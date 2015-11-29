@@ -31,7 +31,7 @@ class Runner:
     module = importlib.import_module(os.path.splitext(path)[0].replace('/', '.'))
     variables = [x for x in dir(module) if 'scenario' in x]
     if len(variables) == 0:
-      raise Exception('File {} must have at least one scenario'.format(scenario_path))
+      raise Exception('File {} must have at least one scenario'.format(path))
     return [self.__build_scenario(path, namespace, getattr(module, v)) for v in variables]
 
   def discover(self, root):
