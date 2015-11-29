@@ -19,7 +19,6 @@ def run(*args, **kwargs):
   dispatcher.register(Environ())
   dispatcher.register(Packagist())
   dispatcher.register(Injector())
-  dispatcher.register(Renamer())
   dispatcher.register(Validator())
   dispatcher.register(Terminator())
 
@@ -36,11 +35,6 @@ def run(*args, **kwargs):
 
   runner = Runner()
   scenarios = runner.discover(config['vedro']['scenarios'])
-
-  for scenario in scenarios:
-    runner.load(scenario)
-    dispatcher.fire(ScenarioLoadEvent(scenario))
-
   dispatcher.fire(SetupEvent(scenarios))
 
   scenarios = sorted(scenarios, key=lambda x: x.priority, reverse=True)

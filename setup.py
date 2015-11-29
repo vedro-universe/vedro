@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
   name='vedro',
   description='',
-  version='0.2.1',
+  version='0.2.2',
   url='https://github.com/nikitanovosibirsk/vedro',
   author='Nikita Tsvetkov',
   author_email='nikitanovosibirsk@yandex.com',

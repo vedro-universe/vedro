@@ -3,7 +3,7 @@ import importlib
 import os
 from ..hook import Hook
 from ...core import Scope
-from ...helpers.decorators import static
+from ...helpers.decorators import static, scenario, skip_scenario, only_scenario
 
 
 class Injector(Hook):
@@ -32,7 +32,13 @@ class Injector(Hook):
       setattr(builtins, variable, variables[variable])
 
   def __on_init(self, event):
-    self.__inject_variables({'Scope': Scope, 'static': static})
+    self.__inject_variables({
+      'Scope': Scope,
+      'static': static,
+      'scenario': scenario,
+      'skip_scenario': skip_scenario,
+      'only_scenario': only_scenario
+    })
     if 'globals' in event.kwargs:
       self.__inject_variables(event.kwargs['globals'])
 

@@ -13,33 +13,29 @@ class Runner:
     for path, _, files in os.walk(root):
       if path.endswith('_'): continue
       namespace = path[len(root) + 1:]
-      scenarios += [Scenario(os.path.join(path, filename), namespace) for filename in files]
+      for filename in files:
+        scenarios += self.__load_scenarios(os.path.join(path, filename), namespace)
     return scenarios
 
-  def __load_scenario(self, module_name):
-    module = importlib.import_module(module_name)
-    variables = [x for x in dir(module) if x.endswith('scenario')]
-    if len(variables) != 1:
-      raise Exception('File {} must have at least one scenario'.format(scenario.path))
-    return getattr(module, variables[0])
+  def __build_scenario(self, path, namespace, fn):
+    profiler = Profiler().register()
+    try:
+      fn()
+    finally:
+      profiler.deregister()
+    scope = profiler.get_locals()
+    steps = [scope[x.co_name] for x in fn.__code__.co_consts if inspect.iscode(x)]
+    return Scenario(path, namespace, fn, scope, scope['subject'], steps)
 
-  def __get_steps(self, fn, scope):
-    return [scope[x.co_name] for x in fn.__code__.co_consts if inspect.iscode(x)]
+  def __load_scenarios(self, path, namespace):
+    module = importlib.import_module(os.path.splitext(path)[0].replace('/', '.'))
+    variables = [x for x in dir(module) if 'scenario' in x]
+    if len(variables) == 0:
+      raise Exception('File {} must have at least one scenario'.format(scenario_path))
+    return [self.__build_scenario(path, namespace, getattr(module, v)) for v in variables]
 
   def discover(self, root):
     return self.__discover_scenarios(root)
-
-  def load(self, scenario):
-    module_name = os.path.splitext(scenario.path)[0].replace('/', '.')
-    scenario.fn = self.__load_scenario(module_name)
-    profiler = Profiler().register()
-    try:
-      scenario.fn()
-    finally:
-      profiler.deregister()
-    scenario.scope = profiler.get_locals()
-    scenario.subject = scenario.scope['subject']
-    scenario.steps = self.__get_steps(scenario.fn, scenario.scope)
 
   def run(self, scenario):
     for step in scenario.steps:
