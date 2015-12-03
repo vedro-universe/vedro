@@ -1,6 +1,5 @@
 import json
 from traceback import format_exception
-from collections import OrderedDict
 from colorama import init, Fore, Style
 from ..reporter import Reporter
 
@@ -15,8 +14,7 @@ class ColoredReporter(Reporter):
     return representation
 
   def __print_dict(self, dictionary):
-    ordered_dictionray = OrderedDict(sorted(dictionary.items()))
-    for key, value in ordered_dictionray.items():
+    for key, value in dictionary.items():
       print(Fore.BLUE + ' {}:'.format(key),
             Fore.RESET + '{}'.format(self.__get_representation(value)))
 
