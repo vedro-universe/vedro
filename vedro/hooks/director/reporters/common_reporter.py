@@ -1,4 +1,4 @@
-from colorama import Fore, Style
+from colorama import init, Fore, Style
 from ..reporter import Reporter
 
 
@@ -9,7 +9,9 @@ class CommonReporter(Reporter):
 
   def _on_setup(self, event):
     super()._on_setup(event)
-    print(self._target)
+    self._prev_namespace = None
+    init(autoreset=True)
+    print(Style.BRIGHT + self._target)
 
   def _on_scenario_fail(self, event):
     super()._on_scenario_fail(event)
@@ -33,10 +35,9 @@ class CommonReporter(Reporter):
 
   def _on_cleanup(self, event):
     super()._on_cleanup(event)
-    print('\n# {total} scenario{s}, {failed} failed, {skipped} skipped{reset}'.format(
+    print('\n# {total} scenario{s}, {failed} failed, {skipped} skipped'.format(
       total=self._total,
       failed=self._failed,
       skipped=self._skipped,
-      s='' if (self._total == 1) else 's',
-      reset = Fore.RESET
+      s='' if (self._total == 1) else 's'
     ))
