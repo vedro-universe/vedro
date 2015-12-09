@@ -48,6 +48,11 @@ class ColoredReporter(Reporter):
     super()._on_scenario_pass(event)
     print(Fore.GREEN + ' ✔ {}'.format(event.scenario.subject))
 
+  def _on_scenario_skip(self, event):
+    super()._on_scenario_skip(event)
+    print(Style.BRIGHT + Fore.YELLOW + ' » ', end='')
+    print(Fore.YELLOW + event.scenario.subject)
+
   def _on_cleanup(self, event):
     super()._on_cleanup(event)
     style, color = Style.BRIGHT, Fore.GREEN if (self._failed == 0) else Fore.RED

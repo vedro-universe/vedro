@@ -15,6 +15,10 @@ class MinimalisticReporter(Reporter):
     super()._on_scenario_pass(event)
     print(' ✔ {}'.format(event.scenario.subject))
 
+  def _on_scenario_skip(self, event):
+    super()._on_scenario_skip(event)
+    print(' » {}'.format(event.scenario.subject))
+
   def _on_cleanup(self, event):
     super()._on_cleanup(event)
     print('\n# {total} scenario{s}, {failed} failed, {skipped} skipped'.format(
