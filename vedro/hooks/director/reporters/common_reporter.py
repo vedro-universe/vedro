@@ -33,9 +33,10 @@ class CommonReporter(Reporter):
 
   def _on_cleanup(self, event):
     super()._on_cleanup(event)
-    print('\n# {total} scenario{s}, {failed} failed, {skipped} skipped'.format(
+    print('\n# {total} scenario{s}, {failed} failed, {skipped} skipped{reset}'.format(
       total=self._total,
       failed=self._failed,
       skipped=self._skipped,
-      s='' if (self._total == 1) else 's'
+      s='' if (self._total == 1) else 's',
+      reset = Fore.RESET
     ))
