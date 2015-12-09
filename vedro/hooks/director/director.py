@@ -3,7 +3,8 @@ from .reporters import (
   SilentReporter,
   MinimalisticReporter,
   ColoredReporter,
-  JUnitReporter
+  JUnitReporter,
+  CommonReporter
 )
 
 
@@ -13,9 +14,10 @@ class Director(Hook):
     'silent': SilentReporter,
     'minimalistic': MinimalisticReporter,
     'colored': ColoredReporter,
-    'junit': JUnitReporter
+    'junit': JUnitReporter,
+    'common': CommonReporter
   }
-  default = 'colored'
+  default = 'common'
   
   def __init__(self, dispatcher, arg_parser):
     self._dispatcher = dispatcher
