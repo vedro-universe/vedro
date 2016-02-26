@@ -18,6 +18,11 @@ class Scenario:
     self.exception = None
 
   @property
+  def unique_name(self):
+    unique_name = self.subject if (self.namespace == '') else self.namespace + '/' + self.subject
+    return unique_name.replace(' ', '_')
+
+  @property
   def passed(self):
     return self.status == self.Status.Passed
 

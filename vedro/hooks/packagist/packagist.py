@@ -4,32 +4,41 @@ from ..hook import Hook
 
 class Packagist(Hook):
 
-  def __get_packages(self, config):
-    packages = config['vedro']['support'].strip().split()
-    return [package for package in packages if os.path.exists(package)]
+  def __get_files(self, path):
+    files = []
+    for filename in os.listdir(path):
+      if not filename.startswith('_'):
+        files += [filename[:-3] if filename.endswith('.py') else filename]
+    return files
 
-  def __get_package_files(self, package_path):
-    package_files = []
-    for filename in os.listdir(package_path):
-      if filename.endswith('.py') and not filename.startswith('_'):
-        package_files += [filename]
-    return package_files
+  def __get_directories(self, path):
+    directories = []
+    for filename in os.listdir(path):
+      filename = os.path.join(path, filename)
+      if not filename.endswith('_') and os.path.isdir(filename):
+        directories += [filename]
+    return directories
 
-  def __make_init_file(self, package_files):
-    return '\n'.join(['from .{} import *'.format(x[:-3]) for x in package_files]) + '\n'
+  def __make_init_file(self, files):
+    return '\n'.join(['from .{} import *'.format(x) for x in files]) + '\n'
+
+  def __generate_init_files(self, directories):
+    for directory in directories:
+      files = self.__get_files(directory)
+      self.__generate_init_files(self.__get_directories(directory))
+      with open(os.path.join(directory, '__init__.py'), 'w') as init_file:
+        init_file.write(self.__make_init_file(files))
 
   def __on_config_load(self, event):
-    self.packages = self.__get_packages(event.config)
-    for package in self.packages:
-      package_files = self.__get_package_files(package)
-      with open(os.path.join(package, '__init__.py'), 'w') as init_file:
-        init_file.write(self.__make_init_file(package_files))
+    supported_directories = event.config['vedro']['support'].strip().split()
+    self.directories = [x for x in supported_directories if os.path.exists(x)]
+    self.__generate_init_files(self.directories)
 
   def __on_cleanup(self, event):
-    for package in self.packages:
-      path = os.path.join(package, '__init__.py')
-      if os.path.exists(path):
-        os.remove(path)
+    for directory in self.directories:
+      for path, _, files in os.walk(directory):
+        init_file = os.path.join(path, '__init__.py')
+        if os.path.exists(init_file): os.remove(init_file)
 
   def subscribe(self, events):
     events.listen('config_load', self.__on_config_load)

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
   name='vedro',
   description='',
-  version='0.2.3',
+  version='0.3.0',
   url='https://github.com/nikitanovosibirsk/vedro',
   author='Nikita Tsvetkov',
   author_email='nikitanovosibirsk@yandex.com',
@@ -15,6 +15,6 @@ setup(
     'colorama>=0.3.3',
     'district42>=0.5.5',
     'valeera>=0.5.5',
-    'blahblah>=0.5.7'
+    'blahblah>=0.5.8'
   ]
 )

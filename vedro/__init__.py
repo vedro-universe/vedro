@@ -2,12 +2,15 @@ import os
 import sys
 import argparse
 import builtins
-from .core import Dispatcher, Config, Runner
+from .core import Dispatcher, Config, Runner, Scope
+from .helpers import scenario, skip_scenario, only_scenario
 from .hooks import *
 from .events import *
 
 
 os.chdir(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
+
+config = Config()
 
 def run(*args, **kwargs):
   arg_parser = argparse.ArgumentParser()
@@ -18,7 +21,6 @@ def run(*args, **kwargs):
   dispatcher.register(Skipper(dispatcher, arg_parser))
   dispatcher.register(Environ())
   dispatcher.register(Packagist())
-  dispatcher.register(Injector())
   dispatcher.register(Validator())
   dispatcher.register(Terminator())
 
@@ -28,7 +30,7 @@ def run(*args, **kwargs):
   dispatcher.fire(ArgParseEvent(args))
 
   config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vedro.cfg')
-  config = Config().read(config_path)
+  config.read(config_path)
 
   config.read(config['vedro']['config'])
   dispatcher.fire(ConfigLoadEvent(config))

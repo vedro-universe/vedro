@@ -8,38 +8,57 @@ class Skipper(Hook):
     self._arg_parser = arg_parser
 
   def __on_init(self, *args, **kwargs):
-    self._arg_parser.add_argument('-n', '--namespace')
-    self._arg_parser.add_argument('-s', '--scenario')
+    self._arg_parser.add_argument('-s', '--scenarios', nargs='+')
+    self._arg_parser.add_argument('-i', '--ignore', nargs='+')
 
   def __on_arg_parse(self, event):
-    self._namespace = event.args.namespace
-    self._scenario = event.args.scenario
-    if self._namespace is not None:
-      self._namespace = self._namespace.replace(' ', '_').replace(' / ', '/')
+    self._ignored = event.args.ignore or []
+    self._specified = event.args.scenarios or []
 
-  def __namespace_mismatch(self, scenario):
-    return (self._namespace is not None) and (scenario.namespace != self._namespace)
+  def __on_config_load(self, event):
+    prefix = event.config['vedro']['scenarios'] + '/'
+    self._ignored = [self.__normalize_scenario_name(x, prefix) for x in self._ignored]
+    self._specified = [self.__normalize_scenario_name(x, prefix) for x in self._specified]
 
-  def __subject_mismatch(self, scenario):
-    return (self._scenario is not None) and (scenario.subject != self._scenario)
+  def __normalize_scenario_name(self, name, prefix=''):
+    if name.startswith(prefix):
+      name = name[len(prefix):]
+    return name.replace(' / ', '/').replace(' ', '_')
 
-  def __mark_all_skipped_except(self, only_scenario):
-    for scenario in self._scenarios:
-      if scenario != only_scenario:
-        scenario.mark_skipped()
+  def __is_scenario_ignored(self, scenario):
+    for x in self._ignored:
+      if scenario.unique_name.startswith(x):
+        return True
+    return False
+
+  def __is_scenario_specified(self, scenario):
+    for x in self._specified:
+      if scenario.unique_name.startswith(x):
+        return True
+    return False
+
+  def __is_scenario_special(self, scenario):
+    return scenario.fn.__name__.startswith('only')
+
+  def __is_scenario_skipped(self, scenario):
+    return scenario.fn.__name__.startswith('skip')
 
   def __on_setup(self, event):
-    self._scenarios = event.scenarios
-    for scenario in self._scenarios:
-      if (self._namespace is None) and (self._scenario is None):
-        if scenario.fn.__name__.startswith('skip'):
-          scenario.mark_skipped()
-        if scenario.fn.__name__.startswith('only'):
-          return self.__mark_all_skipped_except(scenario)
-      if self.__namespace_mismatch(scenario) or self.__subject_mismatch(scenario):
-        scenario.mark_skipped()
-  
+    self._scenario_list = event.scenarios
+    [x.mark_skipped() for x in self._scenario_list if self.__is_scenario_ignored(x)]
+    if len(self._specified) > 0:
+      [x.mark_skipped() for x in self._scenario_list if not self.__is_scenario_specified(x)]
+
+    special_scenarios = [x for x in self._scenario_list if self.__is_scenario_special(x) and not x.skipped]
+    if len(special_scenarios) > 0:
+      [x.mark_skipped() for x in self._scenario_list if not self.__is_scenario_special(x)]
+    
+    for x in self._scenario_list:
+      if self.__is_scenario_skipped(x) and (x.unique_name not in self._specified):
+        x.mark_skipped()
+
   def subscribe(self, events):
     events.listen('init', self.__on_init)
     events.listen('arg_parse', self.__on_arg_parse)
+    events.listen('config_load', self.__on_config_load)
     events.listen('setup', self.__on_setup)

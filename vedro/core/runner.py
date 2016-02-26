@@ -4,6 +4,7 @@ import importlib
 import inspect
 from .profiler import Profiler
 from .scenario import Scenario
+from ..helpers import scenario as scenario_decorator
 
 
 class Runner:
@@ -32,7 +33,12 @@ class Runner:
     variables = [x for x in dir(module) if 'scenario' in x]
     if len(variables) == 0:
       raise Exception('File {} must have at least one scenario'.format(path))
-    return [self.__build_scenario(path, namespace, getattr(module, v)) for v in variables]
+    scenarios = []
+    for v in variables:
+      fn = getattr(module, v)
+      if fn != scenario_decorator:
+        scenarios += [self.__build_scenario(path, namespace, fn)]
+    return scenarios
 
   def discover(self, root):
     return self.__discover_scenarios(root)
