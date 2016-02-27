@@ -23,7 +23,7 @@ class Skipper(Hook):
   def __normalize_scenario_name(self, name, prefix=''):
     if name.startswith(prefix):
       name = name[len(prefix):]
-    return name.replace(' / ', '/').replace(' ', '_')
+    return name.rsplit('.', 1)[0].replace(' / ', '/').replace(' ', '_')
 
   def __is_scenario_ignored(self, scenario):
     for x in self._ignored:
