@@ -42,4 +42,4 @@ class Packagist(Hook):
 
   def subscribe(self, events):
     events.listen('config_load', self.__on_config_load)
-    events.listen('cleanup', self.__on_cleanup)
+    # events.listen('cleanup', self.__on_cleanup)
