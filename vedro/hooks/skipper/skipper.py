@@ -10,10 +10,12 @@ class Skipper(Hook):
   def __on_init(self, *args, **kwargs):
     self._arg_parser.add_argument('-s', '--scenarios', nargs='+')
     self._arg_parser.add_argument('-i', '--ignore', nargs='+')
+    self._arg_parser.add_argument('-o', '--only', nargs='+')
 
   def __on_arg_parse(self, event):
     self._ignored = event.args.ignore or []
     self._specified = event.args.scenarios or []
+    self._only = event.args.only or []
 
   def __on_config_load(self, event):
     prefix = event.config['vedro']['scenarios'] + '/'
@@ -38,7 +40,7 @@ class Skipper(Hook):
     return False
 
   def __is_scenario_special(self, scenario):
-    return scenario.fn.__name__.startswith('only')
+    return scenario.fn.__name__.startswith('only') or (scenario.subject in self._only)
 
   def __is_scenario_skipped(self, scenario):
     return scenario.fn.__name__.startswith('skip')

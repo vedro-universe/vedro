@@ -50,8 +50,8 @@ class ColoredReporter(Reporter):
 
   def _on_scenario_skip(self, event):
     super()._on_scenario_skip(event)
-    print(Style.BRIGHT + Fore.YELLOW + ' » ', end='')
-    print(Fore.YELLOW + event.scenario.subject)
+    # print(Style.BRIGHT + Fore.YELLOW + ' » ', end='')
+    # print(Fore.YELLOW + event.scenario.subject)
 
   def _on_cleanup(self, event):
     super()._on_cleanup(event)
