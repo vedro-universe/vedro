@@ -5,6 +5,8 @@ from .setup import SetupEvent
 from .config_load import ConfigLoadEvent
 from .scenario_load import ScenarioLoadEvent
 from .scenario_run import ScenarioRunEvent
+from .step_pass import StepPassEvent
+from .step_fail import StepFailEvent
 from .scenario_pass import ScenarioPassEvent
 from .scenario_fail import ScenarioFailEvent
 from .scenario_skip import ScenarioSkipEvent

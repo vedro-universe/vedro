@@ -3,7 +3,8 @@ from .reporters import (
   SilentReporter,
   MinimalisticReporter,
   ColoredReporter,
-  JUnitReporter
+  JUnitReporter,
+  DefaultReporter
 )
 
 
@@ -13,9 +14,10 @@ class Director(Hook):
     'silent': SilentReporter,
     'minimalistic': MinimalisticReporter,
     'colored': ColoredReporter,
-    'junit': JUnitReporter
+    'junit': JUnitReporter,
+    'default': DefaultReporter
   }
-  default = 'colored'
+  default = 'default'
   
   def __init__(self, dispatcher, arg_parser):
     self._dispatcher = dispatcher
@@ -26,10 +28,11 @@ class Director(Hook):
       choices=self.reporters,
       default=self.default
     )
+    self._arg_parser.add_argument('-v', '--verbose', action='count', default=0)
 
   def __on_arg_parse(self, event):
     self._reporter = event.args.reporter
-    self._dispatcher.register(self.reporters[self._reporter]())
+    self._dispatcher.register(self.reporters[self._reporter](event.args.verbose))
 
   def subscribe(self, events):
     events.listen('init', self.__on_init)

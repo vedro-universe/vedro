@@ -4,14 +4,7 @@ from colorama import init, Fore, Style
 from ..reporter import Reporter
 
 
-class ColoredReporter(Reporter):
-
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    print(Fore.YELLOW +
-      'WARN! Colored reporter is deprecated and will be removed in the future.' + 
-      Fore.RESET
-    )
+class DefaultReporter(Reporter):
 
   def __get_representation(self, obj):
     try:
@@ -41,19 +34,33 @@ class ColoredReporter(Reporter):
 
   def _on_scenario_fail(self, event):
     super()._on_scenario_fail(event)
-    print(Fore.RED + ' ✗ {}\n'.format(event.scenario.subject))
-    exception = ''.join(format_exception(*event.scenario.exception))
-    if event.scenario.errors:
-      print(Fore.YELLOW + exception + ' - ' + '\n - '.join(event.scenario.errors))
-    else:
-      print(Fore.YELLOW + exception, end='')
-    if 'scope' in event.scenario.scope:
+    print(Fore.RED + ' ✗ {}'.format(event.scenario.subject))
+
+    if self._verbosity > 0:
+      for step in event.scenario.steps:
+        if step.failed:
+          print(Fore.RED + '   ✗ {}'.format(step.name))
+          break
+        else:
+          print(Fore.RED + '   ✔ {}'.format(step.name))
+
+    if self._verbosity > 1:
+      exception = ''.join(format_exception(*event.scenario.exception))
+      if event.scenario.errors:
+        print(Fore.YELLOW + exception + ' - ' + '\n - '.join(event.scenario.errors))
+      else:
+        print(Fore.YELLOW + exception, end='')
+
+    if self._verbosity > 2 and 'scope' in event.scenario.scope:
       print(Style.BRIGHT + Fore.BLUE + '\nScope:')
       self.__print_dict(event.scenario.scope['scope'])
 
   def _on_scenario_pass(self, event):
     super()._on_scenario_pass(event)
     print(Fore.GREEN + ' ✔ {}'.format(event.scenario.subject))
+    # if self._verbosity > 1:
+    #   for step in event.scenario.steps:
+    #     print(Fore.GREEN + '   ✔ {}'.format(step.name))
 
   def _on_scenario_skip(self, event):
     super()._on_scenario_skip(event)

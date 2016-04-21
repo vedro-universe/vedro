@@ -11,7 +11,7 @@ class Scope(OrderedDict):
 
   def __getitem__(self, key):
     if key not in self.__keys:
-      self[key] = Scope()
+      raise KeyError('Scope key "{}" is not found'.format(key))
     return self.__keys[key]
 
   def __setattr__(self, key, value):

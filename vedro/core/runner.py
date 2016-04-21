@@ -4,6 +4,7 @@ import importlib
 import inspect
 from .profiler import Profiler
 from .scenario import Scenario
+from .step import Step
 from ..helpers import scenario as scenario_decorator
 
 
@@ -25,7 +26,7 @@ class Runner:
     finally:
       profiler.deregister()
     scope = profiler.get_locals()
-    steps = [scope[x.co_name] for x in fn.__code__.co_consts if inspect.iscode(x)]
+    steps = [Step(scope[x.co_name]) for x in fn.__code__.co_consts if inspect.iscode(x)]
     return Scenario(path, namespace, fn, scope, scope['subject'], steps)
 
   def __load_scenarios(self, path, namespace):
@@ -46,8 +47,10 @@ class Runner:
   def run(self, scenario):
     for step in scenario.steps:
       try:
-        step()
+        step.go()
       except Exception as e:
         scenario.exception = sys.exc_info()
+        yield step.mark_failed()
         return scenario.mark_failed()
+      yield step.mark_passed()
     return scenario.mark_passed()

@@ -45,7 +45,11 @@ def run(*args, **kwargs):
       dispatcher.fire(ScenarioSkipEvent(scenario))
       continue
     dispatcher.fire(ScenarioRunEvent(scenario))
-    runner.run(scenario)
+    for step in runner.run(scenario):
+      if step.failed:
+        dispatcher.fire(StepFailEvent(step))
+      else:
+        dispatcher.fire(StepPassEvent(step))
     if scenario.failed:
       dispatcher.fire(ScenarioFailEvent(scenario))
     else:

@@ -3,6 +3,10 @@ from ..reporter import Reporter
 
 class MinimalisticReporter(Reporter):
 
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    print('WARN! Minimalistic reporter is deprecated and will be removed in the future.')
+
   def _on_setup(self, event):
     super()._on_setup(event)
     print(self._target)
