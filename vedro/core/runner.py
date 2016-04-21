@@ -36,7 +36,7 @@ class Runner:
     scenarios = []
     for v in variables:
       fn = getattr(module, v)
-      if fn != scenario_decorator:
+      if not isinstance(fn, type(scenario_decorator)):
         scenarios += [self.__build_scenario(path, namespace, fn)]
     return scenarios
 
