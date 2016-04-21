@@ -3,7 +3,7 @@ import importlib
 import os
 from ..hook import Hook
 from ...core import Scope
-from ...helpers.decorators import static, scenario, skip_scenario, only_scenario
+from ...helpers.decorators import scenario, skip_scenario, only_scenario
 
 
 class Injector(Hook):
