@@ -11,8 +11,9 @@ class Step:
     self.fn = fn
     self.status = None
 
+  @property
   def go(self):
-    return self.fn()
+    return self.fn
 
   @property
   def passed(self):

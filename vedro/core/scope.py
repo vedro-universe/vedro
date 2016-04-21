@@ -23,8 +23,10 @@ class Scope(OrderedDict):
   def __getattr__(self, key):
     if key == '_' + self.__class__.__name__ + '__keys':
       return super().__getattr__(key, value)
-    else:
+    elif key in self.__keys:
       return self[key]
+    else:
+      raise KeyError('Scope key "{}" is not found'.format(key))
 
   def __delitem__(self, key):
     return self.__keys.__delitem__(key)
