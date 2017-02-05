@@ -40,6 +40,9 @@ class Scope(OrderedDict):
   def keys(self):
     return self.__keys.keys()
 
+  def items(self):
+    return self.__keys.items()
+
   def __contains__(self, key):
     return self.__keys.__contains__(key)
 
