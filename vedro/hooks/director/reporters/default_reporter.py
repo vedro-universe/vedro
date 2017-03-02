@@ -1,4 +1,5 @@
 import json
+import os
 from traceback import format_exception
 from colorama import init, Fore, Style
 from ..reporter import Reporter
@@ -22,7 +23,7 @@ class DefaultReporter(Reporter):
   def _on_setup(self, event):
     super()._on_setup(event)
     self._prev_namespace = None
-    init(autoreset=True)
+    init(autoreset=True, strip=os.name == 'nt')
     print(Style.BRIGHT + self._target)
 
   def _on_scenario_run(self, event):
