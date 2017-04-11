@@ -8,3 +8,4 @@ from .renamer import Renamer
 from .skipper import Skipper
 from .terminator import Terminator
 from .validator import Validator
+from .fail_writer import FailWriter

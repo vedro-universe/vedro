@@ -23,6 +23,7 @@ def run(*args, **kwargs):
   dispatcher.register(Packagist())
   dispatcher.register(Validator())
   dispatcher.register(Terminator())
+  dispatcher.register(FailWriter(dispatcher, arg_parser))
 
   dispatcher.fire(InitEvent(*args, **kwargs))
 

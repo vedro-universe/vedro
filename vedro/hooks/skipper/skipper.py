@@ -11,11 +11,13 @@ class Skipper(Hook):
     self._arg_parser.add_argument('-s', '--scenarios', nargs='+')
     self._arg_parser.add_argument('-i', '--ignore', nargs='+')
     self._arg_parser.add_argument('-o', '--only', nargs='+')
+    self._arg_parser.add_argument('-f', '--only-failed', action='store_true')
 
   def __on_arg_parse(self, event):
     self._ignored = event.args.ignore or []
     self._specified = event.args.scenarios or []
     self._only = event.args.only or []
+    self._only_failed = event.args.only_failed or []
 
   def __on_config_load(self, event):
     prefix = event.config['vedro']['scenarios'] + '/'
@@ -40,13 +42,19 @@ class Skipper(Hook):
     return False
 
   def __is_scenario_special(self, scenario):
-    return scenario.fn.__name__.startswith('only') or (scenario.subject in self._only)
+    return scenario.fn.__name__.startswith('only') \
+           or (scenario.subject in self._only) \
+           or (self._only_failed and scenario.subject in self._failed_scenarios)
 
   def __is_scenario_skipped(self, scenario):
     return scenario.fn.__name__.startswith('skip')
 
   def __on_setup(self, event):
     self._scenario_list = event.scenarios
+
+    if (self._only_failed):
+        self._failed_scenarios = [scenario.rstrip() for scenario in open('last_failed.report', 'r').readlines()]
+
     [x.mark_skipped() for x in self._scenario_list if self.__is_scenario_ignored(x)]
     if len(self._specified) > 0:
       [x.mark_skipped() for x in self._scenario_list if not self.__is_scenario_specified(x)]
@@ -54,7 +62,7 @@ class Skipper(Hook):
     special_scenarios = [x for x in self._scenario_list if self.__is_scenario_special(x) and not x.skipped]
     if len(special_scenarios) > 0:
       [x.mark_skipped() for x in self._scenario_list if not self.__is_scenario_special(x)]
-    
+
     for x in self._scenario_list:
       if self.__is_scenario_skipped(x) and (x.unique_name not in self._specified):
         x.mark_skipped()
