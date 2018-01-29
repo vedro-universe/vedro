@@ -1,5 +1,6 @@
 import valeera
 from district42 import SchemaType
+
 from ..hook import Hook
 
 
@@ -13,9 +14,13 @@ class Validator(Hook):
     self._validator = None
     SchemaType.__eq__ = lambda a, b: self.__validate(a, b)
 
+  def __on_scenario_run(self, event):
+      self._validator = None
+
   def __on_scenario_fail(self, event):
     event.scenario.errors = self._validator.errors() if self._validator else []
 
   def subscribe(self, events):
     events.listen('setup', self.__on_setup)
+    events.listen('scenario_run', self.__on_scenario_run)
     events.listen('scenario_fail', self.__on_scenario_fail, 9999)
