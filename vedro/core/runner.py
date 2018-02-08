@@ -13,9 +13,10 @@ class Runner:
   def __discover_scenarios(self, root):
     scenarios = []
     for path, _, files in os.walk(root):
-      if path.endswith('_'): continue
+      if path.endswith('__'): continue
       namespace = path[len(root) + 1:]
       for filename in files:
+        if filename.startswith('.') or filename.startswith('__'): continue
         scenarios += self.__load_scenarios(os.path.join(path, filename), namespace)
     return scenarios
 
