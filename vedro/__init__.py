@@ -19,7 +19,7 @@ def run(*args, **kwargs):
   dispatcher.register(Director(dispatcher, arg_parser))
   dispatcher.register(Interrupter(dispatcher, arg_parser))
   dispatcher.register(Skipper(dispatcher, arg_parser))
-  dispatcher.register(Environ())
+  dispatcher.register(Environ(dispatcher, arg_parser))
   dispatcher.register(Packagist())
   dispatcher.register(Validator())
   dispatcher.register(Terminator())

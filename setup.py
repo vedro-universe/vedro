@@ -15,6 +15,7 @@ setup(
     'colorama>=0.3.3',
     'district42>=0.5.5',
     'valeera>=0.5.5',
-    'blahblah>=0.5.8'
+    'blahblah>=0.5.8',
+    'python-dotenv>=0.7.1'
   ]
 )
