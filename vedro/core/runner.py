@@ -27,8 +27,12 @@ class Runner:
     finally:
       profiler.deregister()
     scope = profiler.get_locals()
+    try:
+        subject = scope['subject'].format(**scope)
+    except:
+        subject = scope['subject']
     steps = [Step(scope[x.co_name]) for x in fn.__code__.co_consts if inspect.iscode(x)]
-    return Scenario(path, namespace, fn, scope, scope['subject'], steps)
+    return Scenario(path, namespace, fn, scope, subject, steps)
 
   def __load_scenarios(self, path, namespace):
     module = importlib.import_module(os.path.splitext(path)[0].replace('/', '.'))
