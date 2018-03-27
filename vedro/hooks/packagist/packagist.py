@@ -7,7 +7,7 @@ class Packagist(Hook):
   def __get_files(self, path):
     files = []
     for filename in os.listdir(path):
-      if not filename.startswith('_'):
+      if (not filename.startswith('_')) and (not filename.startswith('.')):
         files += [filename[:-3] if filename.endswith('.py') else filename]
     return files
 
