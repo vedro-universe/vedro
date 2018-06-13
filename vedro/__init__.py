@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import builtins
+
 from .core import Dispatcher, Config, Runner, Scope
 from .helpers import scenario, skip_scenario, only_scenario
 from .hooks import *
@@ -21,6 +22,7 @@ def run(*args, **kwargs):
   dispatcher.register(Skipper(dispatcher, arg_parser))
   dispatcher.register(Environ(dispatcher, arg_parser))
   dispatcher.register(Packagist())
+  dispatcher.register(Faker())
   dispatcher.register(Validator())
   dispatcher.register(Terminator())
 

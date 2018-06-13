@@ -1,6 +1,7 @@
 from .hook import Hook
 from .director import Director, Reporter
 from .environ import Environ
+from .faker import Faker
 from .injector import Injector
 from .interrupter import Interrupter
 from .packagist import Packagist
