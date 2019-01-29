@@ -23,17 +23,16 @@ class Seeder(Hook):
 
     self._namespaces = {}
     for scenario in scenarios:
-      namespace = scenario.namespace
-      namespace = namespace.replace('_', ' ').replace('/', ' / ')
-      if namespace not in self._namespaces:
-        self._namespaces[namespace] = random.randint(1, 2**63 - 1)
+      if scenario.namespace not in self._namespaces:
+        self._namespaces[scenario.namespace] = random.randint(1, 2**63 - 1)
 
+    prev_namespace = None
     self._scenarios = {}
     for scenario in scenarios:
-      namespace = scenario.namespace
-      namespace = namespace.replace('_', ' ').replace('/', ' / ')
-      seed = self._namespaces[namespace]
-      random.seed(seed)
+      if scenario.namespace != prev_namespace:
+        seed = self._namespaces[scenario.namespace]
+        random.seed(seed)
+        prev_namespace = scenario.namespace
       self._scenarios[scenario] = random.randint(1, 2**63 - 1)
 
     self._failed = 0
