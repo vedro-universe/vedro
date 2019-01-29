@@ -6,6 +6,7 @@ from .injector import Injector
 from .interrupter import Interrupter
 from .packagist import Packagist
 from .renamer import Renamer
+from .seeder import Seeder
 from .skipper import Skipper
 from .terminator import Terminator
 from .validator import Validator
