@@ -19,7 +19,11 @@ class Seeder(Hook):
 
   def __on_setup(self, event):
     random.seed(self._root_seed)
-    scenarios = sorted(event.scenarios, key=lambda x: x.path)
+
+    def key_fn(scenario):
+      parts = scenario.path.split('/')
+      return (len(parts), [(len(x), x) for x in parts])
+    scenarios = sorted(event.scenarios, key=key_fn)
 
     self._namespaces = {}
     for scenario in scenarios:
