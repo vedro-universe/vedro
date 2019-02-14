@@ -1,3 +1,4 @@
+import json
 from configparser import ConfigParser, ExtendedInterpolation
 
 
@@ -30,4 +31,16 @@ class Config:
       return self._parser[name]
     if name in self._parser[self._main_namespace]:
       return self._parser[self._main_namespace][name]
-    raise KeyError()
+    raise KeyError(name)
+
+  def to_dict(self):
+    result = {}
+    for section in self._parser.sections():
+      result[section] = {}
+      for key, val in self._parser[section].items():
+        result[section][key] = val
+    return result
+
+  def __repr__(self):
+    config = json.dumps(self.to_dict(), indent=4, ensure_ascii=False, sort_keys=True, default=str)
+    return 'Config({})'.format(config)
