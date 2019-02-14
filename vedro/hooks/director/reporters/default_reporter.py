@@ -66,7 +66,8 @@ class DefaultReporter(Reporter):
 
   def _on_cleanup(self, event):
     super()._on_cleanup(event)
-    style, color = Style.BRIGHT, Fore.GREEN if (self._failed == 0) else Fore.RED
+    style = Style.BRIGHT
+    color = Fore.GREEN if (self._failed == 0 and self._passed > 0) else Fore.RED
     print(style + color + '\n# {total} scenario{s}, {failed} failed, {skipped} skipped'.format(
       total=self._total,
       failed=self._failed,
