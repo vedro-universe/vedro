@@ -11,7 +11,11 @@ from .events import *
 
 os.chdir(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
 
-config = Config()
+config = Config({
+  'main': {
+    'target': os.path.basename(os.getcwd()),
+  },
+})
 
 def run(*args, **kwargs):
   arg_parser = argparse.ArgumentParser()
@@ -34,7 +38,8 @@ def run(*args, **kwargs):
   config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vedro.cfg')
   config.read(config_path)
 
-  config.read(config['vedro']['config'])
+  if os.path.exists(config['vedro']['config']):
+    config.read(config['vedro']['config'])
   dispatcher.fire(ConfigLoadEvent(config))
 
   runner = Runner()
