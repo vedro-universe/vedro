@@ -13,10 +13,12 @@ class Runner:
   def __discover_scenarios(self, root):
     scenarios = []
     for path, _, files in os.walk(root):
-      if path.endswith('__'): continue
+      if path.endswith('__'): # ex: __pycache__
+        continue
       namespace = path[len(root) + 1:]
       for filename in files:
-        if filename.startswith('.') or filename.startswith('__'): continue
+        if filename.startswith('.') or filename.startswith('__') or not filename.endswith('.py'):
+          continue
         scenarios += self.__load_scenarios(os.path.join(path, filename), namespace)
     return scenarios
 
@@ -47,7 +49,12 @@ class Runner:
     return scenarios
 
   def discover(self, root):
-    return self.__discover_scenarios(root)
+    scenarios = self.__discover_scenarios(root)
+    def key_fn(scenario):
+      parts = scenario.path.split(os.sep)
+      return [len(parts)] + parts
+    scenarios.sort(key=key_fn)
+    return scenarios
 
   def run(self, scenario):
     for step in scenario.steps:

@@ -46,7 +46,6 @@ def run(*args, **kwargs):
   scenarios = runner.discover(config['vedro']['scenarios'])
   dispatcher.fire(SetupEvent(scenarios))
 
-  scenarios = sorted(scenarios, key=lambda x: x.priority, reverse=True)
   for scenario in scenarios:
     if scenario.skipped:
       dispatcher.fire(ScenarioSkipEvent(scenario))

@@ -20,19 +20,14 @@ class Seeder(Hook):
   def __on_setup(self, event):
     random.seed(self._root_seed)
 
-    def key_fn(scenario):
-      parts = scenario.path.split('/')
-      return (len(parts), [(len(x), x) for x in parts])
-    scenarios = sorted(event.scenarios, key=key_fn)
-
     self._namespaces = {}
-    for scenario in scenarios:
+    for scenario in event.scenarios:
       if scenario.namespace not in self._namespaces:
         self._namespaces[scenario.namespace] = random.randint(1, 2**63 - 1)
 
     prev_namespace = None
     self._scenarios = {}
-    for scenario in scenarios:
+    for scenario in event.scenarios:
       if scenario.namespace != prev_namespace:
         seed = self._namespaces[scenario.namespace]
         random.seed(seed)
