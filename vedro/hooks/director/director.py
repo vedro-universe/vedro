@@ -4,7 +4,8 @@ from .reporters import (
   MinimalisticReporter,
   ColoredReporter,
   JUnitReporter,
-  DefaultReporter
+  DefaultReporter,
+  ProfilerReporter
 )
 
 
@@ -15,10 +16,11 @@ class Director(Hook):
     'minimalistic': MinimalisticReporter,
     'colored': ColoredReporter,
     'junit': JUnitReporter,
-    'default': DefaultReporter
+    'profiler': ProfilerReporter,
+    'default': DefaultReporter,
   }
   default = 'default'
-  
+
   def __init__(self, dispatcher, arg_parser):
     self._dispatcher = dispatcher
     self._arg_parser = arg_parser

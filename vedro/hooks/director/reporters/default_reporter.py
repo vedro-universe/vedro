@@ -9,7 +9,7 @@ class DefaultReporter(Reporter):
 
   def __get_representation(self, obj):
     try:
-      representation = json.dumps(obj, ensure_ascii=False, indent=2)
+      representation = json.dumps(obj, ensure_ascii=False, indent=2, default=str)
     except Exception as e:
       return repr(obj)
     return representation

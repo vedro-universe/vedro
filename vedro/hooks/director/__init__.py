@@ -5,5 +5,6 @@ from .reporters import (
   MinimalisticReporter,
   ColoredReporter,
   JUnitReporter,
-  DefaultReporter
+  DefaultReporter,
+  ProfilerReporter
 )
