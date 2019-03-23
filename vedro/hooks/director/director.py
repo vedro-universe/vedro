@@ -1,12 +1,6 @@
 from ..hook import Hook
-from .reporters import (
-  SilentReporter,
-  MinimalisticReporter,
-  ColoredReporter,
-  JUnitReporter,
-  DefaultReporter,
-  ProfilerReporter
-)
+from .reporters import (SilentReporter, MinimalisticReporter,
+                        JUnitReporter, DefaultReporter, ProfilerReporter)
 
 
 class Director(Hook):
@@ -14,7 +8,6 @@ class Director(Hook):
   reporters = {
     'silent': SilentReporter,
     'minimalistic': MinimalisticReporter,
-    'colored': ColoredReporter,
     'junit': JUnitReporter,
     'profiler': ProfilerReporter,
     'default': DefaultReporter,
