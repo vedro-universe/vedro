@@ -14,7 +14,7 @@ class Scenario:
     self.subject = subject
     self.scope = scope
     self.steps = steps
-    self.tags = set(tags)
+    self.tags = set(map(str.upper, tags))
     self.status = None
     self.exception = None
 

@@ -11,7 +11,7 @@ class Tagger(Hook):
     self._arg_parser.add_argument('-t', '--tags', nargs='+')
 
   def __on_arg_parse(self, event):
-    self._tags = set(event.args.tags or [])
+    self._tags = set(map(str.upper, event.args.tags)) if event.args.tags else set()
 
   def __on_setup(self, event):
     if len(self._tags) == 0:

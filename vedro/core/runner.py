@@ -38,7 +38,7 @@ class Runner:
     except:
       subject = scope['subject']
     steps = [Step(scope[x.co_name]) for x in fn.__code__.co_consts if inspect.iscode(x)]
-    tags = getattr(fn, "__tags__", [])
+    tags = getattr(fn, '__tags__', [])
     return Scenario(path, namespace, fn, scope, subject, steps, tags)
 
   def __load_scenarios(self, path, namespace):
