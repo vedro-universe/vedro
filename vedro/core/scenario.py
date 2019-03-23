@@ -6,7 +6,7 @@ class Scenario:
   class Status(Enum):
     Passed, Failed, Skipped = range(3)
 
-  def __init__(self, path, namespace, fn, scope, subject, steps):
+  def __init__(self, path, namespace, fn, scope, subject, steps, tags):
     self.priority = 0
     self.path = path
     self.namespace = namespace
@@ -14,6 +14,7 @@ class Scenario:
     self.subject = subject
     self.scope = scope
     self.steps = steps
+    self.tags = set(tags)
     self.status = None
     self.exception = None
 

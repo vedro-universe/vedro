@@ -17,6 +17,7 @@ class scenario:
   def __call__(self, fn):
     name = self.__generate_name(fn)
     wrapper = partial(fn, *self.args, **self.kwargs)
+    wrapper.__tags__ = getattr(self, "__tags__", [])
     wrapper.__name__ = name
     wrapper.__globals__ = fn.__globals__
     wrapper.__code__ = fn.__code__

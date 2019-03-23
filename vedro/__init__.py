@@ -4,7 +4,7 @@ import argparse
 import builtins
 
 from .core import Dispatcher, Config, Runner, Scope
-from .helpers import scenario, skip_scenario, only_scenario
+from .helpers import scenario, skip_scenario, only_scenario, with_tags
 from .hooks import *
 from .events import *
 
@@ -28,6 +28,7 @@ def run(*args, **kwargs):
   _dispatcher.register(Director(_dispatcher, _arg_parser))
   _dispatcher.register(Interrupter(_dispatcher, _arg_parser))
   _dispatcher.register(Skipper(_dispatcher, _arg_parser))
+  _dispatcher.register(Tagger(_dispatcher, _arg_parser))
   _dispatcher.register(Environ(_dispatcher, _arg_parser))
   _dispatcher.register(Seeder(_dispatcher, _arg_parser))
   _dispatcher.register(Packagist())
