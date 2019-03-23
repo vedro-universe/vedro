@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from traceback import format_exception
 from colorama import init, Fore, Style
 from ..reporter import Reporter
@@ -25,6 +26,7 @@ class DefaultReporter(Reporter):
     self._prev_namespace = None
     init(autoreset=True, strip=os.name == 'nt')
     print(Style.BRIGHT + self._target)
+    self._start_time = time.monotonic()
 
   def _on_scenario_run(self, event):
     super()._on_scenario_run(event)
@@ -68,9 +70,10 @@ class DefaultReporter(Reporter):
     super()._on_cleanup(event)
     style = Style.BRIGHT
     color = Fore.GREEN if (self._failed == 0 and self._passed > 0) else Fore.RED
-    print(style + color + '\n# {total} scenario{s}, {failed} failed, {skipped} skipped'.format(
+    print(style + color + '\n# {total} scenario{s}, {failed} failed, {skipped} skipped, '.format(
       total=self._total,
       failed=self._failed,
       skipped=self._skipped,
       s='' if (self._total == 1) else 's'
-    ))
+    ), end='')
+    print(style + Fore.BLUE + '({:.2f}s)'.format(time.monotonic() - self._start_time))
