@@ -10,6 +10,10 @@ from ..helpers import scenario as scenario_decorator
 
 class Runner:
 
+  def __init__(self):
+    self.__scope = None
+    self.__step = None
+
   def __discover_scenarios(self, root):
     scenarios = []
     for path, _, files in os.walk(root):
@@ -48,6 +52,12 @@ class Runner:
         scenarios += [self.__build_scenario(path, namespace, fn)]
     return scenarios
 
+  def get_current_scope(self):
+    return self.__scope
+
+  def get_current_step(self):
+    return self.__step.name if self.__step else None
+
   def discover(self, root):
     scenarios = self.__discover_scenarios(root)
     def key_fn(scenario):
@@ -57,7 +67,9 @@ class Runner:
     return scenarios
 
   def run(self, scenario):
+    self.__scope = scenario.scope.get('scope', None)
     for step in scenario.steps:
+      self.__step = step
       try:
         step.go()
       except Exception as e:

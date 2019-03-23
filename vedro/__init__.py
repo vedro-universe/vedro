@@ -17,48 +17,52 @@ config = Config({
   },
 })
 
+_runner = Runner()
+_dispatcher = Dispatcher()
+_arg_parser = argparse.ArgumentParser()
+
+get_current_scope = lambda: _runner.get_current_scope()
+get_current_step = lambda: _runner.get_current_step()
+
 def run(*args, **kwargs):
-  arg_parser = argparse.ArgumentParser()
+  _dispatcher.register(Director(_dispatcher, _arg_parser))
+  _dispatcher.register(Interrupter(_dispatcher, _arg_parser))
+  _dispatcher.register(Skipper(_dispatcher, _arg_parser))
+  _dispatcher.register(Environ(_dispatcher, _arg_parser))
+  _dispatcher.register(Seeder(_dispatcher, _arg_parser))
+  _dispatcher.register(Packagist())
+  _dispatcher.register(Validator())
+  _dispatcher.register(Terminator())
 
-  dispatcher = Dispatcher()
-  dispatcher.register(Director(dispatcher, arg_parser))
-  dispatcher.register(Interrupter(dispatcher, arg_parser))
-  dispatcher.register(Skipper(dispatcher, arg_parser))
-  dispatcher.register(Environ(dispatcher, arg_parser))
-  dispatcher.register(Seeder(dispatcher, arg_parser))
-  dispatcher.register(Packagist())
-  dispatcher.register(Validator())
-  dispatcher.register(Terminator())
+  _dispatcher.fire(InitEvent(*args, **kwargs))
 
-  dispatcher.fire(InitEvent(*args, **kwargs))
-
-  args = arg_parser.parse_args()
-  dispatcher.fire(ArgParseEvent(args))
+  args = _arg_parser.parse_args()
+  _dispatcher.fire(ArgParseEvent(args))
 
   config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'vedro.cfg')
   config.read(config_path)
 
   if os.path.exists(config['vedro']['config']):
     config.read(config['vedro']['config'])
-  dispatcher.fire(ConfigLoadEvent(config))
+  _dispatcher.fire(ConfigLoadEvent(config))
 
-  runner = Runner()
-  scenarios = runner.discover(config['vedro']['scenarios'])
-  dispatcher.fire(SetupEvent(scenarios))
+  scenarios = _runner.discover(config['vedro']['scenarios'])
+  _dispatcher.fire(SetupEvent(scenarios))
 
   for scenario in scenarios:
     if scenario.skipped:
-      dispatcher.fire(ScenarioSkipEvent(scenario))
+      _dispatcher.fire(ScenarioSkipEvent(scenario))
       continue
-    dispatcher.fire(ScenarioRunEvent(scenario))
-    for step in runner.run(scenario):
+    _dispatcher.fire(ScenarioRunEvent(scenario))
+    for step in _runner.run(scenario):
       if step.failed:
-        dispatcher.fire(StepFailEvent(step))
+        _dispatcher.fire(StepFailEvent(step))
       else:
-        dispatcher.fire(StepPassEvent(step))
+        _dispatcher.fire(StepPassEvent(step))
     if scenario.failed:
-      dispatcher.fire(ScenarioFailEvent(scenario))
+      _dispatcher.fire(ScenarioFailEvent(scenario))
     else:
-      dispatcher.fire(ScenarioPassEvent(scenario))
+      _dispatcher.fire(ScenarioPassEvent(scenario))
 
-  dispatcher.fire(CleanupEvent())
+  _dispatcher.fire(CleanupEvent())
+  _dispatcher.forget()
