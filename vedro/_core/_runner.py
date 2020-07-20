@@ -2,6 +2,7 @@ import importlib
 import os
 import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+from asyncio import Event
 from inspect import isclass
 from typing import AsyncGenerator, List, Optional, Type
 
@@ -72,7 +73,7 @@ class Runner:
                 step.mark_passed()
                 yield step
 
-    async def run(self) -> None:
+    async def run(self, event: Event) -> None:
         os.chdir(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
 
         arg_parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -91,6 +92,9 @@ class Runner:
         await dispatcher.fire(StartupEvent(scenarios))
 
         for scenario in scenarios:
+            if event.is_set():
+                break
+
             if scenario.is_skipped():
                 await dispatcher.fire(ScenarioSkipEvent(scenario))
                 continue

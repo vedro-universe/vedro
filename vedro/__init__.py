@@ -1,4 +1,7 @@
 import asyncio
+import signal
+import sys
+from types import FrameType
 from typing import Optional
 
 from ._core import Runner
@@ -14,4 +17,10 @@ __all__ = ("Scenario", "Runner", "run", "only", "skip", "params",)
 
 def run(*, validator: Optional[Validator] = None) -> None:
     runner = Runner(validator=validator)
-    asyncio.run(runner.run())
+    event = asyncio.Event()
+
+    def signal_handler(sig: int, frame: FrameType) -> None:
+        event.set()
+        sys.exit(1)
+    signal.signal(signal.SIGINT, signal_handler)
+    asyncio.run(runner.run(event))
