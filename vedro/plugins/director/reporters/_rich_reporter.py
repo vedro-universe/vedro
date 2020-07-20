@@ -94,7 +94,10 @@ class RichReporter(Reporter):
                 self._console.print("Scope:", style=Style(color="blue", bold=True))
                 for key, val in scope.__dict__.items():
                     self._console.print(f" {key}: ", end="", style=Style(color="blue"))
-                    val_repr = json.dumps(val, ensure_ascii=False, indent=4, default=repr)
+                    try:
+                        val_repr = json.dumps(val, ensure_ascii=False, indent=4)
+                    except Exception:
+                        val_repr = repr(val)
                     self._console.print(val_repr)
                 self._console.print()
 
