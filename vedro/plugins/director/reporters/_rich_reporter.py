@@ -22,7 +22,7 @@ class RichReporter(Reporter):
     def __init__(self, verbosity: int) -> None:
         super().__init__()
         self._verbosity = verbosity
-        self._console = Console(highlight=False)
+        self._console = Console(highlight=False, force_terminal=True)
         self._namespace = ""
         self._start_time = 0.0
         self._total = 0
