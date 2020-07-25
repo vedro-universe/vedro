@@ -53,7 +53,7 @@ class Runner:
                 module_scenarios = self.load(os.path.join(path, filename))
                 for scenario in module_scenarios:
                     scenarios.append(VirtualScenario(scenario))
-        return sorted(scenarios, key=lambda x: x.path)
+        return sorted(scenarios, key=lambda x: (len(x.path), x.path))
 
     async def _run_steps(self, scenario: VirtualScenario) -> AsyncGenerator[VirtualStep, None]:
         scope = scenario()
