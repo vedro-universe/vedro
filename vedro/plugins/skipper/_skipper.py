@@ -28,12 +28,12 @@ class Skipper(Plugin):
 
         for file_or_dir in event.args.file_or_dir:
             path = self._normalize_path(file_or_dir)
-            assert os.path.isdir(path) or os.path.isfile(path)
+            assert os.path.isdir(path) or os.path.isfile(path), path
             self._specified.append(path)
 
         for file_or_dir in event.args.ignore:
             path = self._normalize_path(file_or_dir)
-            assert os.path.isdir(path) or os.path.isfile(path)
+            assert os.path.isdir(path) or os.path.isfile(path), path
             self._ignored.append(path)
 
     def _normalize_path(self, file_or_dir: str) -> str:

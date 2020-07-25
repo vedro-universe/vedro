@@ -17,7 +17,7 @@ publish:
 
 .PHONY: test
 test:
-	python3 -m pytest -s
+	python3 -m pytest
 
 .PHONY: coverage
 coverage:
@@ -29,7 +29,11 @@ check-types:
 
 .PHONY: check-imports
 check-imports:
-	python3 -m isort ${PROJECT_NAME} tests --recursive --check-only
+	python3 -m isort ${PROJECT_NAME} tests --check-only
+
+.PHONY: sort-imports
+sort-imports:
+	python3 -m isort ${PROJECT_NAME} tests
 
 .PHONY: check-style
 check-style:
