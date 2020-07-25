@@ -1,1 +1,0 @@
-from .packagist import Packagist
