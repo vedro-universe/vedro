@@ -17,7 +17,7 @@ pip3 install vedro
 
 ```python3
 # ./scenarios/decode_base64_encoded_string.py
-import aiohttp
+from aiohttp import ClientSession
 import vedro
 
 
@@ -28,7 +28,7 @@ class Scenario(vedro.Scenario):
         self.encoded = "YmFuYW5h"
 
     async def when(self):
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             self.response = await session.get(f"https://httpbin.org/base64/{self.encoded}")
 
     async def then(self):

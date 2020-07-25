@@ -4,7 +4,8 @@ import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from asyncio import Event
 from inspect import isclass
-from typing import AsyncGenerator, List, Optional, Type
+from pathlib import Path
+from typing import Any, AsyncGenerator, List, Optional, Tuple, Type
 
 from .._events import (
     ArgParsedEvent,
@@ -53,7 +54,12 @@ class Runner:
                 module_scenarios = self.load(os.path.join(path, filename))
                 for scenario in module_scenarios:
                     scenarios.append(VirtualScenario(scenario))
-        return sorted(scenarios, key=lambda x: (len(x.path), x.path))
+
+        def cmp(scn: VirtualScenario) -> Tuple[Any, ...]:
+            path = Path(scn.path)
+            return (len(path.parts),) + path.parts
+        scenarios.sort(key=cmp)
+        return scenarios
 
     async def _run_steps(self, scenario: VirtualScenario) -> AsyncGenerator[VirtualStep, None]:
         scope = scenario()
