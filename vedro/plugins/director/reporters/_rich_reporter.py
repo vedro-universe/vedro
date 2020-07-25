@@ -1,6 +1,7 @@
 import json
 from time import monotonic
 from traceback import format_exception
+from typing import Union
 
 from rich.console import Console
 from rich.style import Style
@@ -23,7 +24,7 @@ class RichReporter(Reporter):
         super().__init__()
         self._verbosity = verbosity
         self._console = Console(highlight=False, force_terminal=True)
-        self._namespace = ""
+        self._namespace: Union[str, None] = None
         self._start_time = 0.0
         self._total = 0
         self._passed = 0
@@ -57,7 +58,7 @@ class RichReporter(Reporter):
 
         namespace = event.scenario.namespace
         namespace = namespace.replace("_", " ").replace("/", " / ")
-        if (self._namespace == "") or (namespace != self._namespace):
+        if namespace != self._namespace:
             self._namespace = namespace
             self._console.print(f"* {namespace}", style=Style(bold=True))
 
