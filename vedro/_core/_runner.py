@@ -38,6 +38,7 @@ class Runner:
         for name in dir(module):
             val = getattr(module, name)
             if isclass(val) and val.__name__.startswith("Scenario"):
+                assert issubclass(val, Scenario), f"{val} must be a subclass of vedro.Scenario"
                 scenarios.append(val)
         return scenarios
 
