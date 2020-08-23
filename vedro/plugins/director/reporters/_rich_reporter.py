@@ -23,7 +23,12 @@ class RichReporter(Reporter):
     def __init__(self, verbosity: int) -> None:
         super().__init__()
         self._verbosity = verbosity
-        self._console = Console(highlight=False, force_terminal=True)
+        self._console = Console(
+            highlight=False,
+            force_terminal=True,
+            markup=False,
+            emoji=False,
+        )
         self._namespace: Union[str, None] = None
         self._start_time = 0.0
         self._total = 0
@@ -111,6 +116,7 @@ class RichReporter(Reporter):
         self._console.print()
         self._console.print(f"# {self._total} scenarios, "
                             f"{self._failed} failed, "
-                            f"{self._skipped} skipped "
-                            f"[blue]({elapsed:.2f}s)",
-                            style=style)
+                            f"{self._skipped} skipped ",
+                            style=style,
+                            end="")
+        self._console.print(f"({elapsed:.2f}s)", style=Style(color="blue"))
