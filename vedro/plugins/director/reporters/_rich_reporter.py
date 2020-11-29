@@ -1,4 +1,6 @@
 import json
+import os
+import shutil
 from time import monotonic
 from traceback import format_exception
 from typing import Union
@@ -23,11 +25,14 @@ class RichReporter(Reporter):
     def __init__(self, verbosity: int) -> None:
         super().__init__()
         self._verbosity = verbosity
+        size = self._get_terminal_size()
         self._console = Console(
             highlight=False,
             force_terminal=True,
             markup=False,
             emoji=False,
+            width=size.columns,
+            height=size.lines,
         )
         self._namespace: Union[str, None] = None
         self._start_time = 0.0
@@ -35,6 +40,15 @@ class RichReporter(Reporter):
         self._passed = 0
         self._failed = 0
         self._skipped = 0
+
+    def _get_terminal_size(self) -> os.terminal_size:
+        columns, lines = shutil.get_terminal_size()
+        # Fix columns=0 lines=0 in Pycharm
+        if columns <= 0:
+            columns = 80
+        if lines <= 0:
+            lines = 24
+        return os.terminal_size((columns, lines))
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(StartupEvent, self.on_startup) \
