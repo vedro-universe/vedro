@@ -5,13 +5,6 @@ from asyncio import Event
 from pathlib import Path
 from typing import Any, AsyncGenerator, List, Optional, Tuple
 
-from ._dispatcher import Dispatcher
-from ._scenario_discoverer import ScenarioDiscoverer
-from ._scenario_finder import ScenarioFileFinder
-from ._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
-from ._scenario_loader import ScenarioFileLoader
-from ._virtual_scenario import VirtualScenario
-from ._virtual_step import VirtualStep
 from .._events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -25,6 +18,13 @@ from .._events import (
     StepPassEvent,
 )
 from ..plugins import Director, Skipper, Terminator, Validator
+from ._dispatcher import Dispatcher
+from ._scenario_discoverer import ScenarioDiscoverer
+from ._scenario_finder import ScenarioFileFinder
+from ._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
+from ._scenario_loader import ScenarioFileLoader
+from ._virtual_scenario import VirtualScenario
+from ._virtual_step import VirtualStep
 
 
 class Runner:
