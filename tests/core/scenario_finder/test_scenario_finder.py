@@ -8,5 +8,4 @@ def test_scenario_finder():
         ScenarioFinder()
 
     assert exc_info.type is TypeError
-    assert str(exc_info.value) == ("Can't instantiate abstract class ScenarioFinder "
-                                   "with abstract methods find")
+    assert "Can't instantiate abstract class ScenarioFinder" in str(exc_info.value)

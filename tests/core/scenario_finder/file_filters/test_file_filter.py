@@ -8,5 +8,4 @@ def test_file_filter():
         FileFilter()
 
     assert exc_info.type is TypeError
-    assert str(exc_info.value) == ("Can't instantiate abstract class FileFilter "
-                                   "with abstract methods filter")
+    assert "Can't instantiate abstract class FileFilter" in str(exc_info.value)
