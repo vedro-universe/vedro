@@ -1,12 +1,17 @@
-import importlib
 import os
 import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from asyncio import Event
-from inspect import isclass
 from pathlib import Path
-from typing import Any, AsyncGenerator, List, Optional, Tuple, Type
+from typing import Any, AsyncGenerator, List, Optional, Tuple
 
+from ._dispatcher import Dispatcher
+from ._scenario_discoverer import ScenarioDiscoverer
+from ._scenario_finder import ScenarioFileFinder
+from ._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
+from ._scenario_loader import ScenarioFileLoader
+from ._virtual_scenario import VirtualScenario
+from ._virtual_step import VirtualStep
 from .._events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -19,48 +24,37 @@ from .._events import (
     StepFailEvent,
     StepPassEvent,
 )
-from .._scenario import Scenario
 from ..plugins import Director, Skipper, Terminator, Validator
-from ._dispatcher import Dispatcher
-from ._virtual_scenario import VirtualScenario
-from ._virtual_step import VirtualStep
 
 
 class Runner:
     def __init__(self, *, validator: Optional[Validator] = None) -> None:
+        self._finder = ScenarioFileFinder(
+            file_filter=AnyFilter([
+                HiddenFilter(),
+                DunderFilter(),
+                ExtFilter(only=["py"]),
+            ]),
+            dir_filter=AnyFilter([
+                HiddenFilter(),
+                DunderFilter(),
+            ])
+        )
+        self._loader = ScenarioFileLoader()
+        self._discoverer = ScenarioDiscoverer(self._finder, self._loader)
         self._validator: Validator = validator if validator else Validator()
 
-    def load(self, path: str) -> List[Type[Scenario]]:
-        name = os.path.splitext(path)[0].replace("/", ".")
-        module = importlib.import_module(name)
-
-        scenarios = []
-        for name in dir(module):
-            val = getattr(module, name)
-            if isclass(val) and val.__name__.startswith("Scenario"):
-                assert issubclass(val, Scenario), f"{val} must be a subclass of vedro.Scenario"
-                scenarios.append(val)
-        return scenarios
-
-    def discover(self, root: str) -> List[VirtualScenario]:
+    async def discover(self, root: Path) -> List[VirtualScenario]:
         start_dir = os.path.relpath(root)
-
-        scenarios = []
-        for path, _, files in os.walk(start_dir):
-            for filename in files:
-                if not filename.endswith(".py"):
-                    continue
-                if filename.startswith(".") or filename.startswith("_"):
-                    continue
-                module_scenarios = self.load(os.path.join(path, filename))
-                for scenario in module_scenarios:
-                    scenarios.append(VirtualScenario(scenario))
+        scenarios = await self._discoverer.discover(Path(start_dir))
+        virtual_scenarios = [VirtualScenario(scn) for scn in scenarios]
 
         def cmp(scn: VirtualScenario) -> Tuple[Any, ...]:
             path = Path(scn.path)
             return (len(path.parts),) + path.parts
-        scenarios.sort(key=cmp)
-        return scenarios
+        virtual_scenarios.sort(key=cmp)
+
+        return virtual_scenarios
 
     async def _run_steps(self, scenario: VirtualScenario) -> AsyncGenerator[VirtualStep, None]:
         scope = scenario()
@@ -95,7 +89,7 @@ class Runner:
         args = arg_parser.parse_args()
         await dispatcher.fire(ArgParsedEvent(args))
 
-        scenarios = self.discover("scenarios")
+        scenarios = await self.discover(Path("scenarios"))
         await dispatcher.fire(StartupEvent(scenarios))
 
         for scenario in scenarios:

@@ -1,6 +1,7 @@
 import importlib
 import importlib.util
 import inspect
+import os
 from pathlib import Path
 from typing import List, Type, cast
 
@@ -31,6 +32,6 @@ class ScenarioFileLoader(ScenarioLoader):
             if inspect.isclass(val) and issubclass(val, Scenario):
                 if not val.__name__.startswith("Scenario"):
                     continue
-                val.__file__ = module.__file__  # virtual scenario
+                val.__file__ = os.path.abspath(module.__file__)
                 loaded.append(val)
         return loaded
