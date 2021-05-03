@@ -47,11 +47,11 @@ all: install lint test
 
 .PHONY: test-in-docker
 test-in-docker:
-	docker run -v `pwd`:/tmp -w /tmp python:$(or $(PYTHON_VERSION),3.6) make install test
+	docker run -v `pwd`:/tmp -w /tmp python:$(or $(PYTHON_VERSION),3.8) make install test
 
 .PHONY: all-in-docker
 all-in-docker:
-	docker run -v `pwd`:/tmp -w /tmp python:$(or $(PYTHON_VERSION),3.6) make all
+	docker run -v `pwd`:/tmp -w /tmp python:$(or $(PYTHON_VERSION),3.8) make all
 
 .PHONY: bump
 bump:

@@ -16,7 +16,7 @@ class VirtualScenario:
     def __init__(self, scenario: Type[Scenario]) -> None:
         self._scenario: Type[Scenario] = scenario
         self._status: Union[str, None] = None
-        self._path: str = inspect.getfile(scenario)
+        self._path: str = getattr(scenario, "__file__")
         self._steps: List[VirtualStep] = []
         self._errors: List[str] = []
         self._exception: Any = None
