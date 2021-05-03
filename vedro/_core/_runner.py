@@ -20,28 +20,14 @@ from .._events import (
 from ..plugins import Director, Skipper, Terminator, Validator
 from ._dispatcher import Dispatcher
 from ._scenario_discoverer import ScenarioDiscoverer
-from ._scenario_finder import ScenarioFileFinder
-from ._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
-from ._scenario_loader import ScenarioFileLoader
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 
 
 class Runner:
-    def __init__(self, *, validator: Optional[Validator] = None) -> None:
-        self._finder = ScenarioFileFinder(
-            file_filter=AnyFilter([
-                HiddenFilter(),
-                DunderFilter(),
-                ExtFilter(only=["py"]),
-            ]),
-            dir_filter=AnyFilter([
-                HiddenFilter(),
-                DunderFilter(),
-            ])
-        )
-        self._loader = ScenarioFileLoader()
-        self._discoverer = ScenarioDiscoverer(self._finder, self._loader)
+    def __init__(self, discoverer: ScenarioDiscoverer, *,
+                 validator: Optional[Validator] = None) -> None:
+        self._discoverer = discoverer
         self._validator: Validator = validator if validator else Validator()
 
     async def discover(self, root: Path) -> List[VirtualScenario]:

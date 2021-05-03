@@ -5,7 +5,10 @@ from types import FrameType
 from typing import Optional
 
 from ._context import context
-from ._core import Runner
+from ._core import Runner, ScenarioDiscoverer
+from ._core._scenario_finder import ScenarioFileFinder
+from ._core._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
+from ._core._scenario_loader import ScenarioFileLoader
 from ._interface import Interface
 from ._params import params
 from ._scenario import Scenario
@@ -18,7 +21,21 @@ __all__ = ("Scenario", "Interface", "Runner", "run", "only", "skip", "params", "
 
 
 def run(*, validator: Optional[Validator] = None) -> None:
-    runner = Runner(validator=validator)
+    finder = ScenarioFileFinder(
+        file_filter=AnyFilter([
+            HiddenFilter(),
+            DunderFilter(),
+            ExtFilter(only=["py"]),
+        ]),
+        dir_filter=AnyFilter([
+            HiddenFilter(),
+            DunderFilter(),
+        ])
+    )
+    loader = ScenarioFileLoader()
+    discoverer = ScenarioDiscoverer(finder, loader)
+
+    runner = Runner(discoverer, validator=validator)
     event = asyncio.Event()
 
     def signal_handler(sig: int, frame: FrameType) -> None:
