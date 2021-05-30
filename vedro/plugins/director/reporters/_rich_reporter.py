@@ -11,6 +11,8 @@ from rich.style import Style
 from ...._core import Dispatcher
 from ...._core._virtual_scenario import VirtualScenario
 from ...._events import (
+    ArgParsedEvent,
+    ArgParseEvent,
     CleanupEvent,
     ScenarioFailEvent,
     ScenarioPassEvent,
@@ -22,7 +24,7 @@ from .._reporter import Reporter
 
 
 class RichReporter(Reporter):
-    def __init__(self, verbosity: int) -> None:
+    def __init__(self, verbosity: int = 0) -> None:
         super().__init__()
         self._verbosity = verbosity
         size = self._get_terminal_size()
@@ -51,12 +53,19 @@ class RichReporter(Reporter):
         return os.terminal_size((columns, lines))
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(StartupEvent, self.on_startup) \
+        dispatcher.listen(ArgParsedEvent, self.on_arg_parsed) \
+                  .listen(StartupEvent, self.on_startup) \
                   .listen(ScenarioRunEvent, self.on_scenario_run) \
                   .listen(ScenarioSkipEvent, self.on_scenario_skip) \
                   .listen(ScenarioPassEvent, self.on_scenario_pass) \
                   .listen(ScenarioFailEvent, self.on_scenario_fail) \
                   .listen(CleanupEvent, self.on_cleanup)
+
+    def on_arg_parse(self, event: ArgParseEvent) -> None:
+        event.arg_parser.add_argument("-v", "--verbose", action="count", default=0)
+
+    def on_arg_parsed(self, event: ArgParsedEvent) -> None:
+        self._verbosity = event.args.verbose
 
     def on_startup(self, event: StartupEvent) -> None:
         self._start_time = monotonic()

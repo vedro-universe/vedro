@@ -63,7 +63,8 @@ class Runner:
     async def run(self, event: Event) -> None:
         os.chdir(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
 
-        arg_parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+        formatter = ArgumentDefaultsHelpFormatter
+        arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False)
 
         dispatcher = Dispatcher()
         dispatcher.register(self._validator)
@@ -72,6 +73,8 @@ class Runner:
         dispatcher.register(Terminator())
 
         await dispatcher.fire(ArgParseEvent(arg_parser))
+        arg_parser.add_argument("-h", "--help",
+                                action="help", help="show this help message and exit")
         args = arg_parser.parse_args()
         await dispatcher.fire(ArgParsedEvent(args))
 

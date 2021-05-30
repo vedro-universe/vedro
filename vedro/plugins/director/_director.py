@@ -1,4 +1,4 @@
-from typing import Any, Union, cast
+from typing import Any, Union
 
 from ..._core import Dispatcher
 from ..._events import ArgParsedEvent, ArgParseEvent
@@ -12,10 +12,10 @@ class Director(Plugin):
         self._dispatcher: Union[Dispatcher, None] = None
         self._reporter: Union[Reporter, None] = None
         self._reporters = {
-            'rich': RichReporter,
-            'silent': SilentReporter,
+            "rich": RichReporter,
+            "silent": SilentReporter,
         }
-        self._default_reporter = 'rich'
+        self._default_reporter = "rich"
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
@@ -25,8 +25,12 @@ class Director(Plugin):
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         event.arg_parser.add_argument("-r", "--reporter",
                                       choices=self._reporters, default=self._default_reporter)
-        event.arg_parser.add_argument("-v", "--verbose", action="count", default=0)
+
+        args, *_ = event.arg_parser.parse_known_args()
+        self._reporter = self._reporters[args.reporter]()
+        self._reporter.on_arg_parse(event)
+
+        self._dispatcher.register(self._reporter)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        self._reporter = self._reporters[event.args.reporter](event.args.verbose)
-        self._reporter.subscribe(cast(Dispatcher, self._dispatcher))
+        pass
