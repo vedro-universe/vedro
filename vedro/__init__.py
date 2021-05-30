@@ -14,6 +14,7 @@ from ._scenario import Scenario
 from ._version import version
 from .plugins import Plugin
 from .plugins.skipper import only, skip
+from .plugins.terminator import Terminator
 from .plugins.validator import Validator
 
 __version__ = version
@@ -35,6 +36,9 @@ def run(*, validator: Optional[Validator] = None, plugins: Optional[List[Plugin]
     loader = ScenarioFileLoader()
     discoverer = ScenarioDiscoverer(finder, loader)
     dispatcher = Dispatcher()
+
+    _plugins = plugins if (plugins is not None) else []
+    _plugins.append(Terminator())
 
     lifecycle = Lifecycle(dispatcher, discoverer, plugins)
     asyncio.run(lifecycle.start())
