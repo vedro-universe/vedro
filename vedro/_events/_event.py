@@ -20,3 +20,6 @@ class Event:
         if EventRegistry.is_registered(cls):
             raise Exception(f"Event {cls} already registered")
         EventRegistry.register(cls)
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__

@@ -16,6 +16,9 @@ class ArgParseEvent(Event):
     def arg_parser(self) -> ArgumentParser:
         return self._arg_parser
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._arg_parser!r})"
+
 
 class ArgParsedEvent(Event):
     def __init__(self, args: Namespace) -> None:
@@ -24,6 +27,9 @@ class ArgParsedEvent(Event):
     @property
     def args(self) -> Namespace:
         return self._args
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._args!r})"
 
 
 class StartupEvent(Event):
@@ -34,6 +40,9 @@ class StartupEvent(Event):
     def scenarios(self) -> List[VirtualScenario]:
         return self._scenarios
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._scenarios!r})"
+
 
 class _ScenarioEvent(Event):
     def __init__(self, scenario_result: ScenarioResult) -> None:
@@ -42,9 +51,6 @@ class _ScenarioEvent(Event):
     @property
     def scenario_result(self) -> ScenarioResult:
         return self._scenario_result
-
-    def __eq__(self, other: Any) -> bool:
-        return isinstance(other, self.__class__) and self._scenario_result == other._scenario_result
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._scenario_result!r})"
@@ -70,8 +76,9 @@ class _StepEvent(Event):
     def __init__(self, step_result: StepResult) -> None:
         self._step_result = step_result
 
-    def __eq__(self, other: Any) -> bool:
-        return isinstance(other, self.__class__) and self._step_result == other._step_result
+    @property
+    def step_result(self) -> StepResult:
+        return self._step_result
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._step_result!r})"
@@ -96,6 +103,9 @@ class CleanupEvent(Event):
     @property
     def report(self) -> Report:
         return self._report
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._report!r})"
 
 
 __all__ = ("Event", "ArgParseEvent", "ArgParsedEvent", "StartupEvent",
