@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, call
+from unittest.mock import AsyncMock, call, MagicMock, Mock
 
 import pytest
 
@@ -7,6 +7,7 @@ from vedro import Scenario
 from vedro._core._scenario_discoverer import ScenarioDiscoverer
 from vedro._core._scenario_finder import ScenarioFinder
 from vedro._core._scenario_loader import ScenarioLoader
+from vedro._core._virtual_scenario import VirtualScenario
 
 
 @pytest.fixture()
@@ -25,20 +26,30 @@ def loader_factory():
     return _factory
 
 
+def create_scenario(filename):
+    return Mock(Scenario, __file__=filename)
+
+
 @pytest.mark.asyncio
 async def test_scenario_discoverer(*, finder_factory, loader_factory):
     root = Path("/tmp")
+    scenario1 = create_scenario(root / "scenario-1.py")
+    scenario3 = create_scenario(root / "folder" / "scenario-3.py")
+    scenario4 = create_scenario(root / "folder" / "scenario-4.py")
     tree = {
-        root / "scenario-1.py": [Mock(Scenario)],
+        scenario1.__file__: [scenario1],
         root / "scenario-2.py": [],
-        root / "folder" / "scenario-3.py": [Mock(Scenario), Mock(Scenario)],
+        scenario3.__file__: [scenario3, scenario4],
     }
     finder_ = finder_factory(tree.keys())
     loader_ = loader_factory(tree.values())
     discoverer = ScenarioDiscoverer(finder_, loader_)
 
     scenarios = await discoverer.discover(root)
-
-    assert scenarios == sum(tree.values(), [])
+    assert scenarios == [
+        VirtualScenario(scenario1, []),
+        VirtualScenario(scenario3, []),
+        VirtualScenario(scenario4, []),
+    ]
     assert finder_.mock_calls == [call.find(root)]
     assert loader_.mock_calls == [call.load(f) for f in tree.keys()]

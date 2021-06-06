@@ -6,18 +6,21 @@ __all__ = ("VirtualStep",)
 
 
 class VirtualStep:
-    def __init__(self, method: MethodType) -> None:
-        self._method: MethodType = method
+    def __init__(self, orig_step: MethodType) -> None:
+        self._orig_step: MethodType = orig_step
 
     @property
     def name(self) -> str:
-        return self._method.__name__
+        return self._orig_step.__name__
 
     def is_coro(self) -> bool:
-        return iscoroutinefunction(self._method)
+        return iscoroutinefunction(self._orig_step)
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        return self._method(*args, **kwargs)
+        return self._orig_step(*args, **kwargs)
 
     def __repr__(self) -> str:
-        return f"VirtualStep({self._method!r})"
+        return f"VirtualStep({self._orig_step!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
