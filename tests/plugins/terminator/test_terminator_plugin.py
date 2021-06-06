@@ -7,7 +7,7 @@ from pytest import raises
 from vedro._core._dispatcher import Dispatcher
 from vedro._core._report import Report
 from vedro._events import CleanupEvent
-from vedro.plugins import Terminator
+from vedro.plugins.terminator import Terminator
 
 
 @pytest.fixture()

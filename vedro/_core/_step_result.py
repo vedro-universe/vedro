@@ -21,6 +21,10 @@ class StepResult:
         self._ended_at: Union[float, None] = None
         self._exc_info: Union[ExcInfo, None] = None
 
+    @property
+    def step_name(self) -> str:
+        return self._step.name
+
     def is_passed(self) -> bool:
         return self._status == StepStatus.PASSED
 

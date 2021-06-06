@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import AsyncMock, call, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, call
 
 import pytest
 

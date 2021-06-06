@@ -13,15 +13,15 @@ from ._params import params
 from ._scenario import Scenario
 from ._version import version
 from .plugins import Plugin
+from .plugins.director import Director, RichReporter, SilentReporter
 from .plugins.skipper import only, skip
 from .plugins.terminator import Terminator
-from .plugins.validator import Validator
 
 __version__ = version
 __all__ = ("Scenario", "Interface", "Runner", "run", "only", "skip", "params", "context",)
 
 
-def run(*, validator: Optional[Validator] = None, plugins: Optional[List[Plugin]] = None) -> None:
+def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     finder = ScenarioFileFinder(
         file_filter=AnyFilter([
             HiddenFilter(),
@@ -37,8 +37,13 @@ def run(*, validator: Optional[Validator] = None, plugins: Optional[List[Plugin]
     discoverer = ScenarioDiscoverer(finder, loader)
     dispatcher = Dispatcher()
 
-    _plugins = plugins if (plugins is not None) else []
-    _plugins.append(Terminator())
+    _plugins = [
+        Director({"rich": RichReporter, "silent": SilentReporter}, "rich"),
+        Terminator(),
+    ]
+    if plugins:
+        for plugin in plugins:
+            _plugins.append(plugin)
 
-    lifecycle = Lifecycle(dispatcher, discoverer, plugins)
+    lifecycle = Lifecycle(dispatcher, discoverer, _plugins)
     asyncio.run(lifecycle.start())

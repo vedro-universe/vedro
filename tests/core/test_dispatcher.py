@@ -29,7 +29,7 @@ def event_type() -> Type[Event]:
 
 def test_dispatcher_register(*, dispatcher: Dispatcher):
     with given:
-        subcriber_ = Mock(Subscriber())
+        subcriber_ = Mock(Subscriber)
 
     with when:
         res = dispatcher.register(subcriber_)
@@ -132,10 +132,13 @@ async def test_dispatcher_fire_priority_order(*, dispatcher: Dispatcher, event_t
 
 
 @pytest.mark.asyncio
-async def test_dispatcher_fire_listen_default_order(*, dispatcher: Dispatcher, event_type: Type[Event]):
+async def test_dispatcher_fire_listen_default_order(*, dispatcher: Dispatcher,
+                                                    event_type: Type[Event]):
     with given:
         subscribe3_ = Mock()
-        handler = lambda e: dispatcher.listen(event_type, subscribe3_)
+
+        def handler(e):
+            dispatcher.listen(event_type, subscribe3_)
         subscribe1_, subscribe2_ = Mock(), Mock(side_effect=handler)
 
         manager_ = Mock()
@@ -160,10 +163,13 @@ async def test_dispatcher_fire_listen_default_order(*, dispatcher: Dispatcher, e
 
 
 @pytest.mark.asyncio
-async def test_dispatcher_fire_listen_priority_order(*, dispatcher: Dispatcher, event_type: Type[Event]):
+async def test_dispatcher_fire_listen_priority_order(*, dispatcher: Dispatcher,
+                                                     event_type: Type[Event]):
     with given:
         subscribe3_ = Mock()
-        handler = lambda e: dispatcher.listen(event_type, subscribe3_)
+
+        def handler(e):
+            dispatcher.listen(event_type, subscribe3_)
         subscribe1_, subscribe2_ = Mock(), Mock(side_effect=handler)
 
         manager_ = Mock()

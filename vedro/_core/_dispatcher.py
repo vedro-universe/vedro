@@ -9,6 +9,7 @@ __all__ = ("Dispatcher", "Subscriber",)
 
 
 HandlerType = Callable[..., Any]
+RegisteredItemType = Tuple[int, int, HandlerType]
 
 
 class Subscriber:
@@ -18,7 +19,7 @@ class Subscriber:
 
 class Dispatcher:
     def __init__(self) -> None:
-        self._events: Dict[str, List[Tuple[int, int, HandlerType]]] = {}
+        self._events: Dict[str, List[RegisteredItemType]] = {}
 
     def register(self, subscriber: "Subscriber") -> None:
         subscriber.subscribe(self)

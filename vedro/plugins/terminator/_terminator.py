@@ -9,7 +9,7 @@ __all__ = ("Terminator",)
 
 class Terminator(Plugin):
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(CleanupEvent, self.on_cleanup, priority=-1)
+        dispatcher.listen(CleanupEvent, self.on_cleanup, priority=sys.maxsize)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if event.report.failed > 0 or event.report.passed == 0:

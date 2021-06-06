@@ -1,32 +1,30 @@
-from typing import Any, Union, cast
+from typing import Callable, Dict, Optional, Union
 
 from ..._core import Dispatcher
-from ..._events import ArgParsedEvent, ArgParseEvent
+from ..._events import ArgParseEvent
 from ..plugin import Plugin
 from ._reporter import Reporter
-from .reporters import RichReporter, SilentReporter
+
+__all__ = ("Director",)
 
 
 class Director(Plugin):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, reporters: Optional[Dict[str, Callable[[], Reporter]]] = None,
+                 default_reporter: Optional[str] = None) -> None:
+        self._reporters = reporters if reporters else {}
+        self._default_reporter = default_reporter
         self._dispatcher: Union[Dispatcher, None] = None
-        self._reporter: Union[Reporter, None] = None
-        self._reporters = {
-            'rich': RichReporter,
-            'silent': SilentReporter,
-        }
-        self._default_reporter = 'rich'
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
-                  .listen(ArgParsedEvent, self.on_arg_parsed)
-        self._dispatcher = dispatcher
+        self._dispatcher = dispatcher.listen(ArgParseEvent, self.on_arg_parse)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("-r", "--reporter",
-                                      choices=self._reporters, default=self._default_reporter)
-        event.arg_parser.add_argument("-v", "--verbose", action="count", default=0)
-
-    def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        self._reporter = self._reporters[event.args.reporter](event.args.verbose)
-        self._reporter.subscribe(cast(Dispatcher, self._dispatcher))
+        if len(self._reporters) == 0:
+            return
+        event.arg_parser.add_argument("-r", "--reporters", nargs='*',
+                                      choices=self._reporters, default=[self._default_reporter])
+        args, *_ = event.arg_parser.parse_known_args()
+        for reporter_name in args.reporters:
+            reporter = self._reporters[reporter_name]()
+            assert self._dispatcher is not None
+            reporter.subscribe(self._dispatcher)

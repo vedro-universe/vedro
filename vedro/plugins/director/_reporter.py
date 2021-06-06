@@ -1,6 +1,9 @@
 from ..._core import Dispatcher
+from ..plugin import Plugin
+
+__all__ = ("Reporter",)
 
 
-class Reporter:
+class Reporter(Plugin):
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        raise NotImplementedError()
+        super().subscribe(dispatcher)

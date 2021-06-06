@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Type, Union
+from typing import Any, List, Type, Union
 
 from .._scenario import Scenario
 from ._virtual_step import VirtualStep
@@ -34,5 +34,5 @@ class VirtualScenario:
     def __repr__(self) -> str:
         return f"VirtualScenario({self._path!r}, {self._steps!r})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__

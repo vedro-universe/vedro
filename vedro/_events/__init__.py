@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, Namespace
-from typing import Any, List
+from typing import List
 
 from .._core._report import Report
 from .._core._scenario_result import ScenarioResult

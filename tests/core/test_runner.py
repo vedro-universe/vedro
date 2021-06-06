@@ -35,7 +35,8 @@ def runner(dispatcher_: Dispatcher):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
-async def test_runner_run_step_passed(method_mock_factory: Mock, *, runner: Runner, dispatcher_: Dispatcher):
+async def test_runner_run_step_passed(method_mock_factory: Mock, *,
+                                      runner: Runner, dispatcher_: Dispatcher):
     with given:
         scenario_ = Mock(Scenario, step=method_mock_factory(return_value=None))
         step = VirtualStep(scenario_.step)
@@ -59,7 +60,8 @@ async def test_runner_run_step_passed(method_mock_factory: Mock, *, runner: Runn
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
-async def test_runner_run_step_failed(method_mock_factory: Mock, *, runner: Runner, dispatcher_: Dispatcher):
+async def test_runner_run_step_failed(method_mock_factory: Mock, *,
+                                      runner: Runner, dispatcher_: Dispatcher):
     with given:
         exception = AssertionError()
         scenario_ = Mock(Scenario, step=method_mock_factory(side_effect=exception))
@@ -128,7 +130,8 @@ async def test_runner_run_scenario_single_step_passed(*, runner: Runner, dispatc
 
 
 @pytest.mark.asyncio
-async def __test_runner_run_scenario_single_step_failed(*, runner: Runner, dispatcher_: Dispatcher):
+async def __test_runner_run_scenario_single_step_failed(*, runner: Runner,
+                                                        dispatcher_: Dispatcher):
     with given:
         exception = AssertionError()
         scenario_ = Mock(Scenario, step=Mock(side_effect=exception), __file__="/tmp/scenario.py")
@@ -154,7 +157,8 @@ async def __test_runner_run_scenario_single_step_failed(*, runner: Runner, dispa
 
 
 @pytest.mark.asyncio
-async def test_runner_run_scenario_multiple_steps_passed(*, runner: Runner, dispatcher_: Dispatcher):
+async def test_runner_run_scenario_multiple_steps_passed(*, runner: Runner,
+                                                         dispatcher_: Dispatcher):
     with given:
         scenario_ = Mock(Scenario, __file__="/tmp/scenario.py",
                          first_step=Mock(return_value=None),

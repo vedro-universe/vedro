@@ -1,5 +1,6 @@
+import os
 from enum import Enum
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
@@ -21,6 +22,23 @@ class ScenarioResult:
         self._started_at: Union[float, None] = None
         self._ended_at: Union[float, None] = None
         self._step_results: List[StepResult] = []
+        self._scope: Union[Dict[Any, Any], None] = None
+
+    @property
+    def scenario(self) -> VirtualScenario:
+        return self._scenario
+
+    @property
+    def scenario_subject(self) -> Union[str, None]:
+        subject = getattr(self._scenario, "subject", None)
+        if isinstance(subject, str) and len(subject) > 0:
+            return subject.format(**self._scope)
+        return self._scenario.path.stem.replace("_", " ")
+
+    @property
+    def scenario_namespace(self) -> str:
+        namespace = os.path.dirname(os.path.relpath(self._scenario.path, "scenarios"))
+        return namespace.replace("_", " ").replace("/", " / ")
 
     def mark_passed(self) -> None:
         self._status = ScenarioStatus.PASSED
@@ -60,3 +78,10 @@ class ScenarioResult:
     @property
     def step_results(self) -> List[StepResult]:
         return self._step_results
+
+    def set_scope(self, scope: Dict[Any, Any]) -> None:
+        self._scope = scope
+
+    @property
+    def scope(self) -> Union[Dict[Any, Any], None]:
+        return self._scope

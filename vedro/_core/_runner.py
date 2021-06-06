@@ -27,16 +27,16 @@ class Runner:
     def __init__(self, dispatcher: Dispatcher) -> None:
         self._dispatcher = dispatcher
 
-    async def run_step(self, step: VirtualStep, scope: Scenario) -> StepResult:
+    async def run_step(self, step: VirtualStep, ref: Scenario) -> StepResult:
         step_result = StepResult(step)
 
         await self._dispatcher.fire(StepRunEvent(step_result))
         step_result.set_started_at(time())
         try:
             if step.is_coro():
-                await step(scope)
+                await step(ref)
             else:
-                step(scope)
+                step(ref)
         except:  # noqa: E722
             step_result.set_ended_at(time())
             exc_info = ExcInfo(*sys.exc_info())
@@ -52,7 +52,8 @@ class Runner:
 
     async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
         scenario_result = ScenarioResult(scenario)
-        scope = scenario()
+        ref = scenario()
+        scenario_result.set_scope(ref.__dict__)
 
         if scenario.is_skipped():
             scenario_result.mark_skipped()
@@ -62,7 +63,7 @@ class Runner:
         await self._dispatcher.fire(ScenarioRunEvent(scenario_result))
         scenario_result.set_started_at(time())
         for step in scenario.steps:
-            step_result = await self.run_step(step, scope)
+            step_result = await self.run_step(step, ref)
             scenario_result.add_step_result(step_result)
 
             if step_result.is_failed():
