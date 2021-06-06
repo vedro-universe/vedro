@@ -1,14 +1,13 @@
 from typing import cast
 
 import pytest
+from baby_steps import given, then, when
 from pytest import raises
 
 from vedro._core._dispatcher import Dispatcher
 from vedro._core._report import Report
 from vedro._events import CleanupEvent
 from vedro.plugins import Terminator
-
-from .._test_utils.steps import given, then, when
 
 
 @pytest.fixture()

@@ -5,14 +5,15 @@ if sys.version_info >= (3, 8):
 else:
     from asynctest.mock import CoroutineMock as AsyncMock
 
-from unittest.mock import call, Mock
 from time import monotonic_ns
+from typing import Type, cast
+from unittest.mock import Mock, call
 
 import pytest
-from typing import Type, cast
+from baby_steps import given, then, when
+
 from vedro._core._dispatcher import Dispatcher, Subscriber
 from vedro._events import Event
-from .._test_utils.steps import given, then, when
 
 
 @pytest.fixture()

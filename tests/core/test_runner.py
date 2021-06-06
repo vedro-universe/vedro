@@ -8,6 +8,7 @@ else:
 from unittest.mock import Mock, call
 
 import pytest
+from baby_steps import given, then, when
 
 from vedro import Scenario
 from vedro._core import Runner, VirtualScenario, VirtualStep
@@ -20,8 +21,6 @@ from vedro._events import (
     StepPassEvent,
     StepRunEvent,
 )
-
-from .._test_utils.steps import given, then, when
 
 
 @pytest.fixture()
