@@ -4,10 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, call
 import pytest
 
 from vedro import Scenario
-from vedro._core._scenario_discoverer import ScenarioDiscoverer
-from vedro._core._scenario_finder import ScenarioFinder
-from vedro._core._scenario_loader import ScenarioLoader
-from vedro._core._virtual_scenario import VirtualScenario
+from vedro._core import ScenarioDiscoverer, ScenarioFinder, ScenarioLoader, VirtualScenario
 
 
 @pytest.fixture()

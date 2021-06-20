@@ -12,8 +12,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 from baby_steps import given, then, when
 
-from vedro._core import Dispatcher, Report, ScenarioDiscoverer
-from vedro._core._lifecycle import Lifecycle
+from vedro._core import Dispatcher, Lifecycle, Report, ScenarioDiscoverer
 from vedro._events import ArgParsedEvent, CleanupEvent, StartupEvent
 from vedro.plugins import Plugin
 

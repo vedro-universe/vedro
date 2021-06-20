@@ -1,5 +1,6 @@
 from ._dispatcher import Dispatcher
 from ._exc_info import ExcInfo
+from ._lifecycle import Lifecycle
 from ._report import Report
 from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer
@@ -10,6 +11,6 @@ from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 
-__all__ = ("Dispatcher", "ExcInfo", "Report", "Runner", "VirtualScenario",
-           "VirtualStep", "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
-           "ScenarioResult", "StepResult",)
+__all__ = ("Dispatcher", "ExcInfo", "Lifecycle", "Report", "Runner",
+           "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
+           "ScenarioResult", "StepResult", "VirtualScenario", "VirtualStep",)

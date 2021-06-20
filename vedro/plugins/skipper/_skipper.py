@@ -1,8 +1,7 @@
 import os
 from typing import List, Union
 
-from ..._core import Dispatcher
-from ..._core._virtual_scenario import VirtualScenario
+from ..._core import Dispatcher, VirtualScenario
 from ..._events import ArgParsedEvent, ArgParseEvent, StartupEvent
 from ..plugin import Plugin
 
