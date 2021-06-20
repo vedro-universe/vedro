@@ -4,7 +4,7 @@ from typing import Union
 from ._exc_info import ExcInfo
 from ._virtual_step import VirtualStep
 
-__all__ = ("StepResult",)
+__all__ = ("StepResult", "StepStatus",)
 
 
 class StepStatus(Enum):
@@ -31,11 +31,13 @@ class StepResult:
     def is_failed(self) -> bool:
         return self._status == StepStatus.FAILED
 
-    def mark_failed(self) -> None:
+    def mark_failed(self) -> "StepResult":
         self._status = StepStatus.FAILED
+        return self
 
-    def mark_passed(self) -> None:
+    def mark_passed(self) -> "StepResult":
         self._status = StepStatus.PASSED
+        return self
 
     @property
     def started_at(self) -> Union[float, None]:

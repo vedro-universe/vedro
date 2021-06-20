@@ -7,11 +7,11 @@ class EventRegistry:
     events: Set[str] = set()
 
     @classmethod
-    def register(cls, event: Type['Event']) -> None:
+    def register(cls, event: Type["Event"]) -> None:
         cls.events.add(event.__name__)
 
     @classmethod
-    def is_registered(cls, event: Type['Event']) -> bool:
+    def is_registered(cls, event: Type["Event"]) -> bool:
         return event.__name__ in cls.events
 
 
@@ -22,4 +22,4 @@ class Event:
         EventRegistry.register(cls)
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+        return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)

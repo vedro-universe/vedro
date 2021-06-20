@@ -1,6 +1,6 @@
 import sys
 from time import time
-from typing import List
+from typing import List, Tuple, Type
 
 from .._events import (
     ScenarioFailEvent,
@@ -24,8 +24,10 @@ __all__ = ("Runner",)
 
 
 class Runner:
-    def __init__(self, dispatcher: Dispatcher) -> None:
+    def __init__(self, dispatcher: Dispatcher,
+                 interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
         self._dispatcher = dispatcher
+        self._interrupt_exceptions = interrupt_exceptions
 
     async def run_step(self, step: VirtualStep, ref: Scenario) -> StepResult:
         step_result = StepResult(step)
@@ -43,6 +45,8 @@ class Runner:
             step_result.set_exc_info(exc_info)
             step_result.mark_failed()
             await self._dispatcher.fire(StepFailEvent(step_result))
+            if exc_info.type in self._interrupt_exceptions:
+                raise exc_info.value
         else:
             step_result.set_ended_at(time())
             step_result.mark_passed()

@@ -1,14 +1,16 @@
 import os
-from typing import Any, List, Union
+from typing import List, Union
 
 from ..._core import Dispatcher
 from ..._core._virtual_scenario import VirtualScenario
 from ..._events import ArgParsedEvent, ArgParseEvent, StartupEvent
 from ..plugin import Plugin
 
+__all__ = ("Skipper",)
+
 
 class Skipper(Plugin):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self) -> None:
         self._subject: Union[str, None] = None
         self._specified: List[str] = []
         self._ignored: List[str] = []
@@ -45,9 +47,9 @@ class Skipper(Plugin):
         return os.path.abspath(path)
 
     def _is_scenario_skipped(self, scenario: VirtualScenario) -> bool:
-        if getattr(scenario.scenario, "__vedro__skipped__", False):
+        if getattr(scenario._orig_scenario, "__vedro__skipped__", False):
             return True
-        template = getattr(scenario.scenario, "__vedro__template__", None)
+        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
         if getattr(template, "__vedro__skipped__", False):
             return True
         if self._subject and scenario.subject != self._subject:
@@ -59,9 +61,9 @@ class Skipper(Plugin):
         return False
 
     def _is_scenario_special(self, scenario: VirtualScenario) -> bool:
-        if getattr(scenario.scenario, "__vedro__only__", False):
+        if getattr(scenario._orig_scenario, "__vedro__only__", False):
             return True
-        template = getattr(scenario.scenario, "__vedro__template__", None)
+        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
         if getattr(template, "__vedro__only__", False):
             return True
         return False
@@ -81,12 +83,13 @@ class Skipper(Plugin):
     def on_startup(self, event: StartupEvent) -> None:
         special_scenarios = set()
         for scenario in event.scenarios:
+            print("scenario.unique_id", scenario.unique_id)
             if self._is_scenario_skipped(scenario):
-                scenario.mark_skipped()
+                scenario.skip()
             elif self._is_scenario_special(scenario):
-                special_scenarios.add(scenario)
+                special_scenarios.add(scenario.unique_id)
 
         if len(special_scenarios) > 0:
             for scenario in event.scenarios:
-                if scenario not in special_scenarios:
-                    scenario.mark_skipped()
+                if scenario.unique_id not in special_scenarios:
+                    scenario.skip()

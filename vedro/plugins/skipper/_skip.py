@@ -2,6 +2,8 @@ from typing import Any, Type, Union
 
 from ..._scenario import Scenario
 
+__all__ = ("skip",)
+
 
 def skip(scenario_or_reason: Union[Type[Scenario], str]) -> Any:
     def wrapped(scenario: Type[Scenario]) -> Type[Scenario]:

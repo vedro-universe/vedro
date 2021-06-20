@@ -23,4 +23,4 @@ class VirtualStep:
         return f"VirtualStep({self._orig_step!r})"
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+        return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)

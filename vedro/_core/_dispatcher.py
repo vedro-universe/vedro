@@ -34,7 +34,7 @@ class Dispatcher:
         if event.__class__.__name__ not in self._events:
             return
         registered = self._events[event.__class__.__name__]
-        registered_copy = []
+        registered_copy: List[RegisteredItemType] = []
         while len(registered) > 0:
             priority, registered_at, handler = heappop(registered)
             if iscoroutinefunction(handler):

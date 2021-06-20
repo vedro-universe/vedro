@@ -37,7 +37,7 @@ class ScenarioDiscoverer:
 
         def cmp(scn: VirtualScenario) -> Tuple[Any, ...]:
             path = Path(scn.path)
-            return (len(path.parts),) + path.parts
+            return (len(path.parts),) + tuple((len(x), x) for x in path.parts)
         scenarios.sort(key=cmp)
 
         return scenarios

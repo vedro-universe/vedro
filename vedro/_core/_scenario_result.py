@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Union
 from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 
-__all__ = ("ScenarioResult",)
+__all__ = ("ScenarioResult", "ScenarioStatus",)
 
 
 class ScenarioStatus(Enum):
@@ -32,7 +32,7 @@ class ScenarioResult:
     def scenario_subject(self) -> Union[str, None]:
         subject = getattr(self._scenario, "subject", None)
         if isinstance(subject, str) and len(subject) > 0:
-            return subject.format(**self._scope)
+            return subject.format(**self._scope) if self._scope else subject
         return self._scenario.path.stem.replace("_", " ")
 
     @property
@@ -40,20 +40,23 @@ class ScenarioResult:
         namespace = os.path.dirname(os.path.relpath(self._scenario.path, "scenarios"))
         return namespace.replace("_", " ").replace("/", " / ")
 
-    def mark_passed(self) -> None:
+    def mark_passed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.PASSED
+        return self
 
     def is_passed(self) -> bool:
         return self._status == ScenarioStatus.PASSED
 
-    def mark_failed(self) -> None:
+    def mark_failed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.FAILED
+        return self
 
     def is_failed(self) -> bool:
         return self._status == ScenarioStatus.FAILED
 
-    def mark_skipped(self) -> None:
+    def mark_skipped(self) -> "ScenarioResult":
         self._status = ScenarioStatus.SKIPPED
+        return self
 
     def is_skipped(self) -> bool:
         return self._status == ScenarioStatus.SKIPPED
