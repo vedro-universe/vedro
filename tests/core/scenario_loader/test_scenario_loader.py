@@ -1,6 +1,6 @@
 from pytest import raises
 
-from vedro._core._scenario_loader import ScenarioLoader
+from vedro._core import ScenarioLoader
 
 
 def test_scenario_loader():

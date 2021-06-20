@@ -1,110 +1,91 @@
-import os
 import sys
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from asyncio import Event
-from pathlib import Path
-from typing import Any, AsyncGenerator, List, Optional, Tuple
+from time import time
+from typing import List, Tuple, Type
 
 from .._events import (
-    ArgParsedEvent,
-    ArgParseEvent,
-    CleanupEvent,
     ScenarioFailEvent,
     ScenarioPassEvent,
     ScenarioRunEvent,
     ScenarioSkipEvent,
-    StartupEvent,
     StepFailEvent,
     StepPassEvent,
+    StepRunEvent,
 )
-from ..plugins import Director, Skipper, Terminator, Validator
+from .._scenario import Scenario
 from ._dispatcher import Dispatcher
-from ._scenario_discoverer import ScenarioDiscoverer
+from ._exc_info import ExcInfo
+from ._report import Report
+from ._scenario_result import ScenarioResult
+from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 
+__all__ = ("Runner",)
+
 
 class Runner:
-    def __init__(self, discoverer: ScenarioDiscoverer, *,
-                 validator: Optional[Validator] = None) -> None:
-        self._discoverer = discoverer
-        self._validator: Validator = validator if validator else Validator()
+    def __init__(self, dispatcher: Dispatcher,
+                 interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
+        self._dispatcher = dispatcher
+        self._interrupt_exceptions = interrupt_exceptions
 
-    async def discover(self, root: Path) -> List[VirtualScenario]:
-        start_dir = os.path.relpath(root)
-        scenarios = await self._discoverer.discover(Path(start_dir))
-        virtual_scenarios = [VirtualScenario(scn) for scn in scenarios]
+    async def run_step(self, step: VirtualStep, ref: Scenario) -> StepResult:
+        step_result = StepResult(step)
 
-        def cmp(scn: VirtualScenario) -> Tuple[Any, ...]:
-            path = Path(scn.path)
-            return (len(path.parts),) + path.parts
-        virtual_scenarios.sort(key=cmp)
-
-        return virtual_scenarios
-
-    async def _run_steps(self, scenario: VirtualScenario) -> AsyncGenerator[VirtualStep, None]:
-        scope = scenario()
-        scenario.set_scope(scope)
-        for step in scenario.get_steps():
-            try:
-                if step.is_coro():
-                    await step(scope)
-                else:
-                    step(scope)
-            except:  # noqa: E722
-                exception = sys.exc_info()
-                scenario.set_exception(exception)
-                step.mark_failed()
-                yield step
+        await self._dispatcher.fire(StepRunEvent(step_result))
+        step_result.set_started_at(time())
+        try:
+            if step.is_coro():
+                await step(ref)
             else:
-                step.mark_passed()
-                yield step
+                step(ref)
+        except:  # noqa: E722
+            step_result.set_ended_at(time())
+            exc_info = ExcInfo(*sys.exc_info())
+            step_result.set_exc_info(exc_info)
+            step_result.mark_failed()
+            await self._dispatcher.fire(StepFailEvent(step_result))
+            if exc_info.type in self._interrupt_exceptions:
+                raise exc_info.value
+        else:
+            step_result.set_ended_at(time())
+            step_result.mark_passed()
+            await self._dispatcher.fire(StepPassEvent(step_result))
 
-    async def run(self, event: Event) -> None:
-        os.chdir(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
+        return step_result
 
-        arg_parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
+        scenario_result = ScenarioResult(scenario)
+        ref = scenario()
+        scenario_result.set_scope(ref.__dict__)
 
-        dispatcher = Dispatcher()
-        dispatcher.register(self._validator)
-        dispatcher.register(Director())
-        dispatcher.register(Skipper())
-        dispatcher.register(Terminator())
+        if scenario.is_skipped():
+            scenario_result.mark_skipped()
+            await self._dispatcher.fire(ScenarioSkipEvent(scenario_result))
+            return scenario_result
 
-        await dispatcher.fire(ArgParseEvent(arg_parser))
-        args = arg_parser.parse_args()
-        await dispatcher.fire(ArgParsedEvent(args))
+        await self._dispatcher.fire(ScenarioRunEvent(scenario_result))
+        scenario_result.set_started_at(time())
+        for step in scenario.steps:
+            step_result = await self.run_step(step, ref)
+            scenario_result.add_step_result(step_result)
 
-        scenarios = await self.discover(Path("scenarios"))
-        await dispatcher.fire(StartupEvent(scenarios))
-
-        for scenario in scenarios:
-            if event.is_set():
+            if step_result.is_failed():
+                scenario_result.set_ended_at(time())
+                scenario_result.mark_failed()
+                await self._dispatcher.fire(ScenarioFailEvent(scenario_result))
                 break
 
-            if scenario.is_skipped():
-                await dispatcher.fire(ScenarioSkipEvent(scenario))
-                continue
+        if not scenario_result.is_failed():
+            scenario_result.set_ended_at(time())
+            scenario_result.mark_passed()
+            await self._dispatcher.fire(ScenarioPassEvent(scenario_result))
 
-            await dispatcher.fire(ScenarioRunEvent(scenario))
+        return scenario_result
 
-            async for step in self._run_steps(scenario):
-                if step.is_failed():
-                    await dispatcher.fire(StepFailEvent(step))
-                    scenario.mark_failed()
-                    break
-                elif step.is_passed():
-                    await dispatcher.fire(StepPassEvent(step))
-                else:
-                    raise ValueError()
-            else:
-                scenario.mark_passed()
-
-            if scenario.is_passed():
-                await dispatcher.fire(ScenarioPassEvent(scenario))
-            elif scenario.is_failed():
-                await dispatcher.fire(ScenarioFailEvent(scenario))
-            else:
-                raise ValueError()
-
-        await dispatcher.fire(CleanupEvent())
+    async def run(self, scenarios: List[VirtualScenario]) -> Report:
+        report = Report()
+        for scenario in scenarios:
+            scenario_result = await self.run_scenario(scenario)
+            report.add_result(scenario_result)
+        return report

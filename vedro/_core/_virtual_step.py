@@ -1,36 +1,26 @@
-import inspect
+from asyncio import iscoroutinefunction
 from types import MethodType
-from typing import Any, Union
+from typing import Any
 
-
-class StepStatus:
-    PASSED = "PASSED"
-    FAILED = "FAILED"
+__all__ = ("VirtualStep",)
 
 
 class VirtualStep:
-    def __init__(self, method: MethodType) -> None:
-        self._method: MethodType = method
-        self._status: Union[str, None] = None
+    def __init__(self, orig_step: MethodType) -> None:
+        self._orig_step: MethodType = orig_step
 
     @property
     def name(self) -> str:
-        return self._method.__name__
+        return self._orig_step.__name__
 
     def is_coro(self) -> bool:
-        return inspect.iscoroutinefunction(self._method)
+        return iscoroutinefunction(self._orig_step)
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        return self._method(*args, **kwargs)
+        return self._orig_step(*args, **kwargs)
 
-    def mark_passed(self) -> None:
-        self._status = StepStatus.PASSED
+    def __repr__(self) -> str:
+        return f"VirtualStep({self._orig_step!r})"
 
-    def is_passed(self) -> bool:
-        return self._status == StepStatus.PASSED
-
-    def mark_failed(self) -> None:
-        self._status = StepStatus.FAILED
-
-    def is_failed(self) -> bool:
-        return self._status == StepStatus.FAILED
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)

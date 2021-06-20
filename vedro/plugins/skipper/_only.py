@@ -2,6 +2,8 @@ from typing import Any, Type, Union
 
 from ..._scenario import Scenario
 
+__all__ = ("only",)
+
 
 def only(scenario_or_nothing: Union[Type[Scenario], None] = None) -> Any:
     def wrapped(scenario: Type[Scenario]) -> Type[Scenario]:

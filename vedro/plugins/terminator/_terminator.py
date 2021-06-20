@@ -1,29 +1,23 @@
 import sys
-from typing import Any
+from typing import Callable
 
 from ..._core import Dispatcher
-from ..._events import CleanupEvent, ScenarioFailEvent, ScenarioPassEvent
+from ..._events import CleanupEvent
 from ..plugin import Plugin
+
+__all__ = ("Terminator",)
 
 
 class Terminator(Plugin):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._passed = 0
-        self._failed = 0
+    def __init__(self, exit_fn: Callable[[int], None] = sys.exit):
+        super().__init__()
+        self._exit_fn = exit_fn
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(ScenarioPassEvent, self.on_scenario_pass) \
-                  .listen(ScenarioFailEvent, self.on_scenario_fail) \
-                  .listen(CleanupEvent, self.on_cleanup, priority=-1)
-
-    def on_scenario_pass(self, event: ScenarioPassEvent) -> None:
-        self._passed += 1
-
-    def on_scenario_fail(self, event: ScenarioFailEvent) -> None:
-        self._failed += 1
+        dispatcher.listen(CleanupEvent, self.on_cleanup, priority=sys.maxsize)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        if self._failed > 0 or self._passed == 0:
-            sys.exit(1)
+        if event.report.failed > 0 or event.report.passed == 0:
+            self._exit_fn(1)
         else:
-            sys.exit(0)
+            self._exit_fn(0)

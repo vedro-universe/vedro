@@ -1,5 +1,7 @@
 from typing import Any, Callable
 
+__all__ = ("params",)
+
 
 class params:
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -1,6 +1,7 @@
-from .._core import Dispatcher
+from .._core._dispatcher import Subscriber
+
+__all__ = ("Plugin",)
 
 
-class Plugin:
-    def subscribe(self, dispatcher: Dispatcher) -> None:
-        raise NotImplementedError()
+class Plugin(Subscriber):
+    pass
