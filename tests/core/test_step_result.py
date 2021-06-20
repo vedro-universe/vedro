@@ -12,13 +12,17 @@ def method_():
     return Mock(MethodType)
 
 
-def test_step_result(*, method_: MethodType):
+@pytest.fixture()
+def virtual_step(method_: MethodType):
+    return VirtualStep(method_)
+
+
+def test_step_result(*, method_: MethodType, virtual_step: VirtualStep):
     with given:
         method_.__name__ = "<name>"
-        step = VirtualStep(method_)
 
     with when:
-        step_result = StepResult(step)
+        step_result = StepResult(virtual_step)
 
     with then:
         assert step_result.step_name == method_.__name__
@@ -27,13 +31,12 @@ def test_step_result(*, method_: MethodType):
         assert step_result.started_at is None
         assert step_result.ended_at is None
         assert step_result.exc_info is None
-        assert repr(step_result) == f"StepResult({step!r})"
+        assert repr(step_result) == f"StepResult({virtual_step!r})"
 
 
-def test_step_result_mark_passed(*, method_: MethodType):
+def test_step_result_mark_passed(*, virtual_step: VirtualStep):
     with given:
-        step = VirtualStep(method_)
-        step_result = StepResult(step)
+        step_result = StepResult(virtual_step)
 
     with when:
         res = step_result.mark_passed()
@@ -43,10 +46,9 @@ def test_step_result_mark_passed(*, method_: MethodType):
         assert step_result.is_passed() is True
 
 
-def test_step_result_mark_failed(*, method_: MethodType):
+def test_step_result_mark_failed(*, virtual_step: VirtualStep):
     with given:
-        step = VirtualStep(method_)
-        step_result = StepResult(step)
+        step_result = StepResult(virtual_step)
 
     with when:
         res = step_result.mark_failed()
@@ -56,10 +58,9 @@ def test_step_result_mark_failed(*, method_: MethodType):
         assert step_result.is_failed() is True
 
 
-def test_step_result_set_started_at(*, method_: MethodType):
+def test_step_result_set_started_at(*, virtual_step: VirtualStep):
     with given:
-        step = VirtualStep(method_)
-        step_result = StepResult(step)
+        step_result = StepResult(virtual_step)
         started_at = 1.0
 
     with when:
@@ -70,10 +71,9 @@ def test_step_result_set_started_at(*, method_: MethodType):
         assert step_result.started_at == started_at
 
 
-def test_step_result_set_ended_at(*, method_: MethodType):
+def test_step_result_set_ended_at(*, virtual_step: VirtualStep):
     with given:
-        step = VirtualStep(method_)
-        step_result = StepResult(step)
+        step_result = StepResult(virtual_step)
         ended_at = 1.0
 
     with when:
@@ -84,10 +84,9 @@ def test_step_result_set_ended_at(*, method_: MethodType):
         assert step_result.ended_at == ended_at
 
 
-def test_step_result_set_exc_info(*, method_: MethodType):
+def test_step_result_set_exc_info(*, virtual_step: VirtualStep):
     with given:
-        step = VirtualStep(method_)
-        step_result = StepResult(step)
+        step_result = StepResult(virtual_step)
         exc_info = ExcInfo(AssertionError, AssertionError(), None)
 
     with when:
@@ -98,11 +97,10 @@ def test_step_result_set_exc_info(*, method_: MethodType):
         assert step_result.exc_info == exc_info
 
 
-def test_step_result_eq(*, method_: MethodType):
+def test_step_result_eq(*, virtual_step: VirtualStep):
     with given:
-        step = VirtualStep(method_)
-        step_result1 = StepResult(step)
-        step_result2 = StepResult(step)
+        step_result1 = StepResult(virtual_step)
+        step_result2 = StepResult(virtual_step)
 
     with when:
         res = step_result1 == step_result2
@@ -113,10 +111,10 @@ def test_step_result_eq(*, method_: MethodType):
 
 def test_step_result_not_eq():
     with given:
-        step1 = VirtualStep(Mock(MethodType))
-        step_result1 = StepResult(step1)
-        step2 = VirtualStep(Mock(MethodType))
-        step_result2 = StepResult(step2)
+        virtual_step1 = VirtualStep(Mock(MethodType))
+        step_result1 = StepResult(virtual_step1)
+        virtual_step2 = VirtualStep(Mock(MethodType))
+        step_result2 = StepResult(virtual_step2)
 
     with when:
         res = step_result1 == step_result2
