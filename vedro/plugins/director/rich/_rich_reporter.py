@@ -1,4 +1,3 @@
-import json
 from traceback import format_exception
 from typing import Callable, Union
 
@@ -17,7 +16,7 @@ from ...._events import (
     StartupEvent,
 )
 from .._reporter import Reporter
-from .utils import make_console
+from .utils import format_scope, make_console
 
 __all__ = ("RichReporter",)
 
@@ -91,13 +90,9 @@ class RichReporter(Reporter):
 
         if event.scenario_result.scope:
             self._console.print("Scope:", style=Style(color="blue", bold=True))
-            for key, val in event.scenario_result.scope.items():
+            for key, val in format_scope(event.scenario_result.scope):
                 self._console.print(f" {key}: ", end="", style=Style(color="blue"))
-                try:
-                    val_repr = json.dumps(val, ensure_ascii=False, indent=4)
-                except:  # noqa: E722
-                    val_repr = repr(val)
-                self._console.print(val_repr)
+                self._console.print(val)
             self._console.print()
 
     def on_cleanup(self, event: CleanupEvent) -> None:

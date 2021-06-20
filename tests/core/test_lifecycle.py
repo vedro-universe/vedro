@@ -6,15 +6,16 @@ else:
     from asynctest.mock import CoroutineMock as AsyncMock
 
 from argparse import Namespace
-from unittest.mock import call, Mock, patch
 from pathlib import Path
+from unittest.mock import Mock, call, patch
+
 import pytest
 from baby_steps import given, then, when
 
-from vedro._core import Dispatcher, ScenarioDiscoverer, Report
+from vedro._core import Dispatcher, Report, ScenarioDiscoverer
 from vedro._core._lifecycle import Lifecycle
+from vedro._events import ArgParsedEvent, CleanupEvent, StartupEvent
 from vedro.plugins import Plugin
-from vedro._events import ArgParsedEvent, StartupEvent, CleanupEvent
 
 
 @pytest.fixture()

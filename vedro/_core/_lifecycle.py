@@ -8,9 +8,9 @@ from typing import List
 from .._events import ArgParsedEvent, ArgParseEvent, CleanupEvent, StartupEvent
 from ..plugins import Plugin
 from ._dispatcher import Dispatcher
+from ._report import Report
 from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer
-from ._report import Report
 
 __all__ = ("Lifecycle",)
 

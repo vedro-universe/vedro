@@ -83,7 +83,6 @@ class Skipper(Plugin):
     def on_startup(self, event: StartupEvent) -> None:
         special_scenarios = set()
         for scenario in event.scenarios:
-            print("scenario.unique_id", scenario.unique_id)
             if self._is_scenario_skipped(scenario):
                 scenario.skip()
             elif self._is_scenario_special(scenario):
