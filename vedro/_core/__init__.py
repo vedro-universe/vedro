@@ -5,8 +5,11 @@ from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer
 from ._scenario_finder import ScenarioFinder
 from ._scenario_loader import ScenarioLoader
+from ._scenario_result import ScenarioResult
+from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 
 __all__ = ("Dispatcher", "ExcInfo", "Report", "Runner", "VirtualScenario",
-           "VirtualStep", "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",)
+           "VirtualStep", "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
+           "ScenarioResult", "StepResult",)
