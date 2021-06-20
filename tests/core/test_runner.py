@@ -1,5 +1,7 @@
 import sys
 
+from pytest import raises
+
 if sys.version_info >= (3, 8):
     from unittest.mock import AsyncMock
 else:
@@ -11,8 +13,7 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro._core import Runner, VirtualScenario, VirtualStep
-from vedro._core._dispatcher import Dispatcher
+from vedro._core import Dispatcher, Runner, VirtualScenario, VirtualStep
 from vedro._events import (
     ScenarioFailEvent,
     ScenarioPassEvent,
@@ -83,6 +84,24 @@ async def test_runner_run_step_failed(method_mock_factory: Mock, *,
             call.fire(StepRunEvent(step_result)),
             call.fire(StepFailEvent(step_result)),
         ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
+async def test_runner_run_step_interrupted(*, method_mock_factory: Mock, dispatcher_: Dispatcher):
+    with given:
+        interrupt_exception = KeyboardInterrupt
+        scenario_ = Mock(Scenario, step=method_mock_factory(side_effect=interrupt_exception))
+        virtual_step = VirtualStep(scenario_.step)
+
+        runner = Runner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
+
+    with when, raises(BaseException) as exception:
+        await runner.run_step(virtual_step, scenario_)
+
+    with given:
+        assert exception.type is interrupt_exception
+        assert scenario_.mock_calls == [call.step(scenario_)]
 
 
 @pytest.mark.asyncio
@@ -228,3 +247,20 @@ async def test_runner_run_scenario_multiple_steps_failed():
 
             call.fire(ScenarioFailEvent(scenario_result)),
         ]
+
+
+@pytest.mark.asyncio
+async def test_runner_interrupted_scenario(*, dispatcher_: Dispatcher):
+    with given:
+        interrupt_exception = KeyboardInterrupt
+        runner = Runner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
+
+        step_ = Mock(side_effect=interrupt_exception)
+        scenario_ = Mock(Scenario, step=step_, __file__="/tmp/scenario.py")
+        virtual_scenario = VirtualScenario(scenario_, [VirtualStep(step_)])
+
+    with when, raises(BaseException) as exception:
+        await runner.run_scenario(virtual_scenario)
+
+    with then:
+        assert exception.type is interrupt_exception
