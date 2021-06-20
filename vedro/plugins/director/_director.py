@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional, Union
+from typing import List, Optional, Union
 
 from ..._core import Dispatcher
 from ..._events import ArgParseEvent
@@ -9,10 +9,9 @@ __all__ = ("Director",)
 
 
 class Director(Plugin):
-    def __init__(self, reporters: Optional[Dict[str, Callable[[], Reporter]]] = None,
-                 default_reporter: Optional[str] = None) -> None:
-        self._reporters = reporters if reporters else {}
-        self._default_reporter = default_reporter
+    def __init__(self, reporters: Optional[List[Reporter]] = None) -> None:
+        self._reporters = {r.name: r for r in reporters} if reporters else {}
+        self._default_reporter = reporters[0].name if reporters else ""
         self._dispatcher: Union[Dispatcher, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -25,6 +24,6 @@ class Director(Plugin):
                                       choices=self._reporters, default=[self._default_reporter])
         args, *_ = event.arg_parser.parse_known_args()
         for reporter_name in args.reporters:
-            reporter = self._reporters[reporter_name]()
+            reporter = self._reporters[reporter_name]
             assert self._dispatcher is not None
             reporter.subscribe(self._dispatcher)

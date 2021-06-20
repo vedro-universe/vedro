@@ -13,7 +13,7 @@ from ._params import params
 from ._scenario import Scenario
 from ._version import version
 from .plugins import Plugin
-from .plugins.director import Director, RichReporter, SilentReporter
+from .plugins.director import Director, Reporter, RichReporter, SilentReporter
 from .plugins.skipper import Skipper, only, skip
 from .plugins.terminator import Terminator
 
@@ -37,16 +37,26 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     discoverer = ScenarioDiscoverer(finder, loader)
     dispatcher = Dispatcher()
 
-    _plugins = [
-        Director({"rich": RichReporter, "silent": SilentReporter}, "rich"),
+    all_plugins = []
+    reporters = [
+        RichReporter(),
+        SilentReporter(),
+    ]
+
+    if plugins:
+        for plugin in plugins:
+            if isinstance(plugin, Reporter):
+                reporters.append(plugin)
+            else:
+                all_plugins.append(plugin)
+
+    all_plugins += [
+        Director(reporters),
         Skipper(),
         Terminator(),
     ]
-    if plugins:
-        for plugin in plugins:
-            _plugins.append(plugin)
 
     lifecycle = Lifecycle(dispatcher, discoverer)
-    lifecycle.register_plugins(_plugins)
+    lifecycle.register_plugins(all_plugins)
 
     asyncio.run(lifecycle.start())

@@ -32,7 +32,8 @@ async def test_director_plugin(*, dispatcher: Dispatcher):
 async def test_director_plugin_with_default_reporter(*, dispatcher: Dispatcher):
     with given:
         reporter_ = Mock(Reporter)
-        director = Director({"default": reporter_}, "default")
+        reporter_.name = "reporter"
+        director = Director([reporter_])
         director.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 
@@ -41,17 +42,19 @@ async def test_director_plugin_with_default_reporter(*, dispatcher: Dispatcher):
 
     with then:
         assert res is None
-        assert reporter_.mock_calls == [call(), call().subscribe(dispatcher)]
+        assert reporter_.mock_calls == [call.subscribe(dispatcher)]
 
 
 @pytest.mark.asyncio
 async def test_director_plugin_with_reporter(*, dispatcher: Dispatcher):
     with given:
         reporter1_, reporter2_ = Mock(Reporter), Mock(Reporter)
-        director = Director({"reporter1": reporter1_, "reporter2": reporter2_}, "reporter1")
+        reporter1_.name = "reporter1"
+        reporter2_.name = "reporter2"
+        director = Director([reporter1_, reporter2_])
         director.subscribe(dispatcher)
 
-        args = Namespace(reporters=["reporter2"])
+        args = Namespace(reporters=[reporter2_.name])
         arg_parser = Mock(ArgumentParser, parse_known_args=Mock(return_value=(args, [])))
         event = ArgParseEvent(arg_parser)
 
@@ -61,17 +64,19 @@ async def test_director_plugin_with_reporter(*, dispatcher: Dispatcher):
     with then:
         assert res is None
         assert reporter1_.mock_calls == []
-        assert reporter2_.mock_calls == [call(), call().subscribe(dispatcher)]
+        assert reporter2_.mock_calls == [call.subscribe(dispatcher)]
 
 
 @pytest.mark.asyncio
 async def test_director_plugin_with_reporters(*, dispatcher: Dispatcher):
     with given:
         reporter1_, reporter2_ = Mock(Reporter), Mock(Reporter)
-        director = Director({"reporter1": reporter1_, "reporter2": reporter2_}, "reporter1")
+        reporter1_.name = "reporter1"
+        reporter2_.name = "reporter2"
+        director = Director([reporter1_, reporter2_])
         director.subscribe(dispatcher)
 
-        args = Namespace(reporters=["reporter2", "reporter1"])
+        args = Namespace(reporters=[reporter2_.name, reporter1_.name])
         arg_parser = Mock(ArgumentParser, parse_known_args=Mock(return_value=(args, [])))
         event = ArgParseEvent(arg_parser)
 
@@ -80,5 +85,5 @@ async def test_director_plugin_with_reporters(*, dispatcher: Dispatcher):
 
     with then:
         assert res is None
-        assert reporter1_.mock_calls == [call(), call().subscribe(dispatcher)]
-        assert reporter2_.mock_calls == [call(), call().subscribe(dispatcher)]
+        assert reporter1_.mock_calls == [call.subscribe(dispatcher)]
+        assert reporter2_.mock_calls == [call.subscribe(dispatcher)]
