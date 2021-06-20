@@ -9,13 +9,9 @@ from baby_steps import given, then, when
 from rich.console import Console
 from rich.style import Style
 
-from vedro._core import Dispatcher
-from vedro._core._exc_info import ExcInfo
-from vedro._core._report import Report
+from vedro._core import Dispatcher, ExcInfo, Report, VirtualScenario, VirtualStep
 from vedro._core._scenario_result import ScenarioResult
 from vedro._core._step_result import StepResult
-from vedro._core._virtual_scenario import VirtualScenario
-from vedro._core._virtual_step import VirtualStep
 from vedro._events import (
     ArgParsedEvent,
     ArgParseEvent,

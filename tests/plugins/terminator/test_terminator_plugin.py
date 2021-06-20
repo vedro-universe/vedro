@@ -5,10 +5,8 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro._core._dispatcher import Dispatcher
-from vedro._core._report import Report
+from vedro._core import Dispatcher, Report, VirtualScenario
 from vedro._core._scenario_result import ScenarioResult
-from vedro._core._virtual_scenario import VirtualScenario
 from vedro._events import CleanupEvent
 from vedro.plugins.terminator import Terminator
 

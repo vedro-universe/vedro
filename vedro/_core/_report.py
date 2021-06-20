@@ -18,7 +18,7 @@ class Report:
     @property
     def elapsed(self) -> float:
         if (self.ended_at is None) or (self.started_at is None):
-            return 0
+            return 0.0
         return self.ended_at - self.started_at
 
     def add_result(self, result: ScenarioResult) -> None:
