@@ -38,7 +38,7 @@ def test_already_registered_event():
             pass
 
     with when, raises(BaseException) as exception:
-        class RegisteredEvent(Event):
+        class RegisteredEvent(Event):  # noqa: F811
             pass
 
     with then:

@@ -130,8 +130,7 @@ async def test_runner_run_scenario_single_step_passed(*, runner: Runner, dispatc
 
 
 @pytest.mark.asyncio
-async def __test_runner_run_scenario_single_step_failed(*, runner: Runner,
-                                                        dispatcher_: Dispatcher):
+async def test_runner_run_scenario_single_step_failed(*, runner: Runner, dispatcher_: Dispatcher):
     with given:
         exception = AssertionError()
         scenario_ = Mock(Scenario, step=Mock(side_effect=exception), __file__="/tmp/scenario.py")
