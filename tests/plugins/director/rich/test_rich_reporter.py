@@ -367,6 +367,28 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
 
 
 @pytest.mark.asyncio
+async def test_rich_reporter_scenario_fail_event_without_steps_verbose3(*, dispatcher: Dispatcher,
+                                                                        reporter: RichReporter,
+                                                                        console_: Mock):
+    with given:
+        reporter.subscribe(dispatcher)
+        event = ArgParsedEvent(Namespace(verbose=3))
+        await dispatcher.fire(event)
+
+        scenario_result = make_scenario_result()
+        scenario_result.set_scope({})
+        event = ScenarioFailEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+        ]
+
+
+@pytest.mark.asyncio
 async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher):
     with given:
         console_ = Mock()

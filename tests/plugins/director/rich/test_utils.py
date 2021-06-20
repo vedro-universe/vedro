@@ -1,12 +1,12 @@
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, sentinel
 
 import pytest
 from baby_steps import given, then, when
 from rich.console import Console
 
 from vedro.plugins.director import RichReporter
-from vedro.plugins.director.rich.utils import get_terminal_size, make_console
+from vedro.plugins.director.rich.utils import format_scope, get_terminal_size, make_console
 
 
 @pytest.fixture()
@@ -73,3 +73,43 @@ def test_get_terminal_size_custom_fallback():
 
     with then:
         assert res == os.terminal_size((width, height))
+
+
+def test_format_scope_without_values():
+    with given:
+        scope = {}
+
+    with when:
+        res = list(format_scope(scope))
+
+    with then:
+        assert res == []
+
+
+def test_format_scope_with_values():
+    with given:
+        scope = {"key_int": 1, "key_str": "val"}
+
+    with when:
+        res = list(format_scope(scope))
+
+    with then:
+        assert res == [
+            ("key_int", "1"),
+            ("key_str", '"val"'),
+        ]
+
+
+def test_format_scope_with_unserializable_value():
+    with given:
+        unserializable = sentinel
+        scope = {"key_int": 1, "key_unserializable": unserializable}
+
+    with when:
+        res = list(format_scope(scope))
+
+    with then:
+        assert res == [
+            ("key_int", "1"),
+            ("key_unserializable", repr(unserializable)),
+        ]
