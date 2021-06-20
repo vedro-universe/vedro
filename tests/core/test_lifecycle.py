@@ -19,7 +19,7 @@ from vedro.plugins import Plugin
 
 @pytest.fixture()
 def dispatcher_():
-    return Mock(Dispatcher)
+    return AsyncMock(Dispatcher)
 
 
 @pytest.fixture()

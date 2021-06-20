@@ -30,7 +30,7 @@ def test_virtual_step_name():
 
 def test_virtual_step_is_coro_sync():
     with given:
-        method_ = Mock(MethodType)
+        method_ = Mock(MethodType, __code__=Mock(co_flags=0))  # python 3.7 specific
         step = VirtualStep(method_)
 
     with when:

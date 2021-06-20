@@ -5,7 +5,7 @@ __all__ = ("ExcInfo",)
 
 
 class ExcInfo:
-    def __init__(self, /,
+    def __init__(self,
                  type_: Type[BaseException],
                  value: BaseException,
                  traceback: TracebackType) -> None:

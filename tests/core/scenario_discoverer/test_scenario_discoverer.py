@@ -1,5 +1,12 @@
+import sys
+
+if sys.version_info >= (3, 8):
+    from unittest.mock import AsyncMock, MagicMock
+else:
+    from asynctest.mock import CoroutineMock as AsyncMock, MagicMock
+
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, call
+from unittest.mock import Mock, call
 
 import pytest
 

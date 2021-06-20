@@ -26,7 +26,7 @@ from vedro._events import (
 
 @pytest.fixture()
 def dispatcher_():
-    return Mock(Dispatcher())
+    return AsyncMock(Dispatcher())
 
 
 @pytest.fixture()
@@ -35,7 +35,7 @@ def runner(dispatcher_: Dispatcher):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
+@pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock,))
 async def test_runner_run_step_passed(method_mock_factory: Mock, *,
                                       runner: Runner, dispatcher_: Dispatcher):
     with given:
@@ -212,7 +212,7 @@ async def test_runner_run_scenario_multiple_steps_passed(*, runner: Runner,
 @pytest.mark.asyncio
 async def test_runner_run_scenario_multiple_steps_failed():
     with given:
-        dispatcher = Mock(Dispatcher)
+        dispatcher = AsyncMock(Dispatcher)
         runner = Runner(dispatcher)
 
         exception = AssertionError()
