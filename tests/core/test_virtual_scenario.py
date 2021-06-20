@@ -1,18 +1,10 @@
-import sys
 from hashlib import blake2b
-from typing import Type
-
-import pytest
-
-if sys.version_info >= (3, 8):
-    pass
-else:
-    pass
-
 from pathlib import Path
 from types import MethodType
+from typing import Type
 from unittest.mock import Mock
 
+import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Any, Union
 
 from ._exc_info import ExcInfo
 from ._virtual_step import VirtualStep
@@ -59,3 +59,9 @@ class StepResult:
 
     def set_exc_info(self, exc_info: ExcInfo) -> None:
         self._exc_info = exc_info
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._step!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)
