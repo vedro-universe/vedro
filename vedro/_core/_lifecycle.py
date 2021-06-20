@@ -10,6 +10,7 @@ from ..plugins import Plugin
 from ._dispatcher import Dispatcher
 from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer
+from ._report import Report
 
 __all__ = ("Lifecycle",)
 
@@ -25,7 +26,7 @@ class Lifecycle:
             self._dispatcher.register(plugin)
             self._plugins.append(plugin)
 
-    async def start(self) -> None:
+    async def start(self) -> Report:
         os.chdir(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
 
         formatter = ArgumentDefaultsHelpFormatter
@@ -44,3 +45,8 @@ class Lifecycle:
         report = await runner.run(scenarios)
 
         await self._dispatcher.fire(CleanupEvent(report))
+
+        return report
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._dispatcher!r}, {self._discoverer!r})"
