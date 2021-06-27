@@ -10,7 +10,7 @@ from rich.traceback import Traceback
 
 import vedro
 
-from ...._core import Dispatcher
+from ...._core import Dispatcher, ScenarioResult, StepResult
 from ....events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -33,6 +33,7 @@ class RichReporter(Reporter):
         self._verbosity = 0
         self._tb_show_internal_calls = False
         self._tb_show_locals = False
+        self._show_timings = False
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -52,6 +53,10 @@ class RichReporter(Reporter):
                                       action="count",
                                       default=self._verbosity,
                                       help=help_message)
+        event.arg_parser.add_argument("--show-timings",
+                                      action='store_true',
+                                      default=False,
+                                      help="Show the elapsed time of each scenario")
         event.arg_parser.add_argument("--tb-show-internal-calls",
                                       action='store_true',
                                       default=False,
@@ -63,6 +68,7 @@ class RichReporter(Reporter):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
+        self._show_timings = event.args.show_timings
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
 
@@ -77,24 +83,63 @@ class RichReporter(Reporter):
             self._namespace = event.scenario_result.scenario_namespace
             self._console.out(f"* {self._namespace}", style=Style(bold=True))
 
+    def _print_scenario_subject(self, scenario_result: ScenarioResult) -> None:
+        if scenario_result.is_passed():
+            subject = f" ✔ {scenario_result.scenario_subject}"
+            style = Style(color="green")
+        elif scenario_result.is_failed():
+            subject = f" ✗ {scenario_result.scenario_subject}"
+            style = Style(color="red")
+        else:
+            return
+
+        if self._show_timings:
+            if (scenario_result.started_at is None) or (scenario_result.ended_at is None):
+                elapsed = 0.0
+            else:
+                elapsed = scenario_result.ended_at - scenario_result.started_at
+            self._console.out(subject, style=style, end="")
+            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+        else:
+            self._console.out(subject, style=style)
+
+    def _print_step_name(self, step_result: StepResult) -> None:
+        if step_result.is_passed():
+            name = f"    ✔ {step_result.step_name}"
+            style = Style(color="green")
+        elif step_result.is_failed():
+            name = f"    ✗ {step_result.step_name}"
+            style = Style(color="red")
+        else:
+            return
+
+        if self._show_timings:
+            if (step_result.started_at is None) or (step_result.ended_at is None):
+                elapsed = 0.0
+            else:
+                elapsed = step_result.ended_at - step_result.started_at
+            self._console.out(name, style=style, end="")
+            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+        else:
+            self._console.out(name, style=style)
+
     def on_scenario_passed(self, event: ScenarioPassedEvent) -> None:
-        subject = event.scenario_result.scenario_subject
-        self._console.out(f" ✔ {subject}", style=Style(color="green"))
+        self._print_scenario_subject(event.scenario_result)
 
     def _filter_locals(self, local_variables: Dict[str, Any]) -> Dict[str, Any]:
         filtered_locals = {}
         for key, val in local_variables.items():
+            # self is always "Scenario"
             if key == "self":
                 continue
+            # assertion rewriter stuff
             if key.startswith("@py"):
                 continue
             filtered_locals[key] = val
         return filtered_locals
 
-    def _print_exception(self, exception: BaseException, traceback: TracebackType, *,
-                         hide_internal_calls: bool = False,
-                         show_locals: bool = False) -> None:
-        if hide_internal_calls:
+    def _print_exception(self, exception: BaseException, traceback: TracebackType) -> None:
+        if not self._tb_show_internal_calls:
             root = os.path.dirname(vedro.__file__)
             while traceback.tb_next is not None:
                 filename = os.path.abspath(traceback.tb_frame.f_code.co_filename)
@@ -102,7 +147,7 @@ class RichReporter(Reporter):
                     break
                 traceback = traceback.tb_next
 
-        if show_locals:
+        if self._tb_show_locals:
             trace = Traceback.extract(type(exception), exception, traceback, show_locals=True)
             for stack in trace.stacks:
                 for frame in stack.frames:
@@ -122,38 +167,29 @@ class RichReporter(Reporter):
                 val_repr = repr(val)
             yield str(key), val_repr
 
+    def _print_scope(self, scope: Dict[Any, Any]) -> None:
+        self._console.out("Scope:", style=Style(color="blue", bold=True))
+        for key, val in self._format_scope(scope):
+            self._console.out(f" {key}: ", end="", style=Style(color="blue"))
+            self._console.out(val)
+
     def on_scenario_failed(self, event: ScenarioFailedEvent) -> None:
-        subject = event.scenario_result.scenario_subject
-        self._console.out(f" ✗ {subject}", style=Style(color="red"))
+        self._print_scenario_subject(event.scenario_result)
 
-        if self._verbosity == 0:
-            return
+        if self._verbosity > 0:
+            for step_result in event.scenario_result.step_results:
+                self._print_step_name(step_result)
 
-        for step_result in event.scenario_result.step_results:
-            if step_result.is_passed():
-                self._console.out(f"    ✔ {step_result.step_name}", style=Style(color="green"))
-            elif step_result.is_failed():
-                self._console.out(f"    ✗ {step_result.step_name}", style=Style(color="red"))
+        if self._verbosity > 1:
+            for step_result in event.scenario_result.step_results:
+                if step_result.exc_info:
+                    self._print_exception(step_result.exc_info.value,
+                                          step_result.exc_info.traceback)
 
-        if self._verbosity == 1:
-            return
-
-        for step_result in event.scenario_result.step_results:
-            if step_result.exc_info:
-                self._print_exception(step_result.exc_info.value,
-                                      step_result.exc_info.traceback,
-                                      hide_internal_calls=not self._tb_show_internal_calls,
-                                      show_locals=self._tb_show_locals)
-
-        if self._verbosity == 2:
-            return
-
-        if event.scenario_result.scope:
-            self._console.out("Scope:", style=Style(color="blue", bold=True))
-            for key, val in self._format_scope(event.scenario_result.scope):
-                self._console.out(f" {key}: ", end="", style=Style(color="blue"))
-                self._console.out(val)
-            self._console.out(" ")
+        if self._verbosity > 2:
+            if event.scenario_result.scope:
+                self._print_scope(event.scenario_result.scope)
+                self._console.out(" ")
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if event.report.failed == 0 and event.report.passed > 0:

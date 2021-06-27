@@ -80,10 +80,12 @@ def make_exc_info(value: Exception) -> ExcInfo:
 
 
 def make_parsed_args(*, verbose: int = 0,
+                     show_timings: bool = False,
                      tb_show_locals: bool = False,
                      tb_show_internal_calls: bool = False) -> Namespace:
     return Namespace(
         verbose=verbose,
+        show_timings=show_timings,
         tb_show_internal_calls=tb_show_internal_calls,
         tb_show_locals=tb_show_locals,
     )
@@ -225,7 +227,7 @@ async def test_rich_reporter_scenario_pass_event(*, dispatcher: Dispatcher,
         reporter.subscribe(dispatcher)
 
         subject = "<subject>"
-        scenario_result = make_scenario_result(scenario_subject=subject)
+        scenario_result = make_scenario_result(scenario_subject=subject).mark_passed()
         event = ScenarioPassedEvent(scenario_result)
 
     with when:
@@ -245,7 +247,7 @@ async def test_rich_reporter_scenario_fail_event_default_verbose(*, dispatcher: 
         reporter.subscribe(dispatcher)
 
         subject = "<subject>"
-        scenario_result = make_scenario_result(scenario_subject=subject)
+        scenario_result = make_scenario_result(scenario_subject=subject).mark_failed()
         event = ScenarioFailedEvent(scenario_result)
 
     with when:
@@ -266,7 +268,7 @@ async def test_rich_reporter_scenario_fail_event_verbose0(*, dispatcher: Dispatc
         event = ArgParsedEvent(make_parsed_args(verbose=0))
         await dispatcher.fire(event)
 
-        scenario_result = make_scenario_result()
+        scenario_result = make_scenario_result().mark_failed()
         event = ScenarioFailedEvent(scenario_result)
 
     with when:
@@ -297,7 +299,7 @@ async def test_rich_reporter_scenario_fail_event_verbose1(*, dispatcher: Dispatc
             step_result_passed,
             step_result_failed,
             step_result,
-        ])
+        ]).mark_failed()
         event = ScenarioFailedEvent(scenario_result)
 
     with when:
@@ -331,7 +333,7 @@ async def test_rich_reporter_scenario_fail_event_verbose2(*, dispatcher: Dispatc
             step_result_passed,
             step_result_failed,
             step_result,
-        ])
+        ]).mark_failed()
         event = ScenarioFailedEvent(scenario_result)
 
     with when:
@@ -367,7 +369,7 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
             step_result_passed,
             step_result_failed,
             step_result,
-        ])
+        ]).mark_failed()
         scenario_result.set_scope({"key_int": 1, "key_str": "val"})
         event = ScenarioFailedEvent(scenario_result)
 
@@ -399,7 +401,7 @@ async def test_rich_reporter_scenario_fail_event_without_steps_verbose3(*, dispa
         event = ArgParsedEvent(make_parsed_args(verbose=3))
         await dispatcher.fire(event)
 
-        scenario_result = make_scenario_result()
+        scenario_result = make_scenario_result().mark_failed()
         scenario_result.set_scope({})
         event = ScenarioFailedEvent(scenario_result)
 
