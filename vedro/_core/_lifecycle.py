@@ -4,7 +4,7 @@ from functools import partial
 from pathlib import Path
 from typing import List
 
-from .._events import ArgParsedEvent, ArgParseEvent, CleanupEvent, StartupEvent
+from ..events import ArgParsedEvent, ArgParseEvent, CleanupEvent, StartupEvent
 from ..plugins import Plugin
 from ._dispatcher import Dispatcher
 from ._report import Report

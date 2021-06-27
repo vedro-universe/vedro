@@ -1,11 +1,10 @@
-import json
 import os
 import shutil
-from typing import Any, Dict, Generator, Tuple
+from typing import Any
 
 from rich.console import Console
 
-__all__ = ("make_console", "get_terminal_size", "format_scope",)
+__all__ = ("make_console", "get_terminal_size",)
 
 
 def get_terminal_size(default_columns: int = 80, default_lines: int = 24) -> os.terminal_size:
@@ -27,12 +26,3 @@ def make_console(**options: Any) -> Console:
         height=size.lines,
     )
     return Console(**{**default_options, **options})  # type: ignore
-
-
-def format_scope(scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
-    for key, val in scope.items():
-        try:
-            val_repr = json.dumps(val, ensure_ascii=False, indent=4)
-        except:  # noqa: E722
-            val_repr = repr(val)
-        yield str(key), val_repr

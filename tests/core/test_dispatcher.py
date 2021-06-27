@@ -14,7 +14,7 @@ from baby_steps import given, then, when
 
 from vedro._core import Dispatcher
 from vedro._core._dispatcher import Subscriber
-from vedro._events import Event
+from vedro.events import Event
 
 
 @pytest.fixture()

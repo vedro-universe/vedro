@@ -2,7 +2,7 @@ import os
 from typing import List, Union
 
 from ..._core import Dispatcher, VirtualScenario
-from ..._events import ArgParsedEvent, ArgParseEvent, StartupEvent
+from ...events import ArgParsedEvent, ArgParseEvent, StartupEvent
 from ..plugin import Plugin
 
 __all__ = ("Skipper",)

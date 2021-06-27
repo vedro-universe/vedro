@@ -5,7 +5,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro._core import ExcInfo, Report, ScenarioResult, StepResult, VirtualScenario, VirtualStep
-from vedro._events import (
+from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,

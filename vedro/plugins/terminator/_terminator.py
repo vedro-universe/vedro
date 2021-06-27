@@ -2,7 +2,7 @@ import sys
 from typing import Callable
 
 from ..._core import Dispatcher
-from ..._events import CleanupEvent
+from ...events import CleanupEvent
 from ..plugin import Plugin
 
 __all__ = ("Terminator",)

@@ -14,7 +14,7 @@ from baby_steps import given, then, when
 
 from vedro import Scenario
 from vedro._core import Dispatcher, Runner, VirtualScenario, VirtualStep
-from vedro._events import (
+from vedro.events import (
     ExceptionRaisedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,

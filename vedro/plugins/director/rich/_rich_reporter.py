@@ -1,6 +1,7 @@
+import json
 import os
 from traceback import format_exception
-from typing import Callable, Union
+from typing import Any, Callable, Dict, Generator, Tuple, Union
 
 from rich.console import Console
 from rich.style import Style
@@ -8,7 +9,7 @@ from rich.style import Style
 import vedro
 
 from ...._core import Dispatcher, ExcInfo
-from ...._events import (
+from ....events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
@@ -19,7 +20,7 @@ from ...._events import (
     StartupEvent,
 )
 from .._reporter import Reporter
-from .utils import format_scope, make_console
+from .utils import make_console
 
 __all__ = ("RichReporter",)
 
@@ -68,6 +69,14 @@ class RichReporter(Reporter):
         subject = event.scenario_result.scenario_subject
         self._console.out(f" ✔ {subject}", style=Style(color="green"))
 
+    def _format_scope(self, scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
+        for key, val in scope.items():
+            try:
+                val_repr = json.dumps(val, ensure_ascii=False, indent=4)
+            except:  # noqa: E722
+                val_repr = repr(val)
+            yield str(key), val_repr
+
     def _format_exception(self, exc_info: ExcInfo, show_internal_calls: bool = True) -> str:
         tb = exc_info.traceback
         if not show_internal_calls:
@@ -107,7 +116,7 @@ class RichReporter(Reporter):
 
         if event.scenario_result.scope:
             self._console.out("Scope:", style=Style(color="blue", bold=True))
-            for key, val in format_scope(event.scenario_result.scope):
+            for key, val in self._format_scope(event.scenario_result.scope):
                 self._console.out(f" {key}: ", end="", style=Style(color="blue"))
                 self._console.out(val)
             self._console.out(" ")

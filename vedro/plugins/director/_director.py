@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
 from ..._core import Dispatcher
-from ..._events import ArgParseEvent
+from ...events import ArgParseEvent
 from ..plugin import Plugin
 from ._reporter import Reporter
 

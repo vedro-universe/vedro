@@ -3,7 +3,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import List, Optional
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, sentinel
 
 import pytest
 from baby_steps import given, then, when
@@ -19,7 +19,7 @@ from vedro._core import (
     VirtualScenario,
     VirtualStep,
 )
-from vedro._events import (
+from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
@@ -486,4 +486,44 @@ async def test_rich_reporter_failed_cleanup_event(*, dispatcher: Dispatcher,
                      style=Style.parse("bold red"),
                      end=""),
             call.out(" (3.14s)", style=Style.parse("blue"))
+        ]
+
+
+def test_rich_reporter_format_scope_without_values(*, reporter: RichReporter):
+    with given:
+        scope = {}
+
+    with when:
+        res = list(reporter._format_scope(scope))
+
+    with then:
+        assert res == []
+
+
+def test_rich_reporter_format_scope_with_values(*, reporter: RichReporter):
+    with given:
+        scope = {"key_int": 1, "key_str": "val"}
+
+    with when:
+        res = list(reporter._format_scope(scope))
+
+    with then:
+        assert res == [
+            ("key_int", "1"),
+            ("key_str", '"val"'),
+        ]
+
+
+def test_rich_reporter_format_scope_with_unserializable_value(*, reporter: RichReporter):
+    with given:
+        unserializable = sentinel
+        scope = {"key_int": 1, "key_unserializable": unserializable}
+
+    with when:
+        res = list(reporter._format_scope(scope))
+
+    with then:
+        assert res == [
+            ("key_int", "1"),
+            ("key_unserializable", repr(unserializable)),
         ]

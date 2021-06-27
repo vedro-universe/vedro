@@ -2,7 +2,8 @@ import sys
 from time import time
 from typing import List, Tuple, Type
 
-from .._events import (
+from .._scenario import Scenario
+from ..events import (
     ExceptionRaisedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
@@ -12,7 +13,6 @@ from .._events import (
     StepPassedEvent,
     StepRunEvent,
 )
-from .._scenario import Scenario
 from ._dispatcher import Dispatcher
 from ._exc_info import ExcInfo
 from ._report import Report
