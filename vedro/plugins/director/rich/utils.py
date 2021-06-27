@@ -23,8 +23,6 @@ def make_console(**options: Any) -> Console:
     default_options = dict(
         highlight=False,
         force_terminal=True,
-        markup=False,
-        emoji=False,
         width=size.columns,
         height=size.lines,
     )

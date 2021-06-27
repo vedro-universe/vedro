@@ -1,7 +1,5 @@
 import os
-import sys
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from asyncio import CancelledError
+from argparse import ArgumentParser, HelpFormatter
 from pathlib import Path
 from typing import List
 
@@ -16,9 +14,13 @@ __all__ = ("Lifecycle",)
 
 
 class Lifecycle:
-    def __init__(self, dispatcher: Dispatcher, discoverer: ScenarioDiscoverer) -> None:
+    def __init__(self,
+                 dispatcher: Dispatcher,
+                 discoverer: ScenarioDiscoverer,
+                 runner: Runner) -> None:
         self._dispatcher = dispatcher
         self._discoverer = discoverer
+        self._runner = runner
         self._plugins: List[Plugin] = []
 
     def register_plugins(self, plugins: List[Plugin]) -> None:
@@ -27,13 +29,10 @@ class Lifecycle:
             self._plugins.append(plugin)
 
     async def start(self) -> Report:
-        os.chdir(os.path.dirname(os.path.join(os.getcwd(), sys.argv[0])))
-
-        formatter = ArgumentDefaultsHelpFormatter
-        arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False)
+        arg_parser = ArgumentParser("vedro", formatter_class=HelpFormatter, add_help=False)
         await self._dispatcher.fire(ArgParseEvent(arg_parser))
         arg_parser.add_argument("-h", "--help",
-                                action="help", help="show this help message and exit")
+                                action="help", help="Show this help message and exit")
         args = arg_parser.parse_args()
         await self._dispatcher.fire(ArgParsedEvent(args))
 
@@ -41,12 +40,12 @@ class Lifecycle:
         scenarios = await self._discoverer.discover(Path(start_dir))
         await self._dispatcher.fire(StartupEvent(scenarios))
 
-        runner = Runner(self._dispatcher, (KeyboardInterrupt, SystemExit, CancelledError,))
-        report = await runner.run(scenarios)
+        report = await self._runner.run(scenarios)
 
         await self._dispatcher.fire(CleanupEvent(report))
 
         return report
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._dispatcher!r}, {self._discoverer!r})"
+        cls_name = self.__class__.__name__
+        return f"{cls_name}({self._dispatcher!r}, {self._discoverer!r}, {self._runner!r})"

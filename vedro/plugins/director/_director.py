@@ -20,8 +20,8 @@ class Director(Plugin):
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         if len(self._reporters) == 0:
             return
-        event.arg_parser.add_argument("-r", "--reporters", nargs='*',
-                                      choices=self._reporters, default=[self._default_reporter])
+        event.arg_parser.add_argument("-r", "--reporters", nargs='*', choices=self._reporters,
+                                      default=[self._default_reporter], help="Set reporter")
         args, *_ = event.arg_parser.parse_known_args()
         for reporter_name in args.reporters:
             reporter = self._reporters[reporter_name]

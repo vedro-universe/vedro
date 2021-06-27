@@ -12,7 +12,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 from baby_steps import given, then, when
 
-from vedro._core import Dispatcher, Lifecycle, Report, ScenarioDiscoverer
+from vedro._core import Dispatcher, Lifecycle, Report, Runner, ScenarioDiscoverer
 from vedro._events import ArgParsedEvent, CleanupEvent, StartupEvent
 from vedro.plugins import Plugin
 
@@ -28,9 +28,16 @@ def discoverer_():
     return discoverer
 
 
-def test_lifecycle_register_plugins(*, dispatcher_: Dispatcher, discoverer_: ScenarioDiscoverer):
+@pytest.fixture()
+def runner_(dispatcher_: Dispatcher):
+    report = Report()
+    return Mock(Runner(dispatcher_), run=AsyncMock(return_value=report))
+
+
+def test_lifecycle_register_plugins(*, dispatcher_: Dispatcher,
+                                    discoverer_: ScenarioDiscoverer, runner_: Runner):
     with given:
-        lifecycle = Lifecycle(dispatcher_, discoverer_)
+        lifecycle = Lifecycle(dispatcher_, discoverer_, runner_)
         plugin1 = Mock(Plugin)
         plugin2 = Mock(Plugin)
 
@@ -47,12 +54,12 @@ def test_lifecycle_register_plugins(*, dispatcher_: Dispatcher, discoverer_: Sce
 
 @pytest.mark.asyncio
 async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
-                                        discoverer_: ScenarioDiscoverer):
+                                        discoverer_: ScenarioDiscoverer, runner_: Runner):
     with given:
         scenarios = []
         discoverer_.discover = AsyncMock(return_value=scenarios)
 
-        lifecycle = Lifecycle(dispatcher_, discoverer_)
+        lifecycle = Lifecycle(dispatcher_, discoverer_, runner_)
         namespace = Namespace()
 
     with when, patch("argparse.ArgumentParser.parse_args", return_value=namespace):
@@ -63,6 +70,9 @@ async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
         assert discoverer_.mock_calls == [
             call.discover(Path("scenarios"))
         ]
+        assert runner_.mock_calls == [
+            call.run(scenarios),
+        ]
         assert dispatcher_.mock_calls[1:] == [
             call.fire(ArgParsedEvent(namespace)),
             call.fire(StartupEvent(scenarios)),
@@ -70,9 +80,10 @@ async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
         ]
 
 
-def test_lifecycle_repr(*, dispatcher_: Dispatcher, discoverer_: ScenarioDiscoverer):
+def test_lifecycle_repr(*, dispatcher_: Dispatcher,
+                        discoverer_: ScenarioDiscoverer, runner_: Runner):
     with when:
-        lifecycle = Lifecycle(dispatcher_, discoverer_)
+        lifecycle = Lifecycle(dispatcher_, discoverer_, runner_)
 
     with then:
-        assert repr(lifecycle) == f"Lifecycle({dispatcher_!r}, {discoverer_!r})"
+        assert repr(lifecycle) == f"Lifecycle({dispatcher_!r}, {discoverer_!r}, {runner_!r})"

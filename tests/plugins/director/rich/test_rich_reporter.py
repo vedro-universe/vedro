@@ -22,10 +22,10 @@ from vedro._events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
-    ScenarioFailEvent,
-    ScenarioPassEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
     ScenarioRunEvent,
-    ScenarioSkipEvent,
+    ScenarioSkippedEvent,
     StartupEvent,
 )
 from vedro.plugins.director import RichReporter
@@ -118,7 +118,7 @@ async def test_rich_reporter_startup_event(*, dispatcher: Dispatcher,
 
     with then:
         assert console_.mock_calls == [
-            call.print("Scenarios")
+            call.out("Scenarios")
         ]
 
 
@@ -137,7 +137,7 @@ async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
 
     with then:
         assert console_.mock_calls == [
-            call.print(f"* {namespace}", style=Style.parse("bold"))
+            call.out(f"* {namespace}", style=Style.parse("bold"))
         ]
 
 
@@ -183,7 +183,7 @@ async def test_rich_reporter_scenario_run_event_diff_namespace(*, dispatcher: Di
 
     with then:
         assert console_.mock_calls == [
-            call.print(f"* {namespace2}", style=Style.parse("bold")),
+            call.out(f"* {namespace2}", style=Style.parse("bold")),
         ]
 
 
@@ -194,7 +194,7 @@ async def test_rich_reporter_scenario_skip_event(*, dispatcher: Dispatcher,
         reporter.subscribe(dispatcher)
 
         scenario_result = make_scenario_result()
-        event = ScenarioSkipEvent(scenario_result)
+        event = ScenarioSkippedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
@@ -211,14 +211,14 @@ async def test_rich_reporter_scenario_pass_event(*, dispatcher: Dispatcher,
 
         subject = "<subject>"
         scenario_result = make_scenario_result(scenario_subject=subject)
-        event = ScenarioPassEvent(scenario_result)
+        event = ScenarioPassedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         assert console_.mock_calls == [
-            call.print(f" ✔ {subject}", style=Style.parse("green"))
+            call.out(f" ✔ {subject}", style=Style.parse("green"))
         ]
 
 
@@ -231,14 +231,14 @@ async def test_rich_reporter_scenario_fail_event_default_verbose(*, dispatcher: 
 
         subject = "<subject>"
         scenario_result = make_scenario_result(scenario_subject=subject)
-        event = ScenarioFailEvent(scenario_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         assert console_.mock_calls == [
-            call.print(f" ✗ {subject}", style=Style.parse("red"))
+            call.out(f" ✗ {subject}", style=Style.parse("red"))
         ]
 
 
@@ -252,14 +252,14 @@ async def test_rich_reporter_scenario_fail_event_verbose0(*, dispatcher: Dispatc
         await dispatcher.fire(event)
 
         scenario_result = make_scenario_result()
-        event = ScenarioFailEvent(scenario_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         assert console_.mock_calls == [
-            call.print(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red"))
+            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red"))
         ]
 
 
@@ -283,16 +283,16 @@ async def test_rich_reporter_scenario_fail_event_verbose1(*, dispatcher: Dispatc
             step_result_failed,
             step_result,
         ])
-        event = ScenarioFailEvent(scenario_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         assert console_.mock_calls == [
-            call.print(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
-            call.print(f"    ✔ {step_name_passed}", style=Style.parse("green")),
-            call.print(f"    ✗ {step_name_failed}", style=Style.parse("red")),
+            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+            call.out(f"    ✔ {step_name_passed}", style=Style.parse("green")),
+            call.out(f"    ✗ {step_name_failed}", style=Style.parse("red")),
         ]
 
 
@@ -317,17 +317,17 @@ async def test_rich_reporter_scenario_fail_event_verbose2(*, dispatcher: Dispatc
             step_result_failed,
             step_result,
         ])
-        event = ScenarioFailEvent(scenario_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         assert console_.mock_calls == [
-            call.print(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
-            call.print(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
-            call.print(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
-            call.print("AssertionError\n", style=Style.parse("yellow")),
+            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+            call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
+            call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
+            call.out("AssertionError\n", style=Style.parse("yellow")),
         ]
 
 
@@ -352,23 +352,23 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
             step_result,
         ])
         scenario_result.set_scope({"key_int": 1, "key_str": "val"})
-        event = ScenarioFailEvent(scenario_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         assert console_.mock_calls == [
-            call.print(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
-            call.print(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
-            call.print(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
-            call.print("AssertionError\n", style=Style.parse("yellow")),
-            call.print("Scope:", style=Style.parse("bold blue")),
-            call.print(" key_int: ", end="", style=Style.parse("blue")),
-            call.print("1"),
-            call.print(" key_str: ", end="", style=Style.parse("blue")),
-            call.print('"val"'),
-            call.print(),
+            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+            call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
+            call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
+            call.out("AssertionError\n", style=Style.parse("yellow")),
+            call.out("Scope:", style=Style.parse("bold blue")),
+            call.out(" key_int: ", end="", style=Style.parse("blue")),
+            call.out("1"),
+            call.out(" key_str: ", end="", style=Style.parse("blue")),
+            call.out('"val"'),
+            call.out(" "),
         ]
 
 
@@ -383,14 +383,14 @@ async def test_rich_reporter_scenario_fail_event_without_steps_verbose3(*, dispa
 
         scenario_result = make_scenario_result()
         scenario_result.set_scope({})
-        event = ScenarioFailEvent(scenario_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         assert console_.mock_calls == [
-            call.print(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
         ]
 
 
@@ -409,10 +409,11 @@ async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher):
 
     with then:
         assert console_.mock_calls == [
-            call.print(),
-            call.print("# 0 scenarios, 0 passed, 0 failed, 0 skipped",
-                       style=Style.parse("bold red"), end=""),
-            call.print(" (0.00s)", style=Style.parse("blue"))
+            call.out(" "),
+            call.out("# 0 scenarios, 0 passed, 0 failed, 0 skipped",
+                     style=Style.parse("bold red"),
+                     end=""),
+            call.out(" (0.00s)", style=Style.parse("blue"))
         ]
 
 
@@ -442,11 +443,11 @@ async def test_rich_reporter_success_cleanup_event(*, dispatcher: Dispatcher,
 
     with then:
         assert console_.mock_calls == [
-            call.print(),
-            call.print("# 3 scenarios, 2 passed, 0 failed, 1 skipped",
-                       style=Style.parse("bold green"),
-                       end=""),
-            call.print(" (2.00s)", style=Style.parse("blue"))
+            call.out(" "),
+            call.out("# 3 scenarios, 2 passed, 0 failed, 1 skipped",
+                     style=Style.parse("bold green"),
+                     end=""),
+            call.out(" (2.00s)", style=Style.parse("blue"))
         ]
 
 
@@ -469,9 +470,9 @@ async def test_rich_reporter_failed_cleanup_event(*, dispatcher: Dispatcher,
 
     with then:
         assert console_.mock_calls == [
-            call.print(),
-            call.print("# 1 scenarios, 0 passed, 1 failed, 0 skipped",
-                       style=Style.parse("bold red"),
-                       end=""),
-            call.print(" (3.14s)", style=Style.parse("blue"))
+            call.out(" "),
+            call.out("# 1 scenarios, 0 passed, 1 failed, 0 skipped",
+                     style=Style.parse("bold red"),
+                     end=""),
+            call.out(" (3.14s)", style=Style.parse("blue"))
         ]

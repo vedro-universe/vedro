@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from typing import List
 
+from .._core._exc_info import ExcInfo
 from .._core._report import Report
 from .._core._scenario_result import ScenarioResult
 from .._core._step_result import StepResult
@@ -56,7 +57,11 @@ class _ScenarioEvent(Event):
         return f"{self.__class__.__name__}({self._scenario_result!r})"
 
 
-class ScenarioSkipEvent(_ScenarioEvent):
+class ScenarioSkippedEvent(_ScenarioEvent):
+    pass
+
+
+class ScenarioFailedEvent(_ScenarioEvent):
     pass
 
 
@@ -64,11 +69,7 @@ class ScenarioRunEvent(_ScenarioEvent):
     pass
 
 
-class ScenarioFailEvent(_ScenarioEvent):
-    pass
-
-
-class ScenarioPassEvent(_ScenarioEvent):
+class ScenarioPassedEvent(_ScenarioEvent):
     pass
 
 
@@ -88,12 +89,24 @@ class StepRunEvent(_StepEvent):
     pass
 
 
-class StepFailEvent(_StepEvent):
+class StepFailedEvent(_StepEvent):
     pass
 
 
-class StepPassEvent(_StepEvent):
+class StepPassedEvent(_StepEvent):
     pass
+
+
+class ExceptionRaisedEvent(Event):
+    def __init__(self, exc_info: ExcInfo) -> None:
+        self._exc_info = exc_info
+
+    @property
+    def exc_info(self) -> ExcInfo:
+        return self._exc_info
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._exc_info!r})"
 
 
 class CleanupEvent(Event):
@@ -108,6 +121,7 @@ class CleanupEvent(Event):
         return f"{self.__class__.__name__}({self._report!r})"
 
 
-__all__ = ("Event", "ArgParseEvent", "ArgParsedEvent", "StartupEvent",
-           "ScenarioSkipEvent", "ScenarioRunEvent", "ScenarioFailEvent", "ScenarioPassEvent",
-           "StepRunEvent", "StepFailEvent", "StepPassEvent", "CleanupEvent",)
+__all__ = ("Event", "ArgParseEvent", "ArgParsedEvent", "StartupEvent", "ScenarioRunEvent",
+           "ScenarioSkippedEvent", "ScenarioFailedEvent", "ScenarioPassedEvent",
+           "StepRunEvent", "StepFailedEvent", "StepPassedEvent", "ExceptionRaisedEvent",
+           "CleanupEvent")

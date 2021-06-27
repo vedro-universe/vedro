@@ -3,12 +3,13 @@ from time import time
 from typing import List, Tuple, Type
 
 from .._events import (
-    ScenarioFailEvent,
-    ScenarioPassEvent,
+    ExceptionRaisedEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
     ScenarioRunEvent,
-    ScenarioSkipEvent,
-    StepFailEvent,
-    StepPassEvent,
+    ScenarioSkippedEvent,
+    StepFailedEvent,
+    StepPassedEvent,
     StepRunEvent,
 )
 from .._scenario import Scenario
@@ -41,16 +42,20 @@ class Runner:
                 step(ref)
         except:  # noqa: E722
             step_result.set_ended_at(time())
+
             exc_info = ExcInfo(*sys.exc_info())
+            await self._dispatcher.fire(ExceptionRaisedEvent(exc_info))
             step_result.set_exc_info(exc_info)
+
             step_result.mark_failed()
-            await self._dispatcher.fire(StepFailEvent(step_result))
+            await self._dispatcher.fire(StepFailedEvent(step_result))
+
             if exc_info.type in self._interrupt_exceptions:
                 raise exc_info.value
         else:
             step_result.set_ended_at(time())
             step_result.mark_passed()
-            await self._dispatcher.fire(StepPassEvent(step_result))
+            await self._dispatcher.fire(StepPassedEvent(step_result))
 
         return step_result
 
@@ -61,7 +66,7 @@ class Runner:
 
         if scenario.is_skipped():
             scenario_result.mark_skipped()
-            await self._dispatcher.fire(ScenarioSkipEvent(scenario_result))
+            await self._dispatcher.fire(ScenarioSkippedEvent(scenario_result))
             return scenario_result
 
         await self._dispatcher.fire(ScenarioRunEvent(scenario_result))
@@ -73,13 +78,13 @@ class Runner:
             if step_result.is_failed():
                 scenario_result.set_ended_at(time())
                 scenario_result.mark_failed()
-                await self._dispatcher.fire(ScenarioFailEvent(scenario_result))
+                await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
                 break
 
         if not scenario_result.is_failed():
             scenario_result.set_ended_at(time())
             scenario_result.mark_passed()
-            await self._dispatcher.fire(ScenarioPassEvent(scenario_result))
+            await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
 
         return scenario_result
 

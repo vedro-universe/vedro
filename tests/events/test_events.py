@@ -4,19 +4,20 @@ from unittest.mock import Mock
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro._core import Report, ScenarioResult, StepResult, VirtualScenario, VirtualStep
+from vedro._core import ExcInfo, Report, ScenarioResult, StepResult, VirtualScenario, VirtualStep
 from vedro._events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
     Event,
-    ScenarioFailEvent,
-    ScenarioPassEvent,
+    ExceptionRaisedEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
     ScenarioRunEvent,
-    ScenarioSkipEvent,
+    ScenarioSkippedEvent,
     StartupEvent,
-    StepFailEvent,
-    StepPassEvent,
+    StepFailedEvent,
+    StepPassedEvent,
     StepRunEvent,
 )
 
@@ -80,19 +81,6 @@ def test_startup_event():
         assert repr(event) == f"StartupEvent({scenarios!r})"
 
 
-def test_scenario_skip_event():
-    with given:
-        scenario_ = Mock(VirtualScenario)
-        scenario_result = ScenarioResult(scenario_)
-
-    with when:
-        event = ScenarioSkipEvent(scenario_result)
-
-    with then:
-        assert event.scenario_result == scenario_result
-        assert repr(event) == f"ScenarioSkipEvent({scenario_result!r})"
-
-
 def test_scenario_run_event():
     with given:
         scenario_ = Mock(VirtualScenario)
@@ -106,17 +94,30 @@ def test_scenario_run_event():
         assert repr(event) == f"ScenarioRunEvent({scenario_result!r})"
 
 
+def test_scenario_skip_event():
+    with given:
+        scenario_ = Mock(VirtualScenario)
+        scenario_result = ScenarioResult(scenario_)
+
+    with when:
+        event = ScenarioSkippedEvent(scenario_result)
+
+    with then:
+        assert event.scenario_result == scenario_result
+        assert repr(event) == f"ScenarioSkippedEvent({scenario_result!r})"
+
+
 def test_scenario_fail_event():
     with given:
         scenario_ = Mock(VirtualScenario)
         scenario_result = ScenarioResult(scenario_)
 
     with when:
-        event = ScenarioFailEvent(scenario_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with then:
         assert event.scenario_result == scenario_result
-        assert repr(event) == f"ScenarioFailEvent({scenario_result!r})"
+        assert repr(event) == f"ScenarioFailedEvent({scenario_result!r})"
 
 
 def test_scenario_pass_event():
@@ -125,11 +126,11 @@ def test_scenario_pass_event():
         scenario_result = ScenarioResult(scenario_)
 
     with when:
-        event = ScenarioPassEvent(scenario_result)
+        event = ScenarioPassedEvent(scenario_result)
 
     with then:
         assert event.scenario_result == scenario_result
-        assert repr(event) == f"ScenarioPassEvent({scenario_result!r})"
+        assert repr(event) == f"ScenarioPassedEvent({scenario_result!r})"
 
 
 def test_step_run_event():
@@ -151,11 +152,11 @@ def test_step_fail_event():
         step_result = StepResult(step_)
 
     with when:
-        event = StepFailEvent(step_result)
+        event = StepFailedEvent(step_result)
 
     with then:
         assert event.step_result == step_result
-        assert repr(event) == f"StepFailEvent({step_result!r})"
+        assert repr(event) == f"StepFailedEvent({step_result!r})"
 
 
 def test_step_pass_event():
@@ -164,11 +165,24 @@ def test_step_pass_event():
         step_result = StepResult(step_)
 
     with when:
-        event = StepPassEvent(step_result)
+        event = StepPassedEvent(step_result)
 
     with then:
         assert event.step_result == step_result
-        assert repr(event) == f"StepPassEvent({step_result!r})"
+        assert repr(event) == f"StepPassedEvent({step_result!r})"
+
+
+def test_exception_raised_event():
+    with given:
+        exception = AssertionError()
+        exc_info = ExcInfo(type(exception), exception, None)
+
+    with when:
+        event = ExceptionRaisedEvent(exc_info)
+
+    with then:
+        assert event.exc_info == exc_info
+        assert repr(event) == f"ExceptionRaisedEvent({exc_info!r})"
 
 
 def test_cleanup_event():

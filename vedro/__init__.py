@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import CancelledError
 from typing import List, Optional
 
 from ._context import context
@@ -56,7 +57,8 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
         Terminator(),
     ]
 
-    lifecycle = Lifecycle(dispatcher, discoverer)
+    runner = Runner(dispatcher, (KeyboardInterrupt, SystemExit, CancelledError,))
+    lifecycle = Lifecycle(dispatcher, discoverer, runner)
     lifecycle.register_plugins(all_plugins)
 
     asyncio.run(lifecycle.start())

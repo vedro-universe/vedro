@@ -15,11 +15,12 @@ from baby_steps import given, then, when
 from vedro import Scenario
 from vedro._core import Dispatcher, Runner, VirtualScenario, VirtualStep
 from vedro._events import (
-    ScenarioFailEvent,
-    ScenarioPassEvent,
+    ExceptionRaisedEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
     ScenarioRunEvent,
-    StepFailEvent,
-    StepPassEvent,
+    StepFailedEvent,
+    StepPassedEvent,
     StepRunEvent,
 )
 
@@ -55,7 +56,7 @@ async def test_runner_run_step_passed(method_mock_factory: Mock, *,
 
         assert dispatcher_.mock_calls == [
             call.fire(StepRunEvent(step_result)),
-            call.fire(StepPassEvent(step_result)),
+            call.fire(StepPassedEvent(step_result)),
         ]
 
 
@@ -82,7 +83,8 @@ async def test_runner_run_step_failed(method_mock_factory: Mock, *,
 
         assert dispatcher_.mock_calls == [
             call.fire(StepRunEvent(step_result)),
-            call.fire(StepFailEvent(step_result)),
+            call.fire(ExceptionRaisedEvent(step_result.exc_info)),
+            call.fire(StepFailedEvent(step_result)),
         ]
 
 
@@ -120,7 +122,7 @@ async def test_runner_run_scenario_no_steps_passed(*, runner: Runner, dispatcher
 
         assert dispatcher_.mock_calls == [
             call.fire(ScenarioRunEvent(scenario_result)),
-            call.fire(ScenarioPassEvent(scenario_result)),
+            call.fire(ScenarioPassedEvent(scenario_result)),
         ]
 
 
@@ -143,8 +145,8 @@ async def test_runner_run_scenario_single_step_passed(*, runner: Runner, dispatc
         assert dispatcher_.mock_calls == [
             call.fire(ScenarioRunEvent(scenario_result)),
             call.fire(StepRunEvent(step_results[0])),
-            call.fire(StepPassEvent(step_results[0])),
-            call.fire(ScenarioPassEvent(scenario_result)),
+            call.fire(StepPassedEvent(step_results[0])),
+            call.fire(ScenarioPassedEvent(scenario_result)),
         ]
 
 
@@ -169,8 +171,9 @@ async def test_runner_run_scenario_single_step_failed(*, runner: Runner, dispatc
         assert dispatcher_.mock_calls == [
             call.fire(ScenarioRunEvent(scenario_result)),
             call.fire(StepRunEvent(step_results[0])),
-            call.fire(StepFailEvent(step_results[0])),
-            call.fire(ScenarioFailEvent(scenario_result)),
+            call.fire(ExceptionRaisedEvent(step_results[0].exc_info)),
+            call.fire(StepFailedEvent(step_results[0])),
+            call.fire(ScenarioFailedEvent(scenario_result)),
         ]
 
 
@@ -200,12 +203,12 @@ async def test_runner_run_scenario_multiple_steps_passed(*, runner: Runner,
             call.fire(ScenarioRunEvent(scenario_result)),
 
             call.fire(StepRunEvent(first_step_result)),
-            call.fire(StepPassEvent(first_step_result)),
+            call.fire(StepPassedEvent(first_step_result)),
 
             call.fire(StepRunEvent(second_step_result)),
-            call.fire(StepPassEvent(second_step_result)),
+            call.fire(StepPassedEvent(second_step_result)),
 
-            call.fire(ScenarioPassEvent(scenario_result)),
+            call.fire(ScenarioPassedEvent(scenario_result)),
         ]
 
 
@@ -240,12 +243,13 @@ async def test_runner_run_scenario_multiple_steps_failed():
             call.fire(ScenarioRunEvent(scenario_result)),
 
             call.fire(StepRunEvent(first_step_result)),
-            call.fire(StepPassEvent(first_step_result)),
+            call.fire(StepPassedEvent(first_step_result)),
 
             call.fire(StepRunEvent(second_step_result)),
-            call.fire(StepFailEvent(second_step_result)),
+            call.fire(ExceptionRaisedEvent(second_step_result.exc_info)),
+            call.fire(StepFailedEvent(second_step_result)),
 
-            call.fire(ScenarioFailEvent(scenario_result)),
+            call.fire(ScenarioFailedEvent(scenario_result)),
         ]
 
 

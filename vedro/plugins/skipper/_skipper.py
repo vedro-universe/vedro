@@ -20,9 +20,11 @@ class Skipper(Plugin):
                   .listen(StartupEvent, self.on_startup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("file_or_dir", nargs='*', default=["."])
-        event.arg_parser.add_argument("-i", "--ignore", nargs='+', default=[])
-        event.arg_parser.add_argument("-s", "--subject")
+        event.arg_parser.add_argument("file_or_dir", nargs='*', default=["."],
+                                      help="Select scenarios in a given file or directory")
+        event.arg_parser.add_argument("-i", "--ignore", nargs='+', default=[],
+                                      help="Skip scenarios in a given file or directory")
+        event.arg_parser.add_argument("--subject", help="Select scenarios with a given subject")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._subject = event.args.subject
