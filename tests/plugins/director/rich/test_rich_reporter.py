@@ -1,4 +1,5 @@
 import os
+import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import List, Optional
@@ -71,7 +72,15 @@ def make_step_result(name: Optional[str] = None) -> StepResult:
 
 
 def make_exc_info(value: Exception) -> ExcInfo:
-    return ExcInfo(type(value), value, None)
+    try:
+        raise value
+    except type(value):
+        *_, traceback = sys.exc_info()
+    return ExcInfo(type(value), value, traceback)
+
+
+def make_parsed_args(verbose: int = 0, tb_show_internals: bool = False) -> Namespace:
+    return Namespace(verbose=verbose, tb_show_internals=tb_show_internals)
 
 
 @pytest.mark.asyncio
@@ -96,7 +105,7 @@ async def test_rich_reporter_arg_parsed_event(*, dispatcher: Dispatcher,
     with given:
         reporter.subscribe(dispatcher)
 
-        args = Namespace(verbose=0)
+        args = make_parsed_args()
         event = ArgParsedEvent(args)
 
     with when:
@@ -248,7 +257,7 @@ async def test_rich_reporter_scenario_fail_event_verbose0(*, dispatcher: Dispatc
                                                           console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
-        event = ArgParsedEvent(Namespace(verbose=0))
+        event = ArgParsedEvent(make_parsed_args(verbose=0))
         await dispatcher.fire(event)
 
         scenario_result = make_scenario_result()
@@ -269,7 +278,7 @@ async def test_rich_reporter_scenario_fail_event_verbose1(*, dispatcher: Dispatc
                                                           console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
-        event = ArgParsedEvent(Namespace(verbose=1))
+        event = ArgParsedEvent(make_parsed_args(verbose=1))
         await dispatcher.fire(event)
 
         step_name_passed = "<passed step>"
@@ -302,13 +311,14 @@ async def test_rich_reporter_scenario_fail_event_verbose2(*, dispatcher: Dispatc
                                                           console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
-        event = ArgParsedEvent(Namespace(verbose=2))
+        event = ArgParsedEvent(make_parsed_args(verbose=2))
         await dispatcher.fire(event)
 
         step_result_passed = make_step_result().mark_passed()
         step_result_failed = make_step_result().mark_failed()
 
         exc_info = make_exc_info(AssertionError())
+        formatted_tb = reporter._format_exception(exc_info)
         step_result_failed.set_exc_info(exc_info)
         step_result = make_step_result()
 
@@ -327,7 +337,7 @@ async def test_rich_reporter_scenario_fail_event_verbose2(*, dispatcher: Dispatc
             call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
-            call.out("AssertionError\n", style=Style.parse("yellow")),
+            call.out(formatted_tb, style=Style.parse("yellow")),
         ]
 
 
@@ -337,12 +347,13 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
                                                           console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
-        event = ArgParsedEvent(Namespace(verbose=3))
+        event = ArgParsedEvent(make_parsed_args(verbose=3))
         await dispatcher.fire(event)
 
         step_result_passed = make_step_result("<passed step>").mark_passed()
         step_result_failed = make_step_result("<failed step>").mark_failed()
         exc_info = make_exc_info(AssertionError())
+        formatted_tb = reporter._format_exception(exc_info)
         step_result_failed.set_exc_info(exc_info)
         step_result = make_step_result()
 
@@ -362,7 +373,7 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
             call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
-            call.out("AssertionError\n", style=Style.parse("yellow")),
+            call.out(formatted_tb, style=Style.parse("yellow")),
             call.out("Scope:", style=Style.parse("bold blue")),
             call.out(" key_int: ", end="", style=Style.parse("blue")),
             call.out("1"),
@@ -378,7 +389,7 @@ async def test_rich_reporter_scenario_fail_event_without_steps_verbose3(*, dispa
                                                                         console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
-        event = ArgParsedEvent(Namespace(verbose=3))
+        event = ArgParsedEvent(make_parsed_args(verbose=3))
         await dispatcher.fire(event)
 
         scenario_result = make_scenario_result()

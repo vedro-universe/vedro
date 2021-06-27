@@ -1,10 +1,13 @@
+import os
 from traceback import format_exception
 from typing import Callable, Union
 
 from rich.console import Console
 from rich.style import Style
 
-from ...._core import Dispatcher
+import vedro
+
+from ...._core import Dispatcher, ExcInfo
 from ...._events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -25,6 +28,7 @@ class RichReporter(Reporter):
     def __init__(self, console_factory: Callable[[], Console] = make_console) -> None:
         self._console = console_factory()
         self._verbosity = 0
+        self._tb_show_internals = False
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -42,9 +46,12 @@ class RichReporter(Reporter):
                         "(-v: show steps, -vv: show exception, -vvv: show scope)")
         event.arg_parser.add_argument("-v", "--verbose", action="count", default=self._verbosity,
                                       help=help_message)
+        event.arg_parser.add_argument("--tb-show-internals", action='store_true', default=False,
+                                      help="Show internal calls in the traceback output")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
+        self._tb_show_internals = event.args.tb_show_internals
 
     def on_startup(self, event: StartupEvent) -> None:
         self._console.out("Scenarios")
@@ -60,6 +67,19 @@ class RichReporter(Reporter):
     def on_scenario_passed(self, event: ScenarioPassedEvent) -> None:
         subject = event.scenario_result.scenario_subject
         self._console.out(f" ✔ {subject}", style=Style(color="green"))
+
+    def _format_exception(self, exc_info: ExcInfo, show_internal_calls: bool = True) -> str:
+        tb = exc_info.traceback
+        if not show_internal_calls:
+            root = os.path.dirname(vedro.__file__)
+            while tb.tb_next is not None:
+                filename = os.path.abspath(tb.tb_frame.f_code.co_filename)
+                if os.path.commonpath([root, filename]) != root:
+                    break
+                tb = tb.tb_next
+
+        formatted = format_exception(exc_info.type, exc_info.value, tb)
+        return "".join(formatted)
 
     def on_scenario_failed(self, event: ScenarioFailedEvent) -> None:
         subject = event.scenario_result.scenario_subject
@@ -79,12 +99,8 @@ class RichReporter(Reporter):
 
         for step_result in event.scenario_result.step_results:
             if step_result.exc_info:
-                tb = format_exception(
-                    step_result.exc_info.type,
-                    step_result.exc_info.value,
-                    step_result.exc_info.traceback,
-                )
-                self._console.out("".join(tb), style=Style(color="yellow"))
+                tb = self._format_exception(step_result.exc_info, self._tb_show_internals)
+                self._console.out(tb, style=Style(color="yellow"))
 
         if self._verbosity == 2:
             return

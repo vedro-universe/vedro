@@ -1,5 +1,6 @@
 import os
 from argparse import ArgumentParser, HelpFormatter
+from functools import partial
 from pathlib import Path
 from typing import List
 
@@ -29,7 +30,9 @@ class Lifecycle:
             self._plugins.append(plugin)
 
     async def start(self) -> Report:
-        arg_parser = ArgumentParser("vedro", formatter_class=HelpFormatter, add_help=False)
+        formatter = partial(HelpFormatter, max_help_position=30)
+        arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False)
+
         await self._dispatcher.fire(ArgParseEvent(arg_parser))
         arg_parser.add_argument("-h", "--help",
                                 action="help", help="Show this help message and exit")
