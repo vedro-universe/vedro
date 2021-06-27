@@ -8,7 +8,7 @@ from ._core._dispatcher import Dispatcher
 from ._core._lifecycle import Lifecycle
 from ._core._scenario_finder import ScenarioFileFinder
 from ._core._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
-from ._core._scenario_loader import ScenarioFileLoader
+from ._core._scenario_loader import ScenarioAssertRewriterLoader
 from ._interface import Interface
 from ._params import params
 from ._scenario import Scenario
@@ -34,7 +34,7 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
             DunderFilter(),
         ])
     )
-    loader = ScenarioFileLoader()
+    loader = ScenarioAssertRewriterLoader()
     discoverer = ScenarioDiscoverer(finder, loader)
     dispatcher = Dispatcher()
 
