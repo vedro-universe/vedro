@@ -1,6 +1,6 @@
 import re
 
-from ..plugin import Plugin
+from ..._core import Plugin
 
 __all__ = ("Reporter",)
 

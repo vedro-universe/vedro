@@ -3,9 +3,7 @@ from asyncio import CancelledError
 from typing import List, Optional
 
 from ._context import context
-from ._core import Runner, ScenarioDiscoverer
-from ._core._dispatcher import Dispatcher
-from ._core._lifecycle import Lifecycle
+from ._core import Dispatcher, Lifecycle, Plugin, Runner, ScenarioDiscoverer
 from ._core._scenario_finder import ScenarioFileFinder
 from ._core._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
 from ._core._scenario_loader import ScenarioAssertRewriterLoader
@@ -13,7 +11,6 @@ from ._interface import Interface
 from ._params import params
 from ._scenario import Scenario
 from ._version import version
-from .plugins import Plugin
 from .plugins.director import Director, Reporter, RichReporter, SilentReporter
 from .plugins.skipper import Skipper, only, skip
 from .plugins.terminator import Terminator

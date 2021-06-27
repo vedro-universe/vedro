@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import List
 
 from ..events import ArgParsedEvent, ArgParseEvent, CleanupEvent, StartupEvent
-from ..plugins import Plugin
 from ._dispatcher import Dispatcher
+from ._plugin import Plugin
 from ._report import Report
 from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer

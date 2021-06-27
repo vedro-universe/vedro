@@ -1,4 +1,4 @@
-from .._core._dispatcher import Subscriber
+from ._dispatcher import Subscriber
 
 __all__ = ("Plugin",)
 
