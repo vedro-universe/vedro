@@ -79,8 +79,14 @@ def make_exc_info(value: Exception) -> ExcInfo:
     return ExcInfo(type(value), value, traceback)
 
 
-def make_parsed_args(verbose: int = 0, tb_show_internals: bool = False) -> Namespace:
-    return Namespace(verbose=verbose, tb_show_internals=tb_show_internals)
+def make_parsed_args(*, verbose: int = 0,
+                     tb_show_locals: bool = False,
+                     tb_show_internal_calls: bool = False) -> Namespace:
+    return Namespace(
+        verbose=verbose,
+        tb_show_internal_calls=tb_show_internal_calls,
+        tb_show_locals=tb_show_locals,
+    )
 
 
 @pytest.mark.asyncio
@@ -318,7 +324,6 @@ async def test_rich_reporter_scenario_fail_event_verbose2(*, dispatcher: Dispatc
         step_result_failed = make_step_result().mark_failed()
 
         exc_info = make_exc_info(AssertionError())
-        formatted_tb = reporter._format_exception(exc_info)
         step_result_failed.set_exc_info(exc_info)
         step_result = make_step_result()
 
@@ -333,12 +338,13 @@ async def test_rich_reporter_scenario_fail_event_verbose2(*, dispatcher: Dispatc
         await dispatcher.fire(event)
 
     with then:
-        assert console_.mock_calls == [
+        assert console_.mock_calls[:3] == [
             call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
-            call.out(formatted_tb, style=Style.parse("yellow")),
         ]
+        assert "Traceback" in console_.mock_calls[3].args[0]
+        assert console_.mock_calls[3].kwargs["style"] == Style.parse("yellow")
 
 
 @pytest.mark.asyncio
@@ -353,7 +359,6 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
         step_result_passed = make_step_result("<passed step>").mark_passed()
         step_result_failed = make_step_result("<failed step>").mark_failed()
         exc_info = make_exc_info(AssertionError())
-        formatted_tb = reporter._format_exception(exc_info)
         step_result_failed.set_exc_info(exc_info)
         step_result = make_step_result()
 
@@ -369,18 +374,15 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
         await dispatcher.fire(event)
 
     with then:
-        assert console_.mock_calls == [
+        assert console_.mock_calls[:3] == [
             call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
-            call.out(formatted_tb, style=Style.parse("yellow")),
-            call.out("Scope:", style=Style.parse("bold blue")),
-            call.out(" key_int: ", end="", style=Style.parse("blue")),
-            call.out("1"),
-            call.out(" key_str: ", end="", style=Style.parse("blue")),
-            call.out('"val"'),
-            call.out(" "),
         ]
+        assert "Traceback" in console_.mock_calls[3].args[0]
+        assert console_.mock_calls[3].kwargs["style"] == Style.parse("yellow")
+        assert "Scope" in console_.mock_calls[4].args[0]
+        assert console_.mock_calls[4].kwargs["style"] == Style(color="blue", bold=True)
 
 
 @pytest.mark.asyncio

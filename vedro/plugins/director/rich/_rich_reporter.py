@@ -1,14 +1,16 @@
 import json
 import os
 from traceback import format_exception
+from types import TracebackType
 from typing import Any, Callable, Dict, Generator, Tuple, Union
 
 from rich.console import Console
 from rich.style import Style
+from rich.traceback import Traceback
 
 import vedro
 
-from ...._core import Dispatcher, ExcInfo
+from ...._core import Dispatcher
 from ....events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -29,7 +31,8 @@ class RichReporter(Reporter):
     def __init__(self, console_factory: Callable[[], Console] = make_console) -> None:
         self._console = console_factory()
         self._verbosity = 0
-        self._tb_show_internals = False
+        self._tb_show_internal_calls = False
+        self._tb_show_locals = False
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -45,14 +48,23 @@ class RichReporter(Reporter):
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         help_message = ("Increase verbosity level "
                         "(-v: show steps, -vv: show exception, -vvv: show scope)")
-        event.arg_parser.add_argument("-v", "--verbose", action="count", default=self._verbosity,
+        event.arg_parser.add_argument("-v", "--verbose",
+                                      action="count",
+                                      default=self._verbosity,
                                       help=help_message)
-        event.arg_parser.add_argument("--tb-show-internals", action='store_true', default=False,
+        event.arg_parser.add_argument("--tb-show-internal-calls",
+                                      action='store_true',
+                                      default=False,
                                       help="Show internal calls in the traceback output")
+        event.arg_parser.add_argument("--tb-show-locals",
+                                      action='store_true',
+                                      default=False,
+                                      help="Show local variables in the traceback output")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
-        self._tb_show_internals = event.args.tb_show_internals
+        self._tb_show_internal_calls = event.args.tb_show_internal_calls
+        self._tb_show_locals = event.args.tb_show_locals
 
     def on_startup(self, event: StartupEvent) -> None:
         self._console.out("Scenarios")
@@ -77,18 +89,38 @@ class RichReporter(Reporter):
                 val_repr = repr(val)
             yield str(key), val_repr
 
-    def _format_exception(self, exc_info: ExcInfo, show_internal_calls: bool = True) -> str:
-        tb = exc_info.traceback
-        if not show_internal_calls:
+    def _filter_locals(self, local_variables: Dict[str, Any]) -> Dict[str, Any]:
+        filtered_locals = {}
+        for key, val in local_variables.items():
+            if key == "self":
+                continue
+            if key.startswith("@py"):
+                continue
+            filtered_locals[key] = val
+        return filtered_locals
+
+    def _print_exception(self, exception: BaseException, traceback: TracebackType, *,
+                         hide_internal_calls: bool = False,
+                         show_locals: bool = False) -> None:
+        if hide_internal_calls:
             root = os.path.dirname(vedro.__file__)
-            while tb.tb_next is not None:
-                filename = os.path.abspath(tb.tb_frame.f_code.co_filename)
+            while traceback.tb_next is not None:
+                filename = os.path.abspath(traceback.tb_frame.f_code.co_filename)
                 if os.path.commonpath([root, filename]) != root:
                     break
-                tb = tb.tb_next
+                traceback = traceback.tb_next
 
-        formatted = format_exception(exc_info.type, exc_info.value, tb)
-        return "".join(formatted)
+        if show_locals:
+            trace = Traceback.extract(type(exception), exception, traceback, show_locals=True)
+            for stack in trace.stacks:
+                for frame in stack.frames:
+                    if frame.locals:
+                        frame.locals = self._filter_locals(frame.locals)
+            self._console.print(Traceback(trace))
+            self._console.out(" ")
+        else:
+            formatted = format_exception(type(exception), exception, traceback)
+            self._console.print("".join(formatted), style=Style(color="yellow"))
 
     def on_scenario_failed(self, event: ScenarioFailedEvent) -> None:
         subject = event.scenario_result.scenario_subject
@@ -108,8 +140,9 @@ class RichReporter(Reporter):
 
         for step_result in event.scenario_result.step_results:
             if step_result.exc_info:
-                tb = self._format_exception(step_result.exc_info, self._tb_show_internals)
-                self._console.out(tb, style=Style(color="yellow"))
+                self._print_exception(step_result.exc_info.value, step_result.exc_info.traceback,
+                                      hide_internal_calls=not self._tb_show_internal_calls,
+                                      show_locals=self._tb_show_locals)
 
         if self._verbosity == 2:
             return
