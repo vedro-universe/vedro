@@ -81,14 +81,6 @@ class RichReporter(Reporter):
         subject = event.scenario_result.scenario_subject
         self._console.out(f" ✔ {subject}", style=Style(color="green"))
 
-    def _format_scope(self, scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
-        for key, val in scope.items():
-            try:
-                val_repr = json.dumps(val, ensure_ascii=False, indent=4)
-            except:  # noqa: E722
-                val_repr = repr(val)
-            yield str(key), val_repr
-
     def _filter_locals(self, local_variables: Dict[str, Any]) -> Dict[str, Any]:
         filtered_locals = {}
         for key, val in local_variables.items():
@@ -122,6 +114,14 @@ class RichReporter(Reporter):
             formatted = format_exception(type(exception), exception, traceback)
             self._console.print("".join(formatted), style=Style(color="yellow"))
 
+    def _format_scope(self, scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
+        for key, val in scope.items():
+            try:
+                val_repr = json.dumps(val, ensure_ascii=False, indent=4)
+            except:  # noqa: E722
+                val_repr = repr(val)
+            yield str(key), val_repr
+
     def on_scenario_failed(self, event: ScenarioFailedEvent) -> None:
         subject = event.scenario_result.scenario_subject
         self._console.out(f" ✗ {subject}", style=Style(color="red"))
@@ -140,7 +140,8 @@ class RichReporter(Reporter):
 
         for step_result in event.scenario_result.step_results:
             if step_result.exc_info:
-                self._print_exception(step_result.exc_info.value, step_result.exc_info.traceback,
+                self._print_exception(step_result.exc_info.value,
+                                      step_result.exc_info.traceback,
                                       hide_internal_calls=not self._tb_show_internal_calls,
                                       show_locals=self._tb_show_locals)
 

@@ -343,8 +343,9 @@ async def test_rich_reporter_scenario_fail_event_verbose2(*, dispatcher: Dispatc
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
         ]
-        assert "Traceback" in console_.mock_calls[3].args[0]
-        assert console_.mock_calls[3].kwargs["style"] == Style.parse("yellow")
+        name, args, kwargs = console_.mock_calls[3]
+        assert "Traceback" in args[0]
+        assert kwargs["style"] == Style.parse("yellow")
 
 
 @pytest.mark.asyncio
@@ -379,10 +380,14 @@ async def test_rich_reporter_scenario_fail_event_verbose3(*, dispatcher: Dispatc
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
         ]
-        assert "Traceback" in console_.mock_calls[3].args[0]
-        assert console_.mock_calls[3].kwargs["style"] == Style.parse("yellow")
-        assert "Scope" in console_.mock_calls[4].args[0]
-        assert console_.mock_calls[4].kwargs["style"] == Style(color="blue", bold=True)
+
+        name, args, kwargs = console_.mock_calls[3]
+        assert "Traceback" in args[0]
+        assert kwargs["style"] == Style.parse("yellow")
+
+        name, args, kwargs = console_.mock_calls[4]
+        assert "Scope" in args[0]
+        assert kwargs["style"] == Style(color="blue", bold=True)
 
 
 @pytest.mark.asyncio
