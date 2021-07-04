@@ -12,6 +12,7 @@ from ._params import params
 from ._scenario import Scenario
 from ._version import version
 from .plugins.director import Director, Reporter, RichReporter, SilentReporter
+from .plugins.seeder import Seeder
 from .plugins.skipper import Skipper, only, skip
 from .plugins.terminator import Terminator
 
@@ -50,6 +51,7 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
 
     all_plugins += [
         Director(reporters),
+        Seeder(),
         Skipper(),
         Terminator(),
     ]

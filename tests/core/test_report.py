@@ -137,3 +137,38 @@ def test_report_eq_with_diff_results():
 
     with then:
         assert res is False
+
+
+def test_report_summary_default():
+    with given:
+        report = Report()
+
+    with when:
+        res = report.summary
+
+    with then:
+        assert res == []
+
+
+def test_report_add_summary():
+    with given:
+        report = Report()
+
+    with when:
+        res = report.add_summary("summary")
+
+    with then:
+        assert res is None
+
+
+def test_report_get_summary():
+    with given:
+        report = Report()
+        summary = "<summary>"
+        report.add_summary(summary)
+
+    with when:
+        res = report.summary
+
+    with then:
+        assert res == [summary]
