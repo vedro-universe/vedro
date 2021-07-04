@@ -39,6 +39,7 @@ $ python3 -m vedro .
 ```
 
 ## Documentation
+
 * [Documentation](#documentation)
   * [Selecting Scenarios](#selecting-scenarios)
     * [Select File or Directory](#select-file-or-directory)
@@ -48,9 +49,10 @@ $ python3 -m vedro .
   * [Reporters](#reporters)
     * [Rich Reporter (default)](#rich-reporter-default)
     * [Silent Reporter](#silent-reporter)
+  * [Parametrized Scenario](#parametrized-scenario)
   * [Plugins](#plugins)
     * [Register Plugin](#register-plugin)
-  * [Parametrized Scenario](#parametrized-scenario)
+    * [Available Plugins](#available-plugins)
 
 ---
 
@@ -98,7 +100,7 @@ $ python3 -m vedro -r rich -vvv
 
 Verbose Levels
 
-| Verbose | Show Scenario | Show Steps| Show Exception | Show Scope |
+| Verbose | Show Scenario | Show Steps| Show Exception | Show Scope (scenario variables) |
 |:--------|:-------------:|:---------:|:--------------:|:----------:|
 |      |✅| | | |
 |`-v`  |✅|✅| |
@@ -110,29 +112,6 @@ Verbose Levels
 
 ```shell
 $ python3 -m vedro -r silent
-```
-
-### Plugins
-
-#### Register Plugin
-
-```python
-# ./bootstrap.py
-import vedro
-from vedro import Dispatcher
-from vedro.plugins import Plugin
-
-
-class DoNothing(Plugin):
-    def subscribe(self, dispatcher: Dispatcher) -> None:
-        pass
-
-
-vedro.run(plugins=[DoNothing()])
-```
-
-```shell
-$ python3 bootstrap.py
 ```
 
 ### Parametrized Scenario
@@ -160,3 +139,43 @@ class Scenario(vedro.Scenario):
     async def then(self):
         assert self.response.status == self.status
 ```
+
+### Plugins
+
+#### Register Plugin
+
+```python
+# ./bootstrap.py
+import vedro
+from vedro import Dispatcher
+from vedro.plugins import Plugin
+
+
+class DoNothing(Plugin):
+    def subscribe(self, dispatcher: Dispatcher) -> None:
+        pass
+
+
+vedro.run(plugins=[DoNothing()])
+```
+
+```shell
+$ python3 bootstrap.py
+```
+
+#### Available Plugins
+
+Core
+- [Director](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/director)
+- [Tagger](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/tagger)
+- [Skipper](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/skipper)
+- [Seeder](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/seeder)
+- [Slicer](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/slicer)
+- [Terminator](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/terminator)
+
+Reporters
+- [Rich Reporter](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/director/rich)
+- [Silent Reporter](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/director/silent)
+- [GitLab Repoter](https://github.com/nikitanovosibirsk/vedro-gitlab-reporter)
+
+And [more](https://github.com/topics/vedro-plugin)..

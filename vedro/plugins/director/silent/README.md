@@ -1,5 +1,7 @@
 # Silent Reporter
 
+Reporter with no ouput
+
 ## Usage
 
 ```shell
