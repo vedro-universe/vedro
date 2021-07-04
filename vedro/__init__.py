@@ -14,6 +14,7 @@ from ._version import version
 from .plugins.director import Director, Reporter, RichReporter, SilentReporter
 from .plugins.seeder import Seeder
 from .plugins.skipper import Skipper, only, skip
+from .plugins.tagger import Tagger
 from .plugins.terminator import Terminator
 
 __version__ = version
@@ -53,6 +54,7 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
         Director(reporters),
         Seeder(),
         Skipper(),
+        Tagger(),
         Terminator(),
     ]
 
