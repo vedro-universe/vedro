@@ -197,6 +197,11 @@ class RichReporter(Reporter):
         else:
             style = Style(color="red", bold=True)
         self._console.out(" ")
+
+        if len(event.report.summary) > 0:
+            summary = "# " + "\n# ".join(event.report.summary)
+            self._console.out(summary, style=Style(color="grey70"))
+
         self._console.out(f"# {event.report.total} scenarios, "
                           f"{event.report.passed} passed, "
                           f"{event.report.failed} failed, "

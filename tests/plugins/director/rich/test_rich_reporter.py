@@ -438,6 +438,33 @@ async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.asyncio
+async def test_rich_reporter_cleanup_event_with_summary(*, dispatcher: Dispatcher):
+    with given:
+        console_ = Mock()
+        reporter = RichReporter(lambda: console_)
+        reporter.subscribe(dispatcher)
+
+        report = Report()
+        summaries = ["<summary1>", "<summary2>"]
+        for summary in summaries:
+            report.add_summary(summary)
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(" "),
+            call.out("# " + "\n# ".join(summaries), style=Style.parse("grey70")),
+            call.out("# 0 scenarios, 0 passed, 0 failed, 0 skipped",
+                     style=Style.parse("bold red"),
+                     end=""),
+            call.out(" (0.00s)", style=Style.parse("blue"))
+        ]
+
+
+@pytest.mark.asyncio
 async def test_rich_reporter_success_cleanup_event(*, dispatcher: Dispatcher,
                                                    reporter: RichReporter, console_: Mock):
     with given:

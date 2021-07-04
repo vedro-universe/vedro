@@ -8,12 +8,17 @@ __all__ = ("Report",)
 class Report:
     def __init__(self) -> None:
         self._results: List[ScenarioResult] = []
+        self._summary: List[str] = []
         self.started_at: Union[float, None] = None
         self.ended_at: Union[float, None] = None
         self.total: int = 0
         self.passed: int = 0
         self.failed: int = 0
         self.skipped: int = 0
+
+    @property
+    def summary(self) -> List[str]:
+        return self._summary
 
     @property
     def elapsed(self) -> float:
@@ -41,6 +46,9 @@ class Report:
             if self.ended_at is None:
                 self.ended_at = result.ended_at
             self.ended_at = max(self.ended_at, result.ended_at)
+
+    def add_summary(self, summary: str) -> None:
+        self._summary.append(summary)
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)
