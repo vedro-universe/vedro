@@ -12,6 +12,7 @@ from ._params import params
 from ._scenario import Scenario
 from ._version import version
 from .plugins.director import Director, Reporter, RichReporter, SilentReporter
+from .plugins.interrupter import Interrupter
 from .plugins.seeder import Seeder
 from .plugins.skipper import Skipper, only, skip
 from .plugins.slicer import Slicer
@@ -57,6 +58,7 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
         Skipper(),
         Tagger(),
         Slicer(),
+        Interrupter(),
         Terminator(),
     ]
 

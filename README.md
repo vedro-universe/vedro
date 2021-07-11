@@ -171,6 +171,7 @@ Core
 - [Skipper](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/skipper)
 - [Seeder](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/seeder)
 - [Slicer](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/slicer)
+- [Interrupter](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/interrupter)
 - [Terminator](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/terminator)
 
 Reporters
@@ -178,4 +179,4 @@ Reporters
 - [Silent Reporter](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/director/silent)
 - [GitLab Repoter](https://github.com/nikitanovosibirsk/vedro-gitlab-reporter)
 
-And [more](https://github.com/topics/vedro-plugin)..
+And [more](https://github.com/topics/vedro-plugin)
