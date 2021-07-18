@@ -147,14 +147,11 @@ class Scenario(vedro.Scenario):
 ```python
 # ./bootstrap.py
 import vedro
-from vedro import Dispatcher
-from vedro.plugins import Plugin
-
+from vedro import Dispatcher, Plugin
 
 class DoNothing(Plugin):
     def subscribe(self, dispatcher: Dispatcher) -> None:
         pass
-
 
 vedro.run(plugins=[DoNothing()])
 ```
@@ -177,6 +174,10 @@ Core
 Reporters
 - [Rich Reporter](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/director/rich)
 - [Silent Reporter](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/director/silent)
-- [GitLab Repoter](https://github.com/nikitanovosibirsk/vedro-gitlab-reporter)
+- [GitLab Reporter](https://github.com/nikitanovosibirsk/vedro-gitlab-reporter)
+- [Allure Reporter](https://github.com/nikitanovosibirsk/vedro-allure-reporter)
+
+External
+- [Valera Validator](https://github.com/nikitanovosibirsk/vedro-valera-validator)
 
 And [more](https://github.com/topics/vedro-plugin)
