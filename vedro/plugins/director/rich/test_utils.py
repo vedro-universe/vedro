@@ -8,7 +8,7 @@ from types import MethodType, TracebackType
 from typing import Any, List, Optional, cast
 from unittest.mock import Mock
 
-import pytest  # type: ignore
+import pytest
 from rich.console import Console
 
 from vedro import Scenario
@@ -29,17 +29,17 @@ __all__ = ("dispatcher", "console_", "reporter",
            "make_report",)
 
 
-@pytest.fixture()  # type: ignore
+@pytest.fixture()
 def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
-@pytest.fixture()  # type: ignore
+@pytest.fixture()
 def console_() -> Mock:
     return Mock(Console)
 
 
-@pytest.fixture()  # type: ignore
+@pytest.fixture()
 def reporter(console_: Console) -> RichReporter:
     return RichReporter(lambda: console_)
 
