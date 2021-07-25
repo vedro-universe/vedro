@@ -50,7 +50,7 @@ def test_scenario_result():
         assert scenario_result.is_skipped() is False
         assert scenario_result.started_at is None
         assert scenario_result.ended_at is None
-        assert scenario_result.scope is None
+        assert scenario_result.scope == {}
 
 
 def test_scenario_result_mark_passed(*, virtual_scenario: VirtualScenario):
@@ -98,8 +98,9 @@ def test_scenario_result_set_started_at(*, virtual_scenario: VirtualScenario):
         res = scenario_result.set_started_at(started_at)
 
     with then:
-        assert res is None
+        assert res == scenario_result
         assert scenario_result.started_at == started_at
+        assert scenario_result.elapsed == 0.0
 
 
 def test_scenario_result_set_ended_at(*, virtual_scenario: VirtualScenario):
@@ -111,8 +112,24 @@ def test_scenario_result_set_ended_at(*, virtual_scenario: VirtualScenario):
         res = scenario_result.set_ended_at(ended_at)
 
     with then:
-        assert res is None
+        assert res == scenario_result
         assert scenario_result.ended_at == ended_at
+        assert scenario_result.elapsed == 0.0
+
+
+def test_scenario_result_elapsed(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        started_at = 3.0
+        scenario_result.set_started_at(started_at)
+        ended_at = 1.0
+        scenario_result.set_ended_at(ended_at)
+
+    with when:
+        res = scenario_result.elapsed
+
+    with then:
+        assert res == ended_at - started_at
 
 
 def test_scenario_result_add_step_result(*, virtual_scenario: VirtualScenario):

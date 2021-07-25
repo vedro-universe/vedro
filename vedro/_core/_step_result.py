@@ -54,11 +54,18 @@ class StepResult:
         self._ended_at = ended_at
 
     @property
+    def elapsed(self) -> float:
+        if (self._started_at is None) or (self._ended_at is None):
+            return 0.0
+        return self._ended_at - self._started_at
+
+    @property
     def exc_info(self) -> Union[ExcInfo, None]:
         return self._exc_info
 
-    def set_exc_info(self, exc_info: ExcInfo) -> None:
+    def set_exc_info(self, exc_info: ExcInfo) -> "StepResult":
         self._exc_info = exc_info
+        return self
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._step!r})"
