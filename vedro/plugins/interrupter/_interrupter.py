@@ -1,5 +1,5 @@
-from ..._core import Dispatcher, Plugin
-from ...events import ArgParsedEvent, ArgParseEvent, ScenarioFailedEvent, ScenarioRunEvent
+from vedro.core import Dispatcher, Plugin
+from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioFailedEvent, ScenarioRunEvent
 
 __all__ = ("Interrupter",)
 

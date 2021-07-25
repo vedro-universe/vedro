@@ -12,7 +12,7 @@ import pytest
 from rich.console import Console
 
 from vedro import Scenario
-from vedro._core import (
+from vedro.core import (
     Dispatcher,
     ExcInfo,
     Report,

@@ -9,9 +9,8 @@ from rich.style import Style
 from rich.traceback import Traceback
 
 import vedro
-
-from ...._core import Dispatcher, ScenarioResult, StepResult
-from ....events import (
+from vedro.core import Dispatcher, ScenarioResult, StepResult
+from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
@@ -21,6 +20,7 @@ from ....events import (
     ScenarioSkippedEvent,
     StartupEvent,
 )
+
 from .._reporter import Reporter
 from .utils import make_console
 
