@@ -67,7 +67,7 @@ def test_step_result_set_started_at(*, virtual_step: VirtualStep):
         res = step_result.set_started_at(started_at)
 
     with then:
-        assert res is None
+        assert res == step_result
         assert step_result.started_at == started_at
         assert step_result.elapsed == 0.0
 
@@ -81,7 +81,7 @@ def test_step_result_set_ended_at(*, virtual_step: VirtualStep):
         res = step_result.set_ended_at(ended_at)
 
     with then:
-        assert res is None
+        assert res == step_result
         assert step_result.ended_at == ended_at
         assert step_result.elapsed == 0.0
 

@@ -40,6 +40,10 @@ class ScenarioResult:
         namespace = os.path.dirname(os.path.relpath(self._scenario.path, "scenarios"))
         return namespace.replace("_", " ").replace("/", " / ")
 
+    @property
+    def status(self) -> ScenarioStatus:
+        return self._status
+
     def mark_passed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.PASSED
         return self

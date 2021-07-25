@@ -25,6 +25,10 @@ class StepResult:
     def step_name(self) -> str:
         return self._step.name
 
+    @property
+    def status(self) -> StepStatus:
+        return self._status
+
     def is_passed(self) -> bool:
         return self._status == StepStatus.PASSED
 
@@ -43,15 +47,17 @@ class StepResult:
     def started_at(self) -> Union[float, None]:
         return self._started_at
 
-    def set_started_at(self, started_at: float) -> None:
+    def set_started_at(self, started_at: float) -> "StepResult":
         self._started_at = started_at
+        return self
 
     @property
     def ended_at(self) -> Union[float, None]:
         return self._ended_at
 
-    def set_ended_at(self, ended_at: float) -> None:
+    def set_ended_at(self, ended_at: float) -> "StepResult":
         self._ended_at = ended_at
+        return self
 
     @property
     def elapsed(self) -> float:
