@@ -169,6 +169,7 @@ Core
 - [Seeder](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/seeder)
 - [Slicer](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/slicer)
 - [Interrupter](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/interrupter)
+- [Deferrer](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/deferrer)
 - [Terminator](https://github.com/nikitanovosibirsk/vedro/tree/master/vedro/plugins/terminator)
 
 Reporters
