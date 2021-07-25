@@ -94,7 +94,7 @@ def test_scenario_run_event():
         assert repr(event) == f"ScenarioRunEvent({scenario_result!r})"
 
 
-def test_scenario_skip_event():
+def test_scenario_skiped_event():
     with given:
         scenario_ = Mock(VirtualScenario)
         scenario_result = ScenarioResult(scenario_)
@@ -107,7 +107,7 @@ def test_scenario_skip_event():
         assert repr(event) == f"ScenarioSkippedEvent({scenario_result!r})"
 
 
-def test_scenario_fail_event():
+def test_scenario_failed_event():
     with given:
         scenario_ = Mock(VirtualScenario)
         scenario_result = ScenarioResult(scenario_)
@@ -120,7 +120,7 @@ def test_scenario_fail_event():
         assert repr(event) == f"ScenarioFailedEvent({scenario_result!r})"
 
 
-def test_scenario_pass_event():
+def test_scenario_passed_event():
     with given:
         scenario_ = Mock(VirtualScenario)
         scenario_result = ScenarioResult(scenario_)

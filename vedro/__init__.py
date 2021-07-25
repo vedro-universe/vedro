@@ -11,6 +11,7 @@ from ._interface import Interface
 from ._params import params
 from ._scenario import Scenario
 from ._version import version
+from .plugins.deferrer import Deferrer, defer
 from .plugins.director import Director, Reporter, RichReporter, SilentReporter
 from .plugins.interrupter import Interrupter
 from .plugins.seeder import Seeder
@@ -20,7 +21,8 @@ from .plugins.tagger import Tagger
 from .plugins.terminator import Terminator
 
 __version__ = version
-__all__ = ("Scenario", "Interface", "Runner", "run", "only", "skip", "params", "context",)
+__all__ = ("Scenario", "Interface", "Runner", "run", "only", "skip", "params",
+           "context", "defer",)
 
 
 def run(*, plugins: Optional[List[Plugin]] = None) -> None:
@@ -59,6 +61,7 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
         Tagger(),
         Slicer(),
         Interrupter(),
+        Deferrer(),
         Terminator(),
     ]
 
