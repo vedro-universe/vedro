@@ -24,6 +24,7 @@ class _Meta(type):
                 "__qualname__": cls_name,
                 "__init__": partialmethod(cls_constructor, *args, **kwargs),
                 "__vedro__template__": created,
+                "__vedro__template_index__": idx,
             }
             cls_globals[cls_name] = type(cls_name, bases, cls_namespace)
 

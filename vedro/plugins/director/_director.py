@@ -1,7 +1,8 @@
 from typing import List, Optional, Union
 
-from ..._core import Dispatcher, Plugin
-from ...events import ArgParseEvent
+from vedro.core import Dispatcher, Plugin
+from vedro.events import ArgParseEvent
+
 from ._reporter import Reporter
 
 __all__ = ("Director",)

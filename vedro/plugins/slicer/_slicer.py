@@ -1,7 +1,7 @@
 from typing import Union
 
-from ..._core import Dispatcher, Plugin
-from ...events import ArgParsedEvent, ArgParseEvent, StartupEvent
+from vedro.core import Dispatcher, Plugin
+from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 
 __all__ = ("Slicer",)
 

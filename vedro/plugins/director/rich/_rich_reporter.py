@@ -9,9 +9,8 @@ from rich.style import Style
 from rich.traceback import Traceback
 
 import vedro
-
-from ...._core import Dispatcher, ScenarioResult, StepResult
-from ....events import (
+from vedro.core import Dispatcher, ScenarioResult, StepResult
+from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
@@ -21,6 +20,7 @@ from ....events import (
     ScenarioSkippedEvent,
     StartupEvent,
 )
+
 from .._reporter import Reporter
 from .utils import make_console
 
@@ -84,22 +84,21 @@ class RichReporter(Reporter):
             self._console.out(f"* {self._namespace}", style=Style(bold=True))
 
     def _print_scenario_subject(self, scenario_result: ScenarioResult) -> None:
+        template_index = scenario_result.scenario.template_index
+        templated = f"[{template_index}] " if (template_index is not None) else ""
+
         if scenario_result.is_passed():
-            subject = f" ✔ {scenario_result.scenario_subject}"
+            subject = f" ✔ {templated}{scenario_result.scenario_subject}"
             style = Style(color="green")
         elif scenario_result.is_failed():
-            subject = f" ✗ {scenario_result.scenario_subject}"
+            subject = f" ✗ {templated}{scenario_result.scenario_subject}"
             style = Style(color="red")
         else:
             return
 
         if self._show_timings:
-            if (scenario_result.started_at is None) or (scenario_result.ended_at is None):
-                elapsed = 0.0
-            else:
-                elapsed = scenario_result.ended_at - scenario_result.started_at
             self._console.out(subject, style=style, end="")
-            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+            self._console.out(f" ({scenario_result.elapsed:.2f}s)", style=Style(color="grey50"))
         else:
             self._console.out(subject, style=style)
 
@@ -114,12 +113,8 @@ class RichReporter(Reporter):
             return
 
         if self._show_timings:
-            if (step_result.started_at is None) or (step_result.ended_at is None):
-                elapsed = 0.0
-            else:
-                elapsed = step_result.ended_at - step_result.started_at
             self._console.out(name, style=style, end="")
-            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+            self._console.out(f" ({step_result.elapsed:.2f}s)", style=Style(color="grey50"))
         else:
             self._console.out(name, style=style)
 
@@ -157,7 +152,7 @@ class RichReporter(Reporter):
             self._console.out(" ")
         else:
             formatted = format_exception(type(exception), exception, traceback)
-            self._console.print("".join(formatted), style=Style(color="yellow"))
+            self._console.out("".join(formatted), style=Style(color="yellow"))
 
     def _format_scope(self, scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
         for key, val in scope.items():

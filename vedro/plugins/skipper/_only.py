@@ -1,6 +1,6 @@
 from typing import Any, Type, Union
 
-from ..._scenario import Scenario
+from vedro import Scenario
 
 __all__ = ("only",)
 

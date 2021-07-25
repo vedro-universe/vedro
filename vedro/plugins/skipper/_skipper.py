@@ -1,8 +1,8 @@
 import os
 from typing import List, Union
 
-from ..._core import Dispatcher, Plugin, VirtualScenario
-from ...events import ArgParsedEvent, ArgParseEvent, StartupEvent
+from vedro.core import Dispatcher, Plugin, VirtualScenario
+from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 
 __all__ = ("Skipper",)
 

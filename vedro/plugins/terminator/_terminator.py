@@ -1,8 +1,8 @@
 import sys
 from typing import Callable
 
-from ..._core import Dispatcher, Plugin
-from ...events import CleanupEvent
+from vedro.core import Dispatcher, Plugin
+from vedro.events import CleanupEvent
 
 __all__ = ("Terminator",)
 

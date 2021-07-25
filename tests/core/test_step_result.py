@@ -67,8 +67,9 @@ def test_step_result_set_started_at(*, virtual_step: VirtualStep):
         res = step_result.set_started_at(started_at)
 
     with then:
-        assert res is None
+        assert res == step_result
         assert step_result.started_at == started_at
+        assert step_result.elapsed == 0.0
 
 
 def test_step_result_set_ended_at(*, virtual_step: VirtualStep):
@@ -80,8 +81,24 @@ def test_step_result_set_ended_at(*, virtual_step: VirtualStep):
         res = step_result.set_ended_at(ended_at)
 
     with then:
-        assert res is None
+        assert res == step_result
         assert step_result.ended_at == ended_at
+        assert step_result.elapsed == 0.0
+
+
+def test_step_result_elapsed(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+        started_at = 3.0
+        step_result.set_started_at(started_at)
+        ended_at = 1.0
+        step_result.set_ended_at(ended_at)
+
+    with when:
+        res = step_result.elapsed
+
+    with then:
+        assert res == ended_at - started_at
 
 
 def test_step_result_set_exc_info(*, virtual_step: VirtualStep):
@@ -93,7 +110,7 @@ def test_step_result_set_exc_info(*, virtual_step: VirtualStep):
         res = step_result.set_exc_info(exc_info)
 
     with then:
-        assert res is None
+        assert res == step_result
         assert step_result.exc_info == exc_info
 
 

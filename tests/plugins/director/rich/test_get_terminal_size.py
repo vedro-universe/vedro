@@ -1,42 +1,9 @@
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
 from baby_steps import given, then, when
-from rich.console import Console
 
-from vedro.plugins.director import RichReporter
-from vedro.plugins.director.rich.utils import get_terminal_size, make_console
-
-
-@pytest.fixture()
-def console_():
-    return Mock(Console)
-
-
-@pytest.fixture()
-def reporter(console_):
-    return RichReporter(lambda: console_)
-
-
-def test_make_console():
-    with when:
-        res = make_console()
-
-    with then:
-        assert isinstance(res, Console)
-
-
-def test_make_console_custom_options():
-    with given:
-        width, height = 1, 2
-
-    with when:
-        res = make_console(width=width, height=height)
-
-    with then:
-        assert isinstance(res, Console)
-        assert res.size == (width, height)
+from vedro.plugins.director.rich.utils import get_terminal_size
 
 
 def test_get_terminal_size():

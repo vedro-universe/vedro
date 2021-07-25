@@ -2,8 +2,14 @@ import random
 from typing import Any, Dict, Union
 from uuid import uuid4
 
-from ..._core import Dispatcher, Plugin
-from ...events import ArgParsedEvent, ArgParseEvent, CleanupEvent, ScenarioRunEvent, StartupEvent
+from vedro.core import Dispatcher, Plugin
+from vedro.events import (
+    ArgParsedEvent,
+    ArgParseEvent,
+    CleanupEvent,
+    ScenarioRunEvent,
+    StartupEvent,
+)
 
 __all__ = ("Seeder",)
 

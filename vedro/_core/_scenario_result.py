@@ -40,6 +40,10 @@ class ScenarioResult:
         namespace = os.path.dirname(os.path.relpath(self._scenario.path, "scenarios"))
         return namespace.replace("_", " ").replace("/", " / ")
 
+    @property
+    def status(self) -> ScenarioStatus:
+        return self._status
+
     def mark_passed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.PASSED
         return self
@@ -65,15 +69,23 @@ class ScenarioResult:
     def started_at(self) -> Union[float, None]:
         return self._started_at
 
-    def set_started_at(self, started_at: float) -> None:
+    def set_started_at(self, started_at: float) -> "ScenarioResult":
         self._started_at = started_at
+        return self
 
     @property
     def ended_at(self) -> Union[float, None]:
         return self._ended_at
 
-    def set_ended_at(self, ended_at: float) -> None:
+    def set_ended_at(self, ended_at: float) -> "ScenarioResult":
         self._ended_at = ended_at
+        return self
+
+    @property
+    def elapsed(self) -> float:
+        if (self._started_at is None) or (self._ended_at is None):
+            return 0.0
+        return self._ended_at - self._started_at
 
     def add_step_result(self, step_result: StepResult) -> None:
         self._step_results.append(step_result)
@@ -86,7 +98,9 @@ class ScenarioResult:
         self._scope = scope
 
     @property
-    def scope(self) -> Union[Dict[Any, Any], None]:
+    def scope(self) -> Dict[Any, Any]:
+        if self._scope is None:
+            return {}
         return self._scope
 
     def __repr__(self) -> str:

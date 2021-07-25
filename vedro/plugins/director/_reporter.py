@@ -1,6 +1,6 @@
 import re
 
-from ..._core import Plugin
+from vedro.core import Plugin
 
 __all__ = ("Reporter",)
 
