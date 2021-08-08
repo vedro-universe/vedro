@@ -24,6 +24,10 @@ from ._virtual_step import VirtualStep
 __all__ = ("Runner",)
 
 
+class _ScenarioInitError(Exception):
+    pass
+
+
 class Runner:
     def __init__(self, dispatcher: Dispatcher,
                  interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
@@ -61,7 +65,12 @@ class Runner:
 
     async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
         scenario_result = ScenarioResult(scenario)
-        ref = scenario()
+        try:
+            ref = scenario()
+        except:  # noqa: E722
+            message = (f"Can't initialize scenario {scenario_result.scenario.subject!r} "
+                       f"at {scenario_result.scenario.path}")
+            raise _ScenarioInitError(message)
         scenario_result.set_scope(ref.__dict__)
 
         if scenario.is_skipped():
