@@ -34,7 +34,8 @@ class Lifecycle:
         arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False)
 
         await self._dispatcher.fire(ArgParseEvent(arg_parser))
-        arg_parser.add_argument("--reruns", type=int, default=0, help="<message>")
+        arg_parser.add_argument("--reruns", type=int, default=0,
+                                help="Number of times to rerun failed scenarios (default 0)")
         arg_parser.add_argument("-h", "--help",
                                 action="help", help="Show this help message and exit")
         args = arg_parser.parse_args()
