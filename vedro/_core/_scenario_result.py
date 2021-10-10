@@ -109,7 +109,7 @@ class ScenarioResult:
         return self._scope
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._scenario!r})"
+        return f"{self.__class__.__name__}<{self._scenario!r}>"
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)

@@ -56,10 +56,11 @@ async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
                                         discoverer_: ScenarioDiscoverer, runner_: Runner):
     with given:
         scenarios = []
+        reruns = 2
         discoverer_.discover = AsyncMock(return_value=scenarios)
 
         lifecycle = Lifecycle(dispatcher_, discoverer_, runner_)
-        namespace = Namespace()
+        namespace = Namespace(reruns=reruns)
 
     with when, patch("argparse.ArgumentParser.parse_args", return_value=namespace):
         report = await lifecycle.start()
@@ -70,7 +71,7 @@ async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
             call.discover(Path("scenarios"))
         ]
         assert runner_.mock_calls == [
-            call.run(scenarios),
+            call.run(scenarios, reruns=reruns),
         ]
         assert dispatcher_.mock_calls[1:] == [
             call.fire(ArgParsedEvent(namespace)),
