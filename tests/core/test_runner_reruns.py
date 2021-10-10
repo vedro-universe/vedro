@@ -38,8 +38,9 @@ def assert_mock_calls(mock_calls: List[Any], expected: List[Any]) -> bool:
     assert len(mock_calls) == len(expected)
 
     for idx, exp in enumerate(expected):
-        assert len(mock_calls[idx].args) == 1
-        assert isinstance(mock_calls[idx].args[0], exp)
+        name, args, kwargs = mock_calls[idx]
+        assert len(args) == 1
+        assert isinstance(args[0], exp)
 
     return True
 
