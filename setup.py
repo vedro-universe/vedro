@@ -21,6 +21,11 @@ setup(
     author_email="nikitanovosibirsk@yandex.com",
     python_requires=">=3.7",
     url="https://github.com/nikitanovosibirsk/vedro",
+    project_urls={
+        "Docs": "https://vedro.io/",
+        "GitHub": "https://github.com/nikitanovosibirsk/vedro",
+        "Slack": "https://vedro-community.slack.com/",
+    },
     license="Apache-2.0",
     packages=find_packages(exclude=("tests",)),
     package_data={"vedro": ["py.typed"]},
