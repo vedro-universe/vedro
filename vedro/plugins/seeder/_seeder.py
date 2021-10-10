@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 from uuid import uuid4
 
 from vedro.core import Dispatcher, Plugin
@@ -35,16 +35,22 @@ class Seeder(Plugin):
         if self._seed is None:
             self._seed = str(uuid4())
 
+    def _generate_seed(self) -> int:
+        return cast(int, self._random.randint(1, 2 ** 63 - 1))
+
     def on_startup(self, event: StartupEvent) -> None:
         self._random.seed(self._seed)
         for scenario in event.scenarios:
-            self._scenarios[scenario.unique_id] = self._random.randint(1, 2 ** 63 - 1)
+            self._scenarios[scenario.unique_id] = self._generate_seed()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         seed = self._scenarios[event.scenario_result.scenario.unique_id]
         self._random.seed(seed)
+        for _ in range(event.scenario_result.rerun):
+            seed = self._generate_seed()
+        self._random.seed(seed)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        if event.report.failed > 0:
+        if (event.report.passed + event.report.failed) > 0:
             summary = f"--seed {self._seed}"
             event.report.add_summary(summary)
