@@ -13,7 +13,7 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro._core import Dispatcher, Runner, VirtualScenario, VirtualStep
+from vedro.core import Dispatcher, Runner, VirtualScenario, VirtualStep
 from vedro.events import (
     ExceptionRaisedEvent,
     ScenarioFailedEvent,

@@ -51,6 +51,7 @@ def test_scenario_result():
         assert scenario_result.started_at is None
         assert scenario_result.ended_at is None
         assert scenario_result.scope == {}
+        assert scenario_result.rerun == 0
 
 
 def test_scenario_result_mark_passed(*, virtual_scenario: VirtualScenario):
@@ -183,7 +184,7 @@ def test_scenario_result_repr(*, virtual_scenario: VirtualScenario):
         scenario_result = ScenarioResult(virtual_scenario)
 
     with then:
-        assert repr(scenario_result) == f"ScenarioResult({virtual_scenario!r})"
+        assert repr(scenario_result) == f"ScenarioResult<{virtual_scenario!r}>"
 
 
 def test_scenario_result_eq(*, virtual_scenario: VirtualScenario):
