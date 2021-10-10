@@ -16,13 +16,14 @@ class ScenarioStatus(Enum):
 
 
 class ScenarioResult:
-    def __init__(self, scenario: VirtualScenario) -> None:
+    def __init__(self, scenario: VirtualScenario, *, rerun: int = 0) -> None:
         self._scenario = scenario
         self._status: ScenarioStatus = ScenarioStatus.PENDING
         self._started_at: Union[float, None] = None
         self._ended_at: Union[float, None] = None
         self._step_results: List[StepResult] = []
         self._scope: Union[Dict[Any, Any], None] = None
+        self._rerun = rerun
 
     @property
     def scenario(self) -> VirtualScenario:
@@ -43,6 +44,10 @@ class ScenarioResult:
     @property
     def status(self) -> ScenarioStatus:
         return self._status
+
+    @property
+    def rerun(self) -> int:
+        return self._rerun
 
     def mark_passed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.PASSED

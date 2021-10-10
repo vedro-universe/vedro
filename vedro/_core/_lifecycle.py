@@ -34,6 +34,7 @@ class Lifecycle:
         arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False)
 
         await self._dispatcher.fire(ArgParseEvent(arg_parser))
+        arg_parser.add_argument("--reruns", type=int, default=0, help="<message>")
         arg_parser.add_argument("-h", "--help",
                                 action="help", help="Show this help message and exit")
         args = arg_parser.parse_args()
@@ -43,7 +44,7 @@ class Lifecycle:
         scenarios = await self._discoverer.discover(Path(start_dir))
         await self._dispatcher.fire(StartupEvent(scenarios))
 
-        report = await self._runner.run(scenarios)
+        report = await self._runner.run(scenarios, reruns=args.reruns)
 
         await self._dispatcher.fire(CleanupEvent(report))
 

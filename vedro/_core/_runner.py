@@ -63,8 +63,8 @@ class Runner:
 
         return step_result
 
-    async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
-        scenario_result = ScenarioResult(scenario)
+    async def run_scenario(self, scenario: VirtualScenario, *, rerun: int = 0) -> ScenarioResult:
+        scenario_result = ScenarioResult(scenario, rerun=rerun)
         try:
             ref = scenario()
         except:  # noqa: E722
@@ -97,9 +97,27 @@ class Runner:
 
         return scenario_result
 
-    async def run(self, scenarios: List[VirtualScenario]) -> Report:
+    async def run(self, scenarios: List[VirtualScenario], reruns: int = 0) -> Report:
         report = Report()
+
         for scenario in scenarios:
             scenario_result = await self.run_scenario(scenario)
-            report.add_result(scenario_result)
+            if not scenario_result.is_failed() or reruns == 0:
+                report.add_result(scenario_result)
+                continue
+
+            passed_results = []
+            failed_results = [scenario_result]
+            for rerun in range(1, reruns + 1):
+                scenario_result = await self.run_scenario(scenario, rerun=rerun)
+                if scenario_result.is_passed():
+                    passed_results.append(scenario_result)
+                elif scenario_result.is_failed():
+                    failed_results.append(scenario_result)
+
+            if len(passed_results) > len(failed_results):
+                report.add_result(passed_results[-1])
+            else:
+                report.add_result(failed_results[-1])
+
         return report
