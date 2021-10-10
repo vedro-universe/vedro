@@ -95,19 +95,18 @@ class RichReporter(Reporter):
             if event.scenario_result.rerun == self._reruns:
                 self._print_buffered()
 
-    def _print_scenario_skipped(self, scenario_result: ScenarioResult, *, rerun: int = 0) -> None:
+    def _print_scenario_skipped(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
         pass
 
-    def _print_scenario_passed(self, scenario_result: ScenarioResult, *, rerun: int = 0) -> None:
-        self._print_scenario_subject(scenario_result, rerun=rerun)
+    def _print_scenario_passed(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
+        self._print_scenario_subject(scenario_result, self._show_timings)
 
-    def _print_scenario_failed(self, scenario_result: ScenarioResult, *, rerun: int = 0) -> None:
-        self._print_scenario_subject(scenario_result, rerun=rerun)
+    def _print_scenario_failed(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
+        self._print_scenario_subject(scenario_result, self._show_timings)
 
         if self._verbosity > 0:
             for step_result in scenario_result.step_results:
-                indent = 4 if (rerun == 0) else 6
-                self._print_step_name(step_result, indent=indent)
+                self._print_step_name(step_result, indent=4 + indent)
 
         if self._verbosity > 1:
             for step_result in scenario_result.step_results:
@@ -129,13 +128,13 @@ class RichReporter(Reporter):
                 failed.append(scenario_result)
         return passed[-1] if len(passed) > len(failed) else failed[-1]
 
-    def _print_scenario_result(self, scenario_result: ScenarioResult, *, rerun: int = 0) -> None:
+    def _print_scenario_result(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
         if scenario_result.is_passed():
-            self._print_scenario_passed(scenario_result, rerun=rerun)
+            self._print_scenario_passed(scenario_result, indent=indent)
         elif scenario_result.is_failed():
-            self._print_scenario_failed(scenario_result, rerun=rerun)
+            self._print_scenario_failed(scenario_result, indent=indent)
         else:
-            self._print_scenario_skipped(scenario_result, rerun=rerun)
+            self._print_scenario_skipped(scenario_result, indent=indent)
 
     def _print_buffered(self) -> None:
         if len(self._buffer) == 1:
@@ -146,19 +145,17 @@ class RichReporter(Reporter):
 
         for rerun in range(1, len(self._buffer) + 1):
             scenario_result = self._buffer.pop(0)
+            prefix = f" ├─[{rerun}/{self._reruns + 1}]"
             self._console.out(" │")
-            self._console.out(" ├─", end="")
-            self._print_scenario_result(scenario_result, rerun=rerun)
+            self._console.out(prefix, end="")
+            self._print_scenario_result(scenario_result, indent=len(prefix))
 
         self._console.out(" ")
 
-    def _print_scenario_subject(self, scenario_result: ScenarioResult, *, rerun: int = 0) -> None:
+    def _print_scenario_subject(self, scenario_result: ScenarioResult,
+                                show_timings: bool = False) -> None:
         template_index = scenario_result.scenario.template_index
         suffix = f" ({template_index})" if (template_index is not None) else ""
-
-        if rerun > 0:
-            prefix = f"[{rerun}/{self._reruns + 1}]"
-            self._console.out(prefix, end="")
 
         if scenario_result.is_passed():
             subject = f" ✔ {scenario_result.scenario_subject}{suffix}"
@@ -169,7 +166,7 @@ class RichReporter(Reporter):
         else:
             return
 
-        if self._show_timings:
+        if show_timings:
             self._console.out(subject, style=style, end="")
             self._console.out(f" ({scenario_result.elapsed:.2f}s)", style=Style(color="grey50"))
         else:
