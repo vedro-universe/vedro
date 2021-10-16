@@ -82,8 +82,9 @@ class RichReporter(Reporter):
         self._console.out("Scenarios")
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
-        if event.scenario_result.scenario_namespace != self._namespace:
-            self._namespace = event.scenario_result.scenario_namespace
+        if event.scenario_result.scenario.namespace != self._namespace:
+            self._namespace = event.scenario_result.scenario.namespace
+            self._namespace = self._namespace.replace("_", " ").replace("/", " / ")
             self._console.out(f"* {self._namespace}", style=Style(bold=True))
 
     def on_scenario_end(self, event: ScenarioEndEventType) -> None:
@@ -154,14 +155,14 @@ class RichReporter(Reporter):
 
     def _print_scenario_subject(self, scenario_result: ScenarioResult,
                                 show_timings: bool = False) -> None:
-        template_index = scenario_result.scenario.template_index
-        suffix = f" ({template_index})" if (template_index is not None) else ""
+        # template_index = scenario_result.scenario.template_index
+        # suffix = f" ({template_index})" if (template_index is not None) else ""
 
         if scenario_result.is_passed():
-            subject = f" ✔ {scenario_result.scenario_subject}{suffix}"
+            subject = f" ✔ {scenario_result.scenario.subject}"
             style = Style(color="green")
         elif scenario_result.is_failed():
-            subject = f" ✗ {scenario_result.scenario_subject}{suffix}"
+            subject = f" ✗ {scenario_result.scenario.subject}"
             style = Style(color="red")
         else:
             return

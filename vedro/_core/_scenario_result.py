@@ -1,4 +1,4 @@
-import os
+import warnings
 from enum import Enum
 from typing import Any, Dict, List, Union
 
@@ -30,16 +30,14 @@ class ScenarioResult:
         return self._scenario
 
     @property
-    def scenario_subject(self) -> Union[str, None]:
-        subject = getattr(self._scenario, "subject", None)
-        if isinstance(subject, str) and len(subject) > 0:
-            return subject.format(**self._scope) if self._scope else subject
-        return self._scenario.path.stem.replace("_", " ")
+    def scenario_subject(self) -> str:
+        warnings.warn("Deprecated: use scenario.subject instead", DeprecationWarning)
+        return self._scenario.subject
 
     @property
     def scenario_namespace(self) -> str:
-        namespace = os.path.dirname(os.path.relpath(self._scenario.path, "scenarios"))
-        return namespace.replace("_", " ").replace("/", " / ")
+        warnings.warn("Deprecated: use scenario.namespace instead", DeprecationWarning)
+        return self.scenario.namespace
 
     @property
     def status(self) -> ScenarioStatus:

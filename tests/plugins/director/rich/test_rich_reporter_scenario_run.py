@@ -34,7 +34,7 @@ async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
 
     with then:
         assert console_.mock_calls == [
-            call.out(f"* {scenario_result.scenario_namespace}", style=Style.parse("bold"))
+            call.out(f"* {scenario_result.scenario.namespace}", style=Style.parse("bold"))
         ]
 
 

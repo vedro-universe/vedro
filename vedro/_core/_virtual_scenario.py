@@ -1,4 +1,6 @@
+import os
 from hashlib import blake2b
+from inspect import BoundArguments
 from pathlib import Path
 from typing import Any, List, Type, Union, cast
 
@@ -30,12 +32,29 @@ class VirtualScenario:
         return cast(Union[int, None], idx)
 
     @property
+    def template_args(self) -> Union[BoundArguments, None]:
+        args = getattr(self._orig_scenario, "__vedro__template_args__", None)
+        return cast(Union[BoundArguments, None], args)
+
+    @property
     def path(self) -> Path:
         return self._path
 
     @property
-    def subject(self) -> Union[str, None]:
-        return cast(Union[str, None], getattr(self._orig_scenario, "subject", None))
+    def subject(self) -> str:
+        subject = getattr(self._orig_scenario, "subject", None)
+        if not isinstance(subject, str) or subject.strip() == "":
+            subject = self._path.stem.replace("_", " ")
+
+        if self.template_args:
+            subject = subject.format(**self.template_args.arguments)
+        return cast(str, subject)
+
+    @property
+    def namespace(self) -> str:
+        module = self._orig_scenario.__module__
+        rel_path = os.path.relpath(self._path, module.split(".")[0])
+        return os.path.dirname(rel_path)
 
     def skip(self) -> None:
         self._is_skipped = True

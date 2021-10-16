@@ -68,6 +68,8 @@ def make_vscenario(*,
     namespace = {}
     if path:
         namespace["__file__"] = str(path)
+        rel_path = path.relative_to(os.getcwd())
+        namespace["__module__"] = str(rel_path.with_suffix("")).replace("/", ".")
     if subject:
         namespace["subject"] = subject
     scenario = type("Scenario", (Scenario,), namespace)
