@@ -1,3 +1,4 @@
+import os
 from hashlib import blake2b
 from pathlib import Path
 from types import MethodType
@@ -8,13 +9,14 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro._core import VirtualScenario, VirtualStep
+from vedro.core import VirtualScenario, VirtualStep
 
 
 @pytest.fixture()
 def scenario_():
     scenario = Mock(Scenario)
-    scenario.__file__ = "/tmp/scenario.py"
+    scenario.__file__ = os.getcwd() + "/scenarios/scenario.py"
+    scenario.__module__ = "scenarios.scenario"
     scenario.__qualname__ = "Scenario"
     return scenario
 
@@ -59,6 +61,18 @@ def test_virtual_scenario_path(*, scenario_: Type[Scenario]):
         assert path == Path(scenario_.__file__)
 
 
+def test_virtual_scenario_subject(*, scenario_: Type[Scenario]):
+    with given:
+        scenario_.subject = "<subject>"
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        subject = virtual_scenario.subject
+
+    with then:
+        assert subject == scenario_.subject
+
+
 def test_virtual_scenario_without_subject(*, scenario_: Type[Scenario]):
     with given:
         virtual_scenario = VirtualScenario(scenario_, [])
@@ -68,6 +82,17 @@ def test_virtual_scenario_without_subject(*, scenario_: Type[Scenario]):
 
     with then:
         assert subject == Path(scenario_.__file__).stem
+
+
+def test_virtual_scenario_namespace(*, scenario_: Type[Scenario]):
+    with given:
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        namespace = virtual_scenario.namespace
+
+    with then:
+        assert namespace == ""
 
 
 def test_virtual_scenario_with_subject(*, scenario_: Type[Scenario]):
