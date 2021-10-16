@@ -1,3 +1,4 @@
+import inspect
 from functools import partialmethod
 from typing import Any, Dict, Tuple
 
@@ -18,6 +19,10 @@ class _Meta(type):
 
         cls_globals = getattr(cls_constructor, "__globals__")
         for idx, (args, kwargs) in enumerate(reversed(cls_params), start=1):
+            signature = inspect.signature(cls_constructor)  # type: ignore
+            bound_args = signature.bind(None, *args, **kwargs)
+            bound_args.apply_defaults()
+
             cls_name = f"{name}_{idx}"
             cls_namespace = {
                 **namespace,
@@ -25,6 +30,7 @@ class _Meta(type):
                 "__init__": partialmethod(cls_constructor, *args, **kwargs),
                 "__vedro__template__": created,
                 "__vedro__template_index__": idx,
+                "__vedro__template_args__": bound_args,
             }
             cls_globals[cls_name] = type(cls_name, bases, cls_namespace)
 
@@ -32,4 +38,4 @@ class _Meta(type):
 
 
 class Scenario(metaclass=_Meta):
-    pass
+    subject: str

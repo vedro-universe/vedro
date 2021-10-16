@@ -8,7 +8,7 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro._core import ScenarioResult, StepResult, VirtualScenario, VirtualStep
+from vedro.core import ScenarioResult, StepResult, VirtualScenario, VirtualStep
 
 
 def make_scenario_path(path: str = "", name: str = "scenario.py") -> Path:
@@ -42,8 +42,6 @@ def test_scenario_result():
 
     with then:
         assert scenario_result.scenario == virtual_scenario
-        assert scenario_result.scenario_subject == subject
-        assert scenario_result.scenario_namespace == scenario_result.scenario_namespace
         assert scenario_result.step_results == []
         assert scenario_result.is_passed() is False
         assert scenario_result.is_failed() is False

@@ -67,7 +67,7 @@ def test_virtual_scenario_without_subject(*, scenario_: Type[Scenario]):
         subject = virtual_scenario.subject
 
     with then:
-        assert subject is None
+        assert subject == Path(scenario_.__file__).stem
 
 
 def test_virtual_scenario_with_subject(*, scenario_: Type[Scenario]):

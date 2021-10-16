@@ -60,7 +60,7 @@ async def test_rich_reporter_scenario_failed_event_verbose0(*, dispatcher: Dispa
 
     with then:
         assert console_.mock_calls == [
-            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red"))
+            call.out(f" ✗ {scenario_result.scenario.subject}", style=Style.parse("red"))
         ]
 
 
@@ -126,7 +126,7 @@ async def test_rich_reporter_scenario_failed_event_verbose2(*, dispatcher: Dispa
 
     with then:
         assert console_.mock_calls[:3] == [
-            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+            call.out(f" ✗ {scenario_result.scenario.subject}", style=Style.parse("red")),
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
         ]
@@ -162,7 +162,7 @@ async def test_rich_reporter_scenario_failed_event_verbose3(*, dispatcher: Dispa
 
     with then:
         assert console_.mock_calls[:3] == [
-            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+            call.out(f" ✗ {scenario_result.scenario.subject}", style=Style.parse("red")),
             call.out(f"    ✔ {step_result_passed.step_name}", style=Style.parse("green")),
             call.out(f"    ✗ {step_result_failed.step_name}", style=Style.parse("red")),
         ]
@@ -194,5 +194,5 @@ async def test_rich_reporter_scenario_failed_event_without_steps_verbose3(*,
 
     with then:
         assert console_.mock_calls == [
-            call.out(f" ✗ {scenario_result.scenario_subject}", style=Style.parse("red")),
+            call.out(f" ✗ {scenario_result.scenario.subject}", style=Style.parse("red")),
         ]
