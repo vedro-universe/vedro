@@ -12,8 +12,7 @@ from unittest.mock import Mock, call
 import pytest
 from baby_steps import given, then, when
 
-from vedro._core import Dispatcher
-from vedro._core._dispatcher import Subscriber
+from vedro.core import Dispatcher, Subscriber
 from vedro.events import Event
 
 

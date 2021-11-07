@@ -3,9 +3,10 @@ name: Test
 on:
   push:
     branches:
-      - '*'
-    tags-ignore:
-      - '*'
+      - 'master'
+  pull_request:
+    branches:
+      - 'master'
   schedule:
     # every Wed at 07:00 UTC
     - cron:  '0 7 * * 3'

@@ -30,6 +30,7 @@ class _Meta(type):
                 "__init__": partialmethod(cls_constructor, *args, **kwargs),
                 "__vedro__template__": created,
                 "__vedro__template_index__": idx,
+                "__vedro__template_total__": len(cls_params),
                 "__vedro__template_args__": bound_args,
             }
             cls_globals[cls_name] = type(cls_name, bases, cls_namespace)

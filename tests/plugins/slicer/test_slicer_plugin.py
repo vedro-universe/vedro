@@ -4,7 +4,7 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro._core import Dispatcher
+from vedro.core import Dispatcher
 from vedro.events import ArgParsedEvent, ArgParseEvent
 from vedro.plugins.slicer import Slicer
 

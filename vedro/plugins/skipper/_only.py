@@ -1,3 +1,4 @@
+from inspect import isclass
 from typing import Any, Type, Union
 
 from vedro import Scenario
@@ -12,7 +13,7 @@ def only(scenario_or_nothing: Union[Type[Scenario], None] = None) -> Any:
 
     if scenario_or_nothing is None:
         return wrapped
-    elif issubclass(scenario_or_nothing, Scenario):
+    elif isclass(scenario_or_nothing) and issubclass(scenario_or_nothing, Scenario):
         return wrapped(scenario_or_nothing)
     else:
         raise TypeError()

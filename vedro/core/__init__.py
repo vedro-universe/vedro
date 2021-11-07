@@ -1,6 +1,7 @@
 from .._core import (
     Dispatcher,
     ExcInfo,
+    Lifecycle,
     Plugin,
     Report,
     Runner,
@@ -8,9 +9,11 @@ from .._core import (
     ScenarioStatus,
     StepResult,
     StepStatus,
+    Subscriber,
     VirtualScenario,
     VirtualStep,
 )
 
-__all__ = ("Dispatcher", "Plugin", "ScenarioResult", "StepResult", "ScenarioStatus", "StepStatus",
-           "VirtualScenario", "VirtualStep", "ExcInfo", "Report", "Runner",)
+__all__ = ("Dispatcher", "Subscriber", "Plugin", "ScenarioResult", "StepResult",
+           "ScenarioStatus", "StepStatus", "VirtualScenario", "VirtualStep",
+           "ExcInfo", "Report", "Runner", "Lifecycle",)

@@ -32,6 +32,11 @@ class VirtualScenario:
         return cast(Union[int, None], idx)
 
     @property
+    def template_total(self) -> Union[int, None]:
+        idx = getattr(self._orig_scenario, "__vedro__template_total__", None)
+        return cast(Union[int, None], idx)
+
+    @property
     def template_args(self) -> Union[BoundArguments, None]:
         args = getattr(self._orig_scenario, "__vedro__template_args__", None)
         return cast(Union[BoundArguments, None], args)

@@ -12,7 +12,7 @@ from unittest.mock import Mock, call, sentinel
 
 from baby_steps import given, then, when
 
-from vedro._core import VirtualStep
+from vedro.core import VirtualStep
 
 
 def test_virtual_step_name():
