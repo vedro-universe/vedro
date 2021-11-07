@@ -4,7 +4,7 @@ import pytest
 from baby_steps import given, then, when
 from rich.console import Style
 
-from vedro._core import Dispatcher, Report
+from vedro.core import Dispatcher, Report
 from vedro.events import CleanupEvent
 from vedro.plugins.director import RichReporter
 from vedro.plugins.director.rich.test_utils import (

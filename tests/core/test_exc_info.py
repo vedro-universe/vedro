@@ -2,7 +2,7 @@ import sys
 
 from baby_steps import given, then, when
 
-from vedro._core import ExcInfo
+from vedro.core import ExcInfo
 
 
 def test_exc_info():

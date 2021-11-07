@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from baby_steps import given, then, when
 
-from vedro._core import ExcInfo, StepResult, VirtualStep
+from vedro.core import ExcInfo, StepResult, VirtualStep
 
 
 @pytest.fixture()

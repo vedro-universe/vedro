@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from baby_steps import given, then, when
 
-from vedro._core import Report, ScenarioResult, VirtualScenario
+from vedro.core import Report, ScenarioResult, VirtualScenario
 
 
 def make_scenario_result() -> ScenarioResult:

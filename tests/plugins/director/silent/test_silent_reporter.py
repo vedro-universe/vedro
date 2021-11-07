@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from baby_steps import given, then, when
 
-from vedro._core import Dispatcher
+from vedro.core import Dispatcher
 from vedro.plugins.director import SilentReporter
 
 

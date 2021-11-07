@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from baby_steps import given, then, when
 
-from vedro._core import Dispatcher
+from vedro.core import Dispatcher
 from vedro.events import ArgParseEvent
 from vedro.plugins.director import RichReporter
 from vedro.plugins.director.rich.test_utils import console_, dispatcher, reporter
