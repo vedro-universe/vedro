@@ -59,15 +59,15 @@ class RichReporter(Reporter):
                                       default=self._verbosity,
                                       help=help_message)
         event.arg_parser.add_argument("--show-timings",
-                                      action='store_true',
+                                      action="store_true",
                                       default=False,
                                       help="Show the elapsed time of each scenario")
         event.arg_parser.add_argument("--tb-show-internal-calls",
-                                      action='store_true',
+                                      action="store_true",
                                       default=False,
                                       help="Show internal calls in the traceback output")
         event.arg_parser.add_argument("--tb-show-locals",
-                                      action='store_true',
+                                      action="store_true",
                                       default=False,
                                       help="Show local variables in the traceback output")
 
@@ -155,9 +155,6 @@ class RichReporter(Reporter):
 
     def _print_scenario_subject(self, scenario_result: ScenarioResult,
                                 show_timings: bool = False) -> None:
-        # template_index = scenario_result.scenario.template_index
-        # suffix = f" ({template_index})" if (template_index is not None) else ""
-
         if scenario_result.is_passed():
             subject = f" ✔ {scenario_result.scenario.subject}"
             style = Style(color="green")
