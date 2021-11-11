@@ -84,8 +84,8 @@ class RichReporter(Reporter):
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         if event.scenario_result.scenario.namespace != self._namespace:
             self._namespace = event.scenario_result.scenario.namespace
-            self._namespace = self._namespace.replace("_", " ").replace("/", " / ")
-            self._console.out(f"* {self._namespace}", style=Style(bold=True))
+            namespace = self._namespace.replace("_", " ").replace("/", " / ")
+            self._console.out(f"* {namespace}", style=Style(bold=True))
 
     def on_scenario_end(self, event: ScenarioEndEventType) -> None:
         if not event.scenario_result.is_failed() and len(self._buffer) == 0:

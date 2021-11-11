@@ -25,7 +25,7 @@ async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
     with given:
         reporter.subscribe(dispatcher)
 
-        vscenario = make_vscenario(path=make_path("<namespace>"))
+        vscenario = make_vscenario(path=make_path("<namespace_1>"))
         scenario_result = ScenarioResult(vscenario)
         event = ScenarioRunEvent(scenario_result)
 
@@ -34,7 +34,7 @@ async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
 
     with then:
         assert console_.mock_calls == [
-            call.out(f"* {scenario_result.scenario.namespace}", style=Style.parse("bold"))
+            call.out("* <namespace 1>", style=Style.parse("bold"))
         ]
 
 
@@ -45,7 +45,8 @@ async def test_rich_reporter_scenario_run_event_same_namespace(*, dispatcher: Di
     with given:
         reporter.subscribe(dispatcher)
 
-        scenario_result = make_scenario_result()
+        vscenario = make_vscenario(path=make_path("<namespace_1>"))
+        scenario_result = make_scenario_result(vscenario)
         event = ScenarioRunEvent(scenario_result)
 
         await dispatcher.fire(event)
@@ -65,14 +66,13 @@ async def test_rich_reporter_scenario_run_event_diff_namespace(*, dispatcher: Di
     with given:
         reporter.subscribe(dispatcher)
 
-        vscenario = make_vscenario(path=make_path("<namespace1>"))
+        vscenario = make_vscenario(path=make_path("<namespace_1>"))
         scenario_result1 = ScenarioResult(vscenario)
         event1 = ScenarioRunEvent(scenario_result1)
         await dispatcher.fire(event1)
         console_.reset_mock()
 
-        namespace = "<namespace2>"
-        vscenario = make_vscenario(path=make_path(namespace))
+        vscenario = make_vscenario(path=make_path("<namespace_2>"))
         scenario_result2 = ScenarioResult(vscenario)
         event2 = ScenarioRunEvent(scenario_result2)
 
@@ -81,5 +81,5 @@ async def test_rich_reporter_scenario_run_event_diff_namespace(*, dispatcher: Di
 
     with then:
         assert console_.mock_calls == [
-            call.out(f"* {namespace}", style=Style.parse("bold")),
+            call.out("* <namespace 2>", style=Style.parse("bold")),
         ]
