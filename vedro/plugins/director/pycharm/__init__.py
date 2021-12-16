@@ -16,7 +16,7 @@ __all__ = ("PyCharmReporter",)
 
 
 class PyCharmReporter(Reporter):
-    def __init__(self, /, out: TextIO = sys.stdout) -> None:
+    def __init__(self, out: TextIO = sys.stdout) -> None:
         self._out = out
 
     @property
