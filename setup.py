@@ -13,7 +13,7 @@ def find_dev_required():
 
 setup(
     name="vedro",
-    version="1.3.3",
+    version="1.3.4",
     description="",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
