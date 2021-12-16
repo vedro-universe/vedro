@@ -12,7 +12,7 @@ from ._params import params
 from ._scenario import Scenario
 from ._version import version
 from .plugins.deferrer import Deferrer, defer
-from .plugins.director import Director, Reporter, RichReporter, SilentReporter
+from .plugins.director import Director, PyCharmReporter, Reporter, RichReporter, SilentReporter
 from .plugins.interrupter import Interrupter
 from .plugins.seeder import Seeder
 from .plugins.skipper import Skipper, only, skip
@@ -45,6 +45,7 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     reporters = [
         RichReporter(),
         SilentReporter(),
+        PyCharmReporter(),
     ]
 
     if plugins:
