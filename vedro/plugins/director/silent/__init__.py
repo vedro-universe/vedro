@@ -1,4 +1,4 @@
-from ...._core import Dispatcher
+from ....core import Dispatcher
 from .._reporter import Reporter
 
 __all__ = ("SilentReporter",)

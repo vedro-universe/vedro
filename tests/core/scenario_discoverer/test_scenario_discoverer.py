@@ -11,7 +11,7 @@ from unittest.mock import Mock, call
 import pytest
 
 from vedro import Scenario
-from vedro._core import ScenarioDiscoverer, ScenarioFinder, ScenarioLoader, VirtualScenario
+from vedro.core import ScenarioDiscoverer, ScenarioFinder, ScenarioLoader, VirtualScenario
 
 
 @pytest.fixture()

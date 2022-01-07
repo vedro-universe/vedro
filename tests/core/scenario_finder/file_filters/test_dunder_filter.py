@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from vedro._core._scenario_finder._file_filters import DunderFilter
+from vedro.core._scenario_finder._file_filters import DunderFilter
 
 
 @pytest.mark.parametrize(("value", "expected"), [

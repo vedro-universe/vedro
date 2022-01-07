@@ -3,8 +3,8 @@ from typing import List
 
 import pytest
 
-from vedro._core._scenario_finder import ScenarioFileFinder
-from vedro._core._scenario_finder._file_filters import DunderFilter, HiddenFilter
+from vedro.core._scenario_finder import ScenarioFileFinder
+from vedro.core._scenario_finder._file_filters import DunderFilter, HiddenFilter
 
 
 def _create_file_tree(tree: List[Path]) -> List[Path]:
