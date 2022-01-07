@@ -1,10 +1,11 @@
 import os
-from argparse import ArgumentParser, HelpFormatter
+from argparse import HelpFormatter
 from functools import partial
 from pathlib import Path
 from typing import List
 
 from ..events import ArgParsedEvent, ArgParseEvent, CleanupEvent, StartupEvent
+from ._arg_parser import ArgumentParser
 from ._dispatcher import Dispatcher
 from ._plugin import Plugin
 from ._report import Report
@@ -31,13 +32,24 @@ class Lifecycle:
 
     async def start(self) -> Report:
         formatter = partial(HelpFormatter, max_help_position=30)
-        arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False)
-
-        await self._dispatcher.fire(ArgParseEvent(arg_parser))
-        arg_parser.add_argument("--reruns", type=int, default=0,
-                                help="Number of times to rerun failed scenarios (default 0)")
+        arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False,
+                                    description="documentation: vedro.io/docs")
         arg_parser.add_argument("-h", "--help",
                                 action="help", help="Show this help message and exit")
+
+        subparsers = arg_parser.add_subparsers(dest="subparser")
+        arg_parser_run = subparsers.add_parser("run", add_help=False,
+                                               description="documentation: vedro.io/docs",
+                                               help="Run scenarios. "
+                                                    "Type 'vedro run --help' for more info")
+        arg_parser.set_default_subparser("run")
+
+        await self._dispatcher.fire(ArgParseEvent(arg_parser_run))
+        arg_parser_run.add_argument("--reruns", type=int, default=0,
+                                    help="Number of times to rerun failed scenarios (default 0)")
+        arg_parser_run.add_argument("-h", "--help",
+                                    action="help", help="Show this help message and exit")
+
         args = arg_parser.parse_args()
         await self._dispatcher.fire(ArgParsedEvent(args))
 
