@@ -1,6 +1,6 @@
 from pytest import raises
 
-from vedro._core import ScenarioFinder
+from vedro.core import ScenarioFinder
 
 
 def test_scenario_finder():

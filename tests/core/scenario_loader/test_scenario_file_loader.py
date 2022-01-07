@@ -4,7 +4,7 @@ from textwrap import dedent
 import pytest
 from baby_steps import given, then, when
 
-from vedro._core._scenario_loader import ScenarioFileLoader
+from vedro.core._scenario_loader import ScenarioFileLoader
 
 
 @pytest.mark.asyncio

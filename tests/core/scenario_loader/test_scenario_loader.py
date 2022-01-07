@@ -1,7 +1,7 @@
 from baby_steps import then, when
 from pytest import raises
 
-from vedro._core import ScenarioLoader
+from vedro.core import ScenarioLoader
 
 
 def test_scenario_loader():

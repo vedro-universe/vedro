@@ -1,12 +1,12 @@
 from argparse import Namespace
 from typing import List
 
-from .._core._arg_parser import ArgumentParser
-from .._core._exc_info import ExcInfo
-from .._core._report import Report
-from .._core._scenario_result import ScenarioResult
-from .._core._step_result import StepResult
-from .._core._virtual_scenario import VirtualScenario
+from ..core._arg_parser import ArgumentParser
+from ..core._exc_info import ExcInfo
+from ..core._report import Report
+from ..core._scenario_result import ScenarioResult
+from ..core._step_result import StepResult
+from ..core._virtual_scenario import VirtualScenario
 from ._event import Event
 
 

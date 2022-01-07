@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pytest
 
-from vedro._core._scenario_loader import ScenarioAssertRewriterLoader
+from vedro.core._scenario_loader import ScenarioAssertRewriterLoader
 
 
 @pytest.mark.asyncio
