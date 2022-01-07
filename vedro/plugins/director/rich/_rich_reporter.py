@@ -52,24 +52,26 @@ class RichReporter(Reporter):
                   .listen(CleanupEvent, self.on_cleanup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
+        group = event.arg_parser.add_argument_group("Rich Reporter")
+
         help_message = ("Increase verbosity level "
                         "(-v: show steps, -vv: show exception, -vvv: show scope)")
-        event.arg_parser.add_argument("-v", "--verbose",
-                                      action="count",
-                                      default=self._verbosity,
-                                      help=help_message)
-        event.arg_parser.add_argument("--show-timings",
-                                      action="store_true",
-                                      default=False,
-                                      help="Show the elapsed time of each scenario")
-        event.arg_parser.add_argument("--tb-show-internal-calls",
-                                      action="store_true",
-                                      default=False,
-                                      help="Show internal calls in the traceback output")
-        event.arg_parser.add_argument("--tb-show-locals",
-                                      action="store_true",
-                                      default=False,
-                                      help="Show local variables in the traceback output")
+        group.add_argument("-v", "--verbose",
+                           action="count",
+                           default=self._verbosity,
+                           help=help_message)
+        group.add_argument("--show-timings",
+                           action="store_true",
+                           default=False,
+                           help="Show the elapsed time of each scenario")
+        group.add_argument("--tb-show-internal-calls",
+                           action="store_true",
+                           default=False,
+                           help="Show internal calls in the traceback output")
+        group.add_argument("--tb-show-locals",
+                           action="store_true",
+                           default=False,
+                           help="Show local variables in the traceback output")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
