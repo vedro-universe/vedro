@@ -1,5 +1,6 @@
 from ._arg_parser import ArgumentParser
 from ._dispatcher import Dispatcher, Subscriber
+from ._event import Event
 from ._exc_info import ExcInfo
 from ._lifecycle import Lifecycle
 from ._plugin import Plugin
@@ -13,7 +14,7 @@ from ._step_result import StepResult, StepStatus
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 
-__all__ = ("Dispatcher", "Subscriber", "ExcInfo", "Lifecycle", "Plugin", "Report", "Runner",
-           "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
+__all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin",
+           "Report", "Runner", "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
            "ScenarioResult", "StepResult", "VirtualScenario", "VirtualStep",
            "ScenarioStatus", "StepStatus", "ArgumentParser",)

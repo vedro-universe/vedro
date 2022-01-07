@@ -4,12 +4,19 @@ from unittest.mock import Mock
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core import ExcInfo, Report, ScenarioResult, StepResult, VirtualScenario, VirtualStep
+from vedro.core import (
+    Event,
+    ExcInfo,
+    Report,
+    ScenarioResult,
+    StepResult,
+    VirtualScenario,
+    VirtualStep,
+)
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
-    Event,
     ExceptionRaisedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,

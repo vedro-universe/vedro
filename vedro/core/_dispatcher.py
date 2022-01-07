@@ -3,7 +3,7 @@ from heapq import heappop, heappush
 from time import monotonic_ns
 from typing import Any, Callable, Dict, List, Tuple, Type
 
-from ..events import Event
+from ._event import Event
 
 __all__ = ("Dispatcher", "Subscriber",)
 

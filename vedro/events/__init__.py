@@ -2,12 +2,12 @@ from argparse import Namespace
 from typing import List
 
 from ..core._arg_parser import ArgumentParser
+from ..core._event import Event
 from ..core._exc_info import ExcInfo
 from ..core._report import Report
 from ..core._scenario_result import ScenarioResult
 from ..core._step_result import StepResult
 from ..core._virtual_scenario import VirtualScenario
-from ._event import Event
 
 
 class ArgParseEvent(Event):
