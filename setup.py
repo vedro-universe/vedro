@@ -14,7 +14,7 @@ def find_dev_required():
 setup(
     name="vedro",
     version="1.3.6",
-    description="",
+    description="BDD Framework (without magic)",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Nikita Tsvetkov",
@@ -29,6 +29,9 @@ setup(
     license="Apache-2.0",
     packages=find_packages(exclude=("tests",)),
     package_data={"vedro": ["py.typed"]},
+    entry_points={
+        "console_scripts": ["vedro = vedro:run"],
+    },
     install_requires=find_required(),
     tests_require=find_dev_required(),
     classifiers=[
