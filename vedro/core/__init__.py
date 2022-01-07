@@ -1,4 +1,5 @@
 from .._core import (
+    ArgumentParser,
     Dispatcher,
     ExcInfo,
     Lifecycle,
@@ -16,4 +17,4 @@ from .._core import (
 
 __all__ = ("Dispatcher", "Subscriber", "Plugin", "ScenarioResult", "StepResult",
            "ScenarioStatus", "StepStatus", "VirtualScenario", "VirtualStep",
-           "ExcInfo", "Report", "Runner", "Lifecycle",)
+           "ExcInfo", "Report", "Runner", "Lifecycle", "ArgumentParser",)

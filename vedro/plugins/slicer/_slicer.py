@@ -17,8 +17,9 @@ class Slicer(Plugin):
                   .listen(StartupEvent, self.on_startup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("--slicer-total", type=int, help="Set total workers")
-        event.arg_parser.add_argument("--slicer-index", type=int, help="Set current worker")
+        group = event.arg_parser.add_argument_group("Slicer")
+        group.add_argument("--slicer-total", type=int, help="Set total workers")
+        group.add_argument("--slicer-index", type=int, help="Set current worker")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._total = event.args.slicer_total

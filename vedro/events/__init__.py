@@ -1,6 +1,7 @@
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from typing import List
 
+from .._core._arg_parser import ArgumentParser
 from .._core._exc_info import ExcInfo
 from .._core._report import Report
 from .._core._scenario_result import ScenarioResult
