@@ -1,13 +1,12 @@
 from asyncio import iscoroutinefunction
-from types import MethodType
-from typing import Any
+from typing import Any, Callable
 
 __all__ = ("VirtualStep",)
 
 
 class VirtualStep:
-    def __init__(self, orig_step: MethodType) -> None:
-        self._orig_step: MethodType = orig_step
+    def __init__(self, orig_step: Callable[..., None]) -> None:
+        self._orig_step = orig_step
 
     @property
     def name(self) -> str:

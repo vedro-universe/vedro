@@ -4,7 +4,7 @@ import string
 import sys
 from argparse import Namespace
 from pathlib import Path
-from types import MethodType, TracebackType
+from types import TracebackType
 from typing import Any, List, Optional, cast
 from unittest.mock import Mock
 
@@ -83,7 +83,7 @@ def make_vstep(*, name: Optional[str] = None) -> VirtualStep:
         pass
     if name:
         method.__name__ = name
-    return VirtualStep(cast(MethodType, method))
+    return VirtualStep(method)
 
 
 def make_random_name(length: int = 10) -> str:
