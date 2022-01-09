@@ -47,14 +47,16 @@ class PyCharmReporter(Reporter):
                   .listen(CleanupEvent, self.on_cleanup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("--pycharm-show-skipped",
-                                      action="store_true",
-                                      default=self._show_skipped,
-                                      help="Show skipped scenarios")
-        event.arg_parser.add_argument("--pycharm-show-internal-calls",
-                                      action="store_true",
-                                      default=self._show_internal_calls,
-                                      help="Show internal calls in the traceback output")
+        group = event.arg_parser.add_argument_group("PyCharm Reporter")
+
+        group.add_argument("--pycharm-show-skipped",
+                           action="store_true",
+                           default=self._show_skipped,
+                           help="Show skipped scenarios")
+        group.add_argument("--pycharm-show-internal-calls",
+                           action="store_true",
+                           default=self._show_internal_calls,
+                           help="Show internal calls in the traceback output")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._show_internal_calls = event.args.pycharm_show_internal_calls
