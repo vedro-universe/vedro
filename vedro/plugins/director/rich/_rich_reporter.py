@@ -37,6 +37,7 @@ class RichReporter(Reporter):
         self._tb_show_internal_calls = False
         self._tb_show_locals = False
         self._show_timings = False
+        self._show_paths = False
         self._namespace: Union[str, None] = None
         self._buffer: List[ScenarioResult] = []
         self._reruns = 0
@@ -64,6 +65,10 @@ class RichReporter(Reporter):
                            action="store_true",
                            default=False,
                            help="Show the elapsed time of each scenario")
+        group.add_argument("--show-paths",
+                           action="store_true",
+                           default=False,
+                           help="Show the relative path of each passed scenario")
         group.add_argument("--tb-show-internal-calls",
                            action="store_true",
                            default=False,
@@ -76,6 +81,7 @@ class RichReporter(Reporter):
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
         self._show_timings = event.args.show_timings
+        self._show_paths = event.args.show_paths
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
         self._reruns = event.args.reruns
@@ -103,6 +109,10 @@ class RichReporter(Reporter):
 
     def _print_scenario_passed(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
         self._print_scenario_subject(scenario_result, self._show_timings)
+        if self._show_paths:
+            prepend = " " * indent
+            rel_path = scenario_result.scenario.path.relative_to(os.getcwd())
+            self._console.out(f"{prepend}   > {rel_path}", style=Style(color="grey50"))
 
     def _print_scenario_failed(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
         self._print_scenario_subject(scenario_result, self._show_timings)
