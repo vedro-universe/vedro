@@ -40,7 +40,7 @@ class ScenarioFileLoader(ScenarioLoader):
         for name in dir(module):
             val = getattr(module, name)
             if inspect.isclass(val) and issubclass(val, Scenario) and val != Scenario:
-                if not val.__name__.startswith("Scenario"):
+                if not (val.__name__.startswith("Scenario") or val.__name__.endswith("Scenario")):
                     continue
                 val.__file__ = os.path.abspath(module.__file__)  # type: ignore
                 loaded.append(val)
