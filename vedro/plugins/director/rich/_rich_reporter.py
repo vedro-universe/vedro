@@ -41,6 +41,7 @@ class RichReporter(Reporter):
         self._namespace: Union[str, None] = None
         self._buffer: List[ScenarioResult] = []
         self._reruns = 0
+        self._max_frames = 8
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
@@ -226,10 +227,10 @@ class RichReporter(Reporter):
                 for frame in stack.frames:
                     if frame.locals:
                         frame.locals = self._filter_locals(frame.locals)
-            self._console.print(Traceback(trace))
+            self._console.print(Traceback(trace, max_frames=self._max_frames))
             self._console.out(" ")
         else:
-            formatted = format_exception(type(exception), exception, traceback)
+            formatted = format_exception(type(exception), exception, traceback, self._max_frames)
             self._console.out("".join(formatted), style=Style(color="yellow"))
 
     def _format_scope(self, scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
