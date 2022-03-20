@@ -258,7 +258,11 @@ class RichReporter(Reporter):
             summary = "# " + "\n# ".join(event.report.summary)
             self._console.out(summary, style=Style(color="grey70"))
 
-        self._console.out(f"# {event.report.total} scenarios, "
+        if event.report.total == 1:
+            scenario = "scenario"
+        else:
+            scenario = "scenarios"
+        self._console.out(f"# {event.report.total} {scenario}, "
                           f"{event.report.passed} passed, "
                           f"{event.report.failed} failed, "
                           f"{event.report.skipped} skipped",

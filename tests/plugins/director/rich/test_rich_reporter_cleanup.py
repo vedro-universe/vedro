@@ -114,7 +114,7 @@ async def test_rich_reporter_failed_cleanup_event(*, dispatcher: Dispatcher,
     with then:
         assert console_.mock_calls == [
             call.out(" "),
-            call.out("# 1 scenarios, 0 passed, 1 failed, 0 skipped",
+            call.out("# 1 scenario, 0 passed, 1 failed, 0 skipped",
                      style=Style.parse("bold red"),
                      end=""),
             call.out(" (3.14s)", style=Style.parse("blue"))
