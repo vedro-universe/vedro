@@ -1,3 +1,5 @@
+from typing import Type
+
 import cabina
 
 from ._dispatcher import Subscriber
@@ -10,5 +12,5 @@ class Plugin(Subscriber):
 
 
 class PluginConfig(cabina.Section):
-    plugin: Plugin = ...
+    plugin: Type[Plugin] = Plugin
     enabled: bool = True

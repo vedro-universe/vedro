@@ -177,10 +177,11 @@ async def test_rich_reporter_scenario_failed_event_verbose3(*, dispatcher: Dispa
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter_scenario_failed_event_without_steps_verbose3(*,
-                                                                          dispatcher: Dispatcher,
-                                                                          reporter: RichReporterPlugin,
-                                                                          console_: Mock):
+async def test_rich_reporter_scenario_failed_event_without_steps_verbose3(
+        *,
+        dispatcher: Dispatcher,
+        reporter: RichReporterPlugin,
+        console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
         event = ArgParsedEvent(make_parsed_args(verbose=3))

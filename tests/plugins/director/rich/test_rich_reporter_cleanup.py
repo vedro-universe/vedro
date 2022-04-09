@@ -41,7 +41,8 @@ async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_cleanup_event_with_summary(*, dispatcher: Dispatcher,
-                                                        reporter: RichReporterPlugin, console_: Mock):
+                                                        reporter: RichReporterPlugin,
+                                                        console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
 

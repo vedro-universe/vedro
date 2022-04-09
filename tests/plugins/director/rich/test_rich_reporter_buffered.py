@@ -19,7 +19,8 @@ __all__ = ("dispatcher", "reporter", "console_",)
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter(*, dispatcher: Dispatcher, reporter: RichReporterPlugin, console_: Mock):
+async def test_rich_reporter(*,
+                             dispatcher: Dispatcher, reporter: RichReporterPlugin, console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
 

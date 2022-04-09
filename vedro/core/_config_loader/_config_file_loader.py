@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 from .._module_loader import ModuleFileLoader, ModuleLoader
 from ._config_loader import ConfigLoader
@@ -16,4 +16,6 @@ class ConfigFileLoader(ConfigLoader):
 
     async def load(self, path: Path) -> ConfigType:
         module = await self._module_loader.load(path)
-        return getattr(module, "Config", self._default_config)
+        config = getattr(module, "Config", self._default_config)
+        assert issubclass(config, ConfigType)
+        return cast(ConfigType, config)

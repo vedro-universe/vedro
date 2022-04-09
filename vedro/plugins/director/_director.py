@@ -20,6 +20,7 @@ class DirectorPlugin(Plugin):
         self._dispatcher = dispatcher.listen(ArgParseEvent, self.on_arg_parse)
 
     async def on_arg_parse(self, event: ArgParseEvent) -> None:
+        assert isinstance(self._dispatcher, Dispatcher)
         await self._dispatcher.fire(DirectorInitEvent(self))
 
         if len(self._reporters) == 0:

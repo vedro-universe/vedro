@@ -5,7 +5,7 @@ from pathlib import Path
 
 from ..events import ArgParsedEvent, ArgParseEvent, CleanupEvent, StartupEvent
 from ._arg_parser import ArgumentParser
-from ._config_loader import ConfigLoader
+from ._config_loader import ConfigLoader, ConfigType
 from ._dispatcher import Dispatcher
 from ._report import Report
 from ._runner import Runner
@@ -25,7 +25,7 @@ class Lifecycle:
         self._runner = runner
         self._config_loader = config_loader
 
-    async def _load_config(self, filename: str):  # ConfigType
+    async def _load_config(self, filename: str) -> ConfigType:
         parser = ArgumentParser(add_help=False)
         parser.add_argument("--config", default=filename, type=Path,
                             help=f"Config path (default {filename})")
@@ -46,7 +46,7 @@ class Lifecycle:
                                 help=f"Config path (default {default_config})")
 
         config = await self._load_config(default_config)
-        for _, section in config.Plugins.items():
+        for _, section in config.Plugins.items():  # type: ignore
             if section.enabled:
                 plugin = section.plugin(config=section)
                 self._dispatcher.register(plugin)

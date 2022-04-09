@@ -1,23 +1,20 @@
 import cabina
 
-from vedro.plugins.director import Director
-from vedro.plugins.director.pycharm import PyCharmReporter
-from vedro.plugins.director.rich import RichReporter
-from vedro.plugins.director.silent import SilentReporter
+import vedro.plugins.director as director
 
 __all__ = ("Config",)
 
 
 class Config(cabina.Config, cabina.Section):
     class Plugins(cabina.Section):
-        class Director(Director):
+        class Director(director.Director):
             pass
 
-        class RichReporter(RichReporter):
+        class RichReporter(director.RichReporter):
             pass
 
-        class SilentReporter(SilentReporter):
+        class SilentReporter(director.SilentReporter):
             pass
 
-        class PyCharmReporter(PyCharmReporter):
+        class PyCharmReporter(director.PyCharmReporter):
             pass

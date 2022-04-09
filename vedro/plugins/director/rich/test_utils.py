@@ -41,7 +41,7 @@ def console_() -> Mock:
 
 @pytest.fixture()
 def reporter(console_: Console) -> RichReporterPlugin:
-    return RichReporterPlugin(lambda: console_)
+    return RichReporterPlugin(console_factory=lambda: console_)
 
 
 def make_parsed_args(*, verbose: int = 0,

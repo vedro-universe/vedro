@@ -28,7 +28,7 @@ __all__ = ("PyCharmReporter", "PyCharmReporterPlugin",)
 
 
 class PyCharmReporterPlugin(Reporter):
-    def __init__(self, config: Optional["PyCharmReporter"] = None,
+    def __init__(self, config: Optional["PyCharmReporter"] = None, *,
                  console_factory: Callable[[], Console] = make_console) -> None:
         super().__init__()
         self._console = console_factory()
