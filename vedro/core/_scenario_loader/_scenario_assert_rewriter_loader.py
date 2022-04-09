@@ -13,6 +13,7 @@ RewriterType = Any
 
 class ScenarioAssertRewriterLoader(ScenarioFileLoader):
     def __init__(self, rewriter: Optional[RewriterType] = None) -> None:
+        super().__init__()
         self._rewriter = rewriter or AssertionRewritingHook()
 
     def _exec_module(self, loader: Loader, module: ModuleType) -> None:
