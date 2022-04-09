@@ -53,7 +53,7 @@ class VirtualScenario:
 
         if self.template_args:
             subject = subject.format(**self.template_args.arguments)
-        return cast(str, subject)
+        return subject
 
     @property
     def namespace(self) -> str:
