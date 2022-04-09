@@ -6,7 +6,7 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, ScenarioResult
 from vedro.events import ScenarioPassedEvent
-from vedro.plugins.director import RichReporter
+from vedro.plugins.director import RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import console_, dispatcher, make_vscenario, reporter
 
 __all__ = ("dispatcher", "reporter", "console_",)
@@ -14,7 +14,7 @@ __all__ = ("dispatcher", "reporter", "console_",)
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_pass_event(*, dispatcher: Dispatcher,
-                                                 reporter: RichReporter, console_: Mock):
+                                                 reporter: RichReporterPlugin, console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
 

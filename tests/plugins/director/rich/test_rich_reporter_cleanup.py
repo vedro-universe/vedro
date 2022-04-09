@@ -6,7 +6,7 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, Report
 from vedro.events import CleanupEvent
-from vedro.plugins.director import RichReporter
+from vedro.plugins.director import RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
     console_,
     dispatcher,
@@ -20,7 +20,7 @@ __all__ = ("dispatcher", "reporter", "console_",)
 
 @pytest.mark.asyncio
 async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher,
-                                           reporter: RichReporter, console_: Mock):
+                                           reporter: RichReporterPlugin, console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
         report = Report()
@@ -41,7 +41,7 @@ async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_cleanup_event_with_summary(*, dispatcher: Dispatcher,
-                                                        reporter: RichReporter, console_: Mock):
+                                                        reporter: RichReporterPlugin, console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
 
@@ -65,7 +65,7 @@ async def test_rich_reporter_cleanup_event_with_summary(*, dispatcher: Dispatche
 
 @pytest.mark.asyncio
 async def test_rich_reporter_success_cleanup_event(*, dispatcher: Dispatcher,
-                                                   reporter: RichReporter, console_: Mock):
+                                                   reporter: RichReporterPlugin, console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
 
@@ -98,7 +98,7 @@ async def test_rich_reporter_success_cleanup_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_failed_cleanup_event(*, dispatcher: Dispatcher,
-                                                  reporter: RichReporter, console_: Mock):
+                                                  reporter: RichReporterPlugin, console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
 

@@ -6,7 +6,7 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
 from vedro.events import ArgParseEvent
-from vedro.plugins.director import Director, Reporter
+from vedro.plugins.director import DirectorPlugin, Reporter
 
 
 @pytest.fixture()
@@ -17,7 +17,7 @@ def dispatcher():
 @pytest.mark.asyncio
 async def test_director_plugin(*, dispatcher: Dispatcher):
     with given:
-        director = Director()
+        director = DirectorPlugin()
         director.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 
@@ -33,7 +33,7 @@ async def test_director_plugin_with_default_reporter(*, dispatcher: Dispatcher):
     with given:
         reporter_ = Mock(Reporter)
         reporter_.name = "reporter"
-        director = Director([reporter_])
+        director = DirectorPlugin([reporter_])
         director.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 
@@ -51,7 +51,7 @@ async def test_director_plugin_with_reporter(*, dispatcher: Dispatcher):
         reporter1_, reporter2_ = Mock(Reporter), Mock(Reporter)
         reporter1_.name = "reporter1"
         reporter2_.name = "reporter2"
-        director = Director([reporter1_, reporter2_])
+        director = DirectorPlugin([reporter1_, reporter2_])
         director.subscribe(dispatcher)
 
         args = Namespace(reporters=[reporter2_.name])
@@ -73,7 +73,7 @@ async def test_director_plugin_with_reporters(*, dispatcher: Dispatcher):
         reporter1_, reporter2_ = Mock(Reporter), Mock(Reporter)
         reporter1_.name = "reporter1"
         reporter2_.name = "reporter2"
-        director = Director([reporter1_, reporter2_])
+        director = DirectorPlugin([reporter1_, reporter2_])
         director.subscribe(dispatcher)
 
         args = Namespace(reporters=[reporter2_.name, reporter1_.name])

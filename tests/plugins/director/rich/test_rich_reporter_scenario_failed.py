@@ -6,7 +6,7 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, ScenarioResult, StepResult
 from vedro.events import ArgParsedEvent, ScenarioFailedEvent
-from vedro.plugins.director import RichReporter
+from vedro.plugins.director import RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
     console_,
     dispatcher,
@@ -24,7 +24,7 @@ __all__ = ("dispatcher", "reporter", "console_",)
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_default_verbose(*, dispatcher: Dispatcher,
-                                                                   reporter: RichReporter,
+                                                                   reporter: RichReporterPlugin,
                                                                    console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
@@ -45,7 +45,7 @@ async def test_rich_reporter_scenario_failed_event_default_verbose(*, dispatcher
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose0(*, dispatcher: Dispatcher,
-                                                            reporter: RichReporter,
+                                                            reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
@@ -66,7 +66,7 @@ async def test_rich_reporter_scenario_failed_event_verbose0(*, dispatcher: Dispa
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose1(*, dispatcher: Dispatcher,
-                                                            reporter: RichReporter,
+                                                            reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
@@ -102,7 +102,7 @@ async def test_rich_reporter_scenario_failed_event_verbose1(*, dispatcher: Dispa
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose2(*, dispatcher: Dispatcher,
-                                                            reporter: RichReporter,
+                                                            reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
@@ -137,7 +137,7 @@ async def test_rich_reporter_scenario_failed_event_verbose2(*, dispatcher: Dispa
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose3(*, dispatcher: Dispatcher,
-                                                            reporter: RichReporter,
+                                                            reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
@@ -179,7 +179,7 @@ async def test_rich_reporter_scenario_failed_event_verbose3(*, dispatcher: Dispa
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_without_steps_verbose3(*,
                                                                           dispatcher: Dispatcher,
-                                                                          reporter: RichReporter,
+                                                                          reporter: RichReporterPlugin,
                                                                           console_: Mock):
     with given:
         reporter.subscribe(dispatcher)

@@ -2,13 +2,13 @@ from unittest.mock import sentinel
 
 from baby_steps import given, then, when
 
-from vedro.plugins.director import RichReporter
+from vedro.plugins.director import RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import console_, dispatcher, reporter
 
 __all__ = ("dispatcher", "reporter", "console_",)
 
 
-def test_rich_reporter_format_scope_without_values(*, reporter: RichReporter):
+def test_rich_reporter_format_scope_without_values(*, reporter: RichReporterPlugin):
     with given:
         scope = {}
 
@@ -19,7 +19,7 @@ def test_rich_reporter_format_scope_without_values(*, reporter: RichReporter):
         assert res == []
 
 
-def test_rich_reporter_format_scope_with_values(*, reporter: RichReporter):
+def test_rich_reporter_format_scope_with_values(*, reporter: RichReporterPlugin):
     with given:
         scope = {"key_int": 1, "key_str": "val"}
 
@@ -33,7 +33,7 @@ def test_rich_reporter_format_scope_with_values(*, reporter: RichReporter):
         ]
 
 
-def test_rich_reporter_format_scope_with_unserializable_value(*, reporter: RichReporter):
+def test_rich_reporter_format_scope_with_unserializable_value(*, reporter: RichReporterPlugin):
     with given:
         unserializable = sentinel
         scope = {"key_int": 1, "key_unserializable": unserializable}

@@ -3,13 +3,13 @@ from unittest.mock import Mock
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
-from vedro.plugins.director import SilentReporter
+from vedro.plugins.director import SilentReporterPlugin
 
 
 def test_silent_reporter():
     with given:
         dispatcher_ = Mock(Dispatcher())
-        reporter = SilentReporter()
+        reporter = SilentReporterPlugin()
 
     with when:
         res = reporter.subscribe(dispatcher_)

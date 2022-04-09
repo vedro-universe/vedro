@@ -6,7 +6,7 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, ScenarioResult
 from vedro.events import ScenarioRunEvent
-from vedro.plugins.director import RichReporter
+from vedro.plugins.director import RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
     console_,
     dispatcher,
@@ -21,7 +21,7 @@ __all__ = ("dispatcher", "reporter", "console_",)
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
-                                                reporter: RichReporter, console_: Mock):
+                                                reporter: RichReporterPlugin, console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
 
@@ -40,7 +40,7 @@ async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_run_event_same_namespace(*, dispatcher: Dispatcher,
-                                                               reporter: RichReporter,
+                                                               reporter: RichReporterPlugin,
                                                                console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
@@ -61,7 +61,7 @@ async def test_rich_reporter_scenario_run_event_same_namespace(*, dispatcher: Di
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_run_event_diff_namespace(*, dispatcher: Dispatcher,
-                                                               reporter: RichReporter,
+                                                               reporter: RichReporterPlugin,
                                                                console_: Mock):
     with given:
         reporter.subscribe(dispatcher)
