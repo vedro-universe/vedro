@@ -21,7 +21,7 @@ from vedro.core import (
     VirtualScenario,
     VirtualStep,
 )
-from vedro.plugins.director import RichReporter
+from vedro.plugins.director import RichReporterPlugin
 
 __all__ = ("dispatcher", "console_", "reporter",
            "make_parsed_args", "make_path", "make_vscenario", "make_vstep",
@@ -40,8 +40,8 @@ def console_() -> Mock:
 
 
 @pytest.fixture()
-def reporter(console_: Console) -> RichReporter:
-    return RichReporter(lambda: console_)
+def reporter(console_: Console) -> RichReporterPlugin:
+    return RichReporterPlugin(lambda: console_)
 
 
 def make_parsed_args(*, verbose: int = 0,
