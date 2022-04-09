@@ -1,20 +1,15 @@
-import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.plugins.director import Reporter
 
 
-@pytest.mark.parametrize(("cls_name", "reporter_name"), [
-    ("WordReporter", "word"),
-    ("TwoWordsReporter", "two_words"),
-    ("ReportGenerator", "report_generator"),
-])
-def test_reporter_name(cls_name: str, reporter_name: str):
+def test_reporter_on_chosen():
     with given:
-        cls = type(cls_name, (Reporter,), {})
+        reporter = Reporter()
 
-    with when:
-        reporter = cls()
+    with when, raises(BaseException) as exception:
+        reporter.on_chosen()
 
     with then:
-        assert reporter.name == reporter_name
+        assert exception.type is NotImplementedError

@@ -4,16 +4,16 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
-from vedro.plugins.director import SilentReporterPlugin, DirectorPlugin, DirectorInitEvent
+from vedro.plugins.director import DirectorPlugin, DirectorInitEvent, PyCharmReporterPlugin
 
 
 @pytest.mark.asyncio
-async def test_silent_reporter_subscribe():
+async def test_pycharm_reporter_subscribe():
     with given:
         dispatcher = Dispatcher()
         director_ = Mock(DirectorPlugin)
 
-        reporter = SilentReporterPlugin()
+        reporter = PyCharmReporterPlugin()
         reporter.subscribe(dispatcher)
 
     with when:
@@ -21,15 +21,15 @@ async def test_silent_reporter_subscribe():
 
     with then:
         assert director_.mock_calls == [
-            call.register("silent", reporter)
+            call.register("pycharm", reporter)
         ]
 
 
-def test_silent_reporter_on_chosen():
+def test_pycharm_reporter_on_chosen():
     with given:
         dispatcher = Dispatcher()
 
-        reporter = SilentReporterPlugin()
+        reporter = PyCharmReporterPlugin()
         reporter.subscribe(dispatcher)
 
     with when:

@@ -2,10 +2,9 @@ from typing import TYPE_CHECKING, Any
 
 from vedro.core import Event
 
+DirectorPlugin = Any
 if TYPE_CHECKING:
     from ._director import DirectorPlugin
-else:
-    DirectorPlugin = Any
 
 __all__ = ("DirectorInitEvent",)
 
