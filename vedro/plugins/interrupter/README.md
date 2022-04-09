@@ -3,5 +3,5 @@
 ## Usage
 
 ```shell
-$ python3 -m vedro --fail-fast
+$ vedro run --fail-fast
 ```

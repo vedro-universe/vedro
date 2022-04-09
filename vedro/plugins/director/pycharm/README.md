@@ -3,5 +3,5 @@
 ## Usage
 
 ```shell
-$ python3 -m vedro -r pycharm
+$ vedro run -r pycharm
 ```

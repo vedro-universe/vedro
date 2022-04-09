@@ -11,5 +11,5 @@ class Scenario(vedro.Scenario):
 ```
 
 ```shell
-$ python3 -m vedro -t API
+$ vedro run -t API
 ```

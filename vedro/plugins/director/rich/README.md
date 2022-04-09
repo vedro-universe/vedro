@@ -3,7 +3,7 @@
 ## Usage
 
 ```shell
-$ python3 -m vedro -r rich -vv
+$ vedro run -r rich -vv
 ```
 
 **Verbose Levels**

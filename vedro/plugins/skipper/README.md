@@ -5,13 +5,13 @@
 ### Select File or Directory
 
 ```shell
-$ python3 -m vedro <file_or_dir>
+$ vedro run <file_or_dir>
 ```
 
 ### Skip File or Directory
 
 ```shell
-$ python3 -m vedro -i (--ignore) <file_or_dir>
+$ vedro run -i (--ignore) <file_or_dir>
 ```
 
 ### Select Specific Scenario
