@@ -1,4 +1,5 @@
 import vedro.core as core
+import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 
 __all__ = ("Config",)
@@ -16,4 +17,7 @@ class Config(core.Config):
             pass
 
         class PyCharmReporter(director.PyCharmReporter):
+            pass
+
+        class Deferrer(deferrer.Deferrer):
             pass

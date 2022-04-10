@@ -13,7 +13,7 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher, Plugin, ScenarioResult, VirtualScenario
 from vedro.events import ScenarioFailedEvent, ScenarioPassedEvent, ScenarioRunEvent
-from vedro.plugins.deferrer import Deferrer
+from vedro.plugins.deferrer import DeferrerPlugin
 
 
 @pytest.fixture()
@@ -27,13 +27,13 @@ def queue() -> deque:
 
 
 @pytest.fixture()
-def deferrer(queue) -> Deferrer:
-    return Deferrer(queue)
+def deferrer(queue) -> DeferrerPlugin:
+    return DeferrerPlugin(queue=queue)
 
 
 def test_deferrer_plugin():
     with when:
-        plugin = Deferrer()
+        plugin = DeferrerPlugin()
 
     with then:
         assert isinstance(plugin, Plugin)
@@ -41,7 +41,7 @@ def test_deferrer_plugin():
 
 @pytest.mark.asyncio
 async def test_deferrer_scenario_run_event(*, dispatcher: Dispatcher,
-                                           deferrer: Deferrer, queue: deque):
+                                           deferrer: DeferrerPlugin, queue: deque):
     with given:
         deferrer.subscribe(dispatcher)
 
@@ -60,7 +60,7 @@ async def test_deferrer_scenario_run_event(*, dispatcher: Dispatcher,
 @pytest.mark.asyncio
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_deferrer_scenario_end_event(event_class, *, dispatcher: Dispatcher,
-                                           deferrer: Deferrer, queue: deque):
+                                           deferrer: DeferrerPlugin, queue: deque):
     with given:
         deferrer.subscribe(dispatcher)
         scenario_result = ScenarioResult(Mock(VirtualScenario))
@@ -91,7 +91,7 @@ async def test_deferrer_scenario_end_event(event_class, *, dispatcher: Dispatche
 @pytest.mark.asyncio
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_deferrer_scenario_end_event_async(event_class, *, dispatcher: Dispatcher,
-                                                 deferrer: Deferrer, queue: deque):
+                                                 deferrer: DeferrerPlugin, queue: deque):
     with given:
         deferrer.subscribe(dispatcher)
         scenario_result = ScenarioResult(Mock(VirtualScenario))
