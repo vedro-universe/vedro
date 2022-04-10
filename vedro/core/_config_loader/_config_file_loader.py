@@ -3,7 +3,7 @@ from typing import Optional
 
 from .._module_loader import ModuleFileLoader, ModuleLoader
 from ._config_loader import ConfigLoader
-from ._config_type import ConfigType, Config
+from ._config_type import Config, ConfigType
 
 __all__ = ("ConfigFileLoader",)
 

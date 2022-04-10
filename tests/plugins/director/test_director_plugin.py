@@ -1,11 +1,12 @@
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Dispatcher
-from vedro.events import ArgParseEvent
+from vedro.core import Config, Dispatcher
+from vedro.events import ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.director import DirectorInitEvent, DirectorPlugin, Reporter
 
 
@@ -15,35 +16,21 @@ def dispatcher():
 
 
 @pytest.mark.asyncio
-async def test_director_plugin(*, dispatcher: Dispatcher):
-    with given:
-        director = DirectorPlugin()
-        director.subscribe(dispatcher)
-        event = ArgParseEvent(ArgumentParser())
-
-    with when:
-        res = await dispatcher.fire(event)
-
-    with then:
-        assert res is None
-
-
-@pytest.mark.asyncio
 async def test_director_plugin_init_event(*, dispatcher: Dispatcher):
     with given:
         director = DirectorPlugin()
         director.subscribe(dispatcher)
 
-        mock_ = Mock()
-        dispatcher.listen(DirectorInitEvent, mock_)
+        callback_ = Mock()
+        dispatcher.listen(DirectorInitEvent, callback_)
 
-        event = ArgParseEvent(ArgumentParser())
+        event = ConfigLoadedEvent(Path(), Config)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
-        assert mock_.mock_calls == [call(DirectorInitEvent(director))]
+        assert callback_.mock_calls == [call(DirectorInitEvent(director))]
 
 
 @pytest.mark.asyncio
@@ -60,6 +47,7 @@ async def test_director_plugin_with_reporters_default(*, dispatcher: Dispatcher)
         dispatcher.listen(DirectorInitEvent,
                           lambda e: e.director.register("reporter2", reporter2_))
 
+        await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
         event = ArgParseEvent(ArgumentParser())
 
     with when:
@@ -83,6 +71,8 @@ async def test_director_plugin_with_reporters_arg(*, dispatcher: Dispatcher):
         reporter2_ = Mock(Reporter)
         dispatcher.listen(DirectorInitEvent,
                           lambda e: e.director.register("reporter2", reporter2_))
+
+        await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
 
         args = Namespace(reporters=["reporter2", "reporter1"])
         arg_parser = Mock(ArgumentParser, parse_known_args=Mock(return_value=(args, [])))
