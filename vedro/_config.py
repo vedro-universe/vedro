@@ -4,6 +4,7 @@ import vedro.plugins.director as director
 import vedro.plugins.interrupter as interrupter
 import vedro.plugins.seeder as seeder
 import vedro.plugins.skipper as skipper
+import vedro.plugins.slicer as slicer
 
 __all__ = ("Config",)
 
@@ -32,4 +33,7 @@ class Config(core.Config):
             enabled = True
 
         class Skipper(skipper.Skipper):
+            enabled = True
+
+        class Slicer(slicer.Slicer):
             enabled = True

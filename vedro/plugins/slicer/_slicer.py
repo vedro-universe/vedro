@@ -1,13 +1,14 @@
-from typing import Union
+from typing import Optional, Type, Union
 
-from vedro.core import Dispatcher, Plugin
+from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 
-__all__ = ("Slicer",)
+__all__ = ("Slicer", "SlicerPlugin",)
 
 
-class Slicer(Plugin):
-    def __init__(self) -> None:
+class SlicerPlugin(Plugin):
+    def __init__(self, config: Optional[Type["Slicer"]] = None) -> None:
+        super().__init__(config)
         self._total: Union[int, None] = None
         self._index: Union[int, None] = None
 
@@ -41,3 +42,7 @@ class Slicer(Plugin):
             if index % self._total != self._index:
                 scenario.skip()
             index += 1
+
+
+class Slicer(PluginConfig):
+    plugin = SlicerPlugin

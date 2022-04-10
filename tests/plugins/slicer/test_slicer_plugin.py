@@ -6,7 +6,7 @@ from pytest import raises
 
 from vedro.core import Dispatcher
 from vedro.events import ArgParsedEvent, ArgParseEvent
-from vedro.plugins.slicer import Slicer
+from vedro.plugins.slicer import SlicerPlugin
 
 
 @pytest.fixture()
@@ -17,7 +17,7 @@ def dispatcher():
 @pytest.mark.asyncio
 async def test_slicer_plugin(*, dispatcher: Dispatcher):
     with given:
-        tagger = Slicer()
+        tagger = SlicerPlugin()
         tagger.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 
@@ -35,7 +35,7 @@ async def test_slicer_plugin(*, dispatcher: Dispatcher):
 @pytest.mark.asyncio
 async def test_slicer_plugin_arg_validation(slicer_total, slicer_index, *, dispatcher: Dispatcher):
     with given:
-        tagger = Slicer()
+        tagger = SlicerPlugin()
         tagger.subscribe(dispatcher)
         event = ArgParsedEvent(Namespace(slicer_total=slicer_total, slicer_index=slicer_index))
 
@@ -57,7 +57,7 @@ async def test_slicer_plugin_arg_validation(slicer_total, slicer_index, *, dispa
 async def test_slicer_plugin_arg_validation_error(slicer_total, slicer_index, *,
                                                   dispatcher: Dispatcher):
     with given:
-        tagger = Slicer()
+        tagger = SlicerPlugin()
         tagger.subscribe(dispatcher)
         event = ArgParsedEvent(Namespace(slicer_total=slicer_total, slicer_index=slicer_index))
 
