@@ -13,7 +13,7 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher, Plugin, ScenarioResult, VirtualScenario
 from vedro.events import ScenarioFailedEvent, ScenarioPassedEvent, ScenarioRunEvent
-from vedro.plugins.deferrer import DeferrerPlugin
+from vedro.plugins.deferrer import Deferrer, DeferrerPlugin
 
 
 @pytest.fixture()
@@ -28,12 +28,12 @@ def queue() -> deque:
 
 @pytest.fixture()
 def deferrer(queue) -> DeferrerPlugin:
-    return DeferrerPlugin(queue=queue)
+    return DeferrerPlugin(Deferrer, queue=queue)
 
 
 def test_deferrer_plugin():
     with when:
-        plugin = DeferrerPlugin()
+        plugin = DeferrerPlugin(Deferrer)
 
     with then:
         assert isinstance(plugin, Plugin)

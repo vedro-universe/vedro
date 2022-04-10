@@ -24,7 +24,7 @@ from vedro.core import (
     VirtualStep,
 )
 from vedro.events import ArgParseEvent, ConfigLoadedEvent
-from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
+from vedro.plugins.director import Director, DirectorPlugin, RichReporter, RichReporterPlugin
 
 __all__ = ("dispatcher", "console_", "reporter", "director", "chose_reporter",
            "make_parsed_args", "make_path", "make_vscenario", "make_vstep",
@@ -39,7 +39,7 @@ def dispatcher() -> Dispatcher:
 
 @pytest.fixture()
 def director(dispatcher: Dispatcher) -> DirectorPlugin:
-    director = DirectorPlugin()
+    director = DirectorPlugin(Director)
     director.subscribe(dispatcher)
     return director
 
@@ -51,7 +51,7 @@ def console_() -> Console:
 
 @pytest.fixture()
 def reporter(dispatcher: Dispatcher, console_: Console) -> RichReporterPlugin:
-    reporter = RichReporterPlugin(console_factory=lambda: console_)
+    reporter = RichReporterPlugin(RichReporter, console_factory=lambda: console_)
     reporter.subscribe(dispatcher)
     return reporter
 

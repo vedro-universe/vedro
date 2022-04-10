@@ -7,20 +7,24 @@ from baby_steps import given, then, when
 
 from vedro.core import Config, Dispatcher
 from vedro.events import ArgParseEvent, ConfigLoadedEvent
-from vedro.plugins.director import DirectorInitEvent, DirectorPlugin, Reporter
+from vedro.plugins.director import Director, DirectorInitEvent, DirectorPlugin, Reporter
 
 
 @pytest.fixture()
-def dispatcher():
+def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
-@pytest.mark.asyncio
-async def test_director_plugin_init_event(*, dispatcher: Dispatcher):
-    with given:
-        director = DirectorPlugin()
-        director.subscribe(dispatcher)
+@pytest.fixture()
+def director(dispatcher: Dispatcher) -> DirectorPlugin:
+    director = DirectorPlugin(Director)
+    director.subscribe(dispatcher)
+    return director
 
+
+@pytest.mark.asyncio
+async def test_director_plugin_init_event(*, director: DirectorPlugin, dispatcher: Dispatcher):
+    with given:
         callback_ = Mock()
         dispatcher.listen(DirectorInitEvent, callback_)
 
@@ -34,11 +38,9 @@ async def test_director_plugin_init_event(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.asyncio
-async def test_director_plugin_with_reporters_default(*, dispatcher: Dispatcher):
+async def test_director_plugin_with_reporters_default(*, director: DirectorPlugin,
+                                                      dispatcher: Dispatcher):
     with given:
-        director = DirectorPlugin()
-        director.subscribe(dispatcher)
-
         reporter1_ = Mock(Reporter)
         dispatcher.listen(DirectorInitEvent,
                           lambda e: e.director.register("reporter1", reporter1_))
@@ -59,11 +61,9 @@ async def test_director_plugin_with_reporters_default(*, dispatcher: Dispatcher)
 
 
 @pytest.mark.asyncio
-async def test_director_plugin_with_reporters_arg(*, dispatcher: Dispatcher):
+async def test_director_plugin_with_reporters_arg(*, director: DirectorPlugin,
+                                                  dispatcher: Dispatcher):
     with given:
-        director = DirectorPlugin()
-        director.subscribe(dispatcher)
-
         reporter1_ = Mock(Reporter)
         dispatcher.listen(DirectorInitEvent,
                           lambda e: e.director.register("reporter1", reporter1_))

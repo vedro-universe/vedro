@@ -6,19 +6,24 @@ from pytest import raises
 
 from vedro.core import Dispatcher
 from vedro.events import ArgParsedEvent, ArgParseEvent
-from vedro.plugins.slicer import SlicerPlugin
+from vedro.plugins.slicer import Slicer, SlicerPlugin
 
 
 @pytest.fixture()
-def dispatcher():
+def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
+@pytest.fixture()
+def slicer(dispatcher: Dispatcher) -> SlicerPlugin:
+    slicer = SlicerPlugin(Slicer)
+    slicer.subscribe(dispatcher)
+    return slicer
+
+
 @pytest.mark.asyncio
-async def test_slicer_plugin(*, dispatcher: Dispatcher):
+async def test_slicer_plugin(*, slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
-        tagger = SlicerPlugin()
-        tagger.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 
     with when:
@@ -33,10 +38,10 @@ async def test_slicer_plugin(*, dispatcher: Dispatcher):
     (1, 0),
 ])
 @pytest.mark.asyncio
-async def test_slicer_plugin_arg_validation(slicer_total, slicer_index, *, dispatcher: Dispatcher):
+async def test_slicer_plugin_arg_validation(slicer_total, slicer_index, *,
+                                            slicer: SlicerPlugin,
+                                            dispatcher: Dispatcher):
     with given:
-        tagger = SlicerPlugin()
-        tagger.subscribe(dispatcher)
         event = ArgParsedEvent(Namespace(slicer_total=slicer_total, slicer_index=slicer_index))
 
     with when:
@@ -55,10 +60,9 @@ async def test_slicer_plugin_arg_validation(slicer_total, slicer_index, *, dispa
 ])
 @pytest.mark.asyncio
 async def test_slicer_plugin_arg_validation_error(slicer_total, slicer_index, *,
+                                                  slicer: SlicerPlugin,
                                                   dispatcher: Dispatcher):
     with given:
-        tagger = SlicerPlugin()
-        tagger.subscribe(dispatcher)
         event = ArgParsedEvent(Namespace(slicer_total=slicer_total, slicer_index=slicer_index))
 
     with when, raises(Exception) as exc_info:

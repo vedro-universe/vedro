@@ -1,4 +1,4 @@
-from typing import Optional, Type, Union
+from typing import Type, Union
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
@@ -7,7 +7,7 @@ __all__ = ("Tagger", "TaggerPlugin",)
 
 
 class TaggerPlugin(Plugin):
-    def __init__(self, config: Optional[Type["Tagger"]] = None) -> None:
+    def __init__(self, config: Type["Tagger"]) -> None:
         super().__init__(config)
         self._tags: Union[str, None] = None
 

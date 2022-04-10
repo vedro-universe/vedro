@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, Optional, Type, Union, cast
+from typing import Any, Dict, Type, Union, cast
 from uuid import uuid4
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
@@ -15,7 +15,7 @@ __all__ = ("Seeder", "SeederPlugin",)
 
 
 class SeederPlugin(Plugin):
-    def __init__(self, config: Optional[Type["Seeder"]] = None, *, random: Any = random) -> None:
+    def __init__(self, config: Type["Seeder"], *, random: Any = random) -> None:
         super().__init__(config)
         self._random = random
         self._seed: Union[str, None] = None

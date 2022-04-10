@@ -2,7 +2,7 @@ import json
 import os
 from traceback import format_exception
 from types import TracebackType
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Generator, List, Tuple, Type, Union
 
 from rich.console import Console
 from rich.style import Style
@@ -32,7 +32,7 @@ ScenarioEndEventType = Union[ScenarioPassedEvent, ScenarioFailedEvent, ScenarioS
 
 
 class RichReporterPlugin(Reporter):
-    def __init__(self, config: Optional[Type["RichReporter"]] = None, *,
+    def __init__(self, config: Type["RichReporter"], *,
                  console_factory: Callable[[], Console] = make_console) -> None:
         super().__init__(config)
         self._console = console_factory()

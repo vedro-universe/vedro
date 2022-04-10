@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Union
+from typing import Dict, Type, Union
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParseEvent, ConfigLoadedEvent
@@ -10,8 +10,8 @@ __all__ = ("Director", "DirectorPlugin",)
 
 
 class DirectorPlugin(Plugin):
-    def __init__(self, config: Optional["Director"] = None) -> None:
-        super().__init__()
+    def __init__(self, config: Type["Director"]) -> None:
+        super().__init__(config)
         self._dispatcher: Union[Dispatcher, None] = None
         self._reporters: Dict[str, Reporter] = {}
         self._default_reporter = ""

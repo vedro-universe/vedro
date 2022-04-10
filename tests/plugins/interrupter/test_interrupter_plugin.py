@@ -5,18 +5,18 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
 from vedro.events import ArgParseEvent
-from vedro.plugins.interrupter import InterrupterPlugin
+from vedro.plugins.interrupter import Interrupter, InterrupterPlugin
 
 
 @pytest.fixture()
-def dispatcher():
+def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
 @pytest.mark.asyncio
 async def test_interrupter_plugin(*, dispatcher: Dispatcher):
     with given:
-        interrupter = InterrupterPlugin()
+        interrupter = InterrupterPlugin(Interrupter)
         interrupter.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 

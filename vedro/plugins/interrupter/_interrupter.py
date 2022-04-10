@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Type
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioFailedEvent, ScenarioRunEvent
@@ -11,7 +11,7 @@ class _Interrupted(Exception):
 
 
 class InterrupterPlugin(Plugin):
-    def __init__(self, config: Optional[Type["Interrupter"]] = None) -> None:
+    def __init__(self, config: Type["Interrupter"]) -> None:
         super().__init__(config)
         self._fail_fast: bool = False
         self._failed: int = 0

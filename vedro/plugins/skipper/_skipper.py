@@ -15,7 +15,7 @@ class _CompositePath:
 
 
 class SkipperPlugin(Plugin):
-    def __init__(self, config: Optional[Type["Skipper"]] = None) -> None:
+    def __init__(self, config: Type["Skipper"]) -> None:
         super().__init__(config)
         self._subject: Union[str, None] = None
         self._specified: List[_CompositePath] = []

@@ -4,7 +4,12 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
-from vedro.plugins.director import DirectorInitEvent, DirectorPlugin, PyCharmReporterPlugin
+from vedro.plugins.director import (
+    DirectorInitEvent,
+    DirectorPlugin,
+    PyCharmReporter,
+    PyCharmReporterPlugin,
+)
 
 
 @pytest.mark.asyncio
@@ -13,7 +18,7 @@ async def test_pycharm_reporter_subscribe():
         dispatcher = Dispatcher()
         director_ = Mock(DirectorPlugin)
 
-        reporter = PyCharmReporterPlugin()
+        reporter = PyCharmReporterPlugin(PyCharmReporter)
         reporter.subscribe(dispatcher)
 
     with when:
@@ -29,7 +34,7 @@ def test_pycharm_reporter_on_chosen():
     with given:
         dispatcher = Dispatcher()
 
-        reporter = PyCharmReporterPlugin()
+        reporter = PyCharmReporterPlugin(PyCharmReporter)
         reporter.subscribe(dispatcher)
 
     with when:

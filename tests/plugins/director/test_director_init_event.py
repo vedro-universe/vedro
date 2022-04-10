@@ -1,11 +1,11 @@
 from baby_steps import given, then, when
 
-from vedro.plugins.director import DirectorInitEvent, DirectorPlugin
+from vedro.plugins.director import Director, DirectorInitEvent, DirectorPlugin
 
 
 def test_director_init_event_prop():
     with given:
-        director = DirectorPlugin()
+        director = DirectorPlugin(Director)
         init_event = DirectorInitEvent(director)
 
     with when:
@@ -17,7 +17,7 @@ def test_director_init_event_prop():
 
 def test_director_init_event_repr():
     with given:
-        director = DirectorPlugin()
+        director = DirectorPlugin(Director)
         init_event = DirectorInitEvent(director)
 
     with when:

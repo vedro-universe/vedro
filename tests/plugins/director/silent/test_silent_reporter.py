@@ -4,7 +4,12 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
-from vedro.plugins.director import DirectorInitEvent, DirectorPlugin, SilentReporterPlugin
+from vedro.plugins.director import (
+    DirectorInitEvent,
+    DirectorPlugin,
+    SilentReporter,
+    SilentReporterPlugin,
+)
 
 
 @pytest.mark.asyncio
@@ -13,7 +18,7 @@ async def test_silent_reporter_subscribe():
         dispatcher = Dispatcher()
         director_ = Mock(DirectorPlugin)
 
-        reporter = SilentReporterPlugin()
+        reporter = SilentReporterPlugin(SilentReporter)
         reporter.subscribe(dispatcher)
 
     with when:
@@ -29,7 +34,7 @@ def test_silent_reporter_on_chosen():
     with given:
         dispatcher = Dispatcher()
 
-        reporter = SilentReporterPlugin()
+        reporter = SilentReporterPlugin(SilentReporter)
         reporter.subscribe(dispatcher)
 
     with when:

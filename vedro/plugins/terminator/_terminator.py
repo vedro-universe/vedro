@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, Optional, Type
+from typing import Callable, Type
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import CleanupEvent
@@ -8,8 +8,7 @@ __all__ = ("Terminator", "TerminatorPlugin",)
 
 
 class TerminatorPlugin(Plugin):
-    def __init__(self, config: Optional[Type["Terminator"]] = None, *,
-                 exit_fn: Callable[[int], None] = sys.exit):
+    def __init__(self, config: Type["Terminator"], *, exit_fn: Callable[[int], None] = sys.exit):
         super().__init__(config)
         self._exit_fn = exit_fn
 

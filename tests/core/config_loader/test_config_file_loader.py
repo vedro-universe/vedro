@@ -7,7 +7,7 @@ from vedro.core import Config, ConfigFileLoader
 
 
 @pytest.mark.asyncio
-async def test_config_file_loader(tmp_path: Path):
+async def test_config_file_loader(*, tmp_path: Path):
     with given:
         config = Config
         loader = ConfigFileLoader(config)
@@ -26,7 +26,7 @@ async def test_config_file_loader(tmp_path: Path):
 
 
 @pytest.mark.asyncio
-async def test_config_file_loader_empty_file(tmp_path: Path):
+async def test_config_file_loader_empty_file(*, tmp_path: Path):
     with given:
         config = Config
         loader = ConfigFileLoader(config)
@@ -41,7 +41,7 @@ async def test_config_file_loader_empty_file(tmp_path: Path):
 
 
 @pytest.mark.asyncio
-async def test_config_file_loader_not_exist(tmp_path: Path):
+async def test_config_file_loader_not_exist(*, tmp_path: Path):
     with given:
         config = Config
         loader = ConfigFileLoader(config)

@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Type
 
 from vedro.core import Dispatcher, PluginConfig
 
@@ -9,7 +9,7 @@ __all__ = ("SilentReporter", "SilentReporterPlugin",)
 
 
 class SilentReporterPlugin(Reporter):
-    def __init__(self, config: Optional[Type["SilentReporter"]] = None) -> None:
+    def __init__(self, config: Type["SilentReporter"]) -> None:
         super().__init__(config)
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
