@@ -7,7 +7,7 @@ from pytest import raises
 
 from vedro.core import Dispatcher, Report, ScenarioResult, VirtualScenario
 from vedro.events import CleanupEvent
-from vedro.plugins.terminator import Terminator
+from vedro.plugins.terminator import TerminatorPlugin
 
 
 @pytest.fixture()
@@ -17,7 +17,7 @@ def dispatcher():
 
 @pytest.fixture()
 def plugin(dispatcher):
-    return Terminator()
+    return TerminatorPlugin()
 
 
 def make_scenario_result() -> ScenarioResult:
@@ -26,7 +26,7 @@ def make_scenario_result() -> ScenarioResult:
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_passed(*, plugin: Terminator, dispatcher: Dispatcher):
+async def test_terminator_plugin_passed(*, plugin: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         plugin.subscribe(dispatcher)
 
@@ -43,7 +43,7 @@ async def test_terminator_plugin_passed(*, plugin: Terminator, dispatcher: Dispa
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_failed(*, plugin: Terminator, dispatcher: Dispatcher):
+async def test_terminator_plugin_failed(*, plugin: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         plugin.subscribe(dispatcher)
 
@@ -60,7 +60,7 @@ async def test_terminator_plugin_failed(*, plugin: Terminator, dispatcher: Dispa
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_no_passed(*, plugin: Terminator, dispatcher: Dispatcher):
+async def test_terminator_plugin_no_passed(*, plugin: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         plugin.subscribe(dispatcher)
 

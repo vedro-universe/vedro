@@ -6,6 +6,7 @@ import vedro.plugins.seeder as seeder
 import vedro.plugins.skipper as skipper
 import vedro.plugins.slicer as slicer
 import vedro.plugins.tagger as tagger
+import vedro.plugins.terminator as terminator
 
 __all__ = ("Config",)
 
@@ -40,4 +41,7 @@ class Config(core.Config):
             enabled = True
 
         class Tagger(tagger.Tagger):
+            enabled = True
+
+        class Terminator(terminator.Terminator):
             enabled = True
