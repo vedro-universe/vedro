@@ -15,7 +15,11 @@ class ConfigFileLoader(ConfigLoader):
         self._module_loader = module_loader or ModuleFileLoader()
 
     async def load(self, path: Path) -> ConfigType:
+        if not path.exists():
+            return self._default_config
         module = await self._module_loader.load(path)
+
         config = getattr(module, "Config", self._default_config)
         assert issubclass(config, Config)
+
         return config
