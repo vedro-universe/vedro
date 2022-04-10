@@ -5,17 +5,24 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
 from vedro.events import ArgParsedEvent
-from vedro.plugins.director import RichReporterPlugin
-from vedro.plugins.director.rich.test_utils import console_, dispatcher, make_parsed_args, reporter
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
+from vedro.plugins.director.rich.test_utils import (
+    chose_reporter,
+    console_,
+    director,
+    dispatcher,
+    make_parsed_args,
+    reporter,
+)
 
 __all__ = ("dispatcher", "reporter", "console_",)
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter_arg_parsed_event(*, dispatcher: Dispatcher,
+async def test_rich_reporter_arg_parsed_event(*, dispatcher: Dispatcher, director: DirectorPlugin,
                                               reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         args = make_parsed_args()
         event = ArgParsedEvent(args)

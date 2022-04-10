@@ -5,17 +5,23 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
 from vedro.events import StartupEvent
-from vedro.plugins.director import RichReporterPlugin
-from vedro.plugins.director.rich.test_utils import console_, dispatcher, reporter
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
+from vedro.plugins.director.rich.test_utils import (
+    chose_reporter,
+    console_,
+    director,
+    dispatcher,
+    reporter,
+)
 
-__all__ = ("dispatcher", "reporter", "console_",)
+__all__ = ("dispatcher", "reporter", "director", "console_",)
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter_startup_event(*, dispatcher: Dispatcher,
+async def test_rich_reporter_startup_event(*, dispatcher: Dispatcher, director: DirectorPlugin,
                                            reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
         event = StartupEvent([])
 
     with when:

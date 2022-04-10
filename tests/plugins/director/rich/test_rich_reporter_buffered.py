@@ -6,23 +6,25 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, ScenarioResult
 from vedro.events import ArgParsedEvent, ScenarioFailedEvent, ScenarioPassedEvent
-from vedro.plugins.director import RichReporterPlugin
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
+    chose_reporter,
     console_,
+    director,
     dispatcher,
     make_parsed_args,
     make_vscenario,
     reporter,
 )
 
-__all__ = ("dispatcher", "reporter", "console_",)
+__all__ = ("dispatcher", "director", "reporter", "console_",)
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter(*,
-                             dispatcher: Dispatcher, reporter: RichReporterPlugin, console_: Mock):
+async def test_rich_reporter(*, dispatcher: Dispatcher, director: DirectorPlugin,
+                             reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         event = ArgParsedEvent(make_parsed_args(reruns=1))
         await dispatcher.fire(event)
@@ -39,10 +41,10 @@ async def test_rich_reporter(*,
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter_failed(*, dispatcher: Dispatcher,
+async def test_rich_reporter_failed(*, dispatcher: Dispatcher, director: DirectorPlugin,
                                     reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         event = ArgParsedEvent(make_parsed_args(reruns=1))
         await dispatcher.fire(event)
@@ -77,10 +79,10 @@ async def test_rich_reporter_failed(*, dispatcher: Dispatcher,
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter_passed(*, dispatcher: Dispatcher,
+async def test_rich_reporter_passed(*, dispatcher: Dispatcher, director: DirectorPlugin,
                                     reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         event = ArgParsedEvent(make_parsed_args(reruns=2))
         await dispatcher.fire(event)

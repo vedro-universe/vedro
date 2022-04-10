@@ -6,9 +6,11 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, ScenarioResult, StepResult
 from vedro.events import ArgParsedEvent, ScenarioFailedEvent
-from vedro.plugins.director import RichReporterPlugin
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
+    chose_reporter,
     console_,
+    director,
     dispatcher,
     make_exc_info,
     make_parsed_args,
@@ -19,15 +21,16 @@ from vedro.plugins.director.rich.test_utils import (
     reporter,
 )
 
-__all__ = ("dispatcher", "reporter", "console_",)
+__all__ = ("dispatcher", "reporter", "director", "console_",)
 
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_default_verbose(*, dispatcher: Dispatcher,
+                                                                   director: DirectorPlugin,
                                                                    reporter: RichReporterPlugin,
                                                                    console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         subject = "<subject>"
         vscenario = make_vscenario(subject=subject)
@@ -45,10 +48,12 @@ async def test_rich_reporter_scenario_failed_event_default_verbose(*, dispatcher
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose0(*, dispatcher: Dispatcher,
+                                                            director: DirectorPlugin,
                                                             reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
+
         event = ArgParsedEvent(make_parsed_args(verbose=0))
         await dispatcher.fire(event)
 
@@ -66,10 +71,12 @@ async def test_rich_reporter_scenario_failed_event_verbose0(*, dispatcher: Dispa
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose1(*, dispatcher: Dispatcher,
+                                                            director: DirectorPlugin,
                                                             reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
+
         event = ArgParsedEvent(make_parsed_args(verbose=1))
         await dispatcher.fire(event)
 
@@ -102,10 +109,12 @@ async def test_rich_reporter_scenario_failed_event_verbose1(*, dispatcher: Dispa
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose2(*, dispatcher: Dispatcher,
+                                                            director: DirectorPlugin,
                                                             reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
+
         event = ArgParsedEvent(make_parsed_args(verbose=2))
         await dispatcher.fire(event)
 
@@ -137,10 +146,12 @@ async def test_rich_reporter_scenario_failed_event_verbose2(*, dispatcher: Dispa
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_failed_event_verbose3(*, dispatcher: Dispatcher,
+                                                            director: DirectorPlugin,
                                                             reporter: RichReporterPlugin,
                                                             console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
+
         event = ArgParsedEvent(make_parsed_args(verbose=3))
         await dispatcher.fire(event)
 
@@ -180,10 +191,12 @@ async def test_rich_reporter_scenario_failed_event_verbose3(*, dispatcher: Dispa
 async def test_rich_reporter_scenario_failed_event_without_steps_verbose3(
         *,
         dispatcher: Dispatcher,
+        director: DirectorPlugin,
         reporter: RichReporterPlugin,
         console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
+
         event = ArgParsedEvent(make_parsed_args(verbose=3))
         await dispatcher.fire(event)
 

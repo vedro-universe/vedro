@@ -5,22 +5,25 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
 from vedro.events import ScenarioSkippedEvent
-from vedro.plugins.director import RichReporterPlugin
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
+    chose_reporter,
     console_,
+    director,
     dispatcher,
     make_scenario_result,
     reporter,
 )
 
-__all__ = ("dispatcher", "reporter", "console_",)
+__all__ = ("dispatcher", "reporter", "director", "console_",)
 
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_skip_event(*, dispatcher: Dispatcher,
+                                                 director: DirectorPlugin,
                                                  reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         scenario_result = make_scenario_result()
         event = ScenarioSkippedEvent(scenario_result)

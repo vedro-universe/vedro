@@ -2,7 +2,7 @@ import os
 import random
 import string
 import sys
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from types import TracebackType
 from typing import Any, List, Optional, cast
@@ -13,6 +13,7 @@ from rich.console import Console
 
 from vedro import Scenario
 from vedro.core import (
+    Config,
     Dispatcher,
     ExcInfo,
     Report,
@@ -21,27 +22,43 @@ from vedro.core import (
     VirtualScenario,
     VirtualStep,
 )
-from vedro.plugins.director import RichReporterPlugin
+from vedro.events import ArgParseEvent, ConfigLoadedEvent
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
 
-__all__ = ("dispatcher", "console_", "reporter",
+__all__ = ("dispatcher", "console_", "reporter", "director", "chose_reporter",
            "make_parsed_args", "make_path", "make_vscenario", "make_vstep",
            "make_scenario_result", "make_step_result", "make_random_name", "make_exc_info",
            "make_report",)
 
 
 @pytest.fixture()
-def dispatcher() -> Dispatcher:
+def dispatcher():
     return Dispatcher()
 
 
 @pytest.fixture()
-def console_() -> Mock:
+def director(dispatcher: Dispatcher):
+    director = DirectorPlugin()
+    director.subscribe(dispatcher)
+    return director
+
+
+@pytest.fixture()
+def console_():
     return Mock(Console)
 
 
 @pytest.fixture()
-def reporter(console_: Console) -> RichReporterPlugin:
-    return RichReporterPlugin(console_factory=lambda: console_)
+def reporter(dispatcher: Dispatcher, console_: Console):
+    reporter = RichReporterPlugin(console_factory=lambda: console_)
+    reporter.subscribe(dispatcher)
+    return reporter
+
+
+async def chose_reporter(dispatcher: Dispatcher,
+                         director: DirectorPlugin, reporter: RichReporterPlugin) -> None:
+    await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
+    await dispatcher.fire(ArgParseEvent(ArgumentParser()))
 
 
 def make_parsed_args(*, verbose: int = 0,

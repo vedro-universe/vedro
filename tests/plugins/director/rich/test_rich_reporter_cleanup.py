@@ -6,23 +6,26 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, Report
 from vedro.events import CleanupEvent
-from vedro.plugins.director import RichReporterPlugin
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
+    chose_reporter,
     console_,
+    director,
     dispatcher,
     make_report,
     make_scenario_result,
     reporter,
 )
 
-__all__ = ("dispatcher", "reporter", "console_",)
+__all__ = ("dispatcher", "reporter", "director", "console_",)
 
 
 @pytest.mark.asyncio
-async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher,
+async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher, director: DirectorPlugin,
                                            reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
+
         report = Report()
         event = CleanupEvent(report)
 
@@ -41,10 +44,11 @@ async def test_rich_reporter_cleanup_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_cleanup_event_with_summary(*, dispatcher: Dispatcher,
+                                                        director: DirectorPlugin,
                                                         reporter: RichReporterPlugin,
                                                         console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         summaries = ["<summary1>", "<summary2>"]
         report = make_report(summaries=summaries)
@@ -66,9 +70,10 @@ async def test_rich_reporter_cleanup_event_with_summary(*, dispatcher: Dispatche
 
 @pytest.mark.asyncio
 async def test_rich_reporter_success_cleanup_event(*, dispatcher: Dispatcher,
+                                                   director: DirectorPlugin,
                                                    reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         scenario_result1 = make_scenario_result().mark_passed() \
                                                  .set_started_at(1.0) \
@@ -99,9 +104,10 @@ async def test_rich_reporter_success_cleanup_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_failed_cleanup_event(*, dispatcher: Dispatcher,
+                                                  director: DirectorPlugin,
                                                   reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         scenario_result = make_scenario_result().mark_failed() \
                                                 .set_started_at(3.145) \
