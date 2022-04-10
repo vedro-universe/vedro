@@ -8,12 +8,17 @@ class _Meta(type):
         if len(bases) == 0:
             return super().__new__(mcs, name, bases, namespace)
 
+        for base in bases:
+            if base != Scenario:
+                module = namespace.get("__module__", "")
+                raise TypeError(f"Subclassing is restricted <{module}.{name}>")
+
         cls_constructor = namespace.get("__init__")
         cls_params = getattr(cls_constructor, "__vedro__params__", None)
         if cls_params is None or len(cls_params) == 0:
             return super().__new__(mcs, name, bases, namespace)
 
-        updated_name = "Template"
+        updated_name = "VedroTemplate"
         updated_namespace = {**namespace, "__qualname__": updated_name}
         created = super().__new__(mcs, updated_name, bases, updated_namespace)
 
@@ -23,7 +28,7 @@ class _Meta(type):
             bound_args = signature.bind(None, *args, **kwargs)
             bound_args.apply_defaults()
 
-            cls_name = f"{name}_{idx}"
+            cls_name = f"{name}_{idx}_VedroScenario"
             cls_namespace = {
                 **namespace,
                 "__qualname__": cls_name,

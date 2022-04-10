@@ -46,12 +46,14 @@ def reporter(console_: Console) -> RichReporterPlugin:
 
 def make_parsed_args(*, verbose: int = 0,
                      show_timings: bool = False,
+                     show_paths: bool = False,
                      tb_show_locals: bool = False,
                      tb_show_internal_calls: bool = False,
                      reruns: int = 0) -> Namespace:
     return Namespace(
         verbose=verbose,
         show_timings=show_timings,
+        show_paths=show_paths,
         tb_show_internal_calls=tb_show_internal_calls,
         tb_show_locals=tb_show_locals,
         reruns=reruns,
