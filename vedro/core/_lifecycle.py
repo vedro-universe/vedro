@@ -41,10 +41,10 @@ class Lifecycle:
 
         arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False,
                                     description="documentation: vedro.io/docs")
-        arg_parser.add_argument("-h", "--help",
-                                action="help", help="Show this help message and exit")
         arg_parser.add_argument("--config", default=default_config, type=Path,
                                 help=f"Config path (default {default_config})")
+        arg_parser.add_argument("-h", "--help",
+                                action="help", help="Show this help message and exit")
 
         config_path, config = await self._load_config(default_config)
         for _, section in config.Plugins.items():
@@ -65,6 +65,8 @@ class Lifecycle:
         await self._dispatcher.fire(ArgParseEvent(arg_parser_run))
         arg_parser_run.add_argument("--reruns", type=int, default=0,
                                     help="Number of times to rerun failed scenarios (default 0)")
+        arg_parser_run.add_argument("--config", default=default_config, type=Path,
+                                    help=f"Config path (default {default_config})")
         arg_parser_run.add_argument("-h", "--help",
                                     action="help", help="Show this help message and exit")
 
