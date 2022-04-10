@@ -1,15 +1,18 @@
-from vedro.core import Dispatcher, Plugin
+from typing import Optional, Type
+
+from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioFailedEvent, ScenarioRunEvent
 
-__all__ = ("Interrupter",)
+__all__ = ("Interrupter", "InterrupterPlugin",)
 
 
 class _Interrupted(Exception):
     pass
 
 
-class Interrupter(Plugin):
-    def __init__(self) -> None:
+class InterrupterPlugin(Plugin):
+    def __init__(self, config: Optional[Type["Interrupter"]] = None) -> None:
+        super().__init__(config)
         self._fail_fast: bool = False
         self._failed: int = 0
 
@@ -35,3 +38,7 @@ class Interrupter(Plugin):
     def on_scenario_failed(self, event: ScenarioFailedEvent) -> None:
         if self._fail_fast:
             self._failed += 1
+
+
+class Interrupter(PluginConfig):
+    plugin = InterrupterPlugin
