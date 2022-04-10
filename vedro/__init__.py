@@ -39,6 +39,6 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     discoverer = ScenarioDiscoverer(finder, ScenarioAssertRewriterLoader())
     dispatcher = Dispatcher()
     runner = Runner(dispatcher, (KeyboardInterrupt, SystemExit, CancelledError,))
-    lifecycle = Lifecycle(dispatcher, discoverer, runner, ConfigFileLoader(Config))  # type: ignore
+    lifecycle = Lifecycle(dispatcher, discoverer, runner, ConfigFileLoader(Config))
 
     asyncio.run(lifecycle.start())

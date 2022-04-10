@@ -1,13 +1,32 @@
 from argparse import Namespace
+from pathlib import Path
 from typing import List
 
 from ..core._arg_parser import ArgumentParser
+from ..core._config_loader import ConfigType
 from ..core._event import Event
 from ..core._exc_info import ExcInfo
 from ..core._report import Report
 from ..core._scenario_result import ScenarioResult
 from ..core._step_result import StepResult
 from ..core._virtual_scenario import VirtualScenario
+
+
+class ConfigLoadedEvent(Event):
+    def __init__(self, path: Path, config: ConfigType) -> None:
+        self._path = path
+        self._config = config
+
+    @property
+    def path(self) -> Path:
+        return self._path
+
+    @property
+    def config(self) -> ConfigType:
+        return self._config
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._path!r}, <Config>)"
 
 
 class ArgParseEvent(Event):
@@ -122,7 +141,8 @@ class CleanupEvent(Event):
         return f"{self.__class__.__name__}({self._report!r})"
 
 
-__all__ = ("Event", "ArgParseEvent", "ArgParsedEvent", "StartupEvent", "ScenarioRunEvent",
-           "ScenarioSkippedEvent", "ScenarioFailedEvent", "ScenarioPassedEvent",
+__all__ = ("Event", "ConfigLoadedEvent", "ArgParseEvent", "ArgParsedEvent",
+           "StartupEvent", "ScenarioRunEvent", "ScenarioSkippedEvent",
+           "ScenarioFailedEvent", "ScenarioPassedEvent",
            "StepRunEvent", "StepFailedEvent", "StepPassedEvent", "ExceptionRaisedEvent",
            "CleanupEvent")

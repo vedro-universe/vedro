@@ -1,5 +1,17 @@
-from cabina import Config
+from typing import Type
 
-__all__ = ("ConfigType",)
+import cabina
 
-ConfigType = Config
+__all__ = ("Config", "Section", "ConfigType",)
+
+
+class Section(cabina.Section):
+    pass
+
+
+class Config(cabina.Config, cabina.Section):
+    class Plugins(Section):
+        pass
+
+
+ConfigType = Type[Config]

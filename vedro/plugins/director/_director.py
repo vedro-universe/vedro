@@ -1,7 +1,7 @@
 from typing import Dict, Optional, Union
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
-from vedro.events import ArgParseEvent
+from vedro.events import ArgParseEvent, ConfigLoadedEvent
 
 from ._director_init_event import DirectorInitEvent
 from ._reporter import Reporter
@@ -17,15 +17,16 @@ class DirectorPlugin(Plugin):
         self._default_reporter = ""
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        self._dispatcher = dispatcher.listen(ArgParseEvent, self.on_arg_parse)
+        self._dispatcher = dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
+                                     .listen(ArgParseEvent, self.on_arg_parse)
 
-    async def on_arg_parse(self, event: ArgParseEvent) -> None:
+    async def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         assert isinstance(self._dispatcher, Dispatcher)
         await self._dispatcher.fire(DirectorInitEvent(self))
 
+    async def on_arg_parse(self, event: ArgParseEvent) -> None:
         if len(self._reporters) == 0:
             return
-
         event.arg_parser.add_argument("-r", "--reporters", nargs='*', choices=self._reporters,
                                       default=[self._default_reporter],
                                       help=f"Set reporter (default {self._default_reporter})")

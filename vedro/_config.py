@@ -1,12 +1,11 @@
-import cabina
-
+import vedro.core as core
 import vedro.plugins.director as director
 
 __all__ = ("Config",)
 
 
-class Config(cabina.Config, cabina.Section):
-    class Plugins(cabina.Section):
+class Config(core.Config):
+    class Plugins(core.Section):
         class Director(director.Director):
             pass
 

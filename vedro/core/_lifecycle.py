@@ -2,11 +2,13 @@ import os
 from argparse import HelpFormatter
 from functools import partial
 from pathlib import Path
+from typing import Tuple
 
-from ..events import ArgParsedEvent, ArgParseEvent, CleanupEvent, StartupEvent
+from ..events import ArgParsedEvent, ArgParseEvent, CleanupEvent, ConfigLoadedEvent, StartupEvent
 from ._arg_parser import ArgumentParser
 from ._config_loader import ConfigLoader, ConfigType
 from ._dispatcher import Dispatcher
+from ._plugin import Plugin
 from ._report import Report
 from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer
@@ -25,14 +27,13 @@ class Lifecycle:
         self._runner = runner
         self._config_loader = config_loader
 
-    async def _load_config(self, filename: str) -> ConfigType:
+    async def _load_config(self, filename: str) -> Tuple[Path, ConfigType]:
         parser = ArgumentParser(add_help=False)
-        parser.add_argument("--config", default=filename, type=Path,
-                            help=f"Config path (default {filename})")
+        parser.add_argument("--config", default=filename, type=Path)
 
         args, _ = parser.parse_known_args()
         config = await self._config_loader.load(args.config)
-        return config
+        return args.config, config
 
     async def start(self) -> Report:
         formatter = partial(HelpFormatter, max_help_position=30)
@@ -45,11 +46,14 @@ class Lifecycle:
         arg_parser.add_argument("--config", default=default_config, type=Path,
                                 help=f"Config path (default {default_config})")
 
-        config = await self._load_config(default_config)
-        for _, section in config.Plugins.items():  # type: ignore
+        config_path, config = await self._load_config(default_config)
+        for _, section in config.Plugins.items():
+            assert issubclass(section.plugin, Plugin)
+            assert section.plugin != Plugin
             if section.enabled:
                 plugin = section.plugin(config=section)
                 self._dispatcher.register(plugin)
+        await self._dispatcher.fire(ConfigLoadedEvent(config_path, config))
 
         subparsers = arg_parser.add_subparsers(dest="subparser")
         arg_parser_run = subparsers.add_parser("run", add_help=False,

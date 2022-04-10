@@ -1,10 +1,12 @@
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from unittest.mock import Mock
 
 from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import (
+    Config,
     Event,
     ExcInfo,
     Report,
@@ -17,6 +19,7 @@ from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
+    ConfigLoadedEvent,
     ExceptionRaisedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
@@ -50,6 +53,20 @@ def test_already_registered_event():
     with then:
         assert exception.type is Exception
         assert str(exception.value) == f"Event {RegisteredEvent!r} already registered"
+
+
+def test_config_loaded_event():
+    with given:
+        path = Path()
+        config = Config
+
+    with when:
+        event = ConfigLoadedEvent(path, config)
+
+    with then:
+        assert event.path == path
+        assert event.config == config
+        assert repr(event) == f"ConfigLoadedEvent({path!r}, <Config>)"
 
 
 def test_arg_parse_event():
