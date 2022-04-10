@@ -2,7 +2,7 @@ import json
 import os
 from traceback import format_exception
 from types import TracebackType
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Type, Union
 
 from rich.console import Console
 from rich.style import Style
@@ -32,9 +32,9 @@ ScenarioEndEventType = Union[ScenarioPassedEvent, ScenarioFailedEvent, ScenarioS
 
 
 class RichReporterPlugin(Reporter):
-    def __init__(self, config: Optional["RichReporter"] = None, *,
+    def __init__(self, config: Optional[Type["RichReporter"]] = None, *,
                  console_factory: Callable[[], Console] = make_console) -> None:
-        super().__init__()
+        super().__init__(config)
         self._console = console_factory()
         self._verbosity = 0
         self._tb_show_internal_calls = False
@@ -47,10 +47,11 @@ class RichReporterPlugin(Reporter):
         self._max_frames = 8
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        self._dispatcher = dispatcher.listen(DirectorInitEvent,
-                                             lambda e: e.director.register("rich", self))
+        super().subscribe(dispatcher)
+        dispatcher.listen(DirectorInitEvent, lambda e: e.director.register("rich", self))
 
     def on_chosen(self) -> None:
+        assert isinstance(self._dispatcher, Dispatcher)
         self._dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                         .listen(ArgParsedEvent, self.on_arg_parsed) \
                         .listen(StartupEvent, self.on_startup) \

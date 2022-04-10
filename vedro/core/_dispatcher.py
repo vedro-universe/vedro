@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from heapq import heappop, heappush
 from time import monotonic_ns
@@ -12,7 +13,8 @@ HandlerType = Callable[..., Any]
 RegisteredItemType = Tuple[int, int, HandlerType]
 
 
-class Subscriber:
+class Subscriber(ABC):
+    @abstractmethod
     def subscribe(self, dispatcher: "Dispatcher") -> None:
         raise NotImplementedError()
 

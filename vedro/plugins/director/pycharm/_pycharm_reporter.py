@@ -2,7 +2,7 @@ import json
 import os
 from traceback import format_exception
 from types import TracebackType
-from typing import Any, Callable, Dict, Generator, Optional, Tuple
+from typing import Any, Callable, Dict, Generator, Optional, Tuple, Type
 
 from rich.console import Console
 from rich.style import Style
@@ -28,18 +28,19 @@ __all__ = ("PyCharmReporter", "PyCharmReporterPlugin",)
 
 
 class PyCharmReporterPlugin(Reporter):
-    def __init__(self, config: Optional["PyCharmReporter"] = None, *,
+    def __init__(self, config: Optional[Type["PyCharmReporter"]] = None, *,
                  console_factory: Callable[[], Console] = make_console) -> None:
-        super().__init__()
+        super().__init__(config)
         self._console = console_factory()
         self._show_internal_calls = False
         self._show_skipped = False
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        self._dispatcher = dispatcher.listen(DirectorInitEvent,
-                                             lambda e: e.director.register("pycharm", self))
+        super().subscribe(dispatcher)
+        dispatcher.listen(DirectorInitEvent, lambda e: e.director.register("pycharm", self))
 
     def on_chosen(self) -> None:
+        assert isinstance(self._dispatcher, Dispatcher)
         self._dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                         .listen(ArgParsedEvent, self.on_arg_parsed) \
                         .listen(StartupEvent, self.on_startup) \

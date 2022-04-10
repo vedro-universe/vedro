@@ -1,15 +1,12 @@
-from baby_steps import given, then, when
+from baby_steps import then, when
 from pytest import raises
 
 from vedro.plugins.director import Reporter
 
 
-def test_reporter_on_chosen():
-    with given:
-        reporter = Reporter()
-
+def test_reporter():
     with when, raises(BaseException) as exception:
-        reporter.on_chosen()
+        Reporter()
 
     with then:
-        assert exception.type is NotImplementedError
+        assert exception.type is TypeError
