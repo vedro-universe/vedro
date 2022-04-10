@@ -4,6 +4,7 @@ from ._dispatcher import Dispatcher, Subscriber
 from ._event import Event
 from ._exc_info import ExcInfo
 from ._lifecycle import Lifecycle
+from ._module_loader import ModuleFileLoader, ModuleLoader
 from ._plugin import Plugin, PluginConfig
 from ._report import Report
 from ._runner import Runner
@@ -19,4 +20,5 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin"
            "Report", "Runner", "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
            "ScenarioResult", "StepResult", "VirtualScenario", "VirtualStep",
            "ScenarioStatus", "StepStatus", "ArgumentParser",
-           "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",)
+           "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",
+           "ModuleLoader", "ModuleFileLoader",)
