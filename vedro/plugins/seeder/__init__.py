@@ -1,3 +1,3 @@
-from ._seeder import Seeder
+from ._seeder import Seeder, SeederPlugin
 
-__all__ = ("Seeder",)
+__all__ = ("Seeder", "SeederPlugin",)

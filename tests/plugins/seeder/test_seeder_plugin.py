@@ -5,7 +5,7 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
 from vedro.events import ArgParseEvent
-from vedro.plugins.seeder import Seeder
+from vedro.plugins.seeder import SeederPlugin
 
 
 @pytest.fixture()
@@ -16,7 +16,7 @@ def dispatcher():
 @pytest.mark.asyncio
 async def test_seeder_plugin(*, dispatcher: Dispatcher):
     with given:
-        seeder = Seeder()
+        seeder = SeederPlugin()
         seeder.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 
