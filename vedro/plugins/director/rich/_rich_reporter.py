@@ -2,14 +2,14 @@ import json
 import os
 from traceback import format_exception
 from types import TracebackType
-from typing import Any, Callable, Dict, Generator, List, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Tuple, Type, Union
 
 from rich.console import Console
 from rich.style import Style
 from rich.traceback import Traceback
 
 import vedro
-from vedro.core import Dispatcher, ScenarioResult, StepResult
+from vedro.core import Dispatcher, PluginConfig, ScenarioResult, StepResult
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -21,17 +21,20 @@ from vedro.events import (
     StartupEvent,
 )
 
+from .._director_init_event import DirectorInitEvent
 from .._reporter import Reporter
 from .utils import make_console
 
-__all__ = ("RichReporter",)
+__all__ = ("RichReporterPlugin", "RichReporter",)
 
 
 ScenarioEndEventType = Union[ScenarioPassedEvent, ScenarioFailedEvent, ScenarioSkippedEvent]
 
 
-class RichReporter(Reporter):
-    def __init__(self, console_factory: Callable[[], Console] = make_console) -> None:
+class RichReporterPlugin(Reporter):
+    def __init__(self, config: Type["RichReporter"], *,
+                 console_factory: Callable[[], Console] = make_console) -> None:
+        super().__init__(config)
         self._console = console_factory()
         self._verbosity = 0
         self._tb_show_internal_calls = False
@@ -44,14 +47,19 @@ class RichReporter(Reporter):
         self._max_frames = 8
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
-                  .listen(ArgParsedEvent, self.on_arg_parsed) \
-                  .listen(StartupEvent, self.on_startup) \
-                  .listen(ScenarioRunEvent, self.on_scenario_run) \
-                  .listen(ScenarioSkippedEvent, self.on_scenario_end) \
-                  .listen(ScenarioPassedEvent, self.on_scenario_end) \
-                  .listen(ScenarioFailedEvent, self.on_scenario_end) \
-                  .listen(CleanupEvent, self.on_cleanup)
+        super().subscribe(dispatcher)
+        dispatcher.listen(DirectorInitEvent, lambda e: e.director.register("rich", self))
+
+    def on_chosen(self) -> None:
+        assert isinstance(self._dispatcher, Dispatcher)
+        self._dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
+                        .listen(ArgParsedEvent, self.on_arg_parsed) \
+                        .listen(StartupEvent, self.on_startup) \
+                        .listen(ScenarioRunEvent, self.on_scenario_run) \
+                        .listen(ScenarioSkippedEvent, self.on_scenario_end) \
+                        .listen(ScenarioPassedEvent, self.on_scenario_end) \
+                        .listen(ScenarioFailedEvent, self.on_scenario_end) \
+                        .listen(CleanupEvent, self.on_cleanup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Rich Reporter")
@@ -269,3 +277,7 @@ class RichReporter(Reporter):
                           style=style,
                           end="")
         self._console.out(f" ({event.report.elapsed:.2f}s)", style=Style(color="blue"))
+
+
+class RichReporter(PluginConfig):
+    plugin = RichReporterPlugin

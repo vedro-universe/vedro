@@ -2,13 +2,13 @@ import json
 import os
 from traceback import format_exception
 from types import TracebackType
-from typing import Any, Callable, Dict, Generator, Tuple
+from typing import Any, Callable, Dict, Generator, Tuple, Type
 
 from rich.console import Console
 from rich.style import Style
 
 import vedro
-from vedro.core import Dispatcher, ScenarioResult
+from vedro.core import Dispatcher, PluginConfig, ScenarioResult
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -20,31 +20,35 @@ from vedro.events import (
     StartupEvent,
 )
 
+from .._director_init_event import DirectorInitEvent
 from .._reporter import Reporter
 from ..rich.utils import make_console
 
-__all__ = ("PyCharmReporter",)
+__all__ = ("PyCharmReporter", "PyCharmReporterPlugin",)
 
 
-class PyCharmReporter(Reporter):
-    def __init__(self, console_factory: Callable[[], Console] = make_console) -> None:
+class PyCharmReporterPlugin(Reporter):
+    def __init__(self, config: Type["PyCharmReporter"], *,
+                 console_factory: Callable[[], Console] = make_console) -> None:
+        super().__init__(config)
         self._console = console_factory()
         self._show_internal_calls = False
         self._show_skipped = False
 
-    @property
-    def name(self) -> str:
-        return "pycharm"
-
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
-                  .listen(ArgParsedEvent, self.on_arg_parsed) \
-                  .listen(StartupEvent, self.on_startup) \
-                  .listen(ScenarioRunEvent, self.on_scenario_run) \
-                  .listen(ScenarioPassedEvent, self.on_scenario_passed) \
-                  .listen(ScenarioFailedEvent, self.on_scenario_failed) \
-                  .listen(ScenarioSkippedEvent, self.on_scenario_skipped) \
-                  .listen(CleanupEvent, self.on_cleanup)
+        super().subscribe(dispatcher)
+        dispatcher.listen(DirectorInitEvent, lambda e: e.director.register("pycharm", self))
+
+    def on_chosen(self) -> None:
+        assert isinstance(self._dispatcher, Dispatcher)
+        self._dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
+                        .listen(ArgParsedEvent, self.on_arg_parsed) \
+                        .listen(StartupEvent, self.on_startup) \
+                        .listen(ScenarioRunEvent, self.on_scenario_run) \
+                        .listen(ScenarioPassedEvent, self.on_scenario_passed) \
+                        .listen(ScenarioFailedEvent, self.on_scenario_failed) \
+                        .listen(ScenarioSkippedEvent, self.on_scenario_skipped) \
+                        .listen(CleanupEvent, self.on_cleanup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("PyCharm Reporter")
@@ -153,3 +157,7 @@ class PyCharmReporter(Reporter):
             message += f" {key}='{escaped}'"
         message += "]"
         self._console.out(message)
+
+
+class PyCharmReporter(PluginConfig):
+    plugin = PyCharmReporterPlugin

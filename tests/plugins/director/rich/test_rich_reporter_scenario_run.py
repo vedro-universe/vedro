@@ -6,9 +6,11 @@ from rich.console import Style
 
 from vedro.core import Dispatcher, ScenarioResult
 from vedro.events import ScenarioRunEvent
-from vedro.plugins.director import RichReporter
+from vedro.plugins.director import DirectorPlugin, RichReporterPlugin
 from vedro.plugins.director.rich.test_utils import (
+    chose_reporter,
     console_,
+    director,
     dispatcher,
     make_path,
     make_scenario_result,
@@ -16,14 +18,15 @@ from vedro.plugins.director.rich.test_utils import (
     reporter,
 )
 
-__all__ = ("dispatcher", "reporter", "console_",)
+__all__ = ("dispatcher", "reporter", "director", "console_",)
 
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
-                                                reporter: RichReporter, console_: Mock):
+                                                director: DirectorPlugin,
+                                                reporter: RichReporterPlugin, console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         vscenario = make_vscenario(path=make_path("<namespace_1>"))
         scenario_result = ScenarioResult(vscenario)
@@ -40,10 +43,11 @@ async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_run_event_same_namespace(*, dispatcher: Dispatcher,
-                                                               reporter: RichReporter,
+                                                               director: DirectorPlugin,
+                                                               reporter: RichReporterPlugin,
                                                                console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         vscenario = make_vscenario(path=make_path("<namespace_1>"))
         scenario_result = make_scenario_result(vscenario)
@@ -61,10 +65,11 @@ async def test_rich_reporter_scenario_run_event_same_namespace(*, dispatcher: Di
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_run_event_diff_namespace(*, dispatcher: Dispatcher,
-                                                               reporter: RichReporter,
+                                                               director: DirectorPlugin,
+                                                               reporter: RichReporterPlugin,
                                                                console_: Mock):
     with given:
-        reporter.subscribe(dispatcher)
+        await chose_reporter(dispatcher, director, reporter)
 
         vscenario = make_vscenario(path=make_path("<namespace_1>"))
         scenario_result1 = ScenarioResult(vscenario)

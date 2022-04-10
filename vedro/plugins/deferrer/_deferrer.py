@@ -1,11 +1,11 @@
 from asyncio import iscoroutinefunction
 from collections import deque
-from typing import Any, Callable, Deque, Dict, Tuple, Union
+from typing import Any, Callable, Deque, Dict, Tuple, Type, Union
 
-from vedro.core import Dispatcher, Plugin
+from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ScenarioFailedEvent, ScenarioPassedEvent, ScenarioRunEvent
 
-__all__ = ("Deferrer", "defer", "Deferrable",)
+__all__ = ("Deferrer", "DeferrerPlugin", "defer", "Deferrable",)
 
 
 Deferrable = Tuple[Callable[..., Any], Tuple[Any, ...], Dict[str, Any]]
@@ -17,9 +17,9 @@ def defer(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
     _queue.append((fn, args, kwargs))
 
 
-class Deferrer(Plugin):
-    def __init__(self, queue: Deque[Deferrable] = _queue) -> None:
-        super().__init__()
+class DeferrerPlugin(Plugin):
+    def __init__(self, config: Type["Deferrer"], *, queue: Deque[Deferrable] = _queue) -> None:
+        super().__init__(config)
         self._queue = queue
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -38,3 +38,7 @@ class Deferrer(Plugin):
                 await fn(*args, **kwargs)
             else:
                 fn(*args, **kwargs)
+
+
+class Deferrer(PluginConfig):
+    plugin = DeferrerPlugin

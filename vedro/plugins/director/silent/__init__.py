@@ -1,9 +1,3 @@
-from ....core import Dispatcher
-from .._reporter import Reporter
+from ._silent_reporter import SilentReporter, SilentReporterPlugin
 
-__all__ = ("SilentReporter",)
-
-
-class SilentReporter(Reporter):
-    def subscribe(self, dispatcher: Dispatcher) -> None:
-        pass
+__all__ = ("SilentReporter", "SilentReporterPlugin",)

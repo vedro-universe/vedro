@@ -1,3 +1,3 @@
-from ._terminator import Terminator
+from ._terminator import Terminator, TerminatorPlugin
 
-__all__ = ("Terminator",)
+__all__ = ("Terminator", "TerminatorPlugin",)

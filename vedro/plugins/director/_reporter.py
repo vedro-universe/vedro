@@ -1,14 +1,19 @@
-import re
+from abc import abstractmethod
+from typing import Type, Union
 
-from vedro.core import Plugin
+from vedro.core import Dispatcher, Plugin, PluginConfig
 
 __all__ = ("Reporter",)
 
 
 class Reporter(Plugin):
-    @property
-    def name(self) -> str:
-        cls_name = self.__class__.__name__
-        if cls_name.endswith(Reporter.__name__):
-            cls_name = cls_name[:-len(Reporter.__name__)]
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', cls_name).lower()
+    def __init__(self, config: Type[PluginConfig]) -> None:
+        super().__init__(config)
+        self._dispatcher: Union[Dispatcher, None] = None
+
+    def subscribe(self, dispatcher: Dispatcher) -> None:
+        self._dispatcher = dispatcher
+
+    @abstractmethod
+    def on_chosen(self) -> None:
+        raise NotImplementedError()

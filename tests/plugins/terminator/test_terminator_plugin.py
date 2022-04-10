@@ -7,17 +7,19 @@ from pytest import raises
 
 from vedro.core import Dispatcher, Report, ScenarioResult, VirtualScenario
 from vedro.events import CleanupEvent
-from vedro.plugins.terminator import Terminator
+from vedro.plugins.terminator import Terminator, TerminatorPlugin
 
 
 @pytest.fixture()
-def dispatcher():
+def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
 @pytest.fixture()
-def plugin(dispatcher):
-    return Terminator()
+def terminator(dispatcher: Dispatcher):
+    terminator = TerminatorPlugin(Terminator)
+    terminator.subscribe(dispatcher)
+    return terminator
 
 
 def make_scenario_result() -> ScenarioResult:
@@ -26,10 +28,8 @@ def make_scenario_result() -> ScenarioResult:
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_passed(*, plugin: Terminator, dispatcher: Dispatcher):
+async def test_terminator_plugin_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
-        plugin.subscribe(dispatcher)
-
         report = Report()
         scenario_result = make_scenario_result().mark_passed()
         report.add_result(scenario_result)
@@ -43,10 +43,8 @@ async def test_terminator_plugin_passed(*, plugin: Terminator, dispatcher: Dispa
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_failed(*, plugin: Terminator, dispatcher: Dispatcher):
+async def test_terminator_plugin_failed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
-        plugin.subscribe(dispatcher)
-
         report = Report()
         scenario_result = make_scenario_result().mark_failed()
         report.add_result(scenario_result)
@@ -60,10 +58,9 @@ async def test_terminator_plugin_failed(*, plugin: Terminator, dispatcher: Dispa
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_no_passed(*, plugin: Terminator, dispatcher: Dispatcher):
+async def test_terminator_plugin_no_passed(*, terminator: TerminatorPlugin,
+                                           dispatcher: Dispatcher):
     with given:
-        plugin.subscribe(dispatcher)
-
         report = Report()
 
     with when, raises(BaseException) as exception:

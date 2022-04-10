@@ -1,10 +1,10 @@
 import os
-from typing import List, Optional, Union
+from typing import List, Optional, Type, Union
 
-from vedro.core import Dispatcher, Plugin, VirtualScenario
+from vedro.core import Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 
-__all__ = ("Skipper",)
+__all__ = ("Skipper", "SkipperPlugin",)
 
 
 class _CompositePath:
@@ -14,8 +14,9 @@ class _CompositePath:
         self.tmpl_idx = tmpl_idx
 
 
-class Skipper(Plugin):
-    def __init__(self) -> None:
+class SkipperPlugin(Plugin):
+    def __init__(self, config: Type["Skipper"]) -> None:
+        super().__init__(config)
         self._subject: Union[str, None] = None
         self._specified: List[_CompositePath] = []
         self._ignored: List[_CompositePath] = []
@@ -26,9 +27,9 @@ class Skipper(Plugin):
                   .listen(StartupEvent, self.on_startup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("file_or_dir", nargs='*', default=["."],
+        event.arg_parser.add_argument("file_or_dir", nargs="*", default=["."],
                                       help="Select scenarios in a given file or directory")
-        event.arg_parser.add_argument("-i", "--ignore", nargs='+', default=[],
+        event.arg_parser.add_argument("-i", "--ignore", nargs="+", default=[],
                                       help="Skip scenarios in a given file or directory")
         event.arg_parser.add_argument("--subject", help="Select scenarios with a given subject")
 
@@ -127,3 +128,7 @@ class Skipper(Plugin):
             for scenario in event.scenarios:
                 if scenario.unique_id not in special_scenarios:
                     scenario.skip()
+
+
+class Skipper(PluginConfig):
+    plugin = SkipperPlugin

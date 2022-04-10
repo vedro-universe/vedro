@@ -1,20 +1,13 @@
-import pytest
-from baby_steps import given, then, when
+from baby_steps import then, when
+from pytest import raises
 
+from vedro.core import PluginConfig
 from vedro.plugins.director import Reporter
 
 
-@pytest.mark.parametrize(("cls_name", "reporter_name"), [
-    ("WordReporter", "word"),
-    ("TwoWordsReporter", "two_words"),
-    ("ReportGenerator", "report_generator"),
-])
-def test_reporter_name(cls_name: str, reporter_name: str):
-    with given:
-        cls = type(cls_name, (Reporter,), {})
-
-    with when:
-        reporter = cls()
+def test_reporter():
+    with when, raises(BaseException) as exception:
+        Reporter(PluginConfig)
 
     with then:
-        assert reporter.name == reporter_name
+        assert exception.type is TypeError

@@ -1,8 +1,8 @@
 import random
-from typing import Any, Dict, Union, cast
+from typing import Any, Dict, Type, Union, cast
 from uuid import uuid4
 
-from vedro.core import Dispatcher, Plugin
+from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -11,11 +11,12 @@ from vedro.events import (
     StartupEvent,
 )
 
-__all__ = ("Seeder",)
+__all__ = ("Seeder", "SeederPlugin",)
 
 
-class Seeder(Plugin):
-    def __init__(self, random: Any = random) -> None:
+class SeederPlugin(Plugin):
+    def __init__(self, config: Type["Seeder"], *, random: Any = random) -> None:
+        super().__init__(config)
         self._random = random
         self._seed: Union[str, None] = None
         self._scenarios: Dict[str, int] = {}
@@ -54,3 +55,7 @@ class Seeder(Plugin):
         if (event.report.passed + event.report.failed) > 0:
             summary = f"--seed {self._seed}"
             event.report.add_summary(summary)
+
+
+class Seeder(PluginConfig):
+    plugin = SeederPlugin
