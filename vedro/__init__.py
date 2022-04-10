@@ -23,7 +23,8 @@ __all__ = ("Scenario", "Interface", "Runner", "run", "only", "skip", "params",
 
 def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     if plugins is not None:
-        raise Exception()
+        raise DeprecationWarning("Argument 'plugins' is deprecated, "
+                                 "declare plugins in config (vedro.cfg.py)")
 
     finder = ScenarioFileFinder(
         file_filter=AnyFilter([
