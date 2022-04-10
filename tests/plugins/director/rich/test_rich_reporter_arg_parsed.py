@@ -15,7 +15,7 @@ from vedro.plugins.director.rich.test_utils import (
     reporter,
 )
 
-__all__ = ("dispatcher", "reporter", "console_",)
+__all__ = ("dispatcher", "reporter", "director", "console_",)
 
 
 @pytest.mark.asyncio

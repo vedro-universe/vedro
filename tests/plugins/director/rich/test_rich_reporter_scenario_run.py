@@ -43,7 +43,7 @@ async def test_rich_reporter_scenario_run_event(*, dispatcher: Dispatcher,
 
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_run_event_same_namespace(*, dispatcher: Dispatcher,
-                                                            director: DirectorPlugin,
+                                                               director: DirectorPlugin,
                                                                reporter: RichReporterPlugin,
                                                                console_: Mock):
     with given:

@@ -12,8 +12,8 @@ from unittest.mock import Mock, call, patch
 import pytest
 from baby_steps import given, then, when
 
-from vedro import Config
 from vedro.core import (
+    Config,
     ConfigFileLoader,
     ConfigLoader,
     Dispatcher,

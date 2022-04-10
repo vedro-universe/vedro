@@ -2,7 +2,7 @@ import os
 import random
 import string
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from pathlib import Path
 from types import TracebackType
 from typing import Any, List, Optional, cast
@@ -13,6 +13,7 @@ from rich.console import Console
 
 from vedro import Scenario
 from vedro.core import (
+    ArgumentParser,
     Config,
     Dispatcher,
     ExcInfo,
@@ -32,24 +33,24 @@ __all__ = ("dispatcher", "console_", "reporter", "director", "chose_reporter",
 
 
 @pytest.fixture()
-def dispatcher():
+def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
 @pytest.fixture()
-def director(dispatcher: Dispatcher):
+def director(dispatcher: Dispatcher) -> DirectorPlugin:
     director = DirectorPlugin()
     director.subscribe(dispatcher)
     return director
 
 
 @pytest.fixture()
-def console_():
+def console_() -> Console:
     return Mock(Console)
 
 
 @pytest.fixture()
-def reporter(dispatcher: Dispatcher, console_: Console):
+def reporter(dispatcher: Dispatcher, console_: Console) -> RichReporterPlugin:
     reporter = RichReporterPlugin(console_factory=lambda: console_)
     reporter.subscribe(dispatcher)
     return reporter
