@@ -1,7 +1,7 @@
 from inspect import isclass
 from typing import Any, Optional, Type, Union
 
-from vedro import Scenario
+from vedro._scenario import Scenario
 
 __all__ = ("skip",)
 
