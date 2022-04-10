@@ -42,7 +42,7 @@ async def test_rich_reporter_scenario_pass_event(*, dispatcher: Dispatcher,
 @pytest.mark.asyncio
 async def test_rich_reporter_scenario_pass_event_with_show_paths(*,
                                                                  dispatcher: Dispatcher,
-                                                                 reporter: RichReporter,
+                                                                 reporter: RichReporterPlugin,
                                                                  console_: Mock):
     with given:
         reporter.subscribe(dispatcher)

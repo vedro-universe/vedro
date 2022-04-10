@@ -4,7 +4,7 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
-from vedro.plugins.director import SilentReporterPlugin, DirectorPlugin, DirectorInitEvent
+from vedro.plugins.director import DirectorInitEvent, DirectorPlugin, SilentReporterPlugin
 
 
 @pytest.mark.asyncio
