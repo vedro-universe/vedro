@@ -1,3 +1,3 @@
-from ._tagger import Tagger
+from ._tagger import Tagger, TaggerPlugin
 
-__all__ = ("Tagger",)
+__all__ = ("Tagger", "TaggerPlugin",)

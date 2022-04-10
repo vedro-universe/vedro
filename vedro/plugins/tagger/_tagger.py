@@ -1,13 +1,14 @@
-from typing import Union
+from typing import Optional, Type, Union
 
-from vedro.core import Dispatcher, Plugin
+from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 
-__all__ = ("Tagger",)
+__all__ = ("Tagger", "TaggerPlugin",)
 
 
-class Tagger(Plugin):
-    def __init__(self) -> None:
+class TaggerPlugin(Plugin):
+    def __init__(self, config: Optional[Type["Tagger"]] = None) -> None:
+        super().__init__(config)
         self._tags: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -28,3 +29,7 @@ class Tagger(Plugin):
             tags = getattr(scenario._orig_scenario, "tags", ())
             if self._tags not in tags:
                 scenario.skip()
+
+
+class Tagger(PluginConfig):
+    plugin = TaggerPlugin

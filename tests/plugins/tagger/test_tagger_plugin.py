@@ -5,7 +5,7 @@ from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
 from vedro.events import ArgParseEvent
-from vedro.plugins.tagger import Tagger
+from vedro.plugins.tagger import TaggerPlugin
 
 
 @pytest.fixture()
@@ -16,7 +16,7 @@ def dispatcher():
 @pytest.mark.asyncio
 async def test_tagger_plugin(*, dispatcher: Dispatcher):
     with given:
-        tagger = Tagger()
+        tagger = TaggerPlugin()
         tagger.subscribe(dispatcher)
         event = ArgParseEvent(ArgumentParser())
 
