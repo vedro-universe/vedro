@@ -3,22 +3,21 @@ name: Test
 on:
   push:
     branches:
-      - '*'
-    tags-ignore:
-      - '*'
-  schedule:
-    # every Wed at 07:00 UTC
-    - cron:  '0 7 * * 3'
+      - 'master'
+  pull_request:
+    branches:
+      - 'master'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout 
+      uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -33,15 +32,3 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         fail_ci_if_error: false
-
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-    - name: Build
-      run: make build
