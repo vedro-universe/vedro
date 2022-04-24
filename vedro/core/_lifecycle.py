@@ -27,22 +27,25 @@ class Lifecycle:
         self._runner = runner
         self._config_loader = config_loader
 
-    async def _load_config(self, filename: str) -> Tuple[Path, ConfigType]:
+    async def _load_config(self, filename: Path) -> Tuple[Path, ConfigType]:
         parser = ArgumentParser(add_help=False)
         parser.add_argument("--config", default=filename, type=Path)
 
         args, _ = parser.parse_known_args()
+        if args.config != filename:
+            assert args.config.exists(), f"'{args.config}' does not exist"
+
         config = await self._config_loader.load(args.config)
         return args.config, config
 
     async def start(self) -> Report:
         formatter = partial(HelpFormatter, max_help_position=30)
-        default_config = "vedro.cfg.py"
+        default_config = Path("vedro.cfg.py")
 
         arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False,
                                     description="documentation: vedro.io/docs")
         arg_parser.add_argument("--config", default=default_config, type=Path,
-                                help=f"Config path (default {default_config})")
+                                help=f"Config path (default: {default_config})")
         arg_parser.add_argument("-h", "--help",
                                 action="help", help="Show this help message and exit")
 
@@ -64,9 +67,9 @@ class Lifecycle:
 
         await self._dispatcher.fire(ArgParseEvent(arg_parser_run))
         arg_parser_run.add_argument("--reruns", type=int, default=0,
-                                    help="Number of times to rerun failed scenarios (default 0)")
+                                    help="Number of times to rerun failed scenarios (default: 0)")
         arg_parser_run.add_argument("--config", default=default_config, type=Path,
-                                    help=f"Config path (default {default_config})")
+                                    help=f"Config path (default: {default_config})")
         arg_parser_run.add_argument("-h", "--help",
                                     action="help", help="Show this help message and exit")
 

@@ -32,8 +32,8 @@ class PyCharmReporterPlugin(Reporter):
                  console_factory: Callable[[], Console] = make_console) -> None:
         super().__init__(config)
         self._console = console_factory()
-        self._show_internal_calls = False
-        self._show_skipped = False
+        self._show_internal_calls = config.show_internal_calls
+        self._show_skipped = config.show_skipped
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
@@ -161,3 +161,9 @@ class PyCharmReporterPlugin(Reporter):
 
 class PyCharmReporter(PluginConfig):
     plugin = PyCharmReporterPlugin
+
+    # Show internal calls in the traceback output
+    show_internal_calls: bool = False
+
+    # Show skipped scenarios
+    show_skipped: bool = False

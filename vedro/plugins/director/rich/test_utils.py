@@ -11,6 +11,7 @@ from unittest.mock import Mock
 import pytest
 from rich.console import Console
 
+import vedro.plugins.director as d
 from vedro import Scenario
 from vedro.core import (
     ArgumentParser,
@@ -24,7 +25,7 @@ from vedro.core import (
     VirtualStep,
 )
 from vedro.events import ArgParseEvent, ConfigLoadedEvent
-from vedro.plugins.director import Director, DirectorPlugin, RichReporter, RichReporterPlugin
+from vedro.plugins.director import Director, DirectorPlugin, RichReporterPlugin
 
 __all__ = ("dispatcher", "console_", "reporter", "director", "chose_reporter",
            "make_parsed_args", "make_path", "make_vscenario", "make_vstep",
@@ -51,6 +52,8 @@ def console_() -> Console:
 
 @pytest.fixture()
 def reporter(dispatcher: Dispatcher, console_: Console) -> RichReporterPlugin:
+    class RichReporter(d.RichReporter):
+        tb_pretty = False
     reporter = RichReporterPlugin(RichReporter, console_factory=lambda: console_)
     reporter.subscribe(dispatcher)
     return reporter
