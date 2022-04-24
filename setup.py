@@ -13,7 +13,7 @@ def find_dev_required():
 
 setup(
     name="vedro",
-    version="1.4.0",
+    version="1.5.0",
     description="BDD Framework (without magic)",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
