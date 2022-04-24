@@ -45,3 +45,6 @@ class _Meta(type):
 
 class Scenario(metaclass=_Meta):
     subject: str
+
+    def __repr__(self) -> str:
+        return "<Scenario>"

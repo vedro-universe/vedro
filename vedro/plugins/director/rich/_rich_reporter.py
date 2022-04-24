@@ -237,7 +237,8 @@ class RichReporterPlugin(Reporter):
                 for frame in stack.frames:
                     if frame.locals:
                         frame.locals = self._filter_locals(frame.locals)
-            self._console.print(Traceback(trace, max_frames=self._tb_max_frames))
+            self._console.print(Traceback(trace,
+                                          max_frames=self._tb_max_frames, word_wrap=True))
             self._console.out(" ")
         else:
             formatted = format_exception(type(exception), exception, traceback,
