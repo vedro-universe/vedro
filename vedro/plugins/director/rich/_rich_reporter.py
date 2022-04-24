@@ -37,14 +37,15 @@ class RichReporterPlugin(Reporter):
         super().__init__(config)
         self._console = console_factory()
         self._verbosity = 0
-        self._tb_show_internal_calls = False
-        self._tb_show_locals = False
-        self._show_timings = False
-        self._show_paths = False
+        self._tb_pretty = config.tb_pretty
+        self._tb_show_internal_calls = config.tb_show_internal_calls
+        self._tb_show_locals = config.tb_show_locals
+        self._tb_max_frames = config.tb_max_frames
+        self._show_timings = config.show_timings
+        self._show_paths = config.show_paths
         self._namespace: Union[str, None] = None
         self._buffer: List[ScenarioResult] = []
         self._reruns = 0
-        self._max_frames = 8
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
@@ -72,19 +73,19 @@ class RichReporterPlugin(Reporter):
                            help=help_message)
         group.add_argument("--show-timings",
                            action="store_true",
-                           default=False,
+                           default=self._show_timings,
                            help="Show the elapsed time of each scenario")
         group.add_argument("--show-paths",
                            action="store_true",
-                           default=False,
+                           default=self._show_paths,
                            help="Show the relative path of each passed scenario")
         group.add_argument("--tb-show-internal-calls",
                            action="store_true",
-                           default=False,
+                           default=self._tb_show_internal_calls,
                            help="Show internal calls in the traceback output")
         group.add_argument("--tb-show-locals",
                            action="store_true",
-                           default=False,
+                           default=self._tb_show_locals,
                            help="Show local variables in the traceback output")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
@@ -215,7 +216,7 @@ class RichReporterPlugin(Reporter):
             if key == "self":
                 continue
             # assertion rewriter stuff
-            if key.startswith("@py"):
+            if key.startswith("@"):
                 continue
             filtered_locals[key] = val
         return filtered_locals
@@ -229,16 +230,18 @@ class RichReporterPlugin(Reporter):
                     break
                 traceback = traceback.tb_next
 
-        if self._tb_show_locals:
-            trace = Traceback.extract(type(exception), exception, traceback, show_locals=True)
+        if self._tb_pretty:
+            trace = Traceback.extract(type(exception), exception, traceback,
+                                      show_locals=self._tb_show_locals)
             for stack in trace.stacks:
                 for frame in stack.frames:
                     if frame.locals:
                         frame.locals = self._filter_locals(frame.locals)
-            self._console.print(Traceback(trace, max_frames=self._max_frames))
+            self._console.print(Traceback(trace, max_frames=self._tb_max_frames))
             self._console.out(" ")
         else:
-            formatted = format_exception(type(exception), exception, traceback, self._max_frames)
+            formatted = format_exception(type(exception), exception, traceback,
+                                         limit=self._tb_max_frames)
             self._console.out("".join(formatted), style=Style(color="yellow"))
 
     def _format_scope(self, scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
@@ -281,3 +284,21 @@ class RichReporterPlugin(Reporter):
 
 class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
+
+    # Show the elapsed time of each scenario
+    show_timings: bool = False
+
+    # Show the relative path of each passed scenario
+    show_paths: bool = False
+
+    # Show pretty traceback
+    tb_pretty: bool = True
+
+    # Show internal calls in the traceback output
+    tb_show_internal_calls: bool = False
+
+    # Show local variables in the traceback output
+    tb_show_locals: bool = False
+
+    # Max stack trace entries to show
+    tb_max_frames: int = 8
