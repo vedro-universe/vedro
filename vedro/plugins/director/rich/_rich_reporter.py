@@ -5,6 +5,7 @@ from types import TracebackType
 from typing import Any, Callable, Dict, Generator, List, Tuple, Type, Union
 
 from rich.console import Console
+from rich.status import Status
 from rich.style import Style
 from rich.traceback import Traceback
 
@@ -43,6 +44,8 @@ class RichReporterPlugin(Reporter):
         self._tb_max_frames = config.tb_max_frames
         self._show_timings = config.show_timings
         self._show_paths = config.show_paths
+        self._show_scenario_spinner = config.show_scenario_spinner
+        self._scenario_spinner: Union[Status, None] = None
         self._namespace: Union[str, None] = None
         self._buffer: List[ScenarioResult] = []
         self._reruns = 0
@@ -104,8 +107,15 @@ class RichReporterPlugin(Reporter):
             self._namespace = event.scenario_result.scenario.namespace
             namespace = self._namespace.replace("_", " ").replace("/", " / ")
             self._console.out(f"* {namespace}", style=Style(bold=True))
+        if self._show_scenario_spinner:
+            self._scenario_spinner = self._console.status(event.scenario_result.scenario.subject)
+            self._scenario_spinner.start()
 
     def on_scenario_end(self, event: ScenarioEndEventType) -> None:
+        if self._scenario_spinner:
+            self._scenario_spinner.stop()
+            self._scenario_spinner = None
+
         if not event.scenario_result.is_failed() and len(self._buffer) == 0:
             self._buffer.append(event.scenario_result)
             self._print_buffered()
@@ -291,6 +301,9 @@ class RichReporter(PluginConfig):
 
     # Show the relative path of each passed scenario
     show_paths: bool = False
+
+    # Show status indicator of the current running scenario
+    show_scenario_spinner: bool = False
 
     # Show pretty traceback
     tb_pretty: bool = True
