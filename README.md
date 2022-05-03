@@ -5,7 +5,7 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/vedro?style=flat-square)](https://pypi.python.org/pypi/vedro/)
 [![Python Version](https://img.shields.io/pypi/pyversions/vedro.svg?style=flat-square)](https://pypi.python.org/pypi/vedro/)
 
-(!) Work in progress, breaking changes are possible until v2.0 is released
+(!) Work in progress, internal breaking changes are possible until v2.0 is released
 
 ## Installation
 
