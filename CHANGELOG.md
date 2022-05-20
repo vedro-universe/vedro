@@ -2,6 +2,11 @@
 
 ## v1.5
 
+### v1.5.1 (2022-5-20)
+
+- [Core] Update dependencies [#daeed79](https://github.com/nikitanovosibirsk/vedro/commit/daeed79e61b475e63c9df74b92460246b83605e6)
+- [Rich Reporter] Add `show_scenario_spinner` param [#72702d9](https://github.com/nikitanovosibirsk/vedro/commit/72702d9270cdac3c3efb1140a9e70e95d337b585)
+
 ### v1.5.0 (2022-04-24)
 
 - [Core] Add plugin configuration [#27](https://github.com/nikitanovosibirsk/vedro/pull/27)
