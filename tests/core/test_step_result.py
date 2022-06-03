@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import ExcInfo, StepResult, VirtualStep
+from vedro.core import Attachment, ExcInfo, StepResult, VirtualStep
 
 
 @pytest.fixture()
@@ -138,3 +138,32 @@ def test_step_result_not_eq():
 
     with then:
         assert res is False
+
+
+def test_step_result_attach(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+        attachment = Attachment("name", "text/plain", b"")
+
+    with when:
+        res = step_result.attach(attachment)
+
+    with then:
+        assert res is None
+
+
+def test_step_result_get_attachments(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+
+        attachment1 = Attachment("name1", "text/plain", b"")
+        step_result.attach(attachment1)
+
+        attachment2 = Attachment("name2", "text/plain", b"")
+        step_result.attach(attachment2)
+
+    with when:
+        attachments = step_result.attachments
+
+    with then:
+        assert attachments == [attachment1, attachment2]

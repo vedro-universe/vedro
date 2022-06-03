@@ -8,7 +8,7 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro.core import ScenarioResult, StepResult, VirtualScenario, VirtualStep
+from vedro.core import Attachment, ScenarioResult, StepResult, VirtualScenario, VirtualStep
 
 
 def make_scenario_path(path: str = "", name: str = "scenario.py") -> Path:
@@ -214,3 +214,32 @@ def test_scenario_result_not_eq():
 
     with then:
         assert res is False
+
+
+def test_scenario_result_attach(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        attachment = Attachment("name", "text/plain", b"")
+
+    with when:
+        res = scenario_result.attach(attachment)
+
+    with then:
+        assert res is None
+
+
+def test_scenario_result_get_attachments(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+
+        attachment1 = Attachment("name1", "text/plain", b"")
+        scenario_result.attach(attachment1)
+
+        attachment2 = Attachment("name2", "text/plain", b"")
+        scenario_result.attach(attachment2)
+
+    with when:
+        attachments = scenario_result.attachments
+
+    with then:
+        assert attachments == [attachment1, attachment2]
