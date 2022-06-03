@@ -1,4 +1,5 @@
 from ._arg_parser import ArgumentParser
+from ._attachment import Attachment
 from ._config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
 from ._dispatcher import Dispatcher, Subscriber
 from ._event import Event
@@ -21,4 +22,4 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin"
            "ScenarioResult", "StepResult", "VirtualScenario", "VirtualStep",
            "ScenarioStatus", "StepStatus", "ArgumentParser",
            "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",
-           "ModuleLoader", "ModuleFileLoader",)
+           "ModuleLoader", "ModuleFileLoader", "Attachment",)
