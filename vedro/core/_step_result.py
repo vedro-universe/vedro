@@ -1,6 +1,7 @@
 from enum import Enum
-from typing import Any, Union
+from typing import Any, List, Union
 
+from ._attachment import Attachment
 from ._exc_info import ExcInfo
 from ._virtual_step import VirtualStep
 
@@ -20,6 +21,7 @@ class StepResult:
         self._started_at: Union[float, None] = None
         self._ended_at: Union[float, None] = None
         self._exc_info: Union[ExcInfo, None] = None
+        self._attachments: List[Attachment] = []
 
     @property
     def step_name(self) -> str:
@@ -72,6 +74,14 @@ class StepResult:
     def set_exc_info(self, exc_info: ExcInfo) -> "StepResult":
         self._exc_info = exc_info
         return self
+
+    def attach(self, attachment: Attachment) -> None:
+        assert isinstance(attachment, Attachment)
+        self._attachments.append(attachment)
+
+    @property
+    def attachments(self) -> List[Attachment]:
+        return self._attachments[:]
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._step!r})"
