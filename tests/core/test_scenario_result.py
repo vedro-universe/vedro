@@ -8,7 +8,14 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro.core import Attachment, ScenarioResult, StepResult, VirtualScenario, VirtualStep
+from vedro.core import (
+    Attachment,
+    ScenarioResult,
+    ScenarioStatus,
+    StepResult,
+    VirtualScenario,
+    VirtualStep,
+)
 
 
 def make_scenario_path(path: str = "", name: str = "scenario.py") -> Path:
@@ -50,6 +57,7 @@ def test_scenario_result():
         assert scenario_result.ended_at is None
         assert scenario_result.scope == {}
         assert scenario_result.rerun == 0
+        assert scenario_result.status == ScenarioStatus.PENDING
 
 
 def test_scenario_result_mark_passed(*, virtual_scenario: VirtualScenario):

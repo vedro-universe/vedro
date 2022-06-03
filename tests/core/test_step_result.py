@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Attachment, ExcInfo, StepResult, VirtualStep
+from vedro.core import Attachment, ExcInfo, StepResult, StepStatus, VirtualStep
 
 
 @pytest.fixture()
@@ -31,6 +31,7 @@ def test_step_result(*, method_: MethodType, virtual_step: VirtualStep):
         assert step_result.started_at is None
         assert step_result.ended_at is None
         assert step_result.exc_info is None
+        assert step_result.status == StepStatus.PENDING
         assert repr(step_result) == f"StepResult({virtual_step!r})"
 
 
