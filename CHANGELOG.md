@@ -1,8 +1,15 @@
 # Changelog
 
+## v1.6
+
+### v1.6.0 (2022-06-05)
+
+- [Core] Add artifacts [#29](https://github.com/nikitanovosibirsk/vedro/pull/29), [#30](https://github.com/nikitanovosibirsk/vedro/pull/30)
+- [Artifacted] Add plugin [#31](https://github.com/nikitanovosibirsk/vedro/pull/31)
+
 ## v1.5
 
-### v1.5.1 (2022-5-20)
+### v1.5.1 (2022-05-20)
 
 - [Core] Update dependencies [#daeed79](https://github.com/nikitanovosibirsk/vedro/commit/daeed79e61b475e63c9df74b92460246b83605e6)
 - [Rich Reporter] Add `show_scenario_spinner` param [#72702d9](https://github.com/nikitanovosibirsk/vedro/commit/72702d9270cdac3c3efb1140a9e70e95d337b585)
