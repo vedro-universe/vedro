@@ -33,10 +33,10 @@ def attach_artifact(artifact: Artifact) -> None:
 class ArtifactedPlugin(Plugin):
     def __init__(self, config: Type["Artifacted"], *,
                  scenario_artifacts: Deque[Artifact] = _scenario_artifacts,
-                 _step_artifacts: Deque[Artifact] = _step_artifacts) -> None:
+                 step_artifacts: Deque[Artifact] = _step_artifacts) -> None:
         super().__init__(config)
         self._scenario_artifacts = scenario_artifacts
-        self._step_artifacts = _step_artifacts
+        self._step_artifacts = step_artifacts
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ScenarioRunEvent, self.on_scenario_run) \
