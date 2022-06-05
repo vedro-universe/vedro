@@ -1,4 +1,5 @@
 import vedro.core as core
+import vedro.plugins.artifacted as artifacted
 import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.interrupter as interrupter
@@ -23,6 +24,9 @@ class Config(core.Config):
             enabled = True
 
         class PyCharmReporter(director.PyCharmReporter):
+            enabled = True
+
+        class Artifacted(artifacted.Artifacted):
             enabled = True
 
         class Deferrer(deferrer.Deferrer):
