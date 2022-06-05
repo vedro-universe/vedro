@@ -2,7 +2,7 @@ import warnings
 from enum import Enum
 from typing import Any, Dict, List, Union
 
-from ._attachment import Attachment
+from ._artifacts import Artifact
 from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 
@@ -24,7 +24,7 @@ class ScenarioResult:
         self._ended_at: Union[float, None] = None
         self._step_results: List[StepResult] = []
         self._scope: Union[Dict[Any, Any], None] = None
-        self._attachments: List[Attachment] = []
+        self._artifacts: List[Artifact] = []
         self._rerun = rerun
 
     @property
@@ -108,13 +108,13 @@ class ScenarioResult:
             return {}
         return self._scope
 
-    def attach(self, attachment: Attachment) -> None:
-        assert isinstance(attachment, Attachment)
-        self._attachments.append(attachment)
+    def attach(self, artifact: Artifact) -> None:
+        assert isinstance(artifact, Artifact)
+        self._artifacts.append(artifact)
 
     @property
-    def attachments(self) -> List[Attachment]:
-        return self._attachments[:]
+    def artifacts(self) -> List[Artifact]:
+        return self._artifacts[:]
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}<{self._scenario!r}>"
