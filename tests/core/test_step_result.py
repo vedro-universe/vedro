@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Attachment, ExcInfo, StepResult, StepStatus, VirtualStep
+from vedro.core import ExcInfo, MemoryArtifact, StepResult, StepStatus, VirtualStep
 
 
 @pytest.fixture()
@@ -141,30 +141,30 @@ def test_step_result_not_eq():
         assert res is False
 
 
-def test_step_result_attach(*, virtual_step: VirtualStep):
+def test_step_result_attach_artifact(*, virtual_step: VirtualStep):
     with given:
         step_result = StepResult(virtual_step)
-        attachment = Attachment("name", "text/plain", b"")
+        artifact = MemoryArtifact("name", "text/plain", b"")
 
     with when:
-        res = step_result.attach(attachment)
+        res = step_result.attach(artifact)
 
     with then:
         assert res is None
 
 
-def test_step_result_get_attachments(*, virtual_step: VirtualStep):
+def test_step_result_get_artifacts(*, virtual_step: VirtualStep):
     with given:
         step_result = StepResult(virtual_step)
 
-        attachment1 = Attachment("name1", "text/plain", b"")
-        step_result.attach(attachment1)
+        artifact1 = MemoryArtifact("name1", "text/plain", b"")
+        step_result.attach(artifact1)
 
-        attachment2 = Attachment("name2", "text/plain", b"")
-        step_result.attach(attachment2)
+        artifact2 = MemoryArtifact("name2", "text/plain", b"")
+        step_result.attach(artifact2)
 
     with when:
-        attachments = step_result.attachments
+        artifacts = step_result.artifacts
 
     with then:
-        assert attachments == [attachment1, attachment2]
+        assert artifacts == [artifact1, artifact2]

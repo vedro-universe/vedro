@@ -9,7 +9,7 @@ from baby_steps import given, then, when
 
 from vedro import Scenario
 from vedro.core import (
-    Attachment,
+    MemoryArtifact,
     ScenarioResult,
     ScenarioStatus,
     StepResult,
@@ -224,30 +224,30 @@ def test_scenario_result_not_eq():
         assert res is False
 
 
-def test_scenario_result_attach(*, virtual_scenario: VirtualScenario):
+def test_scenario_result_attach_artifact(*, virtual_scenario: VirtualScenario):
     with given:
         scenario_result = ScenarioResult(virtual_scenario)
-        attachment = Attachment("name", "text/plain", b"")
+        artifact = MemoryArtifact("name", "text/plain", b"")
 
     with when:
-        res = scenario_result.attach(attachment)
+        res = scenario_result.attach(artifact)
 
     with then:
         assert res is None
 
 
-def test_scenario_result_get_attachments(*, virtual_scenario: VirtualScenario):
+def test_scenario_result_get_artifacts(*, virtual_scenario: VirtualScenario):
     with given:
         scenario_result = ScenarioResult(virtual_scenario)
 
-        attachment1 = Attachment("name1", "text/plain", b"")
-        scenario_result.attach(attachment1)
+        artifact1 = MemoryArtifact("name1", "text/plain", b"")
+        scenario_result.attach(artifact1)
 
-        attachment2 = Attachment("name2", "text/plain", b"")
-        scenario_result.attach(attachment2)
+        artifact2 = MemoryArtifact("name2", "text/plain", b"")
+        scenario_result.attach(artifact2)
 
     with when:
-        attachments = scenario_result.attachments
+        artifacts = scenario_result.artifacts
 
     with then:
-        assert attachments == [attachment1, attachment2]
+        assert artifacts == [artifact1, artifact2]
