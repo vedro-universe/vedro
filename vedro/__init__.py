@@ -1,4 +1,6 @@
 import asyncio
+import os
+import sys
 from asyncio import CancelledError
 from typing import List, Optional
 
@@ -25,6 +27,10 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     if plugins is not None:
         raise DeprecationWarning("Argument 'plugins' is deprecated, "
                                  "declare plugins in config (vedro.cfg.py)")
+
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
 
     finder = ScenarioFileFinder(
         file_filter=AnyFilter([
