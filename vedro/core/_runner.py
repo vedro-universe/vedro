@@ -67,10 +67,10 @@ class Runner:
         scenario_result = ScenarioResult(scenario, rerun=rerun)
         try:
             ref = scenario()
-        except:  # noqa: E722
-            message = (f"Can't initialize scenario {scenario_result.scenario.subject!r} "
-                       f"at {scenario_result.scenario.path}")
-            raise _ScenarioInitError(message)
+        except Exception as exc:
+            message = (f'Can\'t initialize scenario "{scenario_result.scenario.subject}" '
+                       f'at "{scenario_result.scenario.rel_path}" ({exc})')
+            raise _ScenarioInitError(message) from None
         scenario_result.set_scope(ref.__dict__)
 
         if scenario.is_skipped():

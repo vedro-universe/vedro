@@ -46,14 +46,23 @@ class VirtualScenario:
         return self._path
 
     @property
+    def rel_path(self) -> Path:
+        return self._path.relative_to(Path.cwd())
+
+    @property
     def subject(self) -> str:
         subject = getattr(self._orig_scenario, "subject", None)
         if not isinstance(subject, str) or subject.strip() == "":
             subject = self._path.stem.replace("_", " ")
 
-        if self.template_args:
-            subject = subject.format(**self.template_args.arguments)
-        return subject
+        if not self.template_args:
+            return subject
+
+        try:
+            return subject.format(**self.template_args.arguments)
+        except Exception as exc:
+            message = f'Can\'t format subject "{subject}" at "{self.rel_path}" ({exc})'
+            raise ValueError(message) from None
 
     @property
     def namespace(self) -> str:
