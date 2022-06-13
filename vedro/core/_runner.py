@@ -63,8 +63,8 @@ class Runner:
 
         return step_result
 
-    async def run_scenario(self, scenario: VirtualScenario, *, rerun: int = 0) -> ScenarioResult:
-        scenario_result = ScenarioResult(scenario, rerun=rerun)
+    async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
+        scenario_result = ScenarioResult(scenario)
         try:
             ref = scenario()
         except Exception as exc:
@@ -97,43 +97,11 @@ class Runner:
 
         return scenario_result
 
-    def _get_aggregated_result(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
-        passed, failed = [], []
-        for scenario_result in scenario_results:
-            if scenario_result.is_passed():
-                passed.append(scenario_result)
-            else:
-                failed.append(scenario_result)
-
-        resolution = passed[-1] if len(passed) > len(failed) else failed[-1]
-
-        aggregated = ScenarioResult(resolution.scenario)
-        for step_result in resolution.step_results:
-            aggregated.add_step_result(step_result)
-        aggregated.set_scope(resolution.scope)
-
-        if scenario_results[0].started_at:
-            aggregated.set_started_at(scenario_results[0].started_at)
-        if scenario_results[-1].ended_at:
-            aggregated.set_ended_at(scenario_results[-1].ended_at)
-
-        return aggregated.mark_passed() if resolution.is_passed() else aggregated.mark_failed()
-
-    async def run(self, scenarios: List[VirtualScenario], reruns: int = 0) -> Report:
+    async def run(self, scenarios: List[VirtualScenario]) -> Report:
         report = Report()
 
         for scenario in scenarios:
             scenario_result = await self.run_scenario(scenario)
-            if not scenario_result.is_failed() or reruns == 0:
-                report.add_result(scenario_result)
-                continue
-
-            scenario_results = [scenario_result]
-            for rerun in range(1, reruns + 1):
-                scenario_result = await self.run_scenario(scenario, rerun=rerun)
-                scenario_results.append(scenario_result)
-
-            aggregated_result = self._get_aggregated_result(scenario_results)
-            report.add_result(aggregated_result)
+            report.add_result(scenario_result)
 
         return report

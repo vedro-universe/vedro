@@ -47,9 +47,9 @@ class SeederPlugin(Plugin):
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         seed = self._scenarios[event.scenario_result.scenario.unique_id]
         self._random.seed(seed)
-        for _ in range(event.scenario_result.rerun):
-            seed = self._generate_seed()
-        self._random.seed(seed)
+        # for _ in range(event.scenario_result.rerun):
+        #     seed = self._generate_seed()
+        # self._random.seed(seed)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if (event.report.passed + event.report.failed) > 0:

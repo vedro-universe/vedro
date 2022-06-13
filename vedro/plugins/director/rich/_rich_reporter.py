@@ -48,7 +48,6 @@ class RichReporterPlugin(Reporter):
         self._scenario_spinner: Union[Status, None] = None
         self._namespace: Union[str, None] = None
         self._buffer: List[ScenarioResult] = []
-        self._reruns = 0
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
@@ -97,7 +96,6 @@ class RichReporterPlugin(Reporter):
         self._show_paths = event.args.show_paths
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
-        self._reruns = event.args.reruns
 
     def on_startup(self, event: StartupEvent) -> None:
         self._console.out("Scenarios")
@@ -121,7 +119,7 @@ class RichReporterPlugin(Reporter):
             self._print_buffered()
         else:
             self._buffer.append(event.scenario_result)
-            if event.scenario_result.rerun == self._reruns:
+            if event.scenario_result.rerun == 0:
                 self._print_buffered()
 
     def _print_scenario_skipped(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
@@ -176,9 +174,10 @@ class RichReporterPlugin(Reporter):
         resolution = self._find_resolution(self._buffer)
         self._print_scenario_subject(resolution)
 
+        _reruns = 0
         for rerun in range(1, len(self._buffer) + 1):
             scenario_result = self._buffer.pop(0)
-            prefix = f" ├─[{rerun}/{self._reruns + 1}]"
+            prefix = f" ├─[{rerun}/{_reruns + 1}]"
             self._console.out(" │")
             self._console.out(prefix, end="")
             self._print_scenario_result(scenario_result, indent=len(prefix))

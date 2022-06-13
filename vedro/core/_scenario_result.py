@@ -25,7 +25,8 @@ class ScenarioResult:
         self._step_results: List[StepResult] = []
         self._scope: Union[Dict[Any, Any], None] = None
         self._artifacts: List[Artifact] = []
-        self._rerun = rerun
+        if rerun > 0:
+            warnings.warn("Deprecated", DeprecationWarning)
 
     @property
     def scenario(self) -> VirtualScenario:
@@ -47,7 +48,8 @@ class ScenarioResult:
 
     @property
     def rerun(self) -> int:
-        return self._rerun
+        warnings.warn("Deprecated: always returns 0", DeprecationWarning)
+        return 0
 
     def mark_passed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.PASSED

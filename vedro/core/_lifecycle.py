@@ -66,8 +66,8 @@ class Lifecycle:
         arg_parser.set_default_subparser("run")
 
         await self._dispatcher.fire(ArgParseEvent(arg_parser_run))
-        arg_parser_run.add_argument("--reruns", type=int, default=0,
-                                    help="Number of times to rerun failed scenarios (default: 0)")
+        # msg = "Number of times to rerun failed scenarios (default: 0)"
+        # arg_parser_run.add_argument("--reruns", type=int, default=0, help=msg)
         arg_parser_run.add_argument("--config", default=default_config, type=Path,
                                     help=f"Config path (default: {default_config})")
         arg_parser_run.add_argument("-h", "--help",
@@ -80,13 +80,12 @@ class Lifecycle:
         scenarios = await self._discoverer.discover(Path(start_dir))
         await self._dispatcher.fire(StartupEvent(scenarios))
 
-        report = await self._runner.run(scenarios, reruns=args.reruns)
+        report = await self._runner.run(scenarios)
 
         await self._dispatcher.fire(CleanupEvent(report))
 
         return report
 
     def __repr__(self) -> str:
-        cls_name = self.__class__.__name__
-        return (f"{cls_name}({self._dispatcher!r}, {self._discoverer!r}, "
+        return (f"{self.__class__.__name__}({self._dispatcher!r}, {self._discoverer!r}, "
                 f"{self._runner!r}, {self._config_loader!r})")
