@@ -48,6 +48,7 @@ class RichReporterPlugin(Reporter):
         self._scenario_spinner: Union[Status, None] = None
         self._namespace: Union[str, None] = None
         self._buffer: List[ScenarioResult] = []
+        self._last_scenario_id: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
@@ -55,11 +56,12 @@ class RichReporterPlugin(Reporter):
 
     def on_chosen(self) -> None:
         assert isinstance(self._dispatcher, Dispatcher)
+
+        # .listen(ScenarioSkippedEvent, self.on_scenario_end)
         self._dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                         .listen(ArgParsedEvent, self.on_arg_parsed) \
                         .listen(StartupEvent, self.on_startup) \
                         .listen(ScenarioRunEvent, self.on_scenario_run) \
-                        .listen(ScenarioSkippedEvent, self.on_scenario_end) \
                         .listen(ScenarioPassedEvent, self.on_scenario_end) \
                         .listen(ScenarioFailedEvent, self.on_scenario_end) \
                         .listen(CleanupEvent, self.on_cleanup)
@@ -101,26 +103,21 @@ class RichReporterPlugin(Reporter):
         self._console.out("Scenarios")
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
+        if self._last_scenario_id != event.scenario_result.scenario.unique_id:
+            self._print_buffered()
+        self._last_scenario_id = event.scenario_result.scenario.unique_id
+
         if event.scenario_result.scenario.namespace != self._namespace:
             self._namespace = event.scenario_result.scenario.namespace
             namespace = self._namespace.replace("_", " ").replace("/", " / ")
             self._console.out(f"* {namespace}", style=Style(bold=True))
-        if self._show_scenario_spinner:
+
+        if self._show_scenario_spinner and not self._scenario_spinner:
             self._scenario_spinner = self._console.status(event.scenario_result.scenario.subject)
             self._scenario_spinner.start()
 
     def on_scenario_end(self, event: ScenarioEndEventType) -> None:
-        if self._scenario_spinner:
-            self._scenario_spinner.stop()
-            self._scenario_spinner = None
-
-        if not event.scenario_result.is_failed() and len(self._buffer) == 0:
-            self._buffer.append(event.scenario_result)
-            self._print_buffered()
-        else:
-            self._buffer.append(event.scenario_result)
-            if event.scenario_result.rerun == 0:
-                self._print_buffered()
+        self._buffer.append(event.scenario_result)
 
     def _print_scenario_skipped(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
         pass
@@ -157,7 +154,7 @@ class RichReporterPlugin(Reporter):
                 passed.append(scenario_result)
             else:
                 failed.append(scenario_result)
-        return passed[-1] if len(passed) > len(failed) else failed[-1]
+        return passed[-1] if len(failed) == 0 else failed[-1]
 
     def _print_scenario_result(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
         if scenario_result.is_passed():
@@ -168,16 +165,23 @@ class RichReporterPlugin(Reporter):
             self._print_scenario_skipped(scenario_result, indent=indent)
 
     def _print_buffered(self) -> None:
-        if len(self._buffer) == 1:
-            return self._print_scenario_result(self._buffer.pop())
+        if self._scenario_spinner:
+            self._scenario_spinner.stop()
+            self._scenario_spinner = None
+
+        if len(self._buffer) == 0:
+            return
+        elif len(self._buffer) == 1:
+            self._print_scenario_result(self._buffer.pop())
+            return
 
         resolution = self._find_resolution(self._buffer)
         self._print_scenario_subject(resolution)
 
-        _reruns = 0
-        for rerun in range(1, len(self._buffer) + 1):
+        repeats = len(self._buffer)
+        for repeat in range(1, repeats + 1):
             scenario_result = self._buffer.pop(0)
-            prefix = f" ├─[{rerun}/{_reruns + 1}]"
+            prefix = f" ├─[{repeat}/{repeats}]"
             self._console.out(" │")
             self._console.out(prefix, end="")
             self._print_scenario_result(scenario_result, indent=len(prefix))
@@ -269,6 +273,8 @@ class RichReporterPlugin(Reporter):
             self._console.out(val)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
+        self._print_buffered()
+
         if event.report.failed == 0 and event.report.passed > 0:
             style = Style(color="green", bold=True)
         else:
@@ -279,11 +285,8 @@ class RichReporterPlugin(Reporter):
             summary = "# " + "\n# ".join(event.report.summary)
             self._console.out(summary, style=Style(color="grey70"))
 
-        if event.report.total == 1:
-            scenario = "scenario"
-        else:
-            scenario = "scenarios"
-        self._console.out(f"# {event.report.total} {scenario}, "
+        scenarios = "scenario" if (event.report.total == 1) else "scenarios"
+        self._console.out(f"# {event.report.total} {scenarios}, "
                           f"{event.report.passed} passed, "
                           f"{event.report.failed} failed, "
                           f"{event.report.skipped} skipped",

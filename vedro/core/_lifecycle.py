@@ -12,6 +12,7 @@ from ._plugin import Plugin
 from ._report import Report
 from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer
+from ._scenario_scheduler import StraightScenarioScheduler
 
 __all__ = ("Lifecycle",)
 
@@ -66,8 +67,6 @@ class Lifecycle:
         arg_parser.set_default_subparser("run")
 
         await self._dispatcher.fire(ArgParseEvent(arg_parser_run))
-        # msg = "Number of times to rerun failed scenarios (default: 0)"
-        # arg_parser_run.add_argument("--reruns", type=int, default=0, help=msg)
         arg_parser_run.add_argument("--config", default=default_config, type=Path,
                                     help=f"Config path (default: {default_config})")
         arg_parser_run.add_argument("-h", "--help",
@@ -78,9 +77,11 @@ class Lifecycle:
 
         start_dir = os.path.relpath(Path("scenarios"))
         scenarios = await self._discoverer.discover(Path(start_dir))
-        await self._dispatcher.fire(StartupEvent(scenarios))
 
-        report = await self._runner.run(scenarios)
+        scheduler = StraightScenarioScheduler(scenarios)
+        await self._dispatcher.fire(StartupEvent(scheduler))
+
+        report = await self._runner.run(scheduler)
 
         await self._dispatcher.fire(CleanupEvent(report))
 

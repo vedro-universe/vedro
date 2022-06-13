@@ -13,6 +13,11 @@ from ._scenario_discoverer import ScenarioDiscoverer
 from ._scenario_finder import ScenarioFinder
 from ._scenario_loader import ScenarioLoader
 from ._scenario_result import ScenarioResult, ScenarioStatus
+from ._scenario_scheduler import (
+    QueuedScenarioScheduler,
+    ScenarioScheduler,
+    StraightScenarioScheduler,
+)
 from ._step_result import StepResult, StepStatus
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
@@ -22,4 +27,5 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin"
            "ScenarioResult", "StepResult", "VirtualScenario", "VirtualStep",
            "ScenarioStatus", "StepStatus", "ArgumentParser",
            "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",
-           "ModuleLoader", "ModuleFileLoader", "Artifact", "MemoryArtifact", "FileArtifact",)
+           "ModuleLoader", "ModuleFileLoader", "Artifact", "MemoryArtifact", "FileArtifact",
+           "ScenarioScheduler", "StraightScenarioScheduler", "QueuedScenarioScheduler",)

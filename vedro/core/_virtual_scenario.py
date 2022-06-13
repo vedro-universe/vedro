@@ -1,5 +1,5 @@
 import os
-from hashlib import blake2b
+from base64 import b64encode
 from inspect import BoundArguments
 from pathlib import Path
 from typing import Any, List, Type, Union, cast
@@ -23,8 +23,10 @@ class VirtualScenario:
 
     @property
     def unique_id(self) -> str:
-        unique_name = f"{self._path}::{self._orig_scenario.__qualname__}"
-        return blake2b(unique_name.encode(), digest_size=20).hexdigest()
+        unique_name = f"{self.rel_path}::{self.name}"
+        if self.template_index is not None:
+            unique_name += f"#{self.template_index}"
+        return b64encode(unique_name.encode()).decode()
 
     @property
     def template_index(self) -> Union[int, None]:
@@ -48,6 +50,10 @@ class VirtualScenario:
     @property
     def rel_path(self) -> Path:
         return self._path.relative_to(Path.cwd())
+
+    @property
+    def name(self) -> str:
+        return f"{self._orig_scenario.__name__}"
 
     @property
     def subject(self) -> str:
@@ -80,7 +86,7 @@ class VirtualScenario:
         return self._orig_scenario()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._orig_scenario!r}, {self._steps!r})"
+        return f"{self.__class__.__name__}<{str(self.rel_path)!r}>"
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)

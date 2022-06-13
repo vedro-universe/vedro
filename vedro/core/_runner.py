@@ -1,6 +1,6 @@
 import sys
 from time import time
-from typing import List, Tuple, Type
+from typing import Tuple, Type
 
 from .._scenario import Scenario
 from ..events import (
@@ -17,6 +17,7 @@ from ._dispatcher import Dispatcher
 from ._exc_info import ExcInfo
 from ._report import Report
 from ._scenario_result import ScenarioResult
+from ._scenario_scheduler import ScenarioScheduler
 from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
@@ -97,10 +98,10 @@ class Runner:
 
         return scenario_result
 
-    async def run(self, scenarios: List[VirtualScenario]) -> Report:
+    async def run(self, scheduler: ScenarioScheduler) -> Report:
         report = Report()
 
-        for scenario in scenarios:
+        async for scenario in scheduler:
             scenario_result = await self.run_scenario(scenario)
             report.add_result(scenario_result)
 

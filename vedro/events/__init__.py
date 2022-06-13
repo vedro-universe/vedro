@@ -1,3 +1,4 @@
+import warnings
 from argparse import Namespace
 from pathlib import Path
 from typing import List
@@ -8,6 +9,7 @@ from ..core._event import Event
 from ..core._exc_info import ExcInfo
 from ..core._report import Report
 from ..core._scenario_result import ScenarioResult
+from ..core._scenario_scheduler import ScenarioScheduler
 from ..core._step_result import StepResult
 from ..core._virtual_scenario import VirtualScenario
 
@@ -54,15 +56,20 @@ class ArgParsedEvent(Event):
 
 
 class StartupEvent(Event):
-    def __init__(self, scenarios: List[VirtualScenario]) -> None:
-        self._scenarios = scenarios
+    def __init__(self, scheduler: ScenarioScheduler) -> None:
+        self._scheduler = scheduler
+
+    @property
+    def scheduler(self) -> ScenarioScheduler:
+        return self._scheduler
 
     @property
     def scenarios(self) -> List[VirtualScenario]:
-        return self._scenarios
+        warnings.warn("Deprecated: use scheduler.scenarios instead", DeprecationWarning)
+        return list(self._scheduler.scenarios)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._scenarios!r})"
+        return f"{self.__class__.__name__}({self._scheduler!r})"
 
 
 class _ScenarioEvent(Event):

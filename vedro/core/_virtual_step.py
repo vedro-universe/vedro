@@ -19,7 +19,7 @@ class VirtualStep:
         return self._orig_step(*args, **kwargs)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._orig_step!r})"
+        return f"{self.__class__.__name__}<{self._orig_step.__name__!r}>"
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)
