@@ -3,6 +3,8 @@ import vedro.plugins.artifacted as artifacted
 import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.interrupter as interrupter
+import vedro.plugins.repeater as repeater
+import vedro.plugins.rerunner as rerunner
 import vedro.plugins.seeder as seeder
 import vedro.plugins.skipper as skipper
 import vedro.plugins.slicer as slicer
@@ -33,7 +35,7 @@ class Config(core.Config):
             enabled = True
 
         class Interrupter(interrupter.Interrupter):
-            enabled = True
+            enabled = False
 
         class Seeder(seeder.Seeder):
             enabled = True
@@ -46,6 +48,12 @@ class Config(core.Config):
 
         class Tagger(tagger.Tagger):
             enabled = True
+
+        class Repeater(repeater.Repeater):
+            enabled = False
+
+        class Rerunner(rerunner.Rerunner):
+            enabled = False
 
         class Terminator(terminator.Terminator):
             enabled = True
