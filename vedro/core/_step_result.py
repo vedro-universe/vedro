@@ -84,7 +84,7 @@ class StepResult:
         return self._artifacts[:]
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}<{self._step!r}>"
+        return f"<{self.__class__.__name__} {self._step!r} {self._status.value}>"
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)

@@ -45,10 +45,10 @@ class RepeaterPlugin(Plugin):
 
         if self._repeat_scenario_id == event.scenario_result.scenario.unique_id:
             return
-        self._repeat_scenario_id = event.scenario_result.scenario.unique_id
 
+        self._repeat_scenario_id = event.scenario_result.scenario.unique_id
         for _ in range(self._repeats):
-            self._scheduler.set_next(event.scenario_result.scenario)
+            self._scheduler.add(event.scenario_result.scenario)
 
 
 class Repeater(PluginConfig):

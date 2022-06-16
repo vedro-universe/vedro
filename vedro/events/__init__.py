@@ -136,6 +136,18 @@ class ExceptionRaisedEvent(Event):
         return f"{self.__class__.__name__}({self._exc_info!r})"
 
 
+class ScenarioReportedEvent(Event):
+    def __init__(self, scenario_result: ScenarioResult) -> None:
+        self._scenario_result = scenario_result
+
+    @property
+    def scenario_result(self) -> ScenarioResult:
+        return self._scenario_result
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._scenario_result!r}"
+
+
 class CleanupEvent(Event):
     def __init__(self, report: Report) -> None:
         self._report = report
@@ -152,4 +164,4 @@ __all__ = ("Event", "ConfigLoadedEvent", "ArgParseEvent", "ArgParsedEvent",
            "StartupEvent", "ScenarioRunEvent", "ScenarioSkippedEvent",
            "ScenarioFailedEvent", "ScenarioPassedEvent",
            "StepRunEvent", "StepFailedEvent", "StepPassedEvent", "ExceptionRaisedEvent",
-           "CleanupEvent")
+           "ScenarioReportedEvent", "CleanupEvent",)

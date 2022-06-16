@@ -1,12 +1,13 @@
 import sys
 from time import time
-from typing import Tuple, Type
+from typing import List, Tuple, Type
 
 from .._scenario import Scenario
 from ..events import (
     ExceptionRaisedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
+    ScenarioReportedEvent,
     ScenarioRunEvent,
     ScenarioSkippedEvent,
     StepFailedEvent,
@@ -100,9 +101,22 @@ class Runner:
 
     async def run(self, scheduler: ScenarioScheduler) -> Report:
         report = Report()
+        scenario_results = []
 
         async for scenario in scheduler:
+            if len(scenario_results) > 0 and \
+               scenario_results[-1].scenario.unique_id != scenario.unique_id:
+                aggregated_result = scheduler.aggregate_results(scenario_results)
+                report.add_result(aggregated_result)
+                await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
+                scenario_results = []
+
             scenario_result = await self.run_scenario(scenario)
-            report.add_result(scenario_result)
+            scenario_results.append(scenario_result)
+
+        if len(scenario_results) > 0:
+            aggregated_result = scheduler.aggregate_results(scenario_results)
+            report.add_result(aggregated_result)
+            await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
 
         return report

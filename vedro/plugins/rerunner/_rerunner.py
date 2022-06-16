@@ -45,11 +45,11 @@ class RerunnerPlugin(Plugin):
 
         if self._rerun_scenario_id == event.scenario_result.scenario.unique_id:
             return
-        self._rerun_scenario_id = event.scenario_result.scenario.unique_id
 
+        self._rerun_scenario_id = event.scenario_result.scenario.unique_id
         if event.scenario_result.is_failed():
             for _ in range(self._reruns):
-                self._scheduler.set_next(event.scenario_result.scenario)
+                self._scheduler.add(event.scenario_result.scenario)
 
 
 class Rerunner(PluginConfig):

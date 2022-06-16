@@ -86,7 +86,7 @@ class VirtualScenario:
         return self._orig_scenario()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}<{str(self.rel_path)!r}>"
+        return f"<{self.__class__.__name__} {str(self.rel_path)!r}>"
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)

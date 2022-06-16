@@ -17,6 +17,7 @@ from vedro.events import (
     CleanupEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
+    ScenarioReportedEvent,
     ScenarioRunEvent,
     ScenarioSkippedEvent,
     StartupEvent,
@@ -48,7 +49,8 @@ class RichReporterPlugin(Reporter):
         self._scenario_spinner: Union[Status, None] = None
         self._namespace: Union[str, None] = None
         self._buffer: List[ScenarioResult] = []
-        self._last_scenario_id: Union[str, None] = None
+        self._last_scenario_id: str = ""
+        self._last_reported: Union[ScenarioResult, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
@@ -57,13 +59,13 @@ class RichReporterPlugin(Reporter):
     def on_chosen(self) -> None:
         assert isinstance(self._dispatcher, Dispatcher)
 
-        # .listen(ScenarioSkippedEvent, self.on_scenario_end)
         self._dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                         .listen(ArgParsedEvent, self.on_arg_parsed) \
                         .listen(StartupEvent, self.on_startup) \
                         .listen(ScenarioRunEvent, self.on_scenario_run) \
                         .listen(ScenarioPassedEvent, self.on_scenario_end) \
                         .listen(ScenarioFailedEvent, self.on_scenario_end) \
+                        .listen(ScenarioReportedEvent, self.on_scenario_reported) \
                         .listen(CleanupEvent, self.on_cleanup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
@@ -105,7 +107,7 @@ class RichReporterPlugin(Reporter):
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         if self._last_scenario_id != event.scenario_result.scenario.unique_id:
             self._print_buffered()
-        self._last_scenario_id = event.scenario_result.scenario.unique_id
+            self._last_scenario_id = event.scenario_result.scenario.unique_id
 
         if event.scenario_result.scenario.namespace != self._namespace:
             self._namespace = event.scenario_result.scenario.namespace
@@ -147,15 +149,6 @@ class RichReporterPlugin(Reporter):
                 self._print_scope(scenario_result.scope)
                 self._console.out(" ")
 
-    def _find_resolution(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
-        passed, failed = [], []
-        for scenario_result in scenario_results:
-            if scenario_result.is_passed():
-                passed.append(scenario_result)
-            else:
-                failed.append(scenario_result)
-        return passed[-1] if len(failed) == 0 else failed[-1]
-
     def _print_scenario_result(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
         if scenario_result.is_passed():
             self._print_scenario_passed(scenario_result, indent=indent)
@@ -171,12 +164,12 @@ class RichReporterPlugin(Reporter):
 
         if len(self._buffer) == 0:
             return
-        elif len(self._buffer) == 1:
+
+        if len(self._buffer) == 1:
             self._print_scenario_result(self._buffer.pop())
             return
 
-        resolution = self._find_resolution(self._buffer)
-        self._print_scenario_subject(resolution)
+        self._print_scenario_subject(self._last_reported)
 
         repeats = len(self._buffer)
         for repeat in range(1, repeats + 1):
@@ -271,6 +264,9 @@ class RichReporterPlugin(Reporter):
         for key, val in self._format_scope(scope):
             self._console.out(f" {key}: ", end="", style=Style(color="blue"))
             self._console.out(val)
+
+    def on_scenario_reported(self, event: ScenarioReportedEvent) -> None:
+        self._last_reported = event.scenario_result
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         self._print_buffered()

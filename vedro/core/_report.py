@@ -15,7 +15,6 @@ class Report:
         self.passed: int = 0
         self.failed: int = 0
         self.skipped: int = 0
-        # repeated
 
     @property
     def summary(self) -> List[str]:

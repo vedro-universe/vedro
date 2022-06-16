@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from typing import List, Tuple
 
+from .._scenario_result import ScenarioResult
 from .._virtual_scenario import VirtualScenario
 from ._scenario_scheduler import ScenarioScheduler
 
@@ -28,9 +29,12 @@ class QueuedScenarioScheduler(ScenarioScheduler):
             return scenario
         raise StopAsyncIteration()
 
-    def set_next(self, scenario: VirtualScenario) -> None:
+    def add(self, scenario: VirtualScenario) -> None:
         if scenario.unique_id in self._queue:
             scn, repeats = self._queue[scenario.unique_id]
             self._queue[scenario.unique_id] = (scn, repeats + 1)
         else:
             self._queue[scenario.unique_id] = (scenario, 0)
+
+    def aggregate_result(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
+        return scenario_results[-1]

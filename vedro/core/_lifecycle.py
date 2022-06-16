@@ -12,7 +12,7 @@ from ._plugin import Plugin
 from ._report import Report
 from ._runner import Runner
 from ._scenario_discoverer import ScenarioDiscoverer
-from ._scenario_scheduler import StraightScenarioScheduler
+from ._scenario_scheduler import QueuedScenarioScheduler
 
 __all__ = ("Lifecycle",)
 
@@ -78,7 +78,7 @@ class Lifecycle:
         start_dir = os.path.relpath(Path("scenarios"))
         scenarios = await self._discoverer.discover(Path(start_dir))
 
-        scheduler = StraightScenarioScheduler(scenarios)
+        scheduler = QueuedScenarioScheduler(scenarios)
         await self._dispatcher.fire(StartupEvent(scheduler))
 
         report = await self._runner.run(scheduler)
