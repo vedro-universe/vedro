@@ -9,6 +9,7 @@ from vedro.core import (
     Config,
     Event,
     ExcInfo,
+    MonotonicScenarioScheduler,
     Report,
     ScenarioResult,
     StepResult,
@@ -96,13 +97,14 @@ def test_arg_parsed_event():
 def test_startup_event():
     with given:
         scenarios = []
+        scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
-        event = StartupEvent(scenarios)
+        event = StartupEvent(scheduler)
 
     with then:
-        assert event.scenarios == scenarios
-        assert repr(event) == f"StartupEvent({scenarios!r})"
+        assert list(event.scheduler.scenarios) == scenarios
+        assert repr(event) == f"StartupEvent({scheduler!r})"
 
 
 def test_scenario_run_event():
