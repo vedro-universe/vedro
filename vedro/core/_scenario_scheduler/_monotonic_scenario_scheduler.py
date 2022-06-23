@@ -5,10 +5,10 @@ from .._scenario_result import ScenarioResult
 from .._virtual_scenario import VirtualScenario
 from ._scenario_scheduler import ScenarioScheduler
 
-__all__ = ("QueuedScenarioScheduler",)
+__all__ = ("MonotonicScenarioScheduler",)
 
 
-class QueuedScenarioScheduler(ScenarioScheduler):
+class MonotonicScenarioScheduler(ScenarioScheduler):
     def __init__(self, scenarios: List[VirtualScenario]) -> None:
         super().__init__(scenarios)
         self._queue: OrderedDict[str, Tuple[VirtualScenario, int]] = OrderedDict()
@@ -29,12 +29,15 @@ class QueuedScenarioScheduler(ScenarioScheduler):
             return scenario
         raise StopAsyncIteration()
 
-    def add(self, scenario: VirtualScenario) -> None:
+    def schedule(self, scenario: VirtualScenario) -> None:
         if scenario.unique_id in self._queue:
             scn, repeats = self._queue[scenario.unique_id]
             self._queue[scenario.unique_id] = (scn, repeats + 1)
         else:
             self._queue[scenario.unique_id] = (scenario, 0)
 
-    def aggregate_result(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
-        return scenario_results[-1]
+    def aggregate_results(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
+        for scenario_result in scenario_results:
+            if scenario_result.is_failed():
+                return scenario_result
+        return scenario_results[0]

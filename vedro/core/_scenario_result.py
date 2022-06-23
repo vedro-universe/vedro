@@ -99,7 +99,7 @@ class ScenarioResult:
 
     @property
     def step_results(self) -> List[StepResult]:
-        return self._step_results
+        return self._step_results[:]
 
     def set_scope(self, scope: Dict[Any, Any]) -> None:
         self._scope = scope

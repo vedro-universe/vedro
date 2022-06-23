@@ -101,7 +101,7 @@ class Runner:
 
     async def run(self, scheduler: ScenarioScheduler) -> Report:
         report = Report()
-        scenario_results = []
+        scenario_results: List[ScenarioResult] = []
 
         async for scenario in scheduler:
             if len(scenario_results) > 0 and \

@@ -169,6 +169,7 @@ class RichReporterPlugin(Reporter):
             self._print_scenario_result(self._buffer.pop())
             return
 
+        assert isinstance(self._last_reported, ScenarioResult)
         self._print_scenario_subject(self._last_reported)
 
         repeats = len(self._buffer)
