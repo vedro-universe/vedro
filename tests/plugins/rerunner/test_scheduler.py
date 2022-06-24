@@ -26,7 +26,7 @@ def test_scheduler(scheduler: Scheduler):
 
 
 def test_scheduler_no_aggregated_result(scheduler: Scheduler):
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         scheduler.aggregate_results([])
 
     with then:

@@ -17,7 +17,7 @@ def scheduler():
     return Scheduler([])
 
 
-def test_scheduler(scheduler: Scheduler):
+def test_inheritance(scheduler: Scheduler):
     with when:
         res = isinstance(scheduler, MonotonicScenarioScheduler)
 
@@ -25,15 +25,15 @@ def test_scheduler(scheduler: Scheduler):
         assert res
 
 
-def test_scheduler_no_aggregated_result(scheduler: Scheduler):
-    with when, raises(Exception) as exc:
+def test_no_aggregated_result(scheduler: Scheduler):
+    with when, raises(BaseException) as exc:
         scheduler.aggregate_results([])
 
     with then:
         assert exc.type is AssertionError
 
 
-def test_scheduler_not_passed_failed_aggregated_result(scheduler: Scheduler):
+def test_skipped_aggregated_result(scheduler: Scheduler):
     with given:
         scenario_result1 = make_scenario_result().mark_skipped()
         scenario_result2 = make_scenario_result().mark_skipped()
@@ -52,8 +52,7 @@ def test_scheduler_not_passed_failed_aggregated_result(scheduler: Scheduler):
     make_scenario_result().mark_passed(),
     make_scenario_result().mark_failed(),
 ])
-def test_scheduler_single_aggregated_result(scenario_result: ScenarioResult, *,
-                                            scheduler: Scheduler):
+def test_single_aggregated_result(scenario_result: ScenarioResult, *, scheduler: Scheduler):
     with when:
         aggregated_result = scheduler.aggregate_results([scenario_result])
 
@@ -61,7 +60,7 @@ def test_scheduler_single_aggregated_result(scenario_result: ScenarioResult, *,
         assert aggregated_result == scenario_result
 
 
-def test_scheduler_2passed_aggregated_result(scheduler: Scheduler):
+def test_2passed_aggregated_result(scheduler: Scheduler):
     with given:
         passed_first = make_scenario_result().mark_passed()
         passed_last = make_scenario_result().mark_passed()
@@ -76,7 +75,7 @@ def test_scheduler_2passed_aggregated_result(scheduler: Scheduler):
         assert aggregated_result == passed_last
 
 
-def test_scheduler_2passed_1failed_aggregated_result(scheduler: Scheduler):
+def test_2passed_1failed_aggregated_result(scheduler: Scheduler):
     with given:
         passed_first = make_scenario_result().mark_passed()
         failed_single = make_scenario_result().mark_failed()
@@ -93,7 +92,7 @@ def test_scheduler_2passed_1failed_aggregated_result(scheduler: Scheduler):
         assert aggregated_result == failed_single
 
 
-def test_scheduler_2failed_1passed_aggregated_result(scheduler: Scheduler):
+def test_2failed_1passed_aggregated_result(scheduler: Scheduler):
     with given:
         failed_first = make_scenario_result().mark_failed()
         passed_single = make_scenario_result().mark_passed()
