@@ -81,14 +81,15 @@ async def test_virtual_step_call_async():
 
 def test_virtual_step_repr():
     with given:
-        method_ = Mock(MethodType)
+        name = "step"
+        method_ = Mock(MethodType, __name__=name)
         step = VirtualStep(method_)
 
     with when:
         res = repr(step)
 
     with then:
-        assert res == f"VirtualStep({method_!r})"
+        assert res == f"<VirtualStep {name!r}>"
 
 
 def test_virtual_step_eq():

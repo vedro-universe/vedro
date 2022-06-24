@@ -139,7 +139,7 @@ def test_virtual_scenario_repr(*, scenario_: Type[Scenario], method_: MethodType
         res = repr(virtual_scenario)
 
     with then:
-        assert res == f"VirtualScenario({scenario_!r}, {steps!r})"
+        assert res == f"<VirtualScenario {str(virtual_scenario.rel_path)!r}>"
 
 
 def test_virtual_scenario_eq_without_steps(*, scenario_: Type[Scenario]):
