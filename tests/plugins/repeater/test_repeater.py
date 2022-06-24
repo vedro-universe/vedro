@@ -52,10 +52,17 @@ async def fire_startup_event(dispatcher, scheudler: Scheduler) -> None:
     await dispatcher.fire(startup_event)
 
 
+async def fire_failed_event(dispatcher: Dispatcher) -> ScenarioFailedEvent:
+    scenario_result = make_scenario_result().mark_failed()
+    scenario_failed_event = ScenarioFailedEvent(scenario_result)
+    await dispatcher.fire(scenario_failed_event)
+    return scenario_failed_event
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("repeats", [0, 1, 3])
-async def test_repeat_passed(repeats: int, *, repeater: RepeaterPlugin,
-                             dispatcher: Dispatcher, scheduler_: Mock):
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_repeat_passed(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats)
         await fire_startup_event(dispatcher, scheduler_)
@@ -72,8 +79,8 @@ async def test_repeat_passed(repeats: int, *, repeater: RepeaterPlugin,
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("repeats", [0, 1, 3])
-async def test_repeat_failed(repeats: int, *, repeater: RepeaterPlugin,
-                             dispatcher: Dispatcher, scheduler_: Mock):
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_repeat_failed(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats)
         await fire_startup_event(dispatcher, scheduler_)
@@ -90,8 +97,8 @@ async def test_repeat_failed(repeats: int, *, repeater: RepeaterPlugin,
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("repeats", [0, 1])
-async def test_dont_repeat_skipped(repeats: int, *, repeater: RepeaterPlugin,
-                                   dispatcher: Dispatcher, scheduler_: Mock):
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats)
         await fire_startup_event(dispatcher, scheduler_)
@@ -107,16 +114,13 @@ async def test_dont_repeat_skipped(repeats: int, *, repeater: RepeaterPlugin,
 
 
 @pytest.mark.asyncio
-async def test_dont_repeat_repeated(repeater: RepeaterPlugin, dispatcher: Dispatcher,
-                                    scheduler_: Mock):
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats=1)
         await fire_startup_event(dispatcher, scheduler_)
 
-        scenario_result = make_scenario_result().mark_failed()
-        scenario_failed_event = ScenarioFailedEvent(scenario_result)
-
-        await dispatcher.fire(scenario_failed_event)
+        scenario_failed_event = await fire_failed_event(dispatcher)
         scheduler_.reset_mock()
 
     with when:
@@ -128,11 +132,14 @@ async def test_dont_repeat_repeated(repeater: RepeaterPlugin, dispatcher: Dispat
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("repeats", [1, 2])
-async def test_add_summary(repeats: int, *, repeater: RepeaterPlugin,
-                           dispatcher: Dispatcher, scheduler_: Mock):
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_add_summary(repeats: int, *,  dispatcher: Dispatcher, scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats=repeats)
         await fire_startup_event(dispatcher, scheduler_)
+
+        await fire_failed_event(dispatcher)
+        scheduler_.reset_mock()
 
         report_ = Mock(spec=Report)
         cleanup_event = CleanupEvent(report_)
@@ -147,11 +154,14 @@ async def test_add_summary(repeats: int, *, repeater: RepeaterPlugin,
 
 
 @pytest.mark.asyncio
-async def test_dont_add_summary(repeater: RepeaterPlugin,
-                                dispatcher: Dispatcher, scheduler_: Mock):
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_dont_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats=0)
         await fire_startup_event(dispatcher, scheduler_)
+
+        await fire_failed_event(dispatcher)
+        scheduler_.reset_mock()
 
         report_ = Mock(spec=Report)
         cleanup_event = CleanupEvent(report_)

@@ -12,6 +12,8 @@ from vedro.events import (
     StartupEvent,
 )
 
+from ._scheduler import RerunnerScenarioScheduler
+
 __all__ = ("Rerunner", "RerunnerPlugin",)
 
 
@@ -21,8 +23,8 @@ class RerunnerPlugin(Plugin):
         self._reruns: int = 0
         self._scheduler: Union[ScenarioScheduler, None] = None
         self._rerun_scenario_id: Union[str, None] = None
-        self._reran = 0
-        self._times = 0
+        self._reran: int = 0
+        self._times: int = 0
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
@@ -41,7 +43,7 @@ class RerunnerPlugin(Plugin):
         self._reruns = event.args.reruns
 
     def on_startup(self, event: StartupEvent) -> None:
-        if isinstance(event.scheduler, ScenarioScheduler):
+        if isinstance(event.scheduler, RerunnerScenarioScheduler):
             self._scheduler = event.scheduler
 
     def on_scenario_end(self, event:  Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
@@ -59,7 +61,6 @@ class RerunnerPlugin(Plugin):
                 self._times += 1
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        # Interrupt Event
         if self._reruns != 0:
             ss = "" if self._reran == 1 else "s"
             ts = "" if self._times == 1 else "s"
