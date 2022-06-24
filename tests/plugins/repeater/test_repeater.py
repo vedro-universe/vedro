@@ -1,62 +1,27 @@
-from argparse import ArgumentParser, Namespace
 from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Dispatcher, Report, ScenarioResult, VirtualScenario
+from vedro.core import Dispatcher, Report
 from vedro.events import (
-    ArgParsedEvent,
-    ArgParseEvent,
     CleanupEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
     ScenarioSkippedEvent,
-    StartupEvent,
 )
-from vedro.plugins.repeater import Repeater, RepeaterPlugin
-from vedro.plugins.repeater import RepeaterScenarioScheduler as Scheduler
 
+from ._utils import (
+    dispatcher,
+    fire_arg_parsed_event,
+    fire_failed_event,
+    fire_startup_event,
+    make_scenario_result,
+    repeater,
+    scheduler_,
+)
 
-@pytest.fixture()
-def dispatcher() -> Dispatcher:
-    return Dispatcher()
-
-
-@pytest.fixture()
-def repeater(dispatcher: Dispatcher) -> RepeaterPlugin:
-    plugin = RepeaterPlugin(Repeater)
-    plugin.subscribe(dispatcher)
-    return plugin
-
-
-@pytest.fixture()
-def scheduler_() -> Scheduler:
-    return Mock(spec=Scheduler)
-
-
-def make_scenario_result():
-    return ScenarioResult(Mock(spec=VirtualScenario))
-
-
-async def fire_arg_parsed_event(dispatcher: dispatcher, repeats: int) -> None:
-    arg_parse_event = ArgParseEvent(ArgumentParser())
-    await dispatcher.fire(arg_parse_event)
-
-    arg_parsed_event = ArgParsedEvent(Namespace(repeats=repeats))
-    await dispatcher.fire(arg_parsed_event)
-
-
-async def fire_startup_event(dispatcher, scheudler: Scheduler) -> None:
-    startup_event = StartupEvent(scheudler)
-    await dispatcher.fire(startup_event)
-
-
-async def fire_failed_event(dispatcher: Dispatcher) -> ScenarioFailedEvent:
-    scenario_result = make_scenario_result().mark_failed()
-    scenario_failed_event = ScenarioFailedEvent(scenario_result)
-    await dispatcher.fire(scenario_failed_event)
-    return scenario_failed_event
+__all__ = ("dispatcher", "repeater", "scheduler_",)  # fixtures
 
 
 @pytest.mark.asyncio

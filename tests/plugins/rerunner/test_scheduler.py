@@ -1,20 +1,13 @@
-from unittest.mock import Mock
-
 import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core import MonotonicScenarioScheduler, ScenarioResult, VirtualScenario
+from vedro.core import MonotonicScenarioScheduler, ScenarioResult
 from vedro.plugins.rerunner import RerunnerScenarioScheduler as Scheduler
 
+from ._utils import make_scenario_result, scheduler
 
-def make_scenario_result():
-    return ScenarioResult(Mock(spec=VirtualScenario))
-
-
-@pytest.fixture()
-def scheduler():
-    return Scheduler([])
+__all__ = ("scheduler",)  # fixtures
 
 
 def test_scheduler(scheduler: Scheduler):
