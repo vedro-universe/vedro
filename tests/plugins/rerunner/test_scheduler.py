@@ -5,7 +5,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import MonotonicScenarioScheduler, ScenarioResult, VirtualScenario
-from vedro.plugins.repeater import RepeaterScenarioScheduler as Scheduler
+from vedro.plugins.rerunner import RerunnerScenarioScheduler as Scheduler
 
 
 def make_scenario_result():
@@ -90,7 +90,7 @@ def test_scheduler_2passed_1failed_aggregated_result(scheduler: Scheduler):
         ])
 
     with then:
-        assert aggregated_result == failed_single
+        assert aggregated_result == passed_last
 
 
 def test_scheduler_2failed_1passed_aggregated_result(scheduler: Scheduler):
