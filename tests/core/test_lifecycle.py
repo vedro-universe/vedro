@@ -18,8 +18,8 @@ from vedro.core import (
     ConfigLoader,
     Dispatcher,
     Lifecycle,
+    MonotonicRunner,
     Report,
-    Runner,
     ScenarioDiscoverer,
 )
 
@@ -42,13 +42,13 @@ def config_loader():
 @pytest.fixture()
 def runner_(dispatcher_: Dispatcher):
     report = Report()
-    return Mock(Runner(dispatcher_), run=AsyncMock(return_value=report))
+    return Mock(MonotonicRunner(dispatcher_), run=AsyncMock(return_value=report))
 
 
 @pytest.mark.asyncio
 async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
                                         discoverer_: ScenarioDiscoverer,
-                                        runner_: Runner,
+                                        runner_: MonotonicRunner,
                                         config_loader: ConfigLoader):
     with given:
         scenarios = []
@@ -70,7 +70,7 @@ async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
 
 def test_lifecycle_repr(*, dispatcher_: Dispatcher,
                         discoverer_: ScenarioDiscoverer,
-                        runner_: Runner,
+                        runner_: MonotonicRunner,
                         config_loader: ConfigLoader):
     with when:
         lifecycle = Lifecycle(dispatcher_, discoverer_, runner_, config_loader)

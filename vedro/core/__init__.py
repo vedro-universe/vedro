@@ -8,7 +8,7 @@ from ._lifecycle import Lifecycle
 from ._module_loader import ModuleFileLoader, ModuleLoader
 from ._plugin import Plugin, PluginConfig
 from ._report import Report
-from ._runner import Runner
+from ._runner import MonotonicRunner
 from ._scenario_discoverer import ScenarioDiscoverer
 from ._scenario_finder import ScenarioFinder
 from ._scenario_loader import ScenarioLoader
@@ -19,7 +19,7 @@ from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 
 __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin", "PluginConfig",
-           "Report", "Runner", "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
+           "Report", "MonotonicRunner", "ScenarioDiscoverer", "ScenarioFinder", "ScenarioLoader",
            "ScenarioResult", "StepResult", "VirtualScenario", "VirtualStep",
            "ScenarioStatus", "StepStatus", "ArgumentParser",
            "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",

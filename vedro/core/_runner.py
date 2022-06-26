@@ -1,4 +1,5 @@
 import sys
+from abc import ABC, abstractmethod
 from time import time
 from typing import List, Tuple, Type
 
@@ -23,14 +24,20 @@ from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 
-__all__ = ("Runner",)
+__all__ = ("MonotonicRunner", "Runner",)
 
 
 class _ScenarioInitError(Exception):
     pass
 
 
-class Runner:
+class Runner(ABC):
+    @abstractmethod
+    async def run(self, scheduler: ScenarioScheduler) -> Report:
+        pass
+
+
+class MonotonicRunner(Runner):
     def __init__(self, dispatcher: Dispatcher,
                  interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
         self._dispatcher = dispatcher

@@ -13,7 +13,7 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro.core import Dispatcher, Runner, VirtualScenario, VirtualStep
+from vedro.core import Dispatcher, MonotonicRunner, VirtualScenario, VirtualStep
 from vedro.events import (
     ExceptionRaisedEvent,
     ScenarioFailedEvent,
@@ -32,13 +32,13 @@ def dispatcher_():
 
 @pytest.fixture()
 def runner(dispatcher_: Dispatcher):
-    return Runner(dispatcher_)
+    return MonotonicRunner(dispatcher_)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock,))
 async def test_runner_run_step_passed(method_mock_factory: Mock, *,
-                                      runner: Runner, dispatcher_: Dispatcher):
+                                      runner: MonotonicRunner, dispatcher_: Dispatcher):
     with given:
         scenario_ = Mock(Scenario, step=method_mock_factory(return_value=None))
         step = VirtualStep(scenario_.step)
@@ -63,7 +63,7 @@ async def test_runner_run_step_passed(method_mock_factory: Mock, *,
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
 async def test_runner_run_step_failed(method_mock_factory: Mock, *,
-                                      runner: Runner, dispatcher_: Dispatcher):
+                                      runner: MonotonicRunner, dispatcher_: Dispatcher):
     with given:
         exception = AssertionError()
         scenario_ = Mock(Scenario, step=method_mock_factory(side_effect=exception))
@@ -96,7 +96,7 @@ async def test_runner_run_step_interrupted(*, method_mock_factory: Mock, dispatc
         scenario_ = Mock(Scenario, step=method_mock_factory(side_effect=interrupt_exception))
         virtual_step = VirtualStep(scenario_.step)
 
-        runner = Runner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
+        runner = MonotonicRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
 
     with when, raises(BaseException) as exception:
         await runner.run_step(virtual_step, scenario_)
@@ -107,7 +107,8 @@ async def test_runner_run_step_interrupted(*, method_mock_factory: Mock, dispatc
 
 
 @pytest.mark.asyncio
-async def test_runner_run_scenario_no_steps_passed(*, runner: Runner, dispatcher_: Dispatcher):
+async def test_runner_run_scenario_no_steps_passed(*, runner: MonotonicRunner,
+                                                   dispatcher_: Dispatcher):
     with given:
         scenario_ = Mock(Scenario, step=Mock(return_value=None), __file__="/tmp/scenario.py")
         virtual_scenario = VirtualScenario(scenario_, [])
@@ -127,7 +128,8 @@ async def test_runner_run_scenario_no_steps_passed(*, runner: Runner, dispatcher
 
 
 @pytest.mark.asyncio
-async def test_runner_run_scenario_single_step_passed(*, runner: Runner, dispatcher_: Dispatcher):
+async def test_runner_run_scenario_single_step_passed(*, runner: MonotonicRunner,
+                                                      dispatcher_: Dispatcher):
     with given:
         scenario_ = Mock(Scenario, step=Mock(return_value=None), __file__="/tmp/scenario.py")
         step = VirtualStep(scenario_.step)
@@ -151,7 +153,8 @@ async def test_runner_run_scenario_single_step_passed(*, runner: Runner, dispatc
 
 
 @pytest.mark.asyncio
-async def test_runner_run_scenario_single_step_failed(*, runner: Runner, dispatcher_: Dispatcher):
+async def test_runner_run_scenario_single_step_failed(*, runner: MonotonicRunner,
+                                                      dispatcher_: Dispatcher):
     with given:
         exception = AssertionError()
         scenario_ = Mock(Scenario, step=Mock(side_effect=exception), __file__="/tmp/scenario.py")
@@ -178,7 +181,7 @@ async def test_runner_run_scenario_single_step_failed(*, runner: Runner, dispatc
 
 
 @pytest.mark.asyncio
-async def test_runner_run_scenario_multiple_steps_passed(*, runner: Runner,
+async def test_runner_run_scenario_multiple_steps_passed(*, runner: MonotonicRunner,
                                                          dispatcher_: Dispatcher):
     with given:
         scenario_ = Mock(Scenario, __file__="/tmp/scenario.py",
@@ -216,7 +219,7 @@ async def test_runner_run_scenario_multiple_steps_passed(*, runner: Runner,
 async def test_runner_run_scenario_multiple_steps_failed():
     with given:
         dispatcher = AsyncMock(Dispatcher)
-        runner = Runner(dispatcher)
+        runner = MonotonicRunner(dispatcher)
 
         exception = AssertionError()
         scenario_ = Mock(Scenario, __file__="/tmp/scenario.py",
@@ -257,7 +260,7 @@ async def test_runner_run_scenario_multiple_steps_failed():
 async def test_runner_interrupted_scenario(*, dispatcher_: Dispatcher):
     with given:
         interrupt_exception = KeyboardInterrupt
-        runner = Runner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
+        runner = MonotonicRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
 
         step_ = Mock(side_effect=interrupt_exception)
         scenario_ = Mock(Scenario, step=step_, __file__="/tmp/scenario.py")

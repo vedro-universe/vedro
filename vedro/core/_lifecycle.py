@@ -10,7 +10,7 @@ from ._config_loader import ConfigLoader, ConfigType
 from ._dispatcher import Dispatcher
 from ._plugin import Plugin
 from ._report import Report
-from ._runner import Runner
+from ._runner import MonotonicRunner
 from ._scenario_discoverer import ScenarioDiscoverer
 from ._scenario_scheduler import MonotonicScenarioScheduler
 
@@ -21,7 +21,7 @@ class Lifecycle:
     def __init__(self,
                  dispatcher: Dispatcher,
                  discoverer: ScenarioDiscoverer,
-                 runner: Runner,
+                 runner: MonotonicRunner,
                  config_loader: ConfigLoader) -> None:
         self._dispatcher = dispatcher
         self._discoverer = discoverer
