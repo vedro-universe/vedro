@@ -1,12 +1,13 @@
 from types import GeneratorType
 from typing import List
-from unittest.mock import Mock
 
 import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import ScenarioResult, ScenarioScheduler, VirtualScenario
+
+from ._utils import make_virtual_scenario
 
 
 class _ScenarioScheduler(ScenarioScheduler):
@@ -21,10 +22,6 @@ class _ScenarioScheduler(ScenarioScheduler):
 
     async def __anext__(self) -> VirtualScenario:
         raise StopAsyncIteration()
-
-
-def make_virtual_scenario() -> Mock:
-    return Mock(spec=VirtualScenario)
 
 
 def test_abstract():

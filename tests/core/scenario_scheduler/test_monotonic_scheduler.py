@@ -1,6 +1,5 @@
 from types import GeneratorType
-from typing import Any, AsyncIterable, Iterator, List
-from unittest.mock import Mock
+from typing import List
 
 import pytest
 from baby_steps import given, then, when
@@ -8,20 +7,7 @@ from pytest import raises
 
 from vedro.core import MonotonicScenarioScheduler, ScenarioResult, VirtualScenario
 
-
-def make_virtual_scenario() -> Mock:
-    return Mock(spec=VirtualScenario)
-
-
-def make_scenario_result():
-    return ScenarioResult(Mock(spec=VirtualScenario))
-
-
-async def aenumerate(iterable: AsyncIterable, start: int = 0) -> Iterator[Any]:
-    idx = start
-    async for x in iterable:
-        yield idx, x
-        idx += 1
+from ._utils import aenumerate, make_scenario_result, make_virtual_scenario
 
 
 @pytest.mark.parametrize("scenarios", [
