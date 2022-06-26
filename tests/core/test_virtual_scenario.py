@@ -1,5 +1,4 @@
 import os
-from hashlib import blake2b
 from pathlib import Path
 from types import MethodType
 from typing import Type
@@ -17,7 +16,18 @@ def scenario_():
     scenario = Mock(Scenario)
     scenario.__file__ = os.getcwd() + "/scenarios/scenario.py"
     scenario.__module__ = "scenarios.scenario"
-    scenario.__qualname__ = "Scenario"
+    scenario.__name__ = "Scenario"
+    return scenario
+
+
+@pytest.fixture()
+def template_():
+    scenario = Mock(Scenario)
+    scenario.__file__ = os.getcwd() + "/scenarios/scenario.py"
+    scenario.__module__ = "scenarios.scenario"
+    scenario.__name__ = "Scenario_0_VedroScenario"
+    scenario.__vedro__template_index__ = 0
+    scenario.__vedro__template_total__ = 1
     return scenario
 
 
@@ -46,8 +56,18 @@ def test_virtual_scenario_unique_id(*, scenario_: Type[Scenario]):
         unique_id = virtual_scenario.unique_id
 
     with then:
-        unique_name = f"{scenario_.__file__}::{scenario_.__qualname__}"
-        assert unique_id == blake2b(unique_name.encode(), digest_size=20).hexdigest()
+        assert unique_id == "c2NlbmFyaW9zL3NjZW5hcmlvLnB5OjpTY2VuYXJpbw=="
+
+
+def test_virtual_template_unique_id(*, template_: Type[Scenario]):
+    with given:
+        virtual_scenario = VirtualScenario(template_, [])
+
+    with when:
+        unique_id = virtual_scenario.unique_id
+
+    with then:
+        assert unique_id == "c2NlbmFyaW9zL3NjZW5hcmlvLnB5OjpTY2VuYXJpb18wX1ZlZHJvU2NlbmFyaW8jMA=="
 
 
 def test_virtual_scenario_path(*, scenario_: Type[Scenario]):
@@ -59,6 +79,17 @@ def test_virtual_scenario_path(*, scenario_: Type[Scenario]):
 
     with then:
         assert path == Path(scenario_.__file__)
+
+
+def test_virtual_scenario_rel_path(*, scenario_: Type[Scenario]):
+    with given:
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        path = virtual_scenario.rel_path
+
+    with then:
+        assert path == Path("scenarios/scenario.py")
 
 
 def test_virtual_scenario_subject(*, scenario_: Type[Scenario]):
@@ -158,7 +189,7 @@ def test_virtual_scenario_not_eq_without_steps(*, scenario_: Type[Scenario]):
     with given:
         another_scenario_ = Mock(Scenario)
         another_scenario_.__file__ = scenario_.__file__
-        another_scenario_.__qualname__ = scenario_.__qualname__
+        another_scenario_.__name__ = scenario_.__name__
         virtual_scenario1 = VirtualScenario(scenario_, [])
         virtual_scenario2 = VirtualScenario(another_scenario_, [])
 

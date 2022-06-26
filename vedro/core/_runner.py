@@ -106,7 +106,8 @@ class Runner:
         async for scenario in scheduler:
             if len(scenario_results) > 0 and \
                scenario_results[-1].scenario.unique_id != scenario.unique_id:
-                aggregated_result = scheduler.aggregate_results(scenario_results)
+                aggregated_result = scenario_results[0] if len(scenario_results) == 1 else \
+                                        scheduler.aggregate_results(scenario_results)
                 report.add_result(aggregated_result)
                 await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
                 scenario_results = []
@@ -115,7 +116,8 @@ class Runner:
             scenario_results.append(scenario_result)
 
         if len(scenario_results) > 0:
-            aggregated_result = scheduler.aggregate_results(scenario_results)
+            aggregated_result = scenario_results[0] if len(scenario_results) == 1 else \
+                                    scheduler.aggregate_results(scenario_results)
             report.add_result(aggregated_result)
             await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
 

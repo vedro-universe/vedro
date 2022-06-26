@@ -35,7 +35,7 @@ class Config(core.Config):
             enabled = True
 
         class Interrupter(interrupter.Interrupter):
-            enabled = False
+            enabled = True
 
         class Seeder(seeder.Seeder):
             enabled = True
@@ -50,10 +50,10 @@ class Config(core.Config):
             enabled = True
 
         class Repeater(repeater.Repeater):
-            enabled = False
+            enabled = True
 
         class Rerunner(rerunner.Rerunner):
-            enabled = False
+            enabled = True
 
         class Terminator(terminator.Terminator):
             enabled = True

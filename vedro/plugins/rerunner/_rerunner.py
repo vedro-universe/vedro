@@ -43,11 +43,10 @@ class RerunnerPlugin(Plugin):
         self._reruns = event.args.reruns
 
     def on_startup(self, event: StartupEvent) -> None:
-        if isinstance(event.scheduler, RerunnerScenarioScheduler):
-            self._scheduler = event.scheduler
+        self._scheduler = event.scheduler
 
     def on_scenario_end(self, event:  Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        if (self._reruns == 0) or (self._scheduler is None):
+        if (self._reruns == 0) or not isinstance(self._scheduler, RerunnerScenarioScheduler):
             return
 
         if self._rerun_scenario_id == event.scenario_result.scenario.unique_id:

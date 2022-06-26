@@ -41,11 +41,10 @@ class RepeaterPlugin(Plugin):
         self._repeats = event.args.repeats
 
     def on_startup(self, event: StartupEvent) -> None:
-        if isinstance(event.scheduler, RepeaterScenarioScheduler):
-            self._scheduler = event.scheduler
+        self._scheduler = event.scheduler
 
     def on_scenario_end(self, event:  Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        if (self._repeats == 0) or (self._scheduler is None):
+        if (self._repeats == 0) or not isinstance(self._scheduler, RepeaterScenarioScheduler):
             return
 
         if self._repeat_scenario_id == event.scenario_result.scenario.unique_id:
