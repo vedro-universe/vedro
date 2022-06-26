@@ -14,9 +14,8 @@ class ScenarioScheduler(ABC):
 
     @property
     def scenarios(self) -> Iterator[VirtualScenario]:
-        for scenario_id in list(self._scenarios.keys()):
-            if scenario_id in self._scenarios:
-                yield self._scenarios[scenario_id]
+        for scenario_id in self._scenarios:
+            yield self._scenarios[scenario_id]
 
     @abstractmethod
     def schedule(self, scenario: VirtualScenario) -> None:
@@ -24,7 +23,7 @@ class ScenarioScheduler(ABC):
 
     @abstractmethod
     def ignore(self, scenario: VirtualScenario) -> None:
-        self._scenarios.pop(scenario.unique_id, None)
+        pass
 
     @abstractmethod
     def aggregate_results(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
@@ -38,4 +37,4 @@ class ScenarioScheduler(ABC):
         pass
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}<>"
+        return f"<{self.__class__.__name__}>"
