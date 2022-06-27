@@ -32,15 +32,16 @@ class SlicerPlugin(Plugin):
             assert self._total is not None
             assert 0 <= self._index < self._total
 
-    def on_startup(self, event: StartupEvent) -> None:
+    async def on_startup(self, event: StartupEvent) -> None:
         if (self._total is None) or (self._index is None):
             return
         index = 0
-        for scenario in event.scenarios:
+        async for scenario in event.scheduler:
             if scenario.is_skipped():
+                event.scheduler.ignore(scenario)
                 continue
             if index % self._total != self._index:
-                scenario.skip()
+                event.scheduler.ignore(scenario)
             index += 1
 
 

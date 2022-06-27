@@ -22,13 +22,13 @@ class TaggerPlugin(Plugin):
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._tags = event.args.tags
 
-    def on_startup(self, event: StartupEvent) -> None:
+    async def on_startup(self, event: StartupEvent) -> None:
         if self._tags is None:
             return
-        for scenario in event.scenarios:
+        async for scenario in event.scheduler:
             tags = getattr(scenario._orig_scenario, "tags", ())
             if self._tags not in tags:
-                scenario.skip()
+                event.scheduler.ignore(scenario)
 
 
 class Tagger(PluginConfig):
