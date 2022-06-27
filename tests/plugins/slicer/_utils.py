@@ -1,8 +1,7 @@
-import os
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from time import monotonic_ns
 from typing import Union
-from unittest.mock import Mock
 
 import pytest
 
@@ -25,11 +24,10 @@ def slicer(dispatcher: Dispatcher) -> SlicerPlugin:
 
 
 def make_vscenario(*, is_skipped: bool = False) -> VirtualScenario:
-    scenario_ = Mock(spec=Scenario)
-    scenario_.__file__ = os.getcwd() + f"/scenarios/scenario_{monotonic_ns()}.py"
-    scenario_.__name__ = "Scenario"
+    class _Scenario(Scenario):
+        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
 
-    vsenario = VirtualScenario(scenario_, steps=[])
+    vsenario = VirtualScenario(_Scenario, steps=[])
     if is_skipped:
         vsenario.skip()
     return vsenario

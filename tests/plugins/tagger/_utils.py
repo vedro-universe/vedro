@@ -1,8 +1,7 @@
-import os
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from time import monotonic_ns
 from typing import List, Optional
-from unittest.mock import Mock
 
 import pytest
 
@@ -26,13 +25,13 @@ def tagger(dispatcher: Dispatcher) -> TaggerPlugin:
 
 def make_vscenario(*, tags: Optional[List[str]] = None,
                    is_skipped: bool = False) -> VirtualScenario:
-    scenario_ = Mock(spec=Scenario)
-    scenario_.__file__ = os.getcwd() + f"/scenarios/scenario_{monotonic_ns()}.py"
-    scenario_.__name__ = "Scenario"
-    if tags is not None:
-        scenario_.tags = tags
+    class _Scenario(Scenario):
+        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
 
-    vscenario = VirtualScenario(scenario_, steps=[])
+    if tags is not None:
+        _Scenario.tags = tags
+
+    vscenario = VirtualScenario(_Scenario, steps=[])
     if is_skipped:
         vscenario.skip()
     return vscenario

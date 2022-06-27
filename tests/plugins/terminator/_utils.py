@@ -19,4 +19,5 @@ def terminator(dispatcher: Dispatcher) -> TerminatorPlugin:
 
 
 def make_scenario_result() -> ScenarioResult:
-    return ScenarioResult(Mock(spec=VirtualScenario))
+    vscenario = Mock(spec=VirtualScenario)
+    return ScenarioResult(vscenario)
