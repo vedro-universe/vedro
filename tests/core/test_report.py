@@ -203,3 +203,14 @@ def test_get_summary():
 
     with then:
         assert res == [summary]
+
+
+def test_repr():
+    with given:
+        report = Report()
+
+    with when:
+        res = repr(report)
+
+    with then:
+        assert res == "<Report total=0 passed=0 failed=0 skipped=0>"

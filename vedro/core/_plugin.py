@@ -18,6 +18,9 @@ class Plugin(Subscriber):
     def subscribe(self, dispatcher: Dispatcher) -> None:
         pass
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._config.__name__})"
+
 
 class PluginConfig(Section):
     plugin: Type[Plugin] = Plugin

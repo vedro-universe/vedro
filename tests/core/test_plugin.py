@@ -36,6 +36,18 @@ def test_plugin_subscribe():
         assert res is None
 
 
+def test_plugin_repr():
+    with given:
+        config = PluginConfig
+        plugin = Plugin(config)
+
+    with when:
+        res = repr(plugin)
+
+    with then:
+        assert res == f"Plugin({config.__name__})"
+
+
 def test_config_get_plugin():
     with given:
         config = PluginConfig
