@@ -32,12 +32,12 @@ async def test_iterator(scenarios: List[VirtualScenario]):
     [],
     [make_virtual_scenario(), make_virtual_scenario()]
 ])
-def test_get_scenarios(scenarios: List[VirtualScenario]):
+def test_get_discovered(scenarios: List[VirtualScenario]):
     with given:
         scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
-        result = scheduler.scenarios
+        result = scheduler.discovered
 
     with then:
         assert isinstance(result, GeneratorType)
@@ -60,7 +60,8 @@ async def test_ignore_nonexisting():
 
     with then:
         assert result == scenarios
-        assert list(scheduler.scenarios) == scenarios
+        assert list(scheduler.scheduled) == scenarios
+        assert list(scheduler.discovered) == scenarios
 
 
 @pytest.mark.asyncio
@@ -78,7 +79,8 @@ async def test_ignore_scenario():
 
     with then:
         assert result == scenarios[1:]
-        assert list(scheduler.scenarios) == scenarios
+        assert list(scheduler.scheduled) == scenarios[1:]
+        assert list(scheduler.discovered) == scenarios
 
 
 @pytest.mark.asyncio
@@ -97,7 +99,8 @@ async def test_ignore_repeated_scenario():
 
     with then:
         assert result == [scenarios[-1]]
-        assert list(scheduler.scenarios) == scenarios
+        assert list(scheduler.scheduled) == [scenarios[-1]]
+        assert list(scheduler.discovered) == scenarios
 
 
 @pytest.mark.asyncio
@@ -116,6 +119,7 @@ async def test_ignore_repeated_scenario_while_iterating():
 
     with then:
         assert result == [scenarios[0], scenarios[1]]
+        assert list(scheduler.scheduled) == [scenarios[0], scenarios[1]]
 
 
 @pytest.mark.asyncio
@@ -136,6 +140,7 @@ async def test_ignore_repeated_next_scenario_while_iterating():
 
     with then:
         assert result == [scenarios[0], scenarios[0], scenarios[1], scenarios[2]]
+        assert list(scheduler.scheduled) == [scenarios[1], scenarios[2]]
 
 
 @pytest.mark.asyncio
@@ -153,6 +158,7 @@ async def test_ignore_scenario_while_iterating():
 
     with then:
         assert result == [scenarios[0], scenarios[2]]
+        assert list(scheduler.scheduled) == [scenarios[0], scenarios[2]]
 
 
 @pytest.mark.asyncio
@@ -171,7 +177,8 @@ async def test_schedule_new():
 
     with then:
         assert result == [new_scenario] + scenarios
-        assert list(scheduler.scenarios) == scenarios
+        assert list(scheduler.discovered) == scenarios
+        assert list(scheduler.scheduled) == [new_scenario] + scenarios
 
 
 @pytest.mark.asyncio
@@ -190,7 +197,8 @@ async def test_schedule_new_while_iterating():
 
     with then:
         assert result == [scenarios[0], new_scenario, scenarios[1]]
-        assert list(scheduler.scenarios) == scenarios
+        assert list(scheduler.scheduled) == [new_scenario, scenarios[0], scenarios[1]]
+        assert list(scheduler.discovered) == scenarios
 
 
 @pytest.mark.asyncio
@@ -208,7 +216,8 @@ async def test_schedule_iterated_while_iterating():
 
     with then:
         assert result == [scenarios[0], scenarios[0], scenarios[1]]
-        assert list(scheduler.scenarios) == scenarios
+        assert list(scheduler.scheduled) == [scenarios[0], scenarios[0], scenarios[1]]
+        assert list(scheduler.discovered) == scenarios
 
 
 @pytest.mark.asyncio
@@ -226,7 +235,8 @@ async def test_schedule_not_iterated_while_iterating():
 
     with then:
         assert result == [scenarios[0], scenarios[1], scenarios[1]]
-        assert list(scheduler.scenarios) == scenarios
+        assert list(scheduler.scheduled) == [scenarios[0], scenarios[1], scenarios[1]]
+        assert list(scheduler.discovered) == scenarios
 
 
 def test_aggregate_nothing():

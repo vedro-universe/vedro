@@ -103,7 +103,7 @@ def test_startup_event():
         event = StartupEvent(scheduler)
 
     with then:
-        assert list(event.scheduler.scenarios) == scenarios
+        assert list(event.scheduler.discovered) == scenarios
         assert repr(event) == f"StartupEvent({scheduler!r})"
 
 

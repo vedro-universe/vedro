@@ -66,7 +66,7 @@ class StartupEvent(Event):
     @property
     def scenarios(self) -> List[VirtualScenario]:
         warnings.warn("Deprecated: use scheduler.scenarios instead", DeprecationWarning)
-        return list(self._scheduler.scenarios)
+        return list(self._scheduler.discovered)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._scheduler!r})"

@@ -10,12 +10,17 @@ __all__ = ("ScenarioScheduler",)
 
 class ScenarioScheduler(ABC):
     def __init__(self, scenarios: List[VirtualScenario]) -> None:
-        self._scenarios = OrderedDict((scn.unique_id, scn) for scn in scenarios)
+        self._discovered = OrderedDict((scn.unique_id, scn) for scn in scenarios)
 
     @property
-    def scenarios(self) -> Iterator[VirtualScenario]:
-        for scenario_id in self._scenarios:
-            yield self._scenarios[scenario_id]
+    def discovered(self) -> Iterator[VirtualScenario]:
+        for scenario_id in self._discovered:
+            yield self._discovered[scenario_id]
+
+    @property
+    @abstractmethod
+    def scheduled(self) -> Iterator[VirtualScenario]:
+        pass
 
     @abstractmethod
     def schedule(self, scenario: VirtualScenario) -> None:

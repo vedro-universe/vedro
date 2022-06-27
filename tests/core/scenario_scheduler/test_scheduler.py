@@ -1,5 +1,5 @@
 from types import GeneratorType
-from typing import List
+from typing import Iterator, List
 
 import pytest
 from baby_steps import given, then, when
@@ -11,6 +11,10 @@ from ._utils import make_virtual_scenario
 
 
 class _ScenarioScheduler(ScenarioScheduler):
+    @property
+    def scheduled(self) -> Iterator[VirtualScenario]:
+        yield from self.discovered
+
     def schedule(self, scenario: VirtualScenario) -> None:
         pass
 
@@ -36,12 +40,28 @@ def test_abstract():
     [],
     [make_virtual_scenario(), make_virtual_scenario()]
 ])
-def test_get_scenarios(scenarios):
+def test_get_discovered(scenarios):
     with given:
         scheduler = _ScenarioScheduler(scenarios)
 
     with when:
-        result = scheduler.scenarios
+        result = scheduler.discovered
+
+    with then:
+        assert isinstance(result, GeneratorType)
+        assert list(result) == scenarios
+
+
+@pytest.mark.parametrize("scenarios", [
+    [],
+    [make_virtual_scenario(), make_virtual_scenario()]
+])
+def test_get_scheduled(scenarios):
+    with given:
+        scheduler = _ScenarioScheduler(scenarios)
+
+    with when:
+        result = scheduler.scheduled
 
     with then:
         assert isinstance(result, GeneratorType)
