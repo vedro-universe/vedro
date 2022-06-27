@@ -8,7 +8,12 @@ __all__ = ("Plugin", "PluginConfig",)
 
 class Plugin(Subscriber):
     def __init__(self, config: Type["PluginConfig"]) -> None:
+        assert issubclass(config, PluginConfig)
         self._config = config
+
+    @property
+    def config(self) -> Type["PluginConfig"]:
+        return self._config
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         pass
