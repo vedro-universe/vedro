@@ -22,7 +22,7 @@ def rerunner(dispatcher: Dispatcher) -> RerunnerPlugin:
 
 
 @pytest.fixture()
-def scheduler():
+def scheduler() -> Scheduler:
     return Scheduler([])
 
 
@@ -35,7 +35,7 @@ def make_scenario_result():
     return ScenarioResult(Mock(spec=VirtualScenario))
 
 
-async def fire_arg_parsed_event(dispatcher: dispatcher, reruns: int) -> None:
+async def fire_arg_parsed_event(dispatcher: Dispatcher, reruns: int) -> None:
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
@@ -43,8 +43,8 @@ async def fire_arg_parsed_event(dispatcher: dispatcher, reruns: int) -> None:
     await dispatcher.fire(arg_parsed_event)
 
 
-async def fire_startup_event(dispatcher, scheudler: Scheduler) -> None:
-    startup_event = StartupEvent(scheudler)
+async def fire_startup_event(dispatcher: Dispatcher, scheduler: Scheduler) -> None:
+    startup_event = StartupEvent(scheduler)
     await dispatcher.fire(startup_event)
 
 
