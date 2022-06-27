@@ -1,34 +1,20 @@
 from typing import cast
-from unittest.mock import Mock
 
 import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core import Dispatcher, Report, ScenarioResult, VirtualScenario
+from vedro.core import Dispatcher, Report
 from vedro.events import CleanupEvent
-from vedro.plugins.terminator import Terminator, TerminatorPlugin
+from vedro.plugins.terminator import TerminatorPlugin
 
+from ._utils import dispatcher, make_scenario_result, terminator
 
-@pytest.fixture()
-def dispatcher() -> Dispatcher:
-    return Dispatcher()
-
-
-@pytest.fixture()
-def terminator(dispatcher: Dispatcher):
-    terminator = TerminatorPlugin(Terminator)
-    terminator.subscribe(dispatcher)
-    return terminator
-
-
-def make_scenario_result() -> ScenarioResult:
-    scenario_ = Mock(VirtualScenario)
-    return ScenarioResult(scenario_)
+__all__ = ("dispatcher", "terminator",)  # fixtures
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
+async def test_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         report = Report()
         scenario_result = make_scenario_result().mark_passed()
@@ -43,7 +29,7 @@ async def test_terminator_plugin_passed(*, terminator: TerminatorPlugin, dispatc
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_failed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
+async def test_failed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         report = Report()
         scenario_result = make_scenario_result().mark_failed()
@@ -58,8 +44,7 @@ async def test_terminator_plugin_failed(*, terminator: TerminatorPlugin, dispatc
 
 
 @pytest.mark.asyncio
-async def test_terminator_plugin_no_passed(*, terminator: TerminatorPlugin,
-                                           dispatcher: Dispatcher):
+async def test_no_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         report = Report()
 
