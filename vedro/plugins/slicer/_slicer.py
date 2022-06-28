@@ -36,13 +36,16 @@ class SlicerPlugin(Plugin):
         if (self._total is None) or (self._index is None):
             return
         index = 0
+        skipped_index = 0
         async for scenario in event.scheduler:
             if scenario.is_skipped():
-                event.scheduler.ignore(scenario)
-                continue
-            if index % self._total != self._index:
-                event.scheduler.ignore(scenario)
-            index += 1
+                if (skipped_index % self._total) != (self._total - self._index - 1):
+                    event.scheduler.ignore(scenario)
+                skipped_index += 1
+            else:
+                if (index % self._total) != self._index:
+                    event.scheduler.ignore(scenario)
+                index += 1
 
 
 class Slicer(PluginConfig):

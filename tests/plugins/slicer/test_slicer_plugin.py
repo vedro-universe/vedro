@@ -17,14 +17,14 @@ __all__ = ("dispatcher", "slicer",)
 
 @pytest.mark.parametrize(("total", "index", "selected"), [
     (None, None, {0, 1, 2, 3}),
-    (1, 0, {0, 2, 3}),
+    (1, 0, {0, 1, 2, 3}),
 
     (2, 0, {0, 3}),
-    (2, 1, {2}),
+    (2, 1, {1, 2}),
 
     (3, 0, {0}),
     (3, 1, {2}),
-    (3, 2, {3}),
+    (3, 2, {1, 3}),
 ])
 @pytest.mark.asyncio
 async def test_slicing(total: int, index: int, selected: Set[int], *,
@@ -33,10 +33,39 @@ async def test_slicing(total: int, index: int, selected: Set[int], *,
         await fire_arg_parsed_event(dispatcher, total=total, index=index)
 
         scenarios = [
-            make_vscenario(),
-            make_vscenario(is_skipped=True),
-            make_vscenario(),
-            make_vscenario()
+            make_vscenario(),                 # 0
+            make_vscenario(is_skipped=True),  # 1
+            make_vscenario(),                 # 2
+            make_vscenario()                  # 3
+        ]
+        scheduler = Scheduler(scenarios)
+
+        startup_event = StartupEvent(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert list(scheduler.scheduled) == [scenarios[i] for i in selected]
+
+
+@pytest.mark.parametrize(("total", "index", "selected"), [
+    (2, 0, {0, 3, 4}),
+    (2, 1, {1, 2, 5}),
+])
+@pytest.mark.asyncio
+async def test_slicing_skipped(total: int, index: int, selected: Set[int], *,
+                               slicer: SlicerPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, total=total, index=index)
+
+        scenarios = [
+            make_vscenario(),                 # 0
+            make_vscenario(is_skipped=True),  # 1
+            make_vscenario(),                 # 2
+            make_vscenario(is_skipped=True),  # 3
+            make_vscenario(),                 # 4
+            make_vscenario(),                 # 5
         ]
         scheduler = Scheduler(scenarios)
 
@@ -51,11 +80,11 @@ async def test_slicing(total: int, index: int, selected: Set[int], *,
 
 @pytest.mark.parametrize(("total", "index", "selected"), [
     (None, None, {0, 1}),
-    (1, 0, {}),
+    (1, 0, {0, 1}),
 ])
 @pytest.mark.asyncio
-async def test_slicing_skipped(total: int, index: int, selected: Set[int], *,
-                               slicer: SlicerPlugin, dispatcher: Dispatcher):
+async def test_slicing_all_skipped(total: int, index: int, selected: Set[int], *,
+                                   slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, total=total, index=index)
 
@@ -92,11 +121,11 @@ async def test_arg_validation(total: Union[int, None], index: Union[int, None], 
 
 
 @pytest.mark.parametrize(("total", "index"), [
-    (1, None),  # slicer_index is None
-    (None, 1),  # slicer_total is None
-    (0, 1),  # slicer_total <= 0
-    (1, -1),  # slicer_index < 0
-    (1, 1),  # slicer_index > slicer_total
+    (1, None),  # index is None
+    (None, 1),  # total is None
+    (0, 1),  # total <= 0
+    (1, -1),  # index < 0
+    (1, 1),  # index > total
 ])
 @pytest.mark.asyncio
 async def test_arg_validation_error(total: Union[int, None], index: Union[int, None], *,
