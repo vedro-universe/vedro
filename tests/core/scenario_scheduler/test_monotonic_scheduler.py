@@ -7,12 +7,12 @@ from pytest import raises
 
 from vedro.core import MonotonicScenarioScheduler, ScenarioResult, VirtualScenario
 
-from ._utils import aenumerate, make_scenario_result, make_virtual_scenario
+from ._utils import aenumerate, make_scenario_result, make_vscenario
 
 
 @pytest.mark.parametrize("get_scenarios", [
     lambda: [],
-    lambda: [make_virtual_scenario(), make_virtual_scenario()]
+    lambda: [make_vscenario(), make_vscenario()]
 ])
 @pytest.mark.asyncio
 async def test_iterator(get_scenarios: Callable[[], List[VirtualScenario]]):
@@ -31,7 +31,7 @@ async def test_iterator(get_scenarios: Callable[[], List[VirtualScenario]]):
 
 @pytest.mark.parametrize("get_scenarios", [
     lambda: [],
-    lambda: [make_virtual_scenario(), make_virtual_scenario()]
+    lambda: [make_vscenario(), make_vscenario()]
 ])
 def test_get_discovered(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:
@@ -49,10 +49,10 @@ def test_get_discovered(get_scenarios: Callable[[], List[VirtualScenario]]):
 @pytest.mark.asyncio
 async def test_ignore_nonexisting():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario()]
-        nonexisting_scenario = make_virtual_scenario()
+        scenarios = [make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
+        nonexisting_scenario = make_vscenario()
         scheduler.ignore(nonexisting_scenario)
 
     with when:
@@ -69,7 +69,7 @@ async def test_ignore_nonexisting():
 @pytest.mark.asyncio
 async def test_ignore_scenario():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario()]
+        scenarios = [make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
         scheduler.ignore(scenarios[0])
@@ -88,7 +88,7 @@ async def test_ignore_scenario():
 @pytest.mark.asyncio
 async def test_ignore_repeated_scenario():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario()]
+        scenarios = [make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
         scheduler.schedule(scenarios[0])
 
@@ -108,7 +108,7 @@ async def test_ignore_repeated_scenario():
 @pytest.mark.asyncio
 async def test_ignore_repeated_scenario_while_iterating():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario(), make_virtual_scenario()]
+        scenarios = [make_vscenario(), make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
@@ -127,7 +127,7 @@ async def test_ignore_repeated_scenario_while_iterating():
 @pytest.mark.asyncio
 async def test_ignore_repeated_next_scenario_while_iterating():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario(), make_virtual_scenario()]
+        scenarios = [make_vscenario(), make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
@@ -148,7 +148,7 @@ async def test_ignore_repeated_next_scenario_while_iterating():
 @pytest.mark.asyncio
 async def test_ignore_scenario_while_iterating():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario(), make_virtual_scenario()]
+        scenarios = [make_vscenario(), make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
@@ -166,10 +166,10 @@ async def test_ignore_scenario_while_iterating():
 @pytest.mark.asyncio
 async def test_schedule_new():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario()]
-        new_scenario = make_virtual_scenario()
+        scenarios = [make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
+        new_scenario = make_vscenario()
         scheduler.schedule(new_scenario)
 
     with when:
@@ -186,9 +186,9 @@ async def test_schedule_new():
 @pytest.mark.asyncio
 async def test_schedule_new_while_iterating():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario()]
-        new_scenario = make_virtual_scenario()
+        scenarios = [make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
+        new_scenario = make_vscenario()
 
     with when:
         result = []
@@ -206,7 +206,7 @@ async def test_schedule_new_while_iterating():
 @pytest.mark.asyncio
 async def test_schedule_iterated_while_iterating():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario()]
+        scenarios = [make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
@@ -225,7 +225,7 @@ async def test_schedule_iterated_while_iterating():
 @pytest.mark.asyncio
 async def test_schedule_not_iterated_while_iterating():
     with given:
-        scenarios = [make_virtual_scenario(), make_virtual_scenario()]
+        scenarios = [make_vscenario(), make_vscenario()]
         scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
@@ -238,6 +238,44 @@ async def test_schedule_not_iterated_while_iterating():
     with then:
         assert result == [scenarios[0], scenarios[1], scenarios[1]]
         assert list(scheduler.scheduled) == [scenarios[0], scenarios[1], scenarios[1]]
+        assert list(scheduler.discovered) == scenarios
+
+
+@pytest.mark.asyncio
+async def test_schedule_while_iterating_scheduled():
+    with given:
+        scenarios = [make_vscenario(), make_vscenario()]
+        scheduler = MonotonicScenarioScheduler(scenarios)
+
+    with when:
+        result = []
+        for idx, scenario in enumerate(scheduler.scheduled):
+            if idx == 0:
+                scheduler.schedule(scenarios[-1])
+            result.append(scenario)
+
+    with then:
+        assert result == [scenarios[0], scenarios[1], scenarios[1]]
+        assert list(scheduler.scheduled) == [scenarios[0], scenarios[1], scenarios[1]]
+        assert list(scheduler.discovered) == scenarios
+
+
+@pytest.mark.asyncio
+async def test_ignore_while_iterating_scheduled():
+    with given:
+        scenarios = [make_vscenario(), make_vscenario()]
+        scheduler = MonotonicScenarioScheduler(scenarios)
+
+    with when, raises(BaseException) as exc:
+        for idx, scenario in enumerate(scheduler.scheduled):
+            if idx == 0:
+                scheduler.ignore(scenarios[-1])
+
+    with then:
+        assert exc.type is RuntimeError
+        assert str(exc.value) == "OrderedDict mutated during iteration"
+
+        assert list(scheduler.scheduled) == [scenarios[0]]
         assert list(scheduler.discovered) == scenarios
 
 

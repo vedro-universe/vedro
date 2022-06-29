@@ -7,7 +7,7 @@ from pytest import raises
 
 from vedro.core import ScenarioResult, ScenarioScheduler, VirtualScenario
 
-from ._utils import make_virtual_scenario
+from ._utils import make_vscenario
 
 
 class _ScenarioScheduler(ScenarioScheduler):
@@ -38,7 +38,7 @@ def test_abstract():
 
 @pytest.mark.parametrize("get_scenarios", [
     lambda: [],
-    lambda: [make_virtual_scenario(), make_virtual_scenario()]
+    lambda: [make_vscenario(), make_vscenario()]
 ])
 def test_get_discovered(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:
@@ -55,7 +55,7 @@ def test_get_discovered(get_scenarios: Callable[[], List[VirtualScenario]]):
 
 @pytest.mark.parametrize("get_scenarios", [
     lambda: [],
-    lambda: [make_virtual_scenario(), make_virtual_scenario()]
+    lambda: [make_vscenario(), make_vscenario()]
 ])
 def test_get_scheduled(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:

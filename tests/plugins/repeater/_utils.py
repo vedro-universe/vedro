@@ -41,7 +41,7 @@ def make_vscenario() -> VirtualScenario:
     return VirtualScenario(_Scenario, steps=[])
 
 
-def make_scenario_result():
+def make_scenario_result() -> ScenarioResult:
     return ScenarioResult(make_vscenario())
 
 

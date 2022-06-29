@@ -1,11 +1,9 @@
 from collections import deque
-from time import monotonic_ns
-from unittest.mock import Mock
 
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Dispatcher, Plugin, ScenarioResult, StepResult, VirtualScenario, VirtualStep
+from vedro.core import Dispatcher, ScenarioResult, StepResult
 from vedro.events import (
     ScenarioFailedEvent,
     ScenarioPassedEvent,
@@ -13,50 +11,33 @@ from vedro.events import (
     StepFailedEvent,
     StepPassedEvent,
 )
-from vedro.plugins.artifacted import Artifacted, ArtifactedPlugin, MemoryArtifact
+from vedro.plugins.artifacted import (
+    Artifacted,
+    ArtifactedPlugin,
+    attach_artifact,
+    attach_scenario_artifact,
+    attach_step_artifact,
+)
 
+from ._utils import (
+    artifacted,
+    create_artifact,
+    dispatcher,
+    make_vscenario,
+    make_vstep,
+    scenario_artifacts,
+    step_artifacts,
+)
 
-@pytest.fixture()
-def dispatcher() -> Dispatcher:
-    return Dispatcher()
-
-
-@pytest.fixture()
-def scenario_artifacts() -> deque:
-    return deque()
-
-
-@pytest.fixture()
-def step_artifacts() -> deque:
-    return deque()
-
-
-@pytest.fixture()
-def artifacted(scenario_artifacts: deque, step_artifacts: deque) -> ArtifactedPlugin:
-    return ArtifactedPlugin(Artifacted,
-                            scenario_artifacts=scenario_artifacts, step_artifacts=step_artifacts)
-
-
-def create_artifact() -> MemoryArtifact:
-    return MemoryArtifact(f"test-{monotonic_ns()}", "text/plain", b"")
-
-
-def test_artifacted_plugin():
-    with when:
-        plugin = ArtifactedPlugin(Artifacted)
-
-    with then:
-        assert isinstance(plugin, Plugin)
+__all__ = ("dispatcher", "scenario_artifacts", "step_artifacts", "artifacted")  # fixtures
 
 
 @pytest.mark.asyncio
-async def test_artifacted_scenario_run_event(*, dispatcher: Dispatcher,
-                                             artifacted: ArtifactedPlugin,
-                                             scenario_artifacts: deque, step_artifacts: deque):
+@pytest.mark.usefixtures(artifacted.__name__)
+async def test_scenario_run_event(*, dispatcher: Dispatcher, scenario_artifacts: deque,
+                                  step_artifacts: deque):
     with given:
-        artifacted.subscribe(dispatcher)
-
-        scenario_result = ScenarioResult(Mock(VirtualScenario))
+        scenario_result = ScenarioResult(make_vscenario())
         event = ScenarioRunEvent(scenario_result)
 
         scenario_artifacts.append(create_artifact())
@@ -71,13 +52,12 @@ async def test_artifacted_scenario_run_event(*, dispatcher: Dispatcher,
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures(artifacted.__name__)
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
-async def test_artifacted_scenario_end_event(event_class, *, dispatcher: Dispatcher,
-                                             artifacted: ArtifactedPlugin,
-                                             scenario_artifacts: deque):
+async def test_scenario_end_event(event_class, *, dispatcher: Dispatcher,
+                                  scenario_artifacts: deque):
     with given:
-        artifacted.subscribe(dispatcher)
-        scenario_result = ScenarioResult(Mock(VirtualScenario))
+        scenario_result = ScenarioResult(make_vscenario())
         event = event_class(scenario_result)
 
         artifact1 = create_artifact()
@@ -94,13 +74,11 @@ async def test_artifacted_scenario_end_event(event_class, *, dispatcher: Dispatc
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures(artifacted.__name__)
 @pytest.mark.parametrize("event_class", [StepPassedEvent, StepFailedEvent])
-async def test_artifacted_step_end_event(event_class, *, dispatcher: Dispatcher,
-                                         artifacted: ArtifactedPlugin,
-                                         step_artifacts: deque):
+async def test_step_end_event(event_class, *, dispatcher: Dispatcher, step_artifacts: deque):
     with given:
-        artifacted.subscribe(dispatcher)
-        step_result = StepResult(Mock(VirtualStep))
+        step_result = StepResult(make_vstep())
         event = event_class(step_result)
 
         artifact1 = create_artifact()
@@ -114,3 +92,44 @@ async def test_artifacted_step_end_event(event_class, *, dispatcher: Dispatcher,
 
     with then:
         assert step_result.artifacts == [artifact1, artifact2]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
+async def test_attach_scenario_artifact(event_class, *, dispatcher: Dispatcher):
+    with given:
+        artifacted = ArtifactedPlugin(Artifacted)
+        artifacted.subscribe(dispatcher)
+
+        artifact = create_artifact()
+        attach_scenario_artifact(artifact)
+
+        scenario_result = ScenarioResult(make_vscenario())
+        event = event_class(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert scenario_result.artifacts == [artifact]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("attach", [attach_artifact, attach_step_artifact])
+@pytest.mark.parametrize("event_class", [StepPassedEvent, StepFailedEvent])
+async def test_attach_step_artifact(attach, event_class, *, dispatcher: Dispatcher):
+    with given:
+        artifacted = ArtifactedPlugin(Artifacted)
+        artifacted.subscribe(dispatcher)
+
+        artifact = create_artifact()
+        attach(artifact)
+
+        step_result = StepResult(make_vstep())
+        event = event_class(step_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert step_result.artifacts == [artifact]

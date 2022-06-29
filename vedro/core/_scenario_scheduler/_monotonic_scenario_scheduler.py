@@ -17,10 +17,9 @@ class MonotonicScenarioScheduler(ScenarioScheduler):
     @property
     def scheduled(self) -> Iterator[VirtualScenario]:
         for scenario_id in reversed(self._scheduled):
-            if scenario_id in self._scheduled:
-                scenario, repeats = self._scheduled[scenario_id]
-                for _ in range(repeats + 1):
-                    yield scenario
+            scenario, repeats = self._scheduled[scenario_id]
+            for _ in range(repeats + 1):
+                yield scenario
 
     def ignore(self, scenario: VirtualScenario) -> None:
         self._scheduled.pop(scenario.unique_id, None)
