@@ -1,5 +1,5 @@
 from types import GeneratorType
-from typing import Iterator, List
+from typing import Callable, Iterator, List
 
 import pytest
 from baby_steps import given, then, when
@@ -36,12 +36,13 @@ def test_abstract():
         assert exc.type is TypeError
 
 
-@pytest.mark.parametrize("scenarios", [
-    [],
-    [make_virtual_scenario(), make_virtual_scenario()]
+@pytest.mark.parametrize("get_scenarios", [
+    lambda: [],
+    lambda: [make_virtual_scenario(), make_virtual_scenario()]
 ])
-def test_get_discovered(scenarios):
+def test_get_discovered(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:
+        scenarios = get_scenarios()
         scheduler = _ScenarioScheduler(scenarios)
 
     with when:
@@ -52,12 +53,13 @@ def test_get_discovered(scenarios):
         assert list(result) == scenarios
 
 
-@pytest.mark.parametrize("scenarios", [
-    [],
-    [make_virtual_scenario(), make_virtual_scenario()]
+@pytest.mark.parametrize("get_scenarios", [
+    lambda: [],
+    lambda: [make_virtual_scenario(), make_virtual_scenario()]
 ])
-def test_get_scheduled(scenarios):
+def test_get_scheduled(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:
+        scenarios = get_scenarios()
         scheduler = _ScenarioScheduler(scenarios)
 
     with when:

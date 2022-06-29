@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, List
 
 import pytest
 from baby_steps import given, then, when
@@ -28,13 +28,15 @@ def test_aggregate_nothing(scheduler: Scheduler):
         assert exc.type is AssertionError
 
 
-@pytest.mark.parametrize("scenario_results", [
-    (make_scenario_result().mark_passed(), make_scenario_result().mark_passed()),
-    (make_scenario_result().mark_failed(), make_scenario_result().mark_failed()),
-    (make_scenario_result().mark_skipped(), make_scenario_result().mark_skipped()),
+@pytest.mark.parametrize("get_scenario_results", [
+    lambda: [make_scenario_result().mark_passed(), make_scenario_result().mark_passed()],
+    lambda: [make_scenario_result().mark_failed(), make_scenario_result().mark_failed()],
+    lambda: [make_scenario_result().mark_skipped(), make_scenario_result().mark_skipped()],
 ])
-def test_aggreate_results(scenario_results: List[ScenarioResult], *, scheduler: Scheduler):
+def test_aggreate_results(get_scenario_results: Callable[[], List[ScenarioResult]], *,
+                          scheduler: Scheduler):
     with when:
+        scenario_results = get_scenario_results()
         aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:

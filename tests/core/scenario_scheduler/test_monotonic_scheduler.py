@@ -1,5 +1,5 @@
 from types import GeneratorType
-from typing import List
+from typing import Callable, List
 
 import pytest
 from baby_steps import given, then, when
@@ -10,13 +10,14 @@ from vedro.core import MonotonicScenarioScheduler, ScenarioResult, VirtualScenar
 from ._utils import aenumerate, make_scenario_result, make_virtual_scenario
 
 
-@pytest.mark.parametrize("scenarios", [
-    [],
-    [make_virtual_scenario(), make_virtual_scenario()]
+@pytest.mark.parametrize("get_scenarios", [
+    lambda: [],
+    lambda: [make_virtual_scenario(), make_virtual_scenario()]
 ])
 @pytest.mark.asyncio
-async def test_iterator(scenarios: List[VirtualScenario]):
+async def test_iterator(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:
+        scenarios = get_scenarios()
         scheduler = MonotonicScenarioScheduler(scenarios)
         result = []
 
@@ -28,12 +29,13 @@ async def test_iterator(scenarios: List[VirtualScenario]):
         assert result == scenarios
 
 
-@pytest.mark.parametrize("scenarios", [
-    [],
-    [make_virtual_scenario(), make_virtual_scenario()]
+@pytest.mark.parametrize("get_scenarios", [
+    lambda: [],
+    lambda: [make_virtual_scenario(), make_virtual_scenario()]
 ])
-def test_get_discovered(scenarios: List[VirtualScenario]):
+def test_get_discovered(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:
+        scenarios = get_scenarios()
         scheduler = MonotonicScenarioScheduler(scenarios)
 
     with when:
@@ -250,13 +252,14 @@ def test_aggregate_nothing():
         assert exc.type is AssertionError
 
 
-@pytest.mark.parametrize("scenario_results", [
-    (make_scenario_result().mark_passed(), make_scenario_result().mark_passed()),
-    (make_scenario_result().mark_failed(), make_scenario_result().mark_failed()),
-    (make_scenario_result().mark_skipped(), make_scenario_result().mark_skipped()),
+@pytest.mark.parametrize("get_scenario_results", [
+    lambda: [make_scenario_result().mark_passed(), make_scenario_result().mark_passed()],
+    lambda: [make_scenario_result().mark_failed(), make_scenario_result().mark_failed()],
+    lambda: [make_scenario_result().mark_skipped(), make_scenario_result().mark_skipped()],
 ])
-def test_aggreate_results(scenario_results: List[ScenarioResult]):
+def test_aggreate_results(get_scenario_results: Callable[[], List[ScenarioResult]]):
     with given:
+        scenario_results = get_scenario_results()
         scheduler = MonotonicScenarioScheduler([])
 
     with when:

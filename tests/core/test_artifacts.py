@@ -100,7 +100,6 @@ def test_file_artifact_repr():
         artifact = FileArtifact(name, mime_type, path)
 
     with then:
-        print(repr(artifact))
         assert repr(artifact) == f"FileArtifact<{name!r}, {mime_type!r}, {path!r}>"
 
 

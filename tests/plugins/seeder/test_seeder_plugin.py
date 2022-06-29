@@ -90,6 +90,23 @@ async def test_run_discovered(*, seeder: SeederPlugin, dispatcher: Dispatcher):
         assert generated == [RAND_DISCOVERED[0][0], RAND_DISCOVERED[1][0]]
 
 
+@pytest.mark.parametrize("index", [0, 1])
+@pytest.mark.asyncio
+async def test_run_discovered_subset(index: int, *, seeder: SeederPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
+
+        scenarios = [make_vscenario(), make_vscenario()]
+        await fire_startup_event(dispatcher, Scheduler(scenarios))
+        scheduler = Scheduler([scenarios[index]])
+
+    with when:
+        generated = await run_scenarios(dispatcher, scheduler)
+
+    with then:
+        assert generated == [RAND_DISCOVERED[index][0]]
+
+
 @pytest.mark.asyncio
 async def test_run_discovered_and_rescheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
@@ -169,7 +186,6 @@ async def test_run_discovered_and_scheduled(*, seeder: SeederPlugin, dispatcher:
         generated = await run_scenarios(dispatcher, scheduler)
 
     with then:
-        print("generated", generated)
         assert generated == [RAND_SCHEDULED[0][0], RAND_SCHEDULED[0][1],
                              RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][1]]
 
