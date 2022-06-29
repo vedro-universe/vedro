@@ -4,7 +4,12 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher, Report
-from vedro.events import CleanupEvent, ScenarioFailedEvent, ScenarioPassedEvent
+from vedro.events import (
+    CleanupEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
+    ScenarioSkippedEvent,
+)
 
 from ._utils import (
     dispatcher,
@@ -56,6 +61,24 @@ async def test_dont_rerun_passed(reruns: int, *, dispatcher: Dispatcher, schedul
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("repeats", [0, 1])
+@pytest.mark.usefixtures(rerunner.__name__)
+async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, repeats)
+        await fire_startup_event(dispatcher, scheduler_)
+
+        scenario_result = make_scenario_result().mark_skipped()
+        scenario_skipped_event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(scenario_skipped_event)
+
+    with then:
+        assert scheduler_.mock_calls == []
+
+
+@pytest.mark.asyncio
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_dont_rerun_rerunned(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
@@ -81,16 +104,14 @@ async def test_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
         await fire_startup_event(dispatcher, scheduler_)
         await fire_failed_event(dispatcher)
 
-        report_ = Mock(spec=Report)
-        cleanup_event = CleanupEvent(report_)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
     with when:
         await dispatcher.fire(cleanup_event)
 
     with then:
-        assert report_.mock_calls == [
-            call.add_summary(f"rerun 1 scenario, {reruns} times")
-        ]
+        assert report.summary == [f"rerun 1 scenario, {reruns} times"]
 
 
 @pytest.mark.asyncio
@@ -101,11 +122,11 @@ async def test_dont_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
         await fire_startup_event(dispatcher, scheduler_)
         await fire_failed_event(dispatcher)
 
-        report_ = Mock(spec=Report)
-        cleanup_event = CleanupEvent(report_)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
     with when:
         await dispatcher.fire(cleanup_event)
 
     with then:
-        assert report_.mock_calls == []
+        assert report.summary == []

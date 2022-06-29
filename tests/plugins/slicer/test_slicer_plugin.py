@@ -133,7 +133,7 @@ async def test_arg_validation_error(total: Union[int, None], index: Union[int, N
     with given:
         event = ArgParsedEvent(Namespace(slicer_total=total, slicer_index=index))
 
-    with when, raises(Exception) as exc_info:
+    with when, raises(BaseException) as exc_info:
         await dispatcher.fire(event)
 
     with then:

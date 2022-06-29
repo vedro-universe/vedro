@@ -1,8 +1,11 @@
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
+from time import monotonic_ns
 from unittest.mock import Mock
 
 import pytest
 
+from vedro import Scenario
 from vedro.core import Dispatcher, ScenarioResult, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioFailedEvent, StartupEvent
 from vedro.plugins.repeater import Repeater, RepeaterPlugin
@@ -31,8 +34,15 @@ def scheduler_() -> Scheduler:
     return Mock(spec=Scheduler)
 
 
+def make_vscenario() -> VirtualScenario:
+    class _Scenario(Scenario):
+        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+
+    return VirtualScenario(_Scenario, steps=[])
+
+
 def make_scenario_result():
-    return ScenarioResult(Mock(spec=VirtualScenario))
+    return ScenarioResult(make_vscenario())
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, repeats: int) -> None:

@@ -36,7 +36,7 @@ def test_memory_artifact_repr():
 
 
 def test_memory_artifact_binary_only():
-    with raises(Exception) as exc_info:
+    with raises(BaseException) as exc_info:
         MemoryArtifact("log", "text/plain", "text")
 
     with then:
@@ -104,7 +104,7 @@ def test_file_artifact_repr():
 
 
 def test_file_artifact_path_only():
-    with raises(Exception) as exc_info:
+    with raises(BaseException) as exc_info:
         FileArtifact("log", "text/plain", "./log.txt")
 
     with then:

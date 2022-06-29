@@ -104,18 +104,15 @@ async def test_add_summary(repeats: int, *,  dispatcher: Dispatcher, scheduler_:
         await fire_startup_event(dispatcher, scheduler_)
 
         await fire_failed_event(dispatcher)
-        scheduler_.reset_mock()
 
-        report_ = Mock(spec=Report)
-        cleanup_event = CleanupEvent(report_)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
     with when:
         await dispatcher.fire(cleanup_event)
 
     with then:
-        assert report_.mock_calls == [
-            call.add_summary(f"repeated x{repeats}")
-        ]
+        assert report.summary == [f"repeated x{repeats}"]
 
 
 @pytest.mark.asyncio
@@ -126,13 +123,12 @@ async def test_dont_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
         await fire_startup_event(dispatcher, scheduler_)
 
         await fire_failed_event(dispatcher)
-        scheduler_.reset_mock()
 
-        report_ = Mock(spec=Report)
-        cleanup_event = CleanupEvent(report_)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
     with when:
         await dispatcher.fire(cleanup_event)
 
     with then:
-        assert report_.mock_calls == []
+        assert report.summary == []

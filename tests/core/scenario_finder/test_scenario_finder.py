@@ -4,7 +4,7 @@ from vedro.core import ScenarioFinder
 
 
 def test_scenario_finder():
-    with raises(Exception) as exc_info:
+    with raises(BaseException) as exc_info:
         ScenarioFinder()
 
     assert exc_info.type is TypeError

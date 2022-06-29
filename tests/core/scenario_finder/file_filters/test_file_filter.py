@@ -4,7 +4,7 @@ from vedro.core._scenario_finder._file_filters import FileFilter
 
 
 def test_file_filter():
-    with raises(Exception) as exc_info:
+    with raises(BaseException) as exc_info:
         FileFilter()
 
     assert exc_info.type is TypeError

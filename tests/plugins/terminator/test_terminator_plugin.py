@@ -10,7 +10,7 @@ from vedro.plugins.terminator import TerminatorPlugin
 
 from ._utils import dispatcher, make_scenario_result, terminator
 
-__all__ = ("dispatcher", "terminator",)  # fixtures
+__all__ = ("dispatcher", "terminator")  # fixtures
 
 
 @pytest.mark.asyncio

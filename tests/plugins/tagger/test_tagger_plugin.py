@@ -8,7 +8,7 @@ from vedro.plugins.tagger import TaggerPlugin
 
 from ._utils import dispatcher, fire_arg_parsed_event, make_vscenario, tagger
 
-__all__ = ("dispatcher", "tagger",)  # fixtures
+__all__ = ("dispatcher", "tagger")  # fixtures
 
 
 @pytest.mark.asyncio
