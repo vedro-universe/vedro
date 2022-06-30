@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from typing import Iterator, List, Tuple
 
-from .._scenario_result import ScenarioResult
+from .._scenario_result import AggregatedResult, ScenarioResult
 from .._virtual_scenario import VirtualScenario
 from ._scenario_scheduler import ScenarioScheduler
 
@@ -52,9 +52,13 @@ class MonotonicScenarioScheduler(ScenarioScheduler):
             queued = (scenario, 0)
         self._queue[scenario.unique_id] = queued
 
-    def aggregate_results(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
+    def aggregate_results(self, scenario_results: List[ScenarioResult]) -> AggregatedResult:
         assert len(scenario_results) > 0
+
+        result = scenario_results[0]
         for scenario_result in scenario_results:
             if scenario_result.is_failed():
-                return scenario_result
-        return scenario_results[0]
+                result = scenario_result
+                break
+
+        return AggregatedResult.from_scenario_result(result, scenario_results)

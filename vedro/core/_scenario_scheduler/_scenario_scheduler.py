@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 from typing import Iterator, List
 
-from .._scenario_result import ScenarioResult
+from .._scenario_result import AggregatedResult, ScenarioResult
 from .._virtual_scenario import VirtualScenario
 
 __all__ = ("ScenarioScheduler",)
@@ -31,7 +31,7 @@ class ScenarioScheduler(ABC):
         pass
 
     @abstractmethod
-    def aggregate_results(self, scenario_results: List[ScenarioResult]) -> ScenarioResult:
+    def aggregate_results(self, scenario_results: List[ScenarioResult]) -> AggregatedResult:
         pass
 
     def __aiter__(self) -> "ScenarioScheduler":

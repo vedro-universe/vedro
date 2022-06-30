@@ -8,7 +8,7 @@ from ..core._config_loader import ConfigType
 from ..core._event import Event
 from ..core._exc_info import ExcInfo
 from ..core._report import Report
-from ..core._scenario_result import ScenarioResult
+from ..core._scenario_result import AggregatedResult, ScenarioResult
 from ..core._scenario_scheduler import ScenarioScheduler
 from ..core._step_result import StepResult
 from ..core._virtual_scenario import VirtualScenario
@@ -137,15 +137,15 @@ class ExceptionRaisedEvent(Event):
 
 
 class ScenarioReportedEvent(Event):
-    def __init__(self, scenario_result: ScenarioResult) -> None:
-        self._scenario_result = scenario_result
+    def __init__(self, aggregated_result: AggregatedResult) -> None:
+        self._aggregated_result = aggregated_result
 
     @property
-    def scenario_result(self) -> ScenarioResult:
-        return self._scenario_result
+    def aggregated_result(self) -> AggregatedResult:
+        return self._aggregated_result
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._scenario_result!r}"
+        return f"{self.__class__.__name__}({self._aggregated_result!r}"
 
 
 class CleanupEvent(Event):

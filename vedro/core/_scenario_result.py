@@ -6,7 +6,7 @@ from ._artifacts import Artifact
 from ._step_result import StepResult
 from ._virtual_scenario import VirtualScenario
 
-__all__ = ("ScenarioResult", "ScenarioStatus",)
+__all__ = ("ScenarioResult", "ScenarioStatus", "AggregatedResult",)
 
 
 class ScenarioStatus(Enum):
@@ -123,3 +123,46 @@ class ScenarioResult:
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)
+
+
+class AggregatedResult(ScenarioResult):
+    def __init__(self, scenario: VirtualScenario) -> None:
+        super().__init__(scenario)
+        self._scenario_results: List[ScenarioResult] = []
+
+    @property
+    def scenario_results(self) -> List[ScenarioResult]:
+        return self._scenario_results[:]
+
+    def add_sceneario_result(self, scenario_result: ScenarioResult) -> None:
+        self._scenario_results.append(scenario_result)
+
+    @staticmethod
+    def from_scenario_result(scenario_result: ScenarioResult,
+                             scenario_results: List[ScenarioResult]) -> "AggregatedResult":
+        res = AggregatedResult(scenario_result.scenario)
+
+        if scenario_result.is_passed():
+            res.mark_passed()
+        elif scenario_result.is_failed():
+            res.mark_failed()
+        elif scenario_result.is_skipped():
+            res.mark_skipped()
+
+        if scenario_result.started_at is not None:
+            res.set_started_at(scenario_result.started_at)
+        if scenario_result.ended_at is not None:
+            res.set_ended_at(scenario_result.ended_at)
+
+        res.set_scope(scenario_result.scope)
+
+        for step_result in scenario_result.step_results:
+            res.add_step_result(step_result)
+
+        for artifact in scenario_result.artifacts:
+            res.attach(artifact)
+
+        for scenario_result in scenario_results:
+            res.add_sceneario_result(scenario_result)
+
+        return res
