@@ -1,7 +1,7 @@
 from typing import Type
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
-from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioFailedEvent, ScenarioRunEvent
+from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioReportedEvent, ScenarioRunEvent
 
 __all__ = ("Interrupter", "InterrupterPlugin",)
 
@@ -20,10 +20,10 @@ class InterrupterPlugin(Plugin):
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed) \
                   .listen(ScenarioRunEvent, self.on_scenario_run) \
-                  .listen(ScenarioFailedEvent, self.on_scenario_failed)
+                  .listen(ScenarioReportedEvent, self.on_scenario_reported)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("--fail-fast",
+        event.arg_parser.add_argument("--fail-fast", "--ff",
                                       action='store_true',
                                       default=self._fail_fast,
                                       help="Stop after first failed scenario")
@@ -31,13 +31,13 @@ class InterrupterPlugin(Plugin):
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._fail_fast = event.args.fail_fast
 
+    def on_scenario_reported(self, event: ScenarioReportedEvent) -> None:
+        if event.aggregated_result.is_failed():
+            self._failed += 1
+
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         if self._fail_fast and self._failed > 0:
             raise _Interrupted()
-
-    def on_scenario_failed(self, event: ScenarioFailedEvent) -> None:
-        if self._fail_fast:
-            self._failed += 1
 
 
 class Interrupter(PluginConfig):
