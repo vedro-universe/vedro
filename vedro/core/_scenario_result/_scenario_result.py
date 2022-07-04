@@ -1,19 +1,13 @@
 import warnings
-from enum import Enum
 from typing import Any, Dict, List, Union
 
-from ._artifacts import Artifact
-from ._step_result import StepResult
-from ._virtual_scenario import VirtualScenario
+from vedro.core._artifacts import Artifact
+from vedro.core._step_result import StepResult
+from vedro.core._virtual_scenario import VirtualScenario
 
-__all__ = ("ScenarioResult", "ScenarioStatus", "AggregatedResult",)
+from ._scenario_status import ScenarioStatus
 
-
-class ScenarioStatus(Enum):
-    PENDING = "PENDING"
-    PASSED = "PASSED"
-    FAILED = "FAILED"
-    SKIPPED = "SKIPPED"
+__all__ = ("ScenarioResult",)
 
 
 class ScenarioResult:
@@ -123,47 +117,3 @@ class ScenarioResult:
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)
-
-
-class AggregatedResult(ScenarioResult):
-    def __init__(self, scenario: VirtualScenario) -> None:
-        super().__init__(scenario)
-        self._scenario_results: List[ScenarioResult] = []
-
-    @property
-    def scenario_results(self) -> List[ScenarioResult]:
-        return self._scenario_results[:]
-
-    def add_scenario_result(self, scenario_result: ScenarioResult) -> None:
-        self._scenario_results.append(scenario_result)
-
-    @staticmethod
-    def from_existing(main_scenario_result: ScenarioResult,
-                      scenario_results: List[ScenarioResult]) -> "AggregatedResult":
-        result = AggregatedResult(main_scenario_result.scenario)
-
-        if main_scenario_result.is_passed():
-            result.mark_passed()
-        elif main_scenario_result.is_failed():
-            result.mark_failed()
-        elif main_scenario_result.is_skipped():
-            result.mark_skipped()
-
-        if main_scenario_result.started_at is not None:
-            result.set_started_at(main_scenario_result.started_at)
-        if main_scenario_result.ended_at is not None:
-            result.set_ended_at(main_scenario_result.ended_at)
-
-        result.set_scope(main_scenario_result.scope)
-
-        for step_result in main_scenario_result.step_results:
-            result.add_step_result(step_result)
-
-        for artifact in main_scenario_result.artifacts:
-            result.attach(artifact)
-
-        assert len(scenario_results) > 0
-        for scenario_result in scenario_results:
-            result.add_scenario_result(scenario_result)
-
-        return result

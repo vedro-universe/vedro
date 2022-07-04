@@ -14,6 +14,7 @@ from rich.console import Console
 import vedro.plugins.director as d
 from vedro import Scenario
 from vedro.core import (
+    AggregatedResult,
     ArgumentParser,
     Config,
     Dispatcher,
@@ -145,7 +146,7 @@ def make_report(scenario_results: Optional[List[ScenarioResult]] = None,
     report = Report()
     if scenario_results:
         for scenarior_result in scenario_results:
-            report.add_result(scenarior_result)
+            report.add_result(AggregatedResult.from_existing(scenarior_result, [scenarior_result]))
     if summaries:
         for summary in summaries:
             report.add_summary(summary)
