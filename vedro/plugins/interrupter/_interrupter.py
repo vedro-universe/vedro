@@ -3,10 +3,10 @@ from typing import Type
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioReportedEvent, ScenarioRunEvent
 
-__all__ = ("Interrupter", "InterrupterPlugin",)
+__all__ = ("Interrupter", "InterrupterPlugin", "Interrupted",)
 
 
-class _Interrupted(Exception):
+class Interrupted(Exception):
     pass
 
 
@@ -37,7 +37,7 @@ class InterrupterPlugin(Plugin):
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         if self._fail_fast and self._failed > 0:
-            raise _Interrupted()
+            raise Interrupted()
 
 
 class Interrupter(PluginConfig):

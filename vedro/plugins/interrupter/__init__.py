@@ -1,3 +1,3 @@
-from ._interrupter import Interrupter, InterrupterPlugin
+from ._interrupter import Interrupted, Interrupter, InterrupterPlugin
 
-__all__ = ("Interrupter", "InterrupterPlugin",)
+__all__ = ("Interrupter", "InterrupterPlugin", "Interrupted",)
