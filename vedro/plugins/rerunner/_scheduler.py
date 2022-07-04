@@ -21,4 +21,4 @@ class RerunnerScenarioScheduler(MonotonicScenarioScheduler):
         else:
             result = passed[-1] if len(passed) > len(failed) else failed[-1]
 
-        return AggregatedResult.from_scenario_result(result, scenario_results)
+        return AggregatedResult.from_existing(result, scenario_results)

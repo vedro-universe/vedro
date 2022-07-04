@@ -24,7 +24,7 @@ class InterrupterPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         event.arg_parser.add_argument("--fail-fast", "--ff",
-                                      action='store_true',
+                                      action="store_true",
                                       default=self._fail_fast,
                                       help="Stop after first failed scenario")
 

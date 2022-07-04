@@ -1,6 +1,6 @@
 from typing import Any, List, Union, cast
 
-from ._scenario_result import ScenarioResult
+from ._scenario_result import AggregatedResult
 
 __all__ = ("Report",)
 
@@ -49,7 +49,7 @@ class Report:
             return 0.0
         return self.ended_at - self.started_at
 
-    def add_result(self, result: ScenarioResult) -> None:
+    def add_result(self, result: AggregatedResult) -> None:
         self._total += 1
         if result.is_passed():
             self._passed += 1

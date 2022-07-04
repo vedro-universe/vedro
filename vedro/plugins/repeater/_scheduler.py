@@ -21,4 +21,4 @@ class RepeaterScenarioScheduler(MonotonicScenarioScheduler):
         else:
             scenario_result = failed[-1] if len(failed) > 0 else passed[-1]
 
-        return AggregatedResult.from_scenario_result(scenario_result, scenario_results)
+        return AggregatedResult.from_existing(scenario_result, scenario_results)

@@ -5,7 +5,12 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core import MonotonicScenarioScheduler, ScenarioResult, VirtualScenario
+from vedro.core import (
+    AggregatedResult,
+    MonotonicScenarioScheduler,
+    ScenarioResult,
+    VirtualScenario,
+)
 
 from ._utils import aenumerate, make_scenario_result, make_vscenario
 
@@ -304,7 +309,8 @@ def test_aggreate_results(get_scenario_results: Callable[[], List[ScenarioResult
         aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:
-        assert aggregated_result == scenario_results[0]
+        expected = AggregatedResult.from_existing(scenario_results[0], scenario_results)
+        assert aggregated_result == expected
 
 
 def test_aggregate_2passed_1_failed():
@@ -315,15 +321,14 @@ def test_aggregate_2passed_1_failed():
         failed_single = make_scenario_result().mark_failed()
         passed_last = make_scenario_result().mark_passed()
 
+        scenario_results = [passed_first, failed_single, passed_last]
+
     with when:
-        aggregated_result = scheduler.aggregate_results([
-            passed_first,
-            failed_single,
-            passed_last,
-        ])
+        aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:
-        assert aggregated_result == failed_single
+        expected = AggregatedResult.from_existing(failed_single, scenario_results)
+        assert aggregated_result == expected
 
 
 def test_aggregate_2failed_1passed():
@@ -334,15 +339,14 @@ def test_aggregate_2failed_1passed():
         passed_single = make_scenario_result().mark_passed()
         failed_last = make_scenario_result().mark_failed()
 
+        scenario_results = [failed_first, passed_single, failed_last]
+
     with when:
-        aggregated_result = scheduler.aggregate_results([
-            failed_first,
-            passed_single,
-            failed_last,
-        ])
+        aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:
-        assert aggregated_result == failed_first
+        expected = AggregatedResult.from_existing(failed_first, scenario_results)
+        assert aggregated_result == expected
 
 
 def test_repr():

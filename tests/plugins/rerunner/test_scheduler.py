@@ -4,7 +4,7 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core import MonotonicScenarioScheduler, ScenarioResult
+from vedro.core import AggregatedResult, MonotonicScenarioScheduler, ScenarioResult
 from vedro.plugins.rerunner import RerunnerScenarioScheduler as Scheduler
 
 from ._utils import make_scenario_result, scheduler
@@ -40,7 +40,8 @@ def test_aggreate_results(get_scenario_results: Callable[[], List[ScenarioResult
         aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:
-        assert aggregated_result == scenario_results[-1]
+        expected = AggregatedResult.from_existing(scenario_results[-1], scenario_results)
+        assert aggregated_result == expected
 
 
 def test_aggregate_2passed_1_failed(scheduler: Scheduler):
@@ -49,15 +50,14 @@ def test_aggregate_2passed_1_failed(scheduler: Scheduler):
         failed_single = make_scenario_result().mark_failed()
         passed_last = make_scenario_result().mark_passed()
 
+        scenario_results = [passed_first, failed_single, passed_last]
+
     with when:
-        aggregated_result = scheduler.aggregate_results([
-            passed_first,
-            failed_single,
-            passed_last,
-        ])
+        aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:
-        assert aggregated_result == passed_last
+        expected = AggregatedResult.from_existing(passed_last, scenario_results)
+        assert aggregated_result == expected
 
 
 def test_aggregate_2failed_1passed(scheduler: Scheduler):
@@ -66,12 +66,11 @@ def test_aggregate_2failed_1passed(scheduler: Scheduler):
         passed_single = make_scenario_result().mark_passed()
         failed_last = make_scenario_result().mark_failed()
 
+        scenario_results = [failed_first, passed_single, failed_last]
+
     with when:
-        aggregated_result = scheduler.aggregate_results([
-            failed_first,
-            passed_single,
-            failed_last,
-        ])
+        aggregated_result = scheduler.aggregate_results(scenario_results)
 
     with then:
-        assert aggregated_result == failed_last
+        expected = AggregatedResult.from_existing(failed_last, scenario_results)
+        assert aggregated_result == expected

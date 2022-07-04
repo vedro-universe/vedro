@@ -61,4 +61,4 @@ class MonotonicScenarioScheduler(ScenarioScheduler):
                 result = scenario_result
                 break
 
-        return AggregatedResult.from_scenario_result(result, scenario_results)
+        return AggregatedResult.from_existing(result, scenario_results)
