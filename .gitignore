@@ -154,3 +154,6 @@ cython_debug/
 
 # PyCharm
 .idea/
+
+# pytest basetemp
+__tmpdir__/
