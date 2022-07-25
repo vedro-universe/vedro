@@ -7,13 +7,21 @@ from vedro.core import Dispatcher
 from vedro.core import MonotonicScenarioScheduler as Scheduler
 from vedro.events import StartupEvent
 
-from ._utils import dispatcher, fire_arg_parsed_event, get_skipped, make_vscenario, skipper, touch
+from ._utils import (
+    dispatcher,
+    fire_arg_parsed_event,
+    get_skipped,
+    make_vscenario,
+    skipper,
+    tmp_dir,
+    touch,
+)
 
-__all__ = ("dispatcher", "skipper",)
+__all__ = ("dispatcher", "skipper", "tmp_dir")
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_defaults(*, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher)
@@ -35,13 +43,13 @@ async def test_defaults(*, dispatcher: Dispatcher):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
-async def test_select_single_file(*, dispatcher: Dispatcher, tmp_path: Path):
+async def test_select_single_file(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
         scenarios = [
-            make_vscenario(touch(tmp_path / "scenarios/dir1/scn1.py")),
-            make_vscenario(touch(tmp_path / "scenarios/dir1/scn2.py")),
-            make_vscenario(touch(tmp_path / "scenarios/dir2/scn1.py")),
-            make_vscenario(touch(tmp_path / "scenarios/scn1.py"))
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn2.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir2/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/scn1.py"))
         ]
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[
@@ -61,13 +69,13 @@ async def test_select_single_file(*, dispatcher: Dispatcher, tmp_path: Path):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
-async def test_select_multiple_files(*, dispatcher: Dispatcher, tmp_path: Path):
+async def test_select_multiple_files(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
         scenarios = [
-            make_vscenario(touch(tmp_path / "scenarios/dir1/scn1.py")),
-            make_vscenario(touch(tmp_path / "scenarios/dir1/scn2.py")),
-            make_vscenario(touch(tmp_path / "scenarios/dir2/scn1.py")),
-            make_vscenario(touch(tmp_path / "scenarios/scn1.py"))
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn2.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir2/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/scn1.py"))
         ]
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[
@@ -88,17 +96,17 @@ async def test_select_multiple_files(*, dispatcher: Dispatcher, tmp_path: Path):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
-async def test_select_dir(*, dispatcher: Dispatcher, tmp_path: Path):
+async def test_select_dir(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
         scenarios = [
-            make_vscenario(touch(tmp_path / "scenarios/dir1/scn1.py")),
-            make_vscenario(touch(tmp_path / "scenarios/dir1/scn2.py")),
-            make_vscenario(touch(tmp_path / "scenarios/dir2/scn1.py")),
-            make_vscenario(touch(tmp_path / "scenarios/scn1.py"))
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn2.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir2/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/scn1.py"))
         ]
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[
-            str(tmp_path / "scenarios/dir1")
+            str(tmp_dir / "scenarios/dir1")
         ])
 
         scheduler = Scheduler(scenarios)
@@ -113,7 +121,7 @@ async def test_select_dir(*, dispatcher: Dispatcher, tmp_path: Path):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_single_subject(*, dispatcher: Dispatcher):
     with given:
         subject = "subject1"
@@ -135,7 +143,7 @@ async def test_single_subject(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_multiple_subjects(*, dispatcher: Dispatcher):
     with given:
         subject = "subject1"
@@ -158,7 +166,7 @@ async def test_multiple_subjects(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_single_only(*, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher)
@@ -179,7 +187,7 @@ async def test_single_only(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_multiple_only(*, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher)
@@ -202,7 +210,7 @@ async def test_multiple_only(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_single_skip(*, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher)
@@ -223,7 +231,7 @@ async def test_single_skip(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_multiple_skip(*, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher)

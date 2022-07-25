@@ -1,4 +1,5 @@
 from argparse import Namespace
+from os import chdir
 from pathlib import Path
 from time import monotonic_ns
 from typing import Iterable, List, Optional
@@ -23,6 +24,13 @@ def skipper(dispatcher: Dispatcher) -> SkipperPlugin:
     tagger = SkipperPlugin(Skipper)
     tagger.subscribe(dispatcher)
     return tagger
+
+
+@pytest.fixture()
+def tmp_dir(tmp_path: Path) -> Path:
+    chdir(tmp_path)
+    Path("./scenarios").mkdir(exist_ok=True)
+    yield tmp_path
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
