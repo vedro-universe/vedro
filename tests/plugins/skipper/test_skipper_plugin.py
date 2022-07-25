@@ -1,3 +1,4 @@
+from os import getcwd
 from pathlib import Path
 
 import pytest
@@ -24,12 +25,13 @@ __all__ = ("dispatcher", "skipper", "tmp_dir")
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_defaults(*, dispatcher: Dispatcher):
     with given:
-        await fire_arg_parsed_event(dispatcher)
-
         scenarios = [
             make_vscenario(),
             make_vscenario(),
         ]
+
+        await fire_arg_parsed_event(dispatcher)
+
         scheduler = Scheduler(scenarios)
         startup_event = StartupEvent(scheduler)
 
@@ -107,6 +109,34 @@ async def test_select_dir(*, dispatcher: Dispatcher, tmp_dir: Path):
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[
             str(tmp_dir / "scenarios/dir1")
+        ])
+
+        scheduler = Scheduler(scenarios)
+        startup_event = StartupEvent(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert list(scheduler.scheduled) == [scenarios[0], scenarios[1]]
+        assert get_skipped(scheduler.scheduled) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(skipper.__name__)
+@pytest.mark.parametrize("dirname", ["dir1", "scenarios/dir1"])
+async def test_select_rel_dir(dirname: str, *, dispatcher: Dispatcher, tmp_dir: Path):
+    with given:
+        scenarios = [
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir1/scn2.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/dir2/scn1.py")),
+            make_vscenario(touch(tmp_dir / "scenarios/scn1.py"))
+        ]
+
+        rel_path = tmp_dir.relative_to(getcwd())
+        await fire_arg_parsed_event(dispatcher, file_or_dir=[
+            str(rel_path / dirname)
         ])
 
         scheduler = Scheduler(scenarios)
