@@ -56,7 +56,7 @@ def test_virtual_scenario_unique_id(*, scenario_: Type[Scenario]):
         unique_id = virtual_scenario.unique_id
 
     with then:
-        assert unique_id == "c2NlbmFyaW9zL3NjZW5hcmlvLnB5OjpTY2VuYXJpbw=="
+        assert unique_id == "c2NlbmFyaW9zL3NjZW5hcmlvLnB5OjpTY2VuYXJpbw"
 
 
 def test_virtual_template_unique_id(*, template_: Type[Scenario]):
@@ -67,7 +67,7 @@ def test_virtual_template_unique_id(*, template_: Type[Scenario]):
         unique_id = virtual_scenario.unique_id
 
     with then:
-        assert unique_id == "c2NlbmFyaW9zL3NjZW5hcmlvLnB5OjpTY2VuYXJpb18wX1ZlZHJvU2NlbmFyaW8jMA=="
+        assert unique_id == "c2NlbmFyaW9zL3NjZW5hcmlvLnB5OjpTY2VuYXJpb18wX1ZlZHJvU2NlbmFyaW8jMA"
 
 
 def test_virtual_scenario_path(*, scenario_: Type[Scenario]):

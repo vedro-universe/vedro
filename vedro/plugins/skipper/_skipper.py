@@ -79,12 +79,10 @@ class SkipperPlugin(Plugin):
         if os.path.commonpath([path.file_path, scenario.path]) != path.file_path:
             return False
 
-        # Fix matching logic (startswith)
-        if (path.cls_name is not None) and (not scenario.name.startswith(path.cls_name)):
+        if (path.cls_name is not None) and (path.cls_name != scenario.name):
             return False
 
-        tmpl_idx = scenario.template_index
-        if (path.tmpl_idx is not None) and (path.tmpl_idx != tmpl_idx):
+        if (path.tmpl_idx is not None) and (path.tmpl_idx != scenario.template_index):
             return False
 
         return True

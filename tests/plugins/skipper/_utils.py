@@ -2,7 +2,7 @@ from argparse import Namespace
 from os import chdir
 from pathlib import Path
 from time import monotonic_ns
-from typing import Iterable, List, Optional
+from typing import Callable, Iterable, List, Optional, Tuple
 
 import pytest
 
@@ -50,25 +50,52 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
     await dispatcher.fire(arg_parsed_event)
 
 
+def _make_vscenario(path: Optional[Path] = None, *,
+                    name: str = "Scenario",
+                    subject: Optional[str] = None,
+                    only: bool = False,
+                    skip: bool = False,
+                    init: Optional[Callable[..., None]] = None) -> Scenario:
+    if path is None:
+        path = Path(f"scenarios/scenario_{monotonic_ns()}.py").absolute()
+    ns = {"__file__": path}
+    if subject is not None:
+        ns["subject"] = subject
+    if init is not None:
+        ns["__init__"] = init
+
+    new_scn = type(name, (Scenario,), ns)
+    if only:
+        only_scenario(new_scn)
+    if skip:
+        skip_scenario(new_scn)
+
+    return new_scn
+
+
 def make_vscenario(path: Optional[Path] = None, *,
+                   name: str = "Scenario",
                    subject: Optional[str] = None,
                    only: bool = False,
                    skip: bool = False) -> VirtualScenario:
-    scn_subject = subject if subject else None
-    path = path if path else Path(f"scenarios/scenario_{monotonic_ns()}.py").absolute()
-
-    class _Scenario(Scenario):
-        subject = scn_subject
-        __file__ = path
-
-    if only:
-        only_scenario(_Scenario)
-
-    if skip:
-        skip_scenario(_Scenario)
-
-    vscenario = VirtualScenario(_Scenario, steps=[])
+    new_scn = _make_vscenario(path, name=name, subject=subject, only=only, skip=skip)
+    vscenario = VirtualScenario(new_scn, steps=[])
     return vscenario
+
+
+def make_template_vscenario(init: Callable[..., None], *,
+                            path: Optional[Path] = None,
+                            name: Optional[str] = None,
+                            only: bool = False,
+                            skip: bool = False) -> Tuple[Scenario, List[VirtualScenario]]:
+    name = name if name is not None else f"Scenario_{monotonic_ns()}"
+    new_scn = _make_vscenario(path, name=name, only=only, skip=skip, init=init)
+
+    vscenarios = []
+    for key, val in getattr(init, "__globals__").items():
+        if key.startswith(name):
+            vscenarios.append(VirtualScenario(val, steps=[]))
+    return new_scn, vscenarios
 
 
 def touch(path: Path) -> Path:

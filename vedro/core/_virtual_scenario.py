@@ -26,7 +26,7 @@ class VirtualScenario:
         unique_name = f"{self.rel_path}::{self.name}"
         if self.template_index is not None:
             unique_name += f"#{self.template_index}"
-        return b64encode(unique_name.encode()).decode()
+        return b64encode(unique_name.encode()).decode().strip("=")
 
     @property
     def template_index(self) -> Union[int, None]:
@@ -53,7 +53,8 @@ class VirtualScenario:
 
     @property
     def name(self) -> str:
-        return f"{self._orig_scenario.__name__}"
+        return getattr(self._orig_scenario, "__vedro__template_name__",
+                       self._orig_scenario.__name__)
 
     @property
     def subject(self) -> str:
