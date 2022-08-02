@@ -11,7 +11,7 @@ def make_scenario_result() -> ScenarioResult:
     return ScenarioResult(scenario_)
 
 
-def test_report_defaults():
+def test_defaults():
     with when:
         report = Report()
 
@@ -20,10 +20,13 @@ def test_report_defaults():
         assert report.passed == 0
         assert report.failed == 0
         assert report.skipped == 0
+
+        assert report.started_at is None
+        assert report.ended_at is None
         assert report.elapsed == 0.0
 
 
-def test_report_passed():
+def test_passed():
     with given:
         report = Report()
         scenario_result = make_scenario_result().mark_passed()
@@ -39,7 +42,7 @@ def test_report_passed():
         assert report.skipped == 0
 
 
-def test_report_failed():
+def test_failed():
     with given:
         report = Report()
         scenario_result = make_scenario_result().mark_failed()
@@ -55,7 +58,7 @@ def test_report_failed():
         assert report.skipped == 0
 
 
-def test_report_skipped():
+def test_skipped():
     with given:
         report = Report()
         scenario_result = make_scenario_result().mark_skipped()
@@ -71,22 +74,50 @@ def test_report_skipped():
         assert report.skipped == 1
 
 
-def test_report_elapsed():
+def test_elapsed():
     with given:
         report = Report()
         scenario_result = make_scenario_result()
-        scenario_result.set_started_at(1.0)
-        scenario_result.set_ended_at(3.0)
+
+        started_at = 1.0
+        scenario_result.set_started_at(started_at)
+        ended_at = 3.0
+        scenario_result.set_ended_at(ended_at)
 
     with when:
         res = report.add_result(scenario_result)
 
     with then:
         assert res is None
-        assert isclose(report.elapsed, 2.0)
+        assert report.started_at == started_at
+        assert report.ended_at == ended_at
+        assert isclose(report.elapsed, ended_at - started_at)
 
 
-def test_report_eq():
+def test_elapsed_min_max():
+    with given:
+        report = Report()
+
+        scenario_result1 = make_scenario_result()
+        scenario_result1.set_started_at(1.0)
+        scenario_result1.set_ended_at(2.0)
+        report.add_result(scenario_result1)
+
+        scenario_result2 = make_scenario_result()
+        scenario_result2.set_started_at(3.0)
+        scenario_result2.set_ended_at(4.0)
+
+    with when:
+        res = report.add_result(scenario_result2)
+
+    with then:
+        assert res is None
+        assert report.started_at == 1.0
+        assert report.ended_at == 4.0
+        assert isclose(report.elapsed, 3.0)
+
+
+def test_eq():
     with given:
         report1 = Report()
         report2 = Report()
@@ -98,7 +129,7 @@ def test_report_eq():
         assert res is True
 
 
-def test_report_eq_with_same_results():
+def test_eq_with_same_results():
     with given:
         scenario_result1 = make_scenario_result().mark_passed()
         scenario_result2 = make_scenario_result().mark_failed()
@@ -118,7 +149,7 @@ def test_report_eq_with_same_results():
         assert res is True
 
 
-def test_report_eq_with_diff_results():
+def test_eq_with_diff_results():
     with given:
         scenario_result1 = make_scenario_result().mark_passed()
         scenario_result2 = make_scenario_result().mark_failed()
@@ -136,10 +167,10 @@ def test_report_eq_with_diff_results():
         res = report1 == report2
 
     with then:
-        assert res is False
+        assert res is True
 
 
-def test_report_summary_default():
+def test_summary_default():
     with given:
         report = Report()
 
@@ -150,7 +181,7 @@ def test_report_summary_default():
         assert res == []
 
 
-def test_report_add_summary():
+def test_add_summary():
     with given:
         report = Report()
 
@@ -161,7 +192,7 @@ def test_report_add_summary():
         assert res is None
 
 
-def test_report_get_summary():
+def test_get_summary():
     with given:
         report = Report()
         summary = "<summary>"
@@ -172,3 +203,14 @@ def test_report_get_summary():
 
     with then:
         assert res == [summary]
+
+
+def test_repr():
+    with given:
+        report = Report()
+
+    with when:
+        res = repr(report)
+
+    with then:
+        assert res == "<Report total=0 passed=0 failed=0 skipped=0>"

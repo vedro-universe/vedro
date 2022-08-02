@@ -18,8 +18,8 @@ class SkipperPlugin(Plugin):
     def __init__(self, config: Type["Skipper"]) -> None:
         super().__init__(config)
         self._subject: Union[str, None] = None
-        self._specified: List[_CompositePath] = []
-        self._ignored: List[_CompositePath] = []
+        self._selected: List[_CompositePath] = []
+        self._deselected: List[_CompositePath] = []
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
@@ -40,13 +40,13 @@ class SkipperPlugin(Plugin):
             composite_path = self._get_composite_path(file_or_dir)
             path = composite_path.file_path
             assert os.path.isdir(path) or os.path.isfile(path), f"{path!r} does not exist"
-            self._specified.append(composite_path)
+            self._selected.append(composite_path)
 
         for file_or_dir in event.args.ignore:
             composite_path = self._get_composite_path(file_or_dir)
             path = composite_path.file_path
             assert os.path.isdir(path) or os.path.isfile(path), f"{path!r} does not exist"
-            self._ignored.append(composite_path)
+            self._deselected.append(composite_path)
 
     def _get_composite_path(self, file_or_dir: str) -> _CompositePath:
         head, tail = os.path.split(file_or_dir)
@@ -68,66 +68,66 @@ class SkipperPlugin(Plugin):
         return os.path.abspath(path)
 
     def _is_scenario_skipped(self, scenario: VirtualScenario) -> bool:
-        if getattr(scenario._orig_scenario, "__vedro__skipped__", False):
-            return True
         template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if getattr(template, "__vedro__skipped__", False):
-            return True
-        if self._subject and scenario.subject != self._subject:
-            return True
-        if not self._is_scenario_specified(scenario):
-            return True
-        if self._is_scenario_ignored(scenario):
-            return True
-        return False
+        return getattr(template or scenario._orig_scenario, "__vedro__skipped__", False)
 
     def _is_scenario_special(self, scenario: VirtualScenario) -> bool:
-        if getattr(scenario._orig_scenario, "__vedro__only__", False):
-            return True
         template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if getattr(template, "__vedro__only__", False):
-            return True
-        return False
+        return getattr(template or scenario._orig_scenario, "__vedro__only__", False)
 
     def _is_match_scenario(self, path: _CompositePath, scenario: VirtualScenario) -> bool:
         if os.path.commonpath([path.file_path, scenario.path]) != path.file_path:
             return False
 
-        cls_name = scenario._orig_scenario.__name__
-        # Fix matching logic (startswith)
-        if (path.cls_name is not None) and (not cls_name.startswith(path.cls_name)):
+        if (path.cls_name is not None) and (path.cls_name != scenario.name):
             return False
 
-        tmpl_idx = scenario.template_index
-        if (path.tmpl_idx is not None) and (path.tmpl_idx != tmpl_idx):
+        if (path.tmpl_idx is not None) and (path.tmpl_idx != scenario.template_index):
             return False
 
         return True
 
-    def _is_scenario_specified(self, scenario: VirtualScenario) -> bool:
-        for path in self._specified:
+    def _is_scenario_selected(self, scenario: VirtualScenario) -> bool:
+        for path in self._selected:
+            if self._is_match_scenario(path, scenario):
+                return True
+        return False
+
+    def _is_scenario_deselected(self, scenario: VirtualScenario) -> bool:
+        for path in self._deselected:
             if self._is_match_scenario(path, scenario):
                 return True
         return False
 
     def _is_scenario_ignored(self, scenario: VirtualScenario) -> bool:
-        for path in self._ignored:
-            if self._is_match_scenario(path, scenario):
-                return True
+        if self._subject and scenario.subject != self._subject:
+            return True
+
+        if not self._is_scenario_selected(scenario):
+            return True
+
+        if self._is_scenario_deselected(scenario):
+            return True
+
         return False
 
-    def on_startup(self, event: StartupEvent) -> None:
+    async def on_startup(self, event: StartupEvent) -> None:
         special_scenarios = set()
-        for scenario in event.scenarios:
+
+        scheduler = event.scheduler
+        async for scenario in scheduler:
+            if self._is_scenario_ignored(scenario):
+                scheduler.ignore(scenario)
+
             if self._is_scenario_skipped(scenario):
                 scenario.skip()
-            elif self._is_scenario_special(scenario):
+            if self._is_scenario_special(scenario):
                 special_scenarios.add(scenario.unique_id)
 
         if len(special_scenarios) > 0:
-            for scenario in event.scenarios:
+            async for scenario in scheduler:
                 if scenario.unique_id not in special_scenarios:
-                    scenario.skip()
+                    scheduler.ignore(scenario)
 
 
 class Skipper(PluginConfig):

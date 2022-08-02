@@ -18,8 +18,8 @@ from vedro.core import (
     ConfigLoader,
     Dispatcher,
     Lifecycle,
+    MonotonicRunner,
     Report,
-    Runner,
     ScenarioDiscoverer,
 )
 
@@ -42,23 +42,21 @@ def config_loader():
 @pytest.fixture()
 def runner_(dispatcher_: Dispatcher):
     report = Report()
-    return Mock(Runner(dispatcher_), run=AsyncMock(return_value=report))
+    return Mock(MonotonicRunner(dispatcher_), run=AsyncMock(return_value=report))
 
 
 @pytest.mark.asyncio
 async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
                                         discoverer_: ScenarioDiscoverer,
-                                        runner_: Runner,
+                                        runner_: MonotonicRunner,
                                         config_loader: ConfigLoader):
     with given:
         scenarios = []
-        reruns = 2
         discoverer_.discover = AsyncMock(return_value=scenarios)
 
         lifecycle = Lifecycle(dispatcher_, discoverer_, runner_, config_loader)
-        namespace = Namespace(reruns=reruns)
 
-    with when, patch("argparse.ArgumentParser.parse_args", return_value=namespace):
+    with when, patch("argparse.ArgumentParser.parse_args", return_value=Namespace()):
         report = await lifecycle.start()
 
     with then:
@@ -66,15 +64,13 @@ async def test_lifecycle_register_start(*, dispatcher_: Dispatcher,
         assert discoverer_.mock_calls == [
             call.discover(Path("scenarios"))
         ]
-        assert runner_.mock_calls == [
-            call.run(scenarios, reruns=reruns),
-        ]
+        assert len(runner_.mock_calls) == 1
         assert len(dispatcher_.mock_calls) > 0
 
 
 def test_lifecycle_repr(*, dispatcher_: Dispatcher,
                         discoverer_: ScenarioDiscoverer,
-                        runner_: Runner,
+                        runner_: MonotonicRunner,
                         config_loader: ConfigLoader):
     with when:
         lifecycle = Lifecycle(dispatcher_, discoverer_, runner_, config_loader)

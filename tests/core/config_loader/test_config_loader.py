@@ -5,7 +5,7 @@ from vedro.core import Config, ConfigLoader
 
 
 def test_config_loader():
-    with when, raises(Exception) as exc_info:
+    with when, raises(BaseException) as exc_info:
         ConfigLoader(Config)
 
     with then:

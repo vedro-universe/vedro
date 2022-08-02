@@ -3,7 +3,7 @@ from baby_steps import given, then, when
 from vedro.plugins.director import Director, DirectorInitEvent, DirectorPlugin
 
 
-def test_director_init_event_prop():
+def test_event_prop():
     with given:
         director = DirectorPlugin(Director)
         init_event = DirectorInitEvent(director)
@@ -15,7 +15,7 @@ def test_director_init_event_prop():
         assert res == director
 
 
-def test_director_init_event_repr():
+def test_repr():
     with given:
         director = DirectorPlugin(Director)
         init_event = DirectorInitEvent(director)

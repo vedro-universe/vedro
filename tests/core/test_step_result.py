@@ -32,7 +32,7 @@ def test_step_result(*, method_: MethodType, virtual_step: VirtualStep):
         assert step_result.ended_at is None
         assert step_result.exc_info is None
         assert step_result.status == StepStatus.PENDING
-        assert repr(step_result) == f"StepResult({virtual_step!r})"
+        assert repr(step_result) == f"<StepResult {virtual_step!r} {step_result.status.value}>"
 
 
 def test_step_result_mark_passed(*, virtual_step: VirtualStep):

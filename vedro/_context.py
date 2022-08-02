@@ -1,7 +1,9 @@
-from typing import Any
+from typing import TypeVar
 
 __all__ = ("context",)
 
+T = TypeVar("T")
 
-def context(fn: Any) -> Any:
+
+def context(fn: T) -> T:
     return fn

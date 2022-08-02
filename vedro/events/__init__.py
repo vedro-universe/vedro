@@ -1,3 +1,4 @@
+import warnings
 from argparse import Namespace
 from pathlib import Path
 from typing import List
@@ -7,7 +8,8 @@ from ..core._config_loader import ConfigType
 from ..core._event import Event
 from ..core._exc_info import ExcInfo
 from ..core._report import Report
-from ..core._scenario_result import ScenarioResult
+from ..core._scenario_result import AggregatedResult, ScenarioResult
+from ..core._scenario_scheduler import ScenarioScheduler
 from ..core._step_result import StepResult
 from ..core._virtual_scenario import VirtualScenario
 
@@ -54,15 +56,20 @@ class ArgParsedEvent(Event):
 
 
 class StartupEvent(Event):
-    def __init__(self, scenarios: List[VirtualScenario]) -> None:
-        self._scenarios = scenarios
+    def __init__(self, scheduler: ScenarioScheduler) -> None:
+        self._scheduler = scheduler
+
+    @property
+    def scheduler(self) -> ScenarioScheduler:
+        return self._scheduler
 
     @property
     def scenarios(self) -> List[VirtualScenario]:
-        return self._scenarios
+        warnings.warn("Deprecated: use scheduler.scenarios instead", DeprecationWarning)
+        return list(self._scheduler.discovered)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._scenarios!r})"
+        return f"{self.__class__.__name__}({self._scheduler!r})"
 
 
 class _ScenarioEvent(Event):
@@ -129,6 +136,18 @@ class ExceptionRaisedEvent(Event):
         return f"{self.__class__.__name__}({self._exc_info!r})"
 
 
+class ScenarioReportedEvent(Event):
+    def __init__(self, aggregated_result: AggregatedResult) -> None:
+        self._aggregated_result = aggregated_result
+
+    @property
+    def aggregated_result(self) -> AggregatedResult:
+        return self._aggregated_result
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._aggregated_result!r}"
+
+
 class CleanupEvent(Event):
     def __init__(self, report: Report) -> None:
         self._report = report
@@ -145,4 +164,4 @@ __all__ = ("Event", "ConfigLoadedEvent", "ArgParseEvent", "ArgParsedEvent",
            "StartupEvent", "ScenarioRunEvent", "ScenarioSkippedEvent",
            "ScenarioFailedEvent", "ScenarioPassedEvent",
            "StepRunEvent", "StepFailedEvent", "StepPassedEvent", "ExceptionRaisedEvent",
-           "CleanupEvent")
+           "ScenarioReportedEvent", "CleanupEvent",)

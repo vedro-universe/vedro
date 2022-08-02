@@ -13,7 +13,7 @@ from vedro.plugins.director import (
 
 
 @pytest.mark.asyncio
-async def test_silent_reporter_subscribe():
+async def test_subscribe():
     with given:
         dispatcher = Dispatcher()
         director_ = Mock(DirectorPlugin)
@@ -30,7 +30,7 @@ async def test_silent_reporter_subscribe():
         ]
 
 
-def test_silent_reporter_on_chosen():
+def test_on_chosen():
     with given:
         dispatcher = Dispatcher()
 

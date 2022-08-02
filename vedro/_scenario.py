@@ -33,6 +33,7 @@ class _Meta(type):
                 **namespace,
                 "__qualname__": cls_name,
                 "__init__": partialmethod(cls_constructor, *args, **kwargs),
+                "__vedro__template_name__": name,
                 "__vedro__template__": created,
                 "__vedro__template_index__": idx,
                 "__vedro__template_total__": len(cls_params),

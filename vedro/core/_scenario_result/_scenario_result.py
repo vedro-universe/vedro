@@ -1,19 +1,15 @@
 import warnings
-from enum import Enum
 from typing import Any, Dict, List, Union
 
-from ._artifacts import Artifact
-from ._step_result import StepResult
-from ._virtual_scenario import VirtualScenario
+from vedro.core._artifacts import Artifact
+from vedro.core._step_result import StepResult
+from vedro.core._virtual_scenario import VirtualScenario
 
-__all__ = ("ScenarioResult", "ScenarioStatus",)
+from ._scenario_status import ScenarioStatus
 
+__all__ = ("ScenarioResult",)
 
-class ScenarioStatus(Enum):
-    PENDING = "PENDING"
-    PASSED = "PASSED"
-    FAILED = "FAILED"
-    SKIPPED = "SKIPPED"
+ScopeType = Dict[str, Any]
 
 
 class ScenarioResult:
@@ -23,9 +19,10 @@ class ScenarioResult:
         self._started_at: Union[float, None] = None
         self._ended_at: Union[float, None] = None
         self._step_results: List[StepResult] = []
-        self._scope: Union[Dict[Any, Any], None] = None
+        self._scope: Union[ScopeType, None] = None
         self._artifacts: List[Artifact] = []
-        self._rerun = rerun
+        if rerun > 0:
+            warnings.warn("Deprecated", DeprecationWarning)
 
     @property
     def scenario(self) -> VirtualScenario:
@@ -47,7 +44,8 @@ class ScenarioResult:
 
     @property
     def rerun(self) -> int:
-        return self._rerun
+        warnings.warn("Deprecated: always returns 0", DeprecationWarning)
+        return 0
 
     def mark_passed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.PASSED
@@ -97,13 +95,13 @@ class ScenarioResult:
 
     @property
     def step_results(self) -> List[StepResult]:
-        return self._step_results
+        return self._step_results[:]
 
-    def set_scope(self, scope: Dict[Any, Any]) -> None:
+    def set_scope(self, scope: ScopeType) -> None:
         self._scope = scope
 
     @property
-    def scope(self) -> Dict[Any, Any]:
+    def scope(self) -> ScopeType:
         if self._scope is None:
             return {}
         return self._scope
@@ -117,7 +115,7 @@ class ScenarioResult:
         return self._artifacts[:]
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}<{self._scenario!r}>"
+        return f"<{self.__class__.__name__} {self._scenario!r} {self._status.value}>"
 
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)
