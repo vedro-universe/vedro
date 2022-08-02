@@ -9,6 +9,8 @@ from ._scenario_status import ScenarioStatus
 
 __all__ = ("ScenarioResult",)
 
+ScopeType = Dict[str, Any]
+
 
 class ScenarioResult:
     def __init__(self, scenario: VirtualScenario, *, rerun: int = 0) -> None:
@@ -17,7 +19,7 @@ class ScenarioResult:
         self._started_at: Union[float, None] = None
         self._ended_at: Union[float, None] = None
         self._step_results: List[StepResult] = []
-        self._scope: Union[Dict[Any, Any], None] = None
+        self._scope: Union[ScopeType, None] = None
         self._artifacts: List[Artifact] = []
         if rerun > 0:
             warnings.warn("Deprecated", DeprecationWarning)
@@ -95,11 +97,11 @@ class ScenarioResult:
     def step_results(self) -> List[StepResult]:
         return self._step_results[:]
 
-    def set_scope(self, scope: Dict[Any, Any]) -> None:
+    def set_scope(self, scope: ScopeType) -> None:
         self._scope = scope
 
     @property
-    def scope(self) -> Dict[Any, Any]:
+    def scope(self) -> ScopeType:
         if self._scope is None:
             return {}
         return self._scope

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 from vedro.core import Event
 
 DirectorPlugin = Any
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from ._director import DirectorPlugin
 
 __all__ = ("DirectorInitEvent",)

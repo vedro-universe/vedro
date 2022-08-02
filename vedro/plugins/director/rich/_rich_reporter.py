@@ -1,52 +1,36 @@
-import json
-import os
-from traceback import format_exception
-from types import TracebackType
-from typing import Any, Callable, Dict, Generator, Tuple, Type, Union
+from typing import Callable, Type, Union
 
-from rich.console import Console
-from rich.status import Status
-from rich.style import Style
-from rich.traceback import Traceback
-
-import vedro
-from vedro.core import Dispatcher, PluginConfig, ScenarioResult, StepResult
+from vedro.core import Dispatcher, ExcInfo, PluginConfig, ScenarioResult
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
-    ScenarioFailedEvent,
-    ScenarioPassedEvent,
     ScenarioReportedEvent,
     ScenarioRunEvent,
-    ScenarioSkippedEvent,
     StartupEvent,
 )
+from vedro.plugins.director._director_init_event import DirectorInitEvent
+from vedro.plugins.director._reporter import Reporter
 
-from .._director_init_event import DirectorInitEvent
-from .._reporter import Reporter
-from .utils import make_console
+from ._rich_printer import RichPrinter
 
 __all__ = ("RichReporterPlugin", "RichReporter",)
 
 
-ScenarioEndEventType = Union[ScenarioPassedEvent, ScenarioFailedEvent, ScenarioSkippedEvent]
-
-
 class RichReporterPlugin(Reporter):
     def __init__(self, config: Type["RichReporter"], *,
-                 console_factory: Callable[[], Console] = make_console) -> None:
+                 printer_factory: Callable[[], RichPrinter] = RichPrinter) -> None:
         super().__init__(config)
-        self._console = console_factory()
+        self._printer = printer_factory()
         self._verbosity = 0
         self._tb_pretty = config.tb_pretty
         self._tb_show_internal_calls = config.tb_show_internal_calls
         self._tb_show_locals = config.tb_show_locals
         self._tb_max_frames = config.tb_max_frames
+        self._show_skipped = config.show_skipped
         self._show_timings = config.show_timings
         self._show_paths = config.show_paths
         self._show_scenario_spinner = config.show_scenario_spinner
-        self._scenario_spinner: Union[Status, None] = None
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -96,180 +80,115 @@ class RichReporterPlugin(Reporter):
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
 
+        assert self._tb_max_frames >= 4, \
+            "RichReporter: `max_frames` must be >= 4"
+
+        if self._tb_show_locals:
+            assert self._tb_pretty, \
+                "RichReporter: to enable `tb_show_locals` set `tb_pretty` to `True`"
+
     def on_startup(self, event: StartupEvent) -> None:
-        self._console.out("Scenarios")
+        self._printer.print_header()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
-        if event.scenario_result.scenario.namespace != self._namespace:
-            self._namespace = event.scenario_result.scenario.namespace
-            namespace = self._namespace.replace("_", " ").replace("/", " / ")
-            self._console.out(f"* {namespace}", style=Style(bold=True))
+        namespace = event.scenario_result.scenario.namespace
+        if namespace != self._namespace:
+            self._namespace = namespace
+            self._printer.print_namespace(namespace)
 
-        if self._show_scenario_spinner and not self._scenario_spinner:
-            self._scenario_spinner = self._console.status(event.scenario_result.scenario.subject)
-            self._scenario_spinner.start()
+    def _print_exception(self, exc_info: ExcInfo) -> None:
+        if self._tb_pretty:
+            self._printer.print_pretty_exception(exc_info,
+                                                 max_frames=self._tb_max_frames,
+                                                 show_locals=self._tb_show_locals)
+        else:
+            self._printer.print_exception(exc_info, max_frames=self._tb_max_frames)
 
-    def _print_scenario_skipped(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
-        pass
+    def _prefix_to_indent(self, prefix: str, indent: int = 0) -> str:
+        last_line = prefix.split("\n")[-1]
+        return (len(last_line) + indent) * " "
 
-    def _print_scenario_passed(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
-        self._print_scenario_subject(scenario_result, self._show_timings)
+    def _print_scenario_passed(self, scenario_result: ScenarioResult, *, prefix: str = "") -> None:
+        elapsed = scenario_result.elapsed if self._show_timings else None
+        self._printer.print_scenario_subject(scenario_result.scenario.subject,
+                                             scenario_result.status,
+                                             elapsed=elapsed,
+                                             prefix=prefix)
+
         if self._show_paths:
-            prepend = " " * indent
-            self._console.out(f"{prepend}   > {scenario_result.scenario.rel_path}",
-                              style=Style(color="grey50"))
+            caption = f"> {scenario_result.scenario.rel_path}"
+            caption_prefix = self._prefix_to_indent(prefix, indent=2)
+            self._printer.print_scenario_caption(caption, prefix=caption_prefix)
 
-    def _print_scenario_failed(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
-        self._print_scenario_subject(scenario_result, self._show_timings)
+    def _print_scenario_failed(self, scenario_result: ScenarioResult, *, prefix: str = "") -> None:
+        elapsed = scenario_result.elapsed if self._show_timings else None
+        self._printer.print_scenario_subject(scenario_result.scenario.subject,
+                                             scenario_result.status,
+                                             elapsed=elapsed,
+                                             prefix=prefix)
 
         if self._verbosity > 0:
             for step_result in scenario_result.step_results:
-                self._print_step_name(step_result, indent=4 + indent)
+                elapsed = step_result.elapsed if self._show_timings else None
+                step_prefix = self._prefix_to_indent(prefix, indent=2)
+                self._printer.print_step_name(step_result.step_name, step_result.status,
+                                              elapsed=elapsed, prefix=step_prefix)
 
         if self._verbosity > 1:
             for step_result in scenario_result.step_results:
                 if step_result.exc_info:
-                    self._print_exception(step_result.exc_info.value,
-                                          step_result.exc_info.traceback)
+                    self._print_exception(step_result.exc_info)
 
         if self._verbosity > 2:
             if scenario_result.scope:
-                self._print_scope(scenario_result.scope)
-                self._console.out(" ")
+                self._printer.print_scope(scenario_result.scope)
 
-    def _print_scenario_result(self, scenario_result: ScenarioResult, *, indent: int = 0) -> None:
+    def _print_scenario_skipped(self, scenario_result: ScenarioResult, *,
+                                prefix: str = "") -> None:
+        if not self._show_skipped:
+            return
+        elapsed = scenario_result.elapsed if self._show_timings else None
+        self._printer.print_scenario_subject(scenario_result.scenario.subject,
+                                             scenario_result.status,
+                                             elapsed=elapsed,
+                                             prefix=prefix)
+
+    def _print_scenario_result(self, scenario_result: ScenarioResult, *, prefix: str = "") -> None:
         if scenario_result.is_passed():
-            self._print_scenario_passed(scenario_result, indent=indent)
+            self._print_scenario_passed(scenario_result, prefix=prefix)
         elif scenario_result.is_failed():
-            self._print_scenario_failed(scenario_result, indent=indent)
+            self._print_scenario_failed(scenario_result, prefix=prefix)
         elif scenario_result.is_skipped():
-            self._print_scenario_skipped(scenario_result, indent=indent)
-
-    def _print_scenario_subject(self, scenario_result: ScenarioResult,
-                                show_timings: bool = False) -> None:
-        if scenario_result.is_passed():
-            subject = f" ✔ {scenario_result.scenario.subject}"
-            style = Style(color="green")
-        elif scenario_result.is_failed():
-            subject = f" ✗ {scenario_result.scenario.subject}"
-            style = Style(color="red")
-        else:
-            return
-
-        if show_timings:
-            self._console.out(subject, style=style, end="")
-            self._console.out(f" ({scenario_result.elapsed:.2f}s)", style=Style(color="grey50"))
-        else:
-            self._console.out(subject, style=style)
-
-    def _print_step_name(self, step_result: StepResult, *, indent: int = 0) -> None:
-        prepend = " " * indent
-        if step_result.is_passed():
-            name = f"{prepend}✔ {step_result.step_name}"
-            style = Style(color="green")
-        elif step_result.is_failed():
-            name = f"{prepend}✗ {step_result.step_name}"
-            style = Style(color="red")
-        else:
-            return
-
-        if self._show_timings:
-            self._console.out(name, style=style, end="")
-            self._console.out(f" ({step_result.elapsed:.2f}s)", style=Style(color="grey50"))
-        else:
-            self._console.out(name, style=style)
-
-    def _filter_locals(self, local_variables: Dict[str, Any]) -> Dict[str, Any]:
-        filtered_locals = {}
-        for key, val in local_variables.items():
-            if key == "self":
-                continue
-            if key.startswith("@"):
-                continue
-            filtered_locals[key] = val
-        return filtered_locals
-
-    def _print_exception(self, exception: BaseException, traceback: TracebackType) -> None:
-        if not self._tb_show_internal_calls:
-            root = os.path.dirname(vedro.__file__)
-            while traceback.tb_next is not None:
-                filename = os.path.abspath(traceback.tb_frame.f_code.co_filename)
-                if os.path.commonpath([root, filename]) != root:
-                    break
-                traceback = traceback.tb_next
-
-        if self._tb_pretty:
-            trace = Traceback.extract(type(exception), exception, traceback,
-                                      show_locals=self._tb_show_locals)
-            for stack in trace.stacks:
-                for frame in stack.frames:
-                    if frame.locals:
-                        frame.locals = self._filter_locals(frame.locals)
-            self._console.print(Traceback(trace,
-                                          max_frames=self._tb_max_frames, word_wrap=True))
-            self._console.out(" ")
-        else:
-            formatted = format_exception(type(exception), exception, traceback,
-                                         limit=self._tb_max_frames)
-            self._console.out("".join(formatted), style=Style(color="yellow"))
-
-    def _format_scope(self, scope: Dict[Any, Any]) -> Generator[Tuple[str, str], None, None]:
-        for key, val in scope.items():
-            try:
-                val_repr = json.dumps(val, ensure_ascii=False, indent=4)
-            except:  # noqa: E722
-                val_repr = repr(val)
-            yield str(key), val_repr
-
-    def _print_scope(self, scope: Dict[Any, Any]) -> None:
-        self._console.out("Scope:", style=Style(color="blue", bold=True))
-        for key, val in self._format_scope(scope):
-            self._console.out(f" {key}: ", end="", style=Style(color="blue"))
-            self._console.out(val)
+            self._print_scenario_skipped(scenario_result, prefix=prefix)
 
     def on_scenario_reported(self, event: ScenarioReportedEvent) -> None:
-        if self._scenario_spinner:
-            self._scenario_spinner.stop()
-            self._scenario_spinner = None
-
         aggregated_result = event.aggregated_result
-        repeats = len(aggregated_result.scenario_results)
-        if repeats == 1:
-            return self._print_scenario_result(aggregated_result)
+        rescheduled = len(aggregated_result.scenario_results)
+        if rescheduled == 1:
+            self._print_scenario_result(aggregated_result, prefix=" ")
+            return
 
-        self._print_scenario_subject(aggregated_result)
-        for repeat in range(repeats):
-            prefix = f" ├─[{repeat + 1}/{repeats}]"
-            self._console.out(" │")
-            self._console.out(prefix, end="")
-            scenario_result = aggregated_result.scenario_results[repeat]
-            self._print_scenario_result(scenario_result, indent=len(prefix))
-
-        self._console.out(" ")
+        self._printer.print_scenario_subject(aggregated_result.scenario.subject,
+                                             aggregated_result.status, elapsed=None, prefix=" ")
+        for index, scenario_result in enumerate(aggregated_result.scenario_results, start=1):
+            prefix = f" │\n ├─[{index}/{rescheduled}] "
+            self._print_scenario_result(scenario_result, prefix=prefix)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        if event.report.failed == 0 and event.report.passed > 0:
-            style = Style(color="green", bold=True)
-        else:
-            style = Style(color="red", bold=True)
-        self._console.out(" ")
-
-        if len(event.report.summary) > 0:
-            summary = "# " + "\n# ".join(event.report.summary)
-            self._console.out(summary, style=Style(color="grey70"))
-
-        scenarios = "scenario" if (event.report.total == 1) else "scenarios"
-        self._console.out(f"# {event.report.total} {scenarios}, "
-                          f"{event.report.passed} passed, "
-                          f"{event.report.failed} failed, "
-                          f"{event.report.skipped} skipped",
-                          style=style,
-                          end="")
-        self._console.out(f" ({event.report.elapsed:.2f}s)", style=Style(color="blue"))
+        self._printer.print_empty_line()
+        self._printer.print_report_summary(event.report.summary)
+        self._printer.print_report_stats(total=event.report.total,
+                                         passed=event.report.passed,
+                                         failed=event.report.failed,
+                                         skipped=event.report.skipped,
+                                         elapsed=event.report.elapsed)
 
 
 class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
+
+    # Show skipped scenarios
+    show_skipped: bool = False
 
     # Show the elapsed time of each scenario
     show_timings: bool = False
@@ -287,7 +206,8 @@ class RichReporter(PluginConfig):
     tb_show_internal_calls: bool = False
 
     # Show local variables in the traceback output
+    # Available if tb_pretty is True
     tb_show_locals: bool = False
 
-    # Max stack trace entries to show
+    # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8
