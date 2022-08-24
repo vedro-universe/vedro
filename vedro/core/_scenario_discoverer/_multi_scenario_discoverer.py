@@ -7,10 +7,10 @@ from .._virtual_scenario import VirtualScenario
 from .._virtual_step import VirtualStep
 from ._scenario_discoverer import ScenarioDiscoverer
 
-__all__ = ("DefaultScenarioDiscoverer",)
+__all__ = ("MultiScenarioDiscoverer",)
 
 
-class DefaultScenarioDiscoverer(ScenarioDiscoverer):
+class MultiScenarioDiscoverer(ScenarioDiscoverer):
     def _discover_steps(self, scenario: Type[Scenario]) -> List[VirtualStep]:
         steps = []
         for step in scenario.__dict__:

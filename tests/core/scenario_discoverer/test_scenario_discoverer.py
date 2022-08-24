@@ -12,7 +12,7 @@ import pytest
 
 from vedro import Scenario
 from vedro.core import ScenarioFinder, ScenarioLoader, VirtualScenario
-from vedro.core._scenario_discoverer import DefaultScenarioDiscoverer
+from vedro.core._scenario_discoverer import MultiScenarioDiscoverer
 
 
 @pytest.fixture()
@@ -48,7 +48,7 @@ async def test_scenario_discoverer(*, finder_factory, loader_factory):
     }
     finder_ = finder_factory(tree.keys())
     loader_ = loader_factory(tree.values())
-    discoverer = DefaultScenarioDiscoverer(finder_, loader_)
+    discoverer = MultiScenarioDiscoverer(finder_, loader_)
 
     scenarios = await discoverer.discover(root)
     assert scenarios == [

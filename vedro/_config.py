@@ -14,7 +14,7 @@ import vedro.plugins.tagger as tagger
 import vedro.plugins.terminator as terminator
 from vedro.core import Dispatcher
 from vedro.core._container import Factory, Singleton
-from vedro.core._scenario_discoverer import DefaultScenarioDiscoverer, ScenarioDiscoverer
+from vedro.core._scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from vedro.core._scenario_finder import ScenarioFileFinder, ScenarioFinder
 from vedro.core._scenario_finder._file_filters import (
     AnyFilter,
@@ -41,7 +41,7 @@ class Config(core.Config):
 
         ScenarioLoader = Factory[ScenarioLoader](ScenarioFileLoader)
 
-        ScenarioDiscoverer = Factory[ScenarioDiscoverer](lambda: DefaultScenarioDiscoverer(
+        ScenarioDiscoverer = Factory[ScenarioDiscoverer](lambda: MultiScenarioDiscoverer(
             finder=Config.Registry.ScenarioFinder(),
             loader=Config.Registry.ScenarioLoader(),
         ))
