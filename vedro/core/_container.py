@@ -12,7 +12,7 @@ T = TypeVar("T")
 class Container(Generic[T], ABC):
     def __init__(self, resolver: FactoryType[T]) -> None:
         self._resolver = resolver
-        self._default = resolver
+        self._initial = resolver
 
     @abstractmethod
     def register(self, resolver: FactoryType[T]) -> None:
@@ -21,9 +21,6 @@ class Container(Generic[T], ABC):
     @abstractmethod
     def resolve(self, *args: Any, **kwargs: Any) -> T:
         pass
-
-    def restore(self) -> None:
-        self._resolver = self._default
 
     def __call__(self, *args: Any, **kwargs: Any) -> T:
         return self.resolve(*args, **kwargs)
