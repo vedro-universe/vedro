@@ -11,7 +11,8 @@ from unittest.mock import Mock, call
 import pytest
 
 from vedro import Scenario
-from vedro.core import ScenarioDiscoverer, ScenarioFinder, ScenarioLoader, VirtualScenario
+from vedro.core import ScenarioFinder, ScenarioLoader, VirtualScenario
+from vedro.core._scenario_discoverer import DefaultScenarioDiscoverer
 
 
 @pytest.fixture()
@@ -47,7 +48,7 @@ async def test_scenario_discoverer(*, finder_factory, loader_factory):
     }
     finder_ = finder_factory(tree.keys())
     loader_ = loader_factory(tree.values())
-    discoverer = ScenarioDiscoverer(finder_, loader_)
+    discoverer = DefaultScenarioDiscoverer(finder_, loader_)
 
     scenarios = await discoverer.discover(root)
     assert scenarios == [

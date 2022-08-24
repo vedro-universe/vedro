@@ -24,10 +24,9 @@ setup(
     project_urls={
         "Docs": "https://vedro.io/",
         "GitHub": "https://github.com/nikitanovosibirsk/vedro",
-        "Slack": "https://vedro-community.slack.com/",
     },
     license="Apache-2.0",
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages(exclude=["tests", "tests.*"]),
     package_data={"vedro": ["py.typed"]},
     entry_points={
         "console_scripts": ["vedro = vedro:run"],

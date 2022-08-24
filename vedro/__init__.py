@@ -1,7 +1,6 @@
 import asyncio
 import os
 import sys
-from asyncio import CancelledError
 from typing import List, Optional
 
 from ._config import Config
@@ -10,16 +9,12 @@ from ._interface import Interface
 from ._params import params
 from ._scenario import Scenario
 from ._version import version
-from .core import Dispatcher, Lifecycle, MonotonicRunner, Plugin, ScenarioDiscoverer
-from .core._config_loader import ConfigFileLoader
-from .core._scenario_finder import ScenarioFileFinder
-from .core._scenario_finder._file_filters import AnyFilter, DunderFilter, ExtFilter, HiddenFilter
-from .core._scenario_loader import ScenarioAssertRewriterLoader
+from .core import ConfigFileLoader, Lifecycle, Plugin
 from .plugins.deferrer import defer
 from .plugins.skipper import only, skip
 
 __version__ = version
-__all__ = ("Scenario", "Interface", "MonotonicRunner", "run", "only", "skip", "params",
+__all__ = ("Scenario", "Interface", "run", "only", "skip", "params",
            "context", "defer", "Config",)
 
 
@@ -32,20 +27,5 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
 
-    finder = ScenarioFileFinder(
-        file_filter=AnyFilter([
-            HiddenFilter(),
-            DunderFilter(),
-            ExtFilter(only=["py"]),
-        ]),
-        dir_filter=AnyFilter([
-            HiddenFilter(),
-            DunderFilter(),
-        ])
-    )
-    discoverer = ScenarioDiscoverer(finder, ScenarioAssertRewriterLoader())
-    dispatcher = Dispatcher()
-    runner = MonotonicRunner(dispatcher, (KeyboardInterrupt, SystemExit, CancelledError,))
-    lifecycle = Lifecycle(dispatcher, discoverer, runner, ConfigFileLoader(Config))
-
+    lifecycle = Lifecycle(ConfigFileLoader(Config))
     asyncio.run(lifecycle.start())
