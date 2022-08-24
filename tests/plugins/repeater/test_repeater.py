@@ -2,6 +2,7 @@ from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.core import Dispatcher, Report
 from vedro.events import (
@@ -25,7 +26,17 @@ __all__ = ("dispatcher", "repeater", "scheduler_",)  # fixtures
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("repeats", [0, 1, 3])
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_repeat_validation(dispatcher: Dispatcher):
+    with when, raises(BaseException) as exc_info:
+        await fire_arg_parsed_event(dispatcher, repeats=0)
+
+    with then:
+        assert exc_info.type is AssertionError
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("repeats", [1, 2, 3])
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_repeat_passed(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
     with given:
@@ -39,11 +50,11 @@ async def test_repeat_passed(repeats: int, *, dispatcher: Dispatcher, scheduler_
         await dispatcher.fire(scenario_passed_event)
 
     with then:
-        assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * repeats
+        assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * (repeats - 1)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("repeats", [0, 1, 3])
+@pytest.mark.parametrize("repeats", [1, 2, 3])
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_repeat_failed(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
     with given:
@@ -57,11 +68,11 @@ async def test_repeat_failed(repeats: int, *, dispatcher: Dispatcher, scheduler_
         await dispatcher.fire(scenario_failed_event)
 
     with then:
-        assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * repeats
+        assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * (repeats - 1)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("repeats", [0, 1])
+@pytest.mark.parametrize("repeats", [1, 2])
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
     with given:
@@ -82,7 +93,7 @@ async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, sche
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
-        await fire_arg_parsed_event(dispatcher, repeats=1)
+        await fire_arg_parsed_event(dispatcher, repeats=2)
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_failed_event = await fire_failed_event(dispatcher)
@@ -96,7 +107,7 @@ async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("repeats", [1, 2])
+@pytest.mark.parametrize("repeats", [2, 3])
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_add_summary(repeats: int, *,  dispatcher: Dispatcher, scheduler_: Mock):
     with given:
@@ -119,7 +130,7 @@ async def test_add_summary(repeats: int, *,  dispatcher: Dispatcher, scheduler_:
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_dont_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
-        await fire_arg_parsed_event(dispatcher, repeats=0)
+        await fire_arg_parsed_event(dispatcher, repeats=1)
         await fire_startup_event(dispatcher, scheduler_)
 
         await fire_failed_event(dispatcher)

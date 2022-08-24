@@ -1,6 +1,7 @@
 from ._arg_parser import ArgumentParser
 from ._artifacts import Artifact, FileArtifact, MemoryArtifact
 from ._config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
+from ._container import Container, Factory, FactoryType, Singleton
 from ._dispatcher import Dispatcher, Subscriber
 from ._event import Event
 from ._exc_info import ExcInfo
@@ -24,4 +25,5 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin"
            "VirtualScenario", "VirtualStep", "ScenarioStatus", "StepStatus", "ArgumentParser",
            "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",
            "ModuleLoader", "ModuleFileLoader", "Artifact", "MemoryArtifact", "FileArtifact",
-           "ScenarioScheduler", "MonotonicScenarioScheduler",)
+           "ScenarioScheduler", "MonotonicScenarioScheduler", "FactoryType",
+           "Container", "Factory", "Singleton",)

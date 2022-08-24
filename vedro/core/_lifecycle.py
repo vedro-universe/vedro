@@ -18,7 +18,7 @@ class Lifecycle:
         self._config_loader = config_loader
 
     async def _load_config(self, filename: Path) -> Tuple[Path, ConfigType]:
-        parser = ArgumentParser(add_help=False)
+        parser = ArgumentParser(add_help=False, allow_abbrev=False)
         parser.add_argument("--config", default=filename, type=Path)
 
         args, _ = parser.parse_known_args()
@@ -54,6 +54,7 @@ class Lifecycle:
 
         subparsers = arg_parser.add_subparsers(dest="subparser")
         arg_parser_run = subparsers.add_parser("run", add_help=False,
+                                               allow_abbrev=False,
                                                description="documentation: vedro.io/docs",
                                                help="Run scenarios. "
                                                     "Type 'vedro run --help' for more info")
