@@ -2,6 +2,7 @@ from asyncio import CancelledError
 
 import vedro.core as core
 import vedro.plugins.artifacted as artifacted
+import vedro.plugins.assert_rewriter as assert_rewriter
 import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.interrupter as interrupter
@@ -12,19 +13,27 @@ import vedro.plugins.skipper as skipper
 import vedro.plugins.slicer as slicer
 import vedro.plugins.tagger as tagger
 import vedro.plugins.terminator as terminator
-from vedro.core import Dispatcher
-from vedro.core._container import Factory, Singleton
-from vedro.core._scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
-from vedro.core._scenario_finder import ScenarioFileFinder, ScenarioFinder
+from vedro.core import (
+    Dispatcher,
+    Factory,
+    MonotonicScenarioRunner,
+    MonotonicScenarioScheduler,
+    MultiScenarioDiscoverer,
+    ScenarioDiscoverer,
+    ScenarioFileFinder,
+    ScenarioFileLoader,
+    ScenarioFinder,
+    ScenarioLoader,
+    ScenarioRunner,
+    ScenarioScheduler,
+    Singleton,
+)
 from vedro.core._scenario_finder._file_filters import (
     AnyFilter,
     DunderFilter,
     ExtFilter,
     HiddenFilter,
 )
-from vedro.core._scenario_loader import ScenarioFileLoader, ScenarioLoader
-from vedro.core._scenario_runner import MonotonicScenarioRunner, ScenarioRunner
-from vedro.core._scenario_scheduler import MonotonicScenarioScheduler, ScenarioScheduler
 
 __all__ = ("Config",)
 
@@ -91,6 +100,9 @@ class Config(core.Config):
             enabled = True
 
         class Rerunner(rerunner.Rerunner):
+            enabled = True
+
+        class AssertRewriter(assert_rewriter.AssertRewriter):
             enabled = True
 
         class Terminator(terminator.Terminator):

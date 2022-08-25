@@ -9,9 +9,9 @@ from ._lifecycle import Lifecycle
 from ._module_loader import ModuleFileLoader, ModuleLoader
 from ._plugin import Plugin, PluginConfig
 from ._report import Report
-from ._scenario_discoverer import ScenarioDiscoverer
-from ._scenario_finder import ScenarioFinder
-from ._scenario_loader import ScenarioLoader
+from ._scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
+from ._scenario_finder import ScenarioFileFinder, ScenarioFinder
+from ._scenario_loader import ScenarioFileLoader, ScenarioLoader
 from ._scenario_result import AggregatedResult, ScenarioResult, ScenarioStatus
 from ._scenario_runner import MonotonicScenarioRunner, ScenarioRunner
 from ._scenario_scheduler import MonotonicScenarioScheduler, ScenarioScheduler
@@ -21,7 +21,8 @@ from ._virtual_step import VirtualStep
 
 __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin", "PluginConfig",
            "Report", "ScenarioRunner", "MonotonicScenarioRunner", "ScenarioDiscoverer",
-           "ScenarioFinder", "ScenarioLoader", "ScenarioResult", "AggregatedResult", "StepResult",
+           "MultiScenarioDiscoverer", "ScenarioFinder", "ScenarioFileFinder", "ScenarioLoader",
+           "ScenarioFileLoader", "ScenarioResult", "AggregatedResult", "StepResult",
            "VirtualScenario", "VirtualStep", "ScenarioStatus", "StepStatus", "ArgumentParser",
            "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",
            "ModuleLoader", "ModuleFileLoader", "Artifact", "MemoryArtifact", "FileArtifact",

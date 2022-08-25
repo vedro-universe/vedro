@@ -1,10 +1,8 @@
 from importlib.abc import Loader
 from types import ModuleType
-from typing import Any, Optional
+from typing import Any
 
-from dessert import AssertionRewritingHook  # type: ignore
-
-from ._scenario_file_loader import ScenarioFileLoader
+from vedro.core import ScenarioFileLoader
 
 __all__ = ("ScenarioAssertRewriterLoader",)
 
@@ -12,9 +10,9 @@ RewriterType = Any
 
 
 class ScenarioAssertRewriterLoader(ScenarioFileLoader):
-    def __init__(self, rewriter: Optional[RewriterType] = None) -> None:
+    def __init__(self, rewriter: RewriterType) -> None:
         super().__init__()
-        self._rewriter = rewriter or AssertionRewritingHook()
+        self._rewriter = rewriter
 
     def _exec_module(self, loader: Loader, module: ModuleType) -> None:
         self._rewriter.exec_module(module)
