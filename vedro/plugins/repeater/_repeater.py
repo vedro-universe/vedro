@@ -44,9 +44,12 @@ class RepeaterPlugin(Plugin):
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._repeats = event.args.repeats
         assert self._repeats >= 1
-        if self._repeats > 1:
-            assert self._global_config is not None
-            self._global_config.Registry.ScenarioScheduler.register(RepeaterScenarioScheduler)
+
+        if self._repeats <= 1:
+            return
+
+        assert self._global_config is not None
+        self._global_config.Registry.ScenarioScheduler.register(RepeaterScenarioScheduler, self)
 
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler

@@ -46,9 +46,12 @@ class RerunnerPlugin(Plugin):
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._reruns = event.args.reruns
         assert self._reruns >= 0
-        if self._reruns > 0:
-            assert self._global_config is not None
-            self._global_config.Registry.ScenarioScheduler.register(RerunnerScenarioScheduler)
+
+        if self._reruns == 0:
+            return
+
+        assert self._global_config is not None
+        self._global_config.Registry.ScenarioScheduler.register(RerunnerScenarioScheduler, self)
 
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
