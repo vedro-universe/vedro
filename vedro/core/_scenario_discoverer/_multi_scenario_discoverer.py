@@ -1,6 +1,6 @@
 import inspect
 from pathlib import Path
-from typing import Any, List, Tuple, Type
+from typing import List, Type
 
 from ..._scenario import Scenario
 from .._virtual_scenario import VirtualScenario
@@ -30,9 +30,6 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
                 steps = self._discover_steps(scn)
                 scenarios.append(VirtualScenario(scn, steps))
 
-        def cmp(scn: VirtualScenario) -> Tuple[Any, ...]:
-            path = Path(scn.path)
-            return (len(path.parts),) + tuple((len(x), x) for x in path.parts)
-        scenarios.sort(key=cmp)
+        await self._orderer.sort(scenarios)
 
         return scenarios

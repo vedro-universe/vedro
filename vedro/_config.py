@@ -24,9 +24,11 @@ from vedro.core import (
     ScenarioFileLoader,
     ScenarioFinder,
     ScenarioLoader,
+    ScenarioOrderer,
     ScenarioRunner,
     ScenarioScheduler,
     Singleton,
+    StableScenarioOrderer,
 )
 from vedro.core._scenario_finder._file_filters import (
     AnyFilter,
@@ -50,9 +52,12 @@ class Config(core.Config):
 
         ScenarioLoader = Factory[ScenarioLoader](ScenarioFileLoader)
 
+        ScenarioOrderer = Factory[ScenarioOrderer](StableScenarioOrderer)
+
         ScenarioDiscoverer = Factory[ScenarioDiscoverer](lambda: MultiScenarioDiscoverer(
             finder=Config.Registry.ScenarioFinder(),
             loader=Config.Registry.ScenarioLoader(),
+            orderer=Config.Registry.ScenarioOrderer(),
         ))
 
         ScenarioScheduler = Factory[ScenarioScheduler](MonotonicScenarioScheduler)

@@ -11,24 +11,27 @@ from unittest.mock import Mock, call
 import pytest
 
 from vedro import Scenario
-from vedro.core import ScenarioFinder, ScenarioLoader, VirtualScenario
-from vedro.core._scenario_discoverer import MultiScenarioDiscoverer
+from vedro.core import (
+    MultiScenarioDiscoverer,
+    ScenarioFinder,
+    ScenarioLoader,
+    ScenarioOrderer,
+    VirtualScenario,
+)
 
 
-@pytest.fixture()
-def finder_factory():
-    def _factory(files):
-        iterator = MagicMock()
-        iterator.__aiter__.return_value = iter(files)
-        return Mock(ScenarioFinder, find=Mock(return_value=iterator))
-    return _factory
+def make_finder(files):
+    iterator = MagicMock()
+    iterator.__aiter__.return_value = iter(files)
+    return Mock(ScenarioFinder, find=Mock(return_value=iterator))
 
 
-@pytest.fixture()
-def loader_factory():
-    def _factory(scenarios):
-        return Mock(ScenarioLoader, load=AsyncMock(side_effect=iter(scenarios)))
-    return _factory
+def make_loader(scenarios):
+    return Mock(ScenarioLoader, load=AsyncMock(side_effect=iter(scenarios)))
+
+
+def make_orderer():
+    return Mock(ScenarioOrderer, sort=AsyncMock())
 
 
 def create_scenario(filename):
@@ -36,7 +39,7 @@ def create_scenario(filename):
 
 
 @pytest.mark.asyncio
-async def test_scenario_discoverer(*, finder_factory, loader_factory):
+async def test_scenario_discoverer():
     root = Path("/tmp")
     scenario1 = create_scenario(root / "scenario-1.py")
     scenario3 = create_scenario(root / "folder" / "scenario-2.py")
@@ -46,9 +49,10 @@ async def test_scenario_discoverer(*, finder_factory, loader_factory):
         root / "scenario-2.py": [],
         scenario3.__file__: [scenario3, scenario4],
     }
-    finder_ = finder_factory(tree.keys())
-    loader_ = loader_factory(tree.values())
-    discoverer = MultiScenarioDiscoverer(finder_, loader_)
+    finder_ = make_finder(tree.keys())
+    loader_ = make_loader(tree.values())
+    orderer_ = make_orderer()
+    discoverer = MultiScenarioDiscoverer(finder_, loader_, orderer_)
 
     scenarios = await discoverer.discover(root)
     assert scenarios == [
