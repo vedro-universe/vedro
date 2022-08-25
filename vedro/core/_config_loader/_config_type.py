@@ -21,6 +21,9 @@ class Section(cabina.Section, metaclass=_MetaBase):
 
 
 class Config(cabina.Config, Section):
+    class Registry(Section):
+        pass
+
     class Plugins(Section):
         pass
 

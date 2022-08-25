@@ -6,8 +6,23 @@ from unittest.mock import Mock
 import pytest
 
 from vedro import Scenario
-from vedro.core import Dispatcher, ScenarioResult, VirtualScenario
-from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioFailedEvent, StartupEvent
+from vedro.core import (
+    Config,
+    ConfigType,
+    Dispatcher,
+    Factory,
+    MonotonicScenarioScheduler,
+    ScenarioResult,
+    ScenarioScheduler,
+    VirtualScenario,
+)
+from vedro.events import (
+    ArgParsedEvent,
+    ArgParseEvent,
+    ConfigLoadedEvent,
+    ScenarioFailedEvent,
+    StartupEvent,
+)
 from vedro.plugins.rerunner import Rerunner, RerunnerPlugin
 from vedro.plugins.rerunner import RerunnerScenarioScheduler as Scheduler
 
@@ -45,7 +60,18 @@ def make_scenario_result() -> ScenarioResult:
     return ScenarioResult(make_vscenario())
 
 
+def make_config() -> ConfigType:
+    class TestConfig(Config):
+        class Registry(Config.Registry):
+            ScenarioScheduler = Factory[ScenarioScheduler](MonotonicScenarioScheduler)
+
+    return TestConfig
+
+
 async def fire_arg_parsed_event(dispatcher: Dispatcher, reruns: int) -> None:
+    config_loaded_event = ConfigLoadedEvent(Path(), make_config())
+    await dispatcher.fire(config_loaded_event)
+
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 

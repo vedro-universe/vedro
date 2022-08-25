@@ -2,6 +2,7 @@ from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.core import Dispatcher, Report
 from vedro.events import (
@@ -22,6 +23,16 @@ from ._utils import (
 )
 
 __all__ = ("rerunner", "scheduler_", "dispatcher")  # fixtures
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rerunner.__name__)
+async def test_rerun_validation(dispatcher: Dispatcher):
+    with when, raises(BaseException) as exc_info:
+        await fire_arg_parsed_event(dispatcher, reruns=-1)
+
+    with then:
+        assert exc_info.type is AssertionError
 
 
 @pytest.mark.asyncio
