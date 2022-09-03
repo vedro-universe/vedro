@@ -101,6 +101,26 @@ async def test_scenario_run_same_namespace(*, dispatcher: Dispatcher, printer_: 
 
 
 @pytest.mark.asyncio
+async def test_scenario_run_show_spinner(*, dispatcher: Dispatcher,
+                                         rich_reporter: RichReporterPlugin, printer_: Mock):
+    with given:
+        rich_reporter._show_scenario_spinner = True
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result()
+        event = ScenarioRunEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        status = f" {scenario_result.scenario.subject}"
+        assert printer_.print_namespace.assert_called() is None
+        assert printer_.show_spinner.assert_called_with(status) is None
+        assert len(printer_.mock_calls) == 2
+
+
+@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_unknown_status(*, dispatcher: Dispatcher, printer_: Mock):
     with given:

@@ -432,3 +432,64 @@ def test_pretty_format_unknown_type(*, printer: RichPrinter):
     with then:
         assert res == "<repr>"
         assert mock_.mock_calls == [call.__repr__()]
+
+
+def test_show_spinner(*, printer: RichPrinter, console_: Mock):
+    with given:
+        status = "..."
+        spinner_ = Mock()
+        console_.status = Mock(return_value=spinner_)
+
+    with when:
+        printer.show_spinner(status)
+
+    with then:
+        assert console_.mock_calls == [call.status(status)]
+        assert spinner_.mock_calls == [call.start()]
+
+
+def test_show_shown_spinner(*, printer: RichPrinter, console_: Mock):
+    with given:
+        status = "..."
+        spinner_ = Mock()
+        console_.status = Mock(return_value=spinner_)
+
+        printer.show_spinner(status)
+        console_.reset_mock()
+
+    with when:
+        printer.show_spinner(status)
+
+    with then:
+        assert console_.mock_calls == [call.status(status)]
+        assert spinner_.mock_calls == [call.stop(), call.start()]
+
+
+def test_hide_spinner(*, printer: RichPrinter, console_: Mock):
+    with given:
+        spinner_ = Mock()
+        console_.status = Mock(return_value=spinner_)
+
+    with when:
+        printer.hide_spinner()
+
+    with then:
+        assert console_.mock_calls == []
+        assert spinner_.mock_calls == []
+
+
+def test_hide_shown_spinner(*, printer: RichPrinter, console_: Mock):
+    with given:
+        status = "..."
+        spinner_ = Mock()
+        console_.status = Mock(return_value=spinner_)
+
+        printer.show_spinner(status)
+        console_.reset_mock()
+
+    with when:
+        printer.hide_spinner()
+
+    with then:
+        assert console_.mock_calls == []
+        assert spinner_.mock_calls == [call.stop()]

@@ -2,9 +2,10 @@ import json
 import os
 from traceback import format_exception
 from types import FrameType, TracebackType
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
-from rich.console import Console
+from rich.console import Console, RenderableType
+from rich.status import Status
 from rich.style import Style
 from rich.traceback import Trace, Traceback
 
@@ -23,6 +24,7 @@ class RichPrinter:
                  *, traceback_factory: Callable[..., Traceback] = Traceback) -> None:
         self._console = console_factory()
         self._traceback_factory = traceback_factory
+        self._scenario_spinner: Union[Status, None] = None
 
     @property
     def console(self) -> Console:
@@ -184,3 +186,14 @@ class RichPrinter:
 
     def print(self, smth: Any, *, end: str = "\n") -> None:
         self._console.out(smth, end=end)
+
+    def show_spinner(self, status: RenderableType = "") -> None:
+        if self._scenario_spinner:
+            self.hide_spinner()
+        self._scenario_spinner = self._console.status(status)
+        self._scenario_spinner.start()
+
+    def hide_spinner(self) -> None:
+        if self._scenario_spinner:
+            self._scenario_spinner.stop()
+            self._scenario_spinner = None

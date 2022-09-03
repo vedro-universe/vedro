@@ -4,7 +4,8 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro.core import AggregatedResult, Dispatcher, ScenarioStatus
-from vedro.events import ScenarioReportedEvent
+from vedro.events import ScenarioReportedEvent, ScenarioRunEvent
+from vedro.plugins.director import RichReporterPlugin
 
 from ._utils import (
     director,
@@ -78,6 +79,31 @@ async def test_scenario_passed_show_paths(*, dispatcher: Dispatcher, printer_: M
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.PASSED, elapsed=None, prefix=" "),
             call.print_scenario_caption(f"> {scenario_result.scenario.path.name}", prefix=" " * 3)
+        ]
+
+
+@pytest.mark.asyncio
+async def test_scenario_passed_show_spinner(*, dispatcher: Dispatcher,
+                                            rich_reporter: RichReporterPlugin, printer_: Mock):
+    with given:
+        rich_reporter._show_scenario_spinner = True
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result()
+        await dispatcher.fire(ScenarioRunEvent(scenario_result))
+        printer_.reset_mock()
+
+        aggregated_result = make_aggregated_result(scenario_result.mark_passed())
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = aggregated_result.scenario.subject
+        assert printer_.mock_calls == [
+            call.hide_spinner(),
+            call.print_scenario_subject(subject, ScenarioStatus.PASSED, elapsed=None, prefix=" ")
         ]
 
 

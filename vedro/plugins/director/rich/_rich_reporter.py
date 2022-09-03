@@ -96,6 +96,9 @@ class RichReporterPlugin(Reporter):
             self._namespace = namespace
             self._printer.print_namespace(namespace)
 
+        if self._show_scenario_spinner:
+            self._printer.show_spinner(f" {event.scenario_result.scenario.subject}")
+
     def _print_exception(self, exc_info: ExcInfo) -> None:
         if self._tb_pretty:
             self._printer.print_pretty_exception(exc_info,
@@ -165,6 +168,9 @@ class RichReporterPlugin(Reporter):
             self._print_scenario_skipped(scenario_result, prefix=prefix)
 
     def on_scenario_reported(self, event: ScenarioReportedEvent) -> None:
+        if self._show_scenario_spinner:
+            self._printer.hide_spinner()
+
         aggregated_result = event.aggregated_result
         rescheduled = len(aggregated_result.scenario_results)
         if rescheduled == 1:
