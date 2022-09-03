@@ -35,7 +35,7 @@ class PyCharmReporterPlugin(Reporter):
         group.add_argument("--pycharm-show-skipped",
                            action="store_true",
                            default=self._show_skipped,
-                           help="Show skipped scenarios")
+                           help="Show skipped scenarios (deprecated, default: True)")
         group.add_argument("--pycharm-show-internal-calls",
                            action="store_true",
                            default=self._show_internal_calls,
