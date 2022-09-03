@@ -118,11 +118,11 @@ class SkipperPlugin(Plugin):
         async for scenario in scheduler:
             if self._is_scenario_ignored(scenario):
                 scheduler.ignore(scenario)
-
-            if self._is_scenario_skipped(scenario):
-                scenario.skip()
-            if self._is_scenario_special(scenario):
-                special_scenarios.add(scenario.unique_id)
+            else:
+                if self._is_scenario_skipped(scenario):
+                    scenario.skip()
+                if self._is_scenario_special(scenario):
+                    special_scenarios.add(scenario.unique_id)
 
         if len(special_scenarios) > 0:
             async for scenario in scheduler:
