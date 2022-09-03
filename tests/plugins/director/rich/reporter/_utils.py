@@ -1,15 +1,13 @@
-import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
-from typing import Any, Optional
+from typing import Optional
 from unittest.mock import Mock
 
 import pytest
-from rich.console import Console
 
 from vedro import Config, Scenario
-from vedro.core import AggregatedResult, Dispatcher, ExcInfo, ScenarioResult, VirtualScenario
+from vedro.core import AggregatedResult, Dispatcher, ScenarioResult, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.director import Director, DirectorPlugin, RichReporter, RichReporterPlugin
 from vedro.plugins.director.rich import RichPrinter
@@ -38,25 +36,6 @@ def rich_reporter(dispatcher: Dispatcher,
     reporter = RichReporterPlugin(RichReporter, printer_factory=lambda: printer_)
     reporter.subscribe(dispatcher)
     return reporter
-
-
-@pytest.fixture()
-def console_() -> Mock:
-    return Mock(Console)
-
-
-@pytest.fixture()
-def printer(console_: Mock) -> RichPrinter:
-    return RichPrinter(lambda: console_, traceback_factory=TestTraceback)
-
-
-@pytest.fixture()
-def exc_info() -> ExcInfo:
-    try:
-        raise KeyError()
-    except KeyError:
-        _, value, traceback = sys.exc_info()
-    return ExcInfo(type(value), value, traceback)
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
@@ -96,14 +75,3 @@ def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> 
     if scenario_result is None:
         scenario_result = make_scenario_result()
     return AggregatedResult.from_existing(scenario_result, [scenario_result])
-
-
-class TestTraceback:
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._args = args
-        self._kwargs = kwargs
-
-    def __eq__(self, other: Any) -> bool:
-        if self.__class__ != other.__class__:
-            return False
-        return (self._args == other._args) and (self._kwargs == other._kwargs)
