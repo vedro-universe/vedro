@@ -3,7 +3,7 @@ from unittest.mock import Mock, call
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Dispatcher, ScenarioStatus
+from vedro.core import AggregatedResult, Dispatcher, ScenarioStatus
 from vedro.events import ScenarioReportedEvent
 
 from ._utils import (
@@ -78,4 +78,39 @@ async def test_scenario_passed_show_paths(*, dispatcher: Dispatcher, printer_: M
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.PASSED, elapsed=None, prefix=" "),
             call.print_scenario_caption(f"> {scenario_result.scenario.path.name}", prefix=" " * 3)
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_passed_aggregated_result(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_results = [
+            make_scenario_result().mark_failed(),
+            make_scenario_result().mark_passed(),
+        ]
+
+        aggregated_result = AggregatedResult.from_existing(scenario_results[0], scenario_results)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(aggregated_result.scenario.subject,
+                                        ScenarioStatus.FAILED, elapsed=None, prefix=" "),
+
+            call.print_scenario_subject(aggregated_result.scenario_results[0].scenario.subject,
+                                        ScenarioStatus.FAILED,
+                                        elapsed=None,
+                                        prefix=" │\n ├─[1/2] "),
+            call.print_scenario_subject(aggregated_result.scenario_results[1].scenario.subject,
+                                        ScenarioStatus.PASSED,
+                                        elapsed=None,
+                                        prefix=" │\n ├─[2/2] "),
+
+            call.print_empty_line(),
         ]

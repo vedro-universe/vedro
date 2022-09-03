@@ -234,7 +234,6 @@ def test_print_scope_key(*, printer: RichPrinter, console_: Mock):
         printer.print_scope_key(key)
 
     with then:
-        print(console_.mock_calls)
         assert console_.mock_calls == [
             call.out(f"{key}: ", end="", style=Style(color="blue"))
         ]
@@ -356,7 +355,6 @@ def test_print_report_stats(stats: Dict[str, int], color: str, *,
         printer.print_report_stats(**stats, elapsed=0.0)
 
     with then:
-        print(console_.mock_calls)
         assert console_.mock_calls == [
             call.out(message, style=Style(color=color, bold=True), end=""),
             call.out(" (0.00s)", style=Style(color="blue")),

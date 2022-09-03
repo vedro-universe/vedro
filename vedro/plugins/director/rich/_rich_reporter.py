@@ -177,6 +177,8 @@ class RichReporterPlugin(Reporter):
             prefix = f" │\n ├─[{index}/{rescheduled}] "
             self._print_scenario_result(scenario_result, prefix=prefix)
 
+        self._printer.print_empty_line()
+
     def on_cleanup(self, event: CleanupEvent) -> None:
         self._printer.print_empty_line()
         self._printer.print_report_summary(event.report.summary)
