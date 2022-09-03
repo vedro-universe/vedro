@@ -10,7 +10,6 @@ import pytest
 
 from vedro import Config, Scenario
 from vedro.core import (
-    AggregatedResult,
     Dispatcher,
     ExcInfo,
     ScenarioResult,
@@ -84,12 +83,6 @@ def make_scenario_result(vscenario: Optional[VirtualScenario] = None) -> Scenari
 
 def make_step_result(vstep: Optional[VirtualStep] = None) -> StepResult:
     return StepResult(vstep or make_vstep())
-
-
-def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> AggregatedResult:
-    if scenario_result is None:
-        scenario_result = make_scenario_result()
-    return AggregatedResult.from_existing(scenario_result, [scenario_result])
 
 
 def make_exc_info(exc_val: Exception) -> ExcInfo:

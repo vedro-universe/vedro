@@ -4,7 +4,12 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher, ScenarioStatus, StepStatus
-from vedro.events import ScenarioReportedEvent, ScenarioRunEvent
+from vedro.events import (
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
+    ScenarioRunEvent,
+    ScenarioSkippedEvent,
+)
 from vedro.plugins.director import (
     DirectorInitEvent,
     DirectorPlugin,
@@ -16,7 +21,6 @@ from ._utils import (
     director,
     dispatcher,
     fire_arg_parsed_event,
-    make_aggregated_result,
     make_exc_info,
     make_scenario_result,
     make_step_result,
@@ -72,16 +76,15 @@ async def test_scenario_passed(*, dispatcher: Dispatcher, printer_: Mock):
 
         scenario_result = make_scenario_result().mark_passed() \
                                                 .set_started_at(1.0).set_ended_at(3.0)
-        aggregated_result = make_aggregated_result(scenario_result)
-        event = ScenarioReportedEvent(aggregated_result)
+        event = ScenarioPassedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
-        subject = aggregated_result.scenario.subject
+        subject = scenario_result.scenario.subject
         assert printer_.mock_calls == [
-            call.print_scenario_subject(subject, ScenarioStatus.PASSED),
+            call.print_scenario_subject(subject, ScenarioStatus.PASSED, prefix=" "),
             call.console.out(f"##teamcity[testFinished name='{subject}' duration='2000']")
         ]
 
@@ -94,16 +97,15 @@ async def test_scenario_failed(*, dispatcher: Dispatcher, printer_: Mock):
 
         scenario_result = make_scenario_result().mark_failed() \
                                                 .set_started_at(1.0).set_ended_at(3.0)
-        aggregated_result = make_aggregated_result(scenario_result)
-        event = ScenarioReportedEvent(aggregated_result)
+        event = ScenarioFailedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
-        subject = aggregated_result.scenario.subject
+        subject = scenario_result.scenario.subject
         assert printer_.mock_calls == [
-            call.print_scenario_subject(subject, ScenarioStatus.FAILED),
+            call.print_scenario_subject(subject, ScenarioStatus.FAILED, prefix=" "),
             call.console.out(f"##teamcity[testFailed name='{subject}' message='' details='']"),
             call.console.out(f"##teamcity[testFinished name='{subject}' duration='2000']")
         ]
@@ -111,9 +113,11 @@ async def test_scenario_failed(*, dispatcher: Dispatcher, printer_: Mock):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
-async def test_scenario_failed_with_steps(*, dispatcher: Dispatcher, printer_: Mock):
+@pytest.mark.parametrize("show_internal_calls", [False, True])
+async def test_scenario_failed_with_steps(show_internal_calls: bool, *,
+                                          dispatcher: Dispatcher, printer_: Mock):
     with given:
-        await fire_arg_parsed_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher, show_internal_calls=show_internal_calls)
 
         scenario_result = make_scenario_result().set_started_at(1.0).set_ended_at(5.0)
 
@@ -124,20 +128,19 @@ async def test_scenario_failed_with_steps(*, dispatcher: Dispatcher, printer_: M
         step_result_failed = make_step_result().mark_failed().set_exc_info(exc_info)
         scenario_result.add_step_result(step_result_failed)
 
-        aggregated_result = make_aggregated_result(scenario_result.mark_failed())
-        event = ScenarioReportedEvent(aggregated_result)
+        event = ScenarioFailedEvent(scenario_result.mark_failed())
 
     with when:
         await dispatcher.fire(event)
 
     with then:
-        subject = aggregated_result.scenario.subject
+        subject = scenario_result.scenario.subject
         assert printer_.mock_calls == [
-            call.print_scenario_subject(subject, ScenarioStatus.FAILED),
+            call.print_scenario_subject(subject, ScenarioStatus.FAILED, prefix=" "),
 
-            call.print_step_name(step_result_passed.step_name, StepStatus.PASSED, prefix=" " * 2),
-            call.print_step_name(step_result_failed.step_name, StepStatus.FAILED, prefix=" " * 2),
-            call.print_exception(exc_info),
+            call.print_step_name(step_result_passed.step_name, StepStatus.PASSED, prefix=" " * 3),
+            call.print_step_name(step_result_failed.step_name, StepStatus.FAILED, prefix=" " * 3),
+            call.print_exception(exc_info, show_internal_calls=show_internal_calls),
 
             call.console.out(f"##teamcity[testFailed name='{subject}' message='' details='']"),
             call.console.out(f"##teamcity[testFinished name='{subject}' duration='4000']")
@@ -159,19 +162,18 @@ async def test_scenario_failed_with_scope(*, dispatcher: Dispatcher, printer_: M
         scope = {"key": "val"}
         scenario_result.set_scope(scope)
 
-        aggregated_result = make_aggregated_result(scenario_result.mark_failed())
-        event = ScenarioReportedEvent(aggregated_result)
+        event = ScenarioFailedEvent(scenario_result.mark_failed())
 
     with when:
         await dispatcher.fire(event)
 
     with then:
-        subject = aggregated_result.scenario.subject
+        subject = scenario_result.scenario.subject
         assert printer_.mock_calls == [
-            call.print_scenario_subject(subject, ScenarioStatus.FAILED),
+            call.print_scenario_subject(subject, ScenarioStatus.FAILED, prefix=" "),
 
-            call.print_step_name(step_result.step_name, StepStatus.FAILED, prefix=" " * 2),
-            call.print_exception(exc_info),
+            call.print_step_name(step_result.step_name, StepStatus.FAILED, prefix=" " * 3),
+            call.print_exception(exc_info, show_internal_calls=False),
             call.print_scope(scope),
 
             call.console.out(f"##teamcity[testFailed name='{subject}' message='' details='']"),
@@ -187,16 +189,15 @@ async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
 
         scenario_result = make_scenario_result().mark_skipped() \
                                                 .set_started_at(1.0).set_ended_at(3.0)
-        aggregated_result = make_aggregated_result(scenario_result)
-        event = ScenarioReportedEvent(aggregated_result)
+        event = ScenarioSkippedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
-        subject = aggregated_result.scenario.subject
+        subject = scenario_result.scenario.subject
         assert printer_.mock_calls == [
-            call.print_scenario_subject(subject, ScenarioStatus.SKIPPED),
+            call.print_scenario_subject(subject, ScenarioStatus.SKIPPED, prefix=" "),
             call.console.out(f"##teamcity[testIgnored name='{subject}']")
         ]
 
@@ -208,25 +209,7 @@ async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher, printer_: Mo
         await fire_arg_parsed_event(dispatcher, show_skipped=False)
 
         scenario_result = make_scenario_result().mark_skipped()
-        aggregated_result = make_aggregated_result(scenario_result)
-        event = ScenarioReportedEvent(aggregated_result)
-
-    with when:
-        await dispatcher.fire(event)
-
-    with then:
-        assert printer_.mock_calls == []
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures(pycharm_reporter.__name__)
-async def test_scenario_reported_unknown_status(*, dispatcher: Dispatcher, printer_: Mock):
-    with given:
-        await fire_arg_parsed_event(dispatcher)
-
-        scenario_result = make_scenario_result()
-        aggregated_result = make_aggregated_result(scenario_result)
-        event = ScenarioReportedEvent(aggregated_result)
+        event = ScenarioSkippedEvent(scenario_result)
 
     with when:
         await dispatcher.fire(event)
