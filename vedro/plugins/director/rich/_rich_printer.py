@@ -76,6 +76,7 @@ class RichPrinter:
         else:
             self._console.out(name, style=style)
 
+    # filter calls
     def _filter_calls(self, traceback: TracebackType) -> TracebackType:
         class _Traceback:
             def __init__(self, tb_frame: FrameType, tb_lasti: int, tb_lineno: int,
@@ -113,7 +114,7 @@ class RichPrinter:
         return filtered_locals
 
     def print_pretty_exception(self, exc_info: ExcInfo, *,
-                               max_frames: int = 8,  # min=4
+                               max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
                                show_locals: bool = False,
                                word_wrap: bool = False) -> None:
         traceback = self._filter_calls(exc_info.traceback)
@@ -132,7 +133,7 @@ class RichPrinter:
     def pretty_format(self, value: Any) -> Any:
         try:
             return json.dumps(value, ensure_ascii=False, indent=4)
-        except:  # noqa: E722
+        except BaseException:
             return repr(value)
 
     def print_scope(self, scope: Dict[str, Any]) -> None:
