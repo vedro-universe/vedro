@@ -100,9 +100,12 @@ class RichReporterPlugin(Reporter):
         if self._tb_pretty:
             self._printer.print_pretty_exception(exc_info,
                                                  max_frames=self._tb_max_frames,
-                                                 show_locals=self._tb_show_locals)
+                                                 show_locals=self._tb_show_locals,
+                                                 show_internal_calls=self._tb_show_internal_calls)
         else:
-            self._printer.print_exception(exc_info, max_frames=self._tb_max_frames)
+            self._printer.print_exception(exc_info,
+                                          max_frames=self._tb_max_frames,
+                                          show_internal_calls=self._tb_show_internal_calls)
 
     def _prefix_to_indent(self, prefix: str, indent: int = 0) -> str:
         last_line = prefix.split("\n")[-1]

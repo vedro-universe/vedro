@@ -99,8 +99,13 @@ class RichPrinter:
 
         return cast(TracebackType, tb)
 
-    def print_exception(self, exc_info: ExcInfo, *, max_frames: int = 8) -> None:
-        traceback = self.__filter_internals(exc_info.traceback)
+    def print_exception(self, exc_info: ExcInfo, *,
+                        max_frames: int = 8, show_internal_calls: bool = False) -> None:
+        if show_internal_calls:
+            traceback = exc_info.traceback
+        else:
+            traceback = self.__filter_internals(exc_info.traceback)
+
         formatted = format_exception(exc_info.type, exc_info.value, traceback, limit=max_frames)
         self._console.out("".join(formatted), style=Style(color="yellow"))
 
@@ -114,8 +119,13 @@ class RichPrinter:
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
                                show_locals: bool = False,
+                               show_internal_calls: bool = False,
                                word_wrap: bool = False) -> None:
-        traceback = self.__filter_internals(exc_info.traceback)
+        if show_internal_calls:
+            traceback = exc_info.traceback
+        else:
+            traceback = self.__filter_internals(exc_info.traceback)
+
         trace = Traceback.extract(exc_info.type, exc_info.value, traceback,
                                   show_locals=show_locals)
 
