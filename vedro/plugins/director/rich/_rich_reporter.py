@@ -188,7 +188,7 @@ class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
 
     # Show skipped scenarios
-    show_skipped: bool = False
+    show_skipped: bool = True
 
     # Show the elapsed time of each scenario
     show_timings: bool = False
