@@ -17,7 +17,7 @@ from ._utils import (
     touch,
 )
 
-__all__ = ("dispatcher", "skipper", "tmp_dir")
+__all__ = ("dispatcher", "skipper", "tmp_dir",)  # fixtures
 
 
 @pytest.mark.asyncio

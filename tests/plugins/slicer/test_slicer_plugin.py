@@ -12,7 +12,7 @@ from vedro.plugins.slicer import SlicerPlugin
 
 from ._utils import dispatcher, fire_arg_parsed_event, make_vscenario, slicer
 
-__all__ = ("dispatcher", "slicer",)
+__all__ = ("dispatcher", "slicer",)  # fixtures
 
 
 @pytest.mark.parametrize(("total", "index", "selected"), [
