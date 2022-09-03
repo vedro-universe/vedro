@@ -1,4 +1,3 @@
-import warnings
 from typing import Any, Dict, List, Union
 
 from vedro.core._artifacts import Artifact
@@ -13,7 +12,7 @@ ScopeType = Dict[str, Any]
 
 
 class ScenarioResult:
-    def __init__(self, scenario: VirtualScenario, *, rerun: int = 0) -> None:
+    def __init__(self, scenario: VirtualScenario) -> None:
         self._scenario = scenario
         self._status: ScenarioStatus = ScenarioStatus.PENDING
         self._started_at: Union[float, None] = None
@@ -21,31 +20,14 @@ class ScenarioResult:
         self._step_results: List[StepResult] = []
         self._scope: Union[ScopeType, None] = None
         self._artifacts: List[Artifact] = []
-        if rerun > 0:
-            warnings.warn("Deprecated", DeprecationWarning)
 
     @property
     def scenario(self) -> VirtualScenario:
         return self._scenario
 
     @property
-    def scenario_subject(self) -> str:
-        warnings.warn("Deprecated: use scenario.subject instead", DeprecationWarning)
-        return self._scenario.subject
-
-    @property
-    def scenario_namespace(self) -> str:
-        warnings.warn("Deprecated: use scenario.namespace instead", DeprecationWarning)
-        return self.scenario.namespace
-
-    @property
     def status(self) -> ScenarioStatus:
         return self._status
-
-    @property
-    def rerun(self) -> int:
-        warnings.warn("Deprecated: always returns 0", DeprecationWarning)
-        return 0
 
     def mark_passed(self) -> "ScenarioResult":
         self._status = ScenarioStatus.PASSED
