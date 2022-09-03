@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, cast
 
 from rich.console import Console
 from rich.style import Style
-from rich.traceback import Traceback
+from rich.traceback import Trace, Traceback
 
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
@@ -19,8 +19,10 @@ def make_console() -> Console:
 
 
 class RichPrinter:
-    def __init__(self, console_factory: Callable[[], Console] = make_console) -> None:
+    def __init__(self, console_factory: Callable[[], Console] = make_console,
+                 *, traceback_factory: Callable[..., Traceback] = Traceback) -> None:
         self._console = console_factory()
+        self._traceback_factory = traceback_factory
 
     @property
     def console(self) -> Console:
@@ -76,8 +78,7 @@ class RichPrinter:
         else:
             self._console.out(name, style=style)
 
-    # filter calls
-    def _filter_calls(self, traceback: TracebackType) -> TracebackType:
+    def __filter_internals(self, traceback: TracebackType) -> TracebackType:
         class _Traceback:
             def __init__(self, tb_frame: FrameType, tb_lasti: int, tb_lineno: int,
                          tb_next: Optional[TracebackType]) -> None:
@@ -91,7 +92,7 @@ class RichPrinter:
 
         root = os.path.dirname(vedro.__file__)
         while tb.tb_next is not None:
-            filename = os.path.abspath(traceback.tb_frame.f_code.co_filename)
+            filename = os.path.abspath(tb.tb_frame.f_code.co_filename)
             if os.path.commonpath([root, filename]) != root:
                 break
             tb = tb.tb_next  # type: ignore
@@ -99,34 +100,29 @@ class RichPrinter:
         return cast(TracebackType, tb)
 
     def print_exception(self, exc_info: ExcInfo, *, max_frames: int = 8) -> None:
-        traceback = self._filter_calls(exc_info.traceback)
+        traceback = self.__filter_internals(exc_info.traceback)
         formatted = format_exception(exc_info.type, exc_info.value, traceback, limit=max_frames)
         self._console.out("".join(formatted), style=Style(color="yellow"))
 
-    def _filter_locals(self, local_variables: Dict[str, Any]) -> Dict[str, Any]:
-        filtered_locals = {}
-        for key, val in local_variables.items():
-            if key == "self":
-                continue
-            if key.startswith("@"):
-                continue
-            filtered_locals[key] = val
-        return filtered_locals
+    def __filter_locals(self, trace: Trace) -> None:
+        for stack in trace.stacks:
+            for frame in stack.frames:
+                if frame.locals is not None:
+                    frame.locals = {k: v for k, v in frame.locals.items()
+                                    if k != "self" and not k.startswith("@")}
 
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
                                show_locals: bool = False,
                                word_wrap: bool = False) -> None:
-        traceback = self._filter_calls(exc_info.traceback)
+        traceback = self.__filter_internals(exc_info.traceback)
         trace = Traceback.extract(exc_info.type, exc_info.value, traceback,
                                   show_locals=show_locals)
-        if show_locals:
-            for stack in trace.stacks:
-                for frame in stack.frames:
-                    if frame.locals is not None:
-                        frame.locals = self._filter_locals(frame.locals)
 
-        tb = Traceback(trace, max_frames=max_frames, word_wrap=word_wrap)
+        if show_locals:
+            self.__filter_locals(trace)
+
+        tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap)
         self._console.print(tb)
         self.print_empty_line()
 

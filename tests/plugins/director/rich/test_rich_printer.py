@@ -1,16 +1,18 @@
+from traceback import format_exception
 from typing import Dict, Union
 from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
 from rich.style import Style
+from rich.traceback import Traceback
 
-from vedro.core import ScenarioStatus, StepStatus
+from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 from vedro.plugins.director.rich import RichPrinter
 
-from ._utils import console_, printer
+from ._utils import TestTraceback, console_, exc_info, printer
 
-__all__ = ("console_", "printer")  # fixtures
+__all__ = ("printer", "exc_info", "console_")  # fixtures
 
 
 def test_get_console(*, printer: RichPrinter, console_: Mock):
@@ -180,6 +182,34 @@ def test_print_step_name_unknown_status(*, printer: RichPrinter, console_: Mock)
 
     with then:
         assert console_.mock_calls == []
+
+
+def test_print_exception(*, printer: RichPrinter, exc_info: ExcInfo, console_: Mock):
+    with given:
+        formatted = format_exception(exc_info.type, exc_info.value, exc_info.traceback)
+
+    with when:
+        printer.print_exception(exc_info)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out("".join(formatted), style=Style(color="yellow")),
+        ]
+
+
+def test_print_pretty_exception(*, printer: RichPrinter, exc_info: ExcInfo, console_: Mock):
+    with given:
+        trace = Traceback.extract(exc_info.type, exc_info.value, exc_info.traceback)
+        tb = TestTraceback(trace, max_frames=8, word_wrap=False)
+
+    with when:
+        printer.print_pretty_exception(exc_info)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(tb),
+            call.out(" "),
+        ]
 
 
 def test_print_scope_header(*, printer: RichPrinter, console_: Mock):
