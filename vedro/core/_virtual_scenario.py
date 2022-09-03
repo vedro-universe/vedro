@@ -81,7 +81,6 @@ class VirtualScenario:
 
     @property
     def namespace(self) -> str:
-        # deprecate
         module = self._orig_scenario.__module__
         rel_path = os.path.relpath(self._path, module.split(".")[0])
         return os.path.dirname(rel_path)

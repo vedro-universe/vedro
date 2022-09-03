@@ -1,3 +1,4 @@
+import sys
 from traceback import format_exception
 from typing import Dict, Union
 from unittest.mock import Mock, call
@@ -422,6 +423,7 @@ def test_pretty_format(*, printer: RichPrinter):
         ])
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.__repr__ returns 'call'")
 def test_pretty_format_unknown_type(*, printer: RichPrinter):
     with given:
         mock_ = Mock(__repr__=Mock(return_value="<repr>"))
