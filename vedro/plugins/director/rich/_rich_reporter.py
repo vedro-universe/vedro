@@ -102,6 +102,8 @@ class RichReporterPlugin(Reporter):
             self._printer.show_spinner(f" {event.scenario_result.scenario.subject}")
 
     def on_scenario_skipped(self, event: ScenarioSkippedEvent) -> None:
+        if not self._show_skipped:
+            return
         namespace = event.scenario_result.scenario.namespace
         if namespace != self._namespace:
             self._namespace = namespace
