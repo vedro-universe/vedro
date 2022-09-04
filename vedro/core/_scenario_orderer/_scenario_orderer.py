@@ -8,5 +8,5 @@ __all__ = ("ScenarioOrderer",)
 
 class ScenarioOrderer(ABC):
     @abstractmethod
-    async def sort(self, scenarios: List[VirtualScenario]) -> None:
+    async def sort(self, scenarios: List[VirtualScenario]) -> List[VirtualScenario]:
         pass

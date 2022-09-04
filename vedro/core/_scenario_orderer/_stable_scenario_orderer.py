@@ -8,9 +8,9 @@ __all__ = ("StableScenarioOrderer",)
 
 
 class StableScenarioOrderer(ScenarioOrderer):
-    async def sort(self, scenarios: List[VirtualScenario]) -> None:
-        def cmp(scn: VirtualScenario) -> Tuple[Any, ...]:
-            path = Path(scn.path)
-            return (len(path.parts),) + tuple((len(x), x) for x in path.parts)
+    def _cmp(self, scn: VirtualScenario) -> Tuple[Any, ...]:
+        path = Path(scn.path)
+        return (len(path.parts),) + tuple((len(x), x) for x in path.parts)
 
-        scenarios.sort(key=cmp)
+    async def sort(self, scenarios: List[VirtualScenario]) -> List[VirtualScenario]:
+        return list(sorted(scenarios, key=self._cmp))

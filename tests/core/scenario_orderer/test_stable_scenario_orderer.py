@@ -28,7 +28,7 @@ async def test_sort_no_scenarios(*, orderer: StableScenarioOrderer):
         res = await orderer.sort(scenarios)
 
     with then:
-        assert res is None
+        assert res == []
         assert scenarios == []
 
 
@@ -49,8 +49,7 @@ async def test_sort_scenarios(*, orderer: StableScenarioOrderer):
         res = await orderer.sort(scenarios)
 
     with then:
-        assert res is None
-        assert scenarios == [
+        assert res == [
             orig_scenarios["scenarios/scn2.py"],
             orig_scenarios["scenarios/scn10.py"],
             orig_scenarios["scenarios/dir1/scn1.py"],
@@ -58,3 +57,4 @@ async def test_sort_scenarios(*, orderer: StableScenarioOrderer):
             orig_scenarios["scenarios/dir2/scn2.py"],
             orig_scenarios["scenarios/directory/scn.py"],
         ]
+        assert scenarios == list(orig_scenarios.values())
