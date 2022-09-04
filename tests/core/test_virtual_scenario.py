@@ -59,6 +59,17 @@ def test_virtual_scenario_unique_id(*, scenario_: Type[Scenario]):
         assert unique_id == "c2NlbmFyaW9zL3NjZW5hcmlvLnB5OjpTY2VuYXJpbw"
 
 
+def test_virtual_scenario_unique_hash(*, scenario_: Type[Scenario]):
+    with given:
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        unique_hash = virtual_scenario.unique_hash
+
+    with then:
+        assert unique_hash == "c6b074186cf075e2044bed1088c30b9af5e6e2c2"
+
+
 def test_virtual_template_unique_id(*, template_: Type[Scenario]):
     with given:
         virtual_scenario = VirtualScenario(template_, [])

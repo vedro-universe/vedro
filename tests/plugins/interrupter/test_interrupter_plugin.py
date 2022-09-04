@@ -17,7 +17,7 @@ from ._utils import (
     make_scenario_result,
 )
 
-__all__ = ("dispatcher", "interrupter")
+__all__ = ("dispatcher", "interrupter",)  # fixtures
 
 
 @pytest.mark.asyncio

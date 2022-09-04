@@ -7,6 +7,7 @@ from vedro.events import (
     CleanupEvent,
     ScenarioReportedEvent,
     ScenarioRunEvent,
+    ScenarioSkippedEvent,
     StartupEvent,
 )
 from vedro.plugins.director._director_init_event import DirectorInitEvent
@@ -44,6 +45,7 @@ class RichReporterPlugin(Reporter):
                         .listen(ArgParsedEvent, self.on_arg_parsed) \
                         .listen(StartupEvent, self.on_startup) \
                         .listen(ScenarioRunEvent, self.on_scenario_run) \
+                        .listen(ScenarioSkippedEvent, self.on_scenario_skipped) \
                         .listen(ScenarioReportedEvent, self.on_scenario_reported) \
                         .listen(CleanupEvent, self.on_cleanup)
 
@@ -96,13 +98,25 @@ class RichReporterPlugin(Reporter):
             self._namespace = namespace
             self._printer.print_namespace(namespace)
 
+        if self._show_scenario_spinner:
+            self._printer.show_spinner(f" {event.scenario_result.scenario.subject}")
+
+    def on_scenario_skipped(self, event: ScenarioSkippedEvent) -> None:
+        namespace = event.scenario_result.scenario.namespace
+        if namespace != self._namespace:
+            self._namespace = namespace
+            self._printer.print_namespace(namespace)
+
     def _print_exception(self, exc_info: ExcInfo) -> None:
         if self._tb_pretty:
             self._printer.print_pretty_exception(exc_info,
                                                  max_frames=self._tb_max_frames,
-                                                 show_locals=self._tb_show_locals)
+                                                 show_locals=self._tb_show_locals,
+                                                 show_internal_calls=self._tb_show_internal_calls)
         else:
-            self._printer.print_exception(exc_info, max_frames=self._tb_max_frames)
+            self._printer.print_exception(exc_info,
+                                          max_frames=self._tb_max_frames,
+                                          show_internal_calls=self._tb_show_internal_calls)
 
     def _prefix_to_indent(self, prefix: str, indent: int = 0) -> str:
         last_line = prefix.split("\n")[-1]
@@ -162,6 +176,9 @@ class RichReporterPlugin(Reporter):
             self._print_scenario_skipped(scenario_result, prefix=prefix)
 
     def on_scenario_reported(self, event: ScenarioReportedEvent) -> None:
+        if self._show_scenario_spinner:
+            self._printer.hide_spinner()
+
         aggregated_result = event.aggregated_result
         rescheduled = len(aggregated_result.scenario_results)
         if rescheduled == 1:
@@ -173,6 +190,8 @@ class RichReporterPlugin(Reporter):
         for index, scenario_result in enumerate(aggregated_result.scenario_results, start=1):
             prefix = f" │\n ├─[{index}/{rescheduled}] "
             self._print_scenario_result(scenario_result, prefix=prefix)
+
+        self._printer.print_empty_line()
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         self._printer.print_empty_line()
@@ -188,7 +207,7 @@ class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
 
     # Show skipped scenarios
-    show_skipped: bool = False
+    show_skipped: bool = True
 
     # Show the elapsed time of each scenario
     show_timings: bool = False

@@ -1,5 +1,6 @@
 import os
 from base64 import b64encode
+from hashlib import blake2b
 from inspect import BoundArguments
 from pathlib import Path
 from typing import Any, List, Type, Union, cast
@@ -27,6 +28,13 @@ class VirtualScenario:
         if self.template_index is not None:
             unique_name += f"#{self.template_index}"
         return b64encode(unique_name.encode()).decode().strip("=")
+
+    @property
+    def unique_hash(self) -> str:
+        unique_name = f"{self.rel_path}::{self.name}"
+        if self.template_index is not None:
+            unique_name += f"#{self.template_index}"
+        return blake2b(unique_name.encode(), digest_size=20).hexdigest()
 
     @property
     def template_index(self) -> Union[int, None]:
