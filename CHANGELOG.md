@@ -1,11 +1,31 @@
 # Changelog
 
+## v1.7
+
+### v1.7.0 (2022-09-04)
+
+- [Core] Add `Registry` [#33](https://github.com/nikitanovosibirsk/vedro/pull/33)
+- [Core] Add `ScenarioOrderer` [#34](https://github.com/nikitanovosibirsk/vedro/pull/34)
+- [Core] Add `ScenarioScheduler` [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Core] Add `ScenarioReportedEvent` [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Core] Add `AggregatedResult` [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Core] Change `VirtualScenario.unique_id` impl [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Core] Fix `@context` typing [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Core] Fix `Deferrer` and `Artifacted` order [#33](https://github.com/nikitanovosibirsk/vedro/pull/33)
+- [Rich Reporter] Add `RichPrinter` [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Rich Reporter] Add `show_skipped` param [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [PyCharm Reporter] Set `show_skipped=True` by default [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Interrupter] Add `-ff` argument [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Repeater] Add plugin [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+
+
 ## v1.6
 
 ### v1.6.0 (2022-06-05)
 
 - [Core] Add artifacts [#29](https://github.com/nikitanovosibirsk/vedro/pull/29), [#30](https://github.com/nikitanovosibirsk/vedro/pull/30)
 - [Artifacted] Add plugin [#31](https://github.com/nikitanovosibirsk/vedro/pull/31)
+
 
 ## v1.5
 
@@ -22,12 +42,14 @@
 - [Rich Reporter] Limit traceback [#25](https://github.com/nikitanovosibirsk/vedro/pull/25)
 - [Rich Reporter] Add `--show-paths` param [#24](https://github.com/nikitanovosibirsk/vedro/pull/24)
 
+
 ## v1.4
 
 ### v1.4.0 (2022-01-09)
 
 - [Core] Add `vedro run` command [#20](https://github.com/nikitanovosibirsk/vedro/pull/20)
 - [Core] Move `vedro._core` to `vedro.core` [#21](https://github.com/nikitanovosibirsk/vedro/pull/21)
+
 
 ## v1.3
 
