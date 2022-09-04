@@ -29,7 +29,4 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
             for scn in loaded:
                 steps = self._discover_steps(scn)
                 scenarios.append(VirtualScenario(scn, steps))
-
-        await self._orderer.sort(scenarios)
-
-        return scenarios
+        return await self._orderer.sort(scenarios)
