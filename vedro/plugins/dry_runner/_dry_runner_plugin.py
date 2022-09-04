@@ -14,7 +14,8 @@ class DryRunnerPlugin(Plugin):
         self._global_config: ConfigType = event.config
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("--dry-run", action="store_true", default=False, help="")
+        group = event.arg_parser.add_argument_group("Dry Runner")
+        group.add_argument("--dry-run", action="store_true", default=False, help="")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._dry_run = event.args.dry_run
