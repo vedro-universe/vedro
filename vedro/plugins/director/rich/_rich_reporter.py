@@ -7,6 +7,7 @@ from vedro.events import (
     CleanupEvent,
     ScenarioReportedEvent,
     ScenarioRunEvent,
+    ScenarioSkippedEvent,
     StartupEvent,
 )
 from vedro.plugins.director._director_init_event import DirectorInitEvent
@@ -44,6 +45,7 @@ class RichReporterPlugin(Reporter):
                         .listen(ArgParsedEvent, self.on_arg_parsed) \
                         .listen(StartupEvent, self.on_startup) \
                         .listen(ScenarioRunEvent, self.on_scenario_run) \
+                        .listen(ScenarioSkippedEvent, self.on_scenario_skipped) \
                         .listen(ScenarioReportedEvent, self.on_scenario_reported) \
                         .listen(CleanupEvent, self.on_cleanup)
 
@@ -98,6 +100,12 @@ class RichReporterPlugin(Reporter):
 
         if self._show_scenario_spinner:
             self._printer.show_spinner(f" {event.scenario_result.scenario.subject}")
+
+    def on_scenario_skipped(self, event: ScenarioSkippedEvent) -> None:
+        namespace = event.scenario_result.scenario.namespace
+        if namespace != self._namespace:
+            self._namespace = namespace
+            self._printer.print_namespace(namespace)
 
     def _print_exception(self, exc_info: ExcInfo) -> None:
         if self._tb_pretty:

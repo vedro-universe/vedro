@@ -6,7 +6,13 @@ from baby_steps import given, then, when
 from vedro.core import Dispatcher
 from vedro.core import MonotonicScenarioScheduler as ScenarioScheduler
 from vedro.core import Report
-from vedro.events import CleanupEvent, ScenarioReportedEvent, ScenarioRunEvent, StartupEvent
+from vedro.events import (
+    CleanupEvent,
+    ScenarioReportedEvent,
+    ScenarioRunEvent,
+    ScenarioSkippedEvent,
+    StartupEvent,
+)
 from vedro.plugins.director import (
     DirectorInitEvent,
     DirectorPlugin,
@@ -135,6 +141,44 @@ async def test_scenario_unknown_status(*, dispatcher: Dispatcher, printer_: Mock
 
     with then:
         assert printer_.mock_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result()
+        event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.print_namespace.assert_called() is None
+        assert len(printer_.mock_calls) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_skipped_same_namespace(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result1 = make_scenario_result()
+        await dispatcher.fire(ScenarioSkippedEvent(scenario_result1))
+        printer_.reset_mock()
+
+        scenario_result2 = make_scenario_result()
+        event = ScenarioSkippedEvent(scenario_result2)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.print_namespace.assert_not_called() is None
+        assert len(printer_.mock_calls) == 0
 
 
 @pytest.mark.asyncio
