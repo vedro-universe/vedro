@@ -12,7 +12,7 @@ from ._report import Report
 from ._scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from ._scenario_finder import ScenarioFileFinder, ScenarioFinder
 from ._scenario_loader import ScenarioFileLoader, ScenarioLoader
-from ._scenario_orderer import ScenarioOrderer, StableScenarioOrderer
+from ._scenario_orderer import ScenarioOrderer
 from ._scenario_result import AggregatedResult, ScenarioResult, ScenarioStatus
 from ._scenario_runner import MonotonicScenarioRunner, ScenarioRunner
 from ._scenario_scheduler import MonotonicScenarioScheduler, ScenarioScheduler
@@ -28,4 +28,4 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Lifecycle", "Plugin"
            "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",
            "ModuleLoader", "ModuleFileLoader", "Artifact", "MemoryArtifact", "FileArtifact",
            "ScenarioScheduler", "MonotonicScenarioScheduler", "FactoryType",
-           "Container", "Factory", "Singleton", "ScenarioOrderer", "StableScenarioOrderer")
+           "Container", "Factory", "Singleton", "ScenarioOrderer")
