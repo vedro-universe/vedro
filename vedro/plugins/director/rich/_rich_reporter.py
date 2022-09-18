@@ -31,6 +31,7 @@ class RichReporterPlugin(Reporter):
         self._show_skipped = config.show_skipped
         self._show_timings = config.show_timings
         self._show_paths = config.show_paths
+        self._hide_namespaces = config.hide_namespaces
         self._show_scenario_spinner = config.show_scenario_spinner
         self._namespace: Union[str, None] = None
 
@@ -66,6 +67,10 @@ class RichReporterPlugin(Reporter):
                            action="store_true",
                            default=self._show_paths,
                            help="Show the relative path of each passed scenario")
+        group.add_argument("--hide-namespaces",
+                           action="store_true",
+                           default=self._hide_namespaces,
+                           help="Don't show scenario namespaces")
         group.add_argument("--tb-show-internal-calls",
                            action="store_true",
                            default=self._tb_show_internal_calls,
@@ -79,6 +84,7 @@ class RichReporterPlugin(Reporter):
         self._verbosity = event.args.verbose
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
+        self._hide_namespaces = event.args.hide_namespaces
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
 
@@ -96,7 +102,8 @@ class RichReporterPlugin(Reporter):
         namespace = event.scenario_result.scenario.namespace
         if namespace != self._namespace:
             self._namespace = namespace
-            self._printer.print_namespace(namespace)
+            if self._hide_namespaces is False:
+                self._printer.print_namespace(namespace)
 
         if self._show_scenario_spinner:
             self._printer.show_spinner(f" {event.scenario_result.scenario.subject}")
@@ -107,7 +114,8 @@ class RichReporterPlugin(Reporter):
         namespace = event.scenario_result.scenario.namespace
         if namespace != self._namespace:
             self._namespace = namespace
-            self._printer.print_namespace(namespace)
+            if self._hide_namespaces is False:
+                self._printer.print_namespace(namespace)
 
     def _print_exception(self, exc_info: ExcInfo) -> None:
         if self._tb_pretty:
@@ -216,6 +224,9 @@ class RichReporter(PluginConfig):
 
     # Show the relative path of each passed scenario
     show_paths: bool = False
+
+    # Don't show scenario namespaces
+    hide_namespaces: bool = False
 
     # Show status indicator of the current running scenario
     show_scenario_spinner: bool = False

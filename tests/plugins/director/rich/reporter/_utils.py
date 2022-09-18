@@ -52,6 +52,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 verbose: int = 0,
                                 show_timings: bool = RichReporter.show_timings,
                                 show_paths: bool = RichReporter.show_paths,
+                                hide_namespaces: bool = RichReporter.hide_namespaces,
                                 tb_show_internal_calls: bool = RichReporter.tb_show_internal_calls,
                                 tb_show_locals: bool = RichReporter.tb_show_locals) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
@@ -62,6 +63,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
     namespace = Namespace(verbose=verbose,
                           show_timings=show_timings,
                           show_paths=show_paths,
+                          hide_namespaces=hide_namespaces,
                           tb_show_internal_calls=tb_show_internal_calls,
                           tb_show_locals=tb_show_locals)
     arg_parsed_event = ArgParsedEvent(namespace)
