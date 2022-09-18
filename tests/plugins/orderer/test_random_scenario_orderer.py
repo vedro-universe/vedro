@@ -1,33 +1,14 @@
-import random
-from contextlib import contextmanager
-from pathlib import Path
-
 import pytest
 from baby_steps import given, then, when
 
-from vedro import Scenario
-from vedro.core import VirtualScenario
 from vedro.plugins.orderer import RandomOrderer
+
+from ._utils import make_vscenario, seeded
 
 
 @pytest.fixture()
-def orderer():
+def orderer() -> RandomOrderer:
     return RandomOrderer()
-
-
-@contextmanager
-def seeded(seed: str):
-    state = random.getstate()
-    random.seed(seed)
-    yield
-    random.setstate(state)
-
-
-def make_vscenario(path: str) -> VirtualScenario:
-    class _Scenario(Scenario):
-        __file__ = Path(path).absolute()
-
-    return VirtualScenario(_Scenario, steps=[])
 
 
 @pytest.mark.asyncio

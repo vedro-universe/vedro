@@ -1,9 +1,12 @@
+import random
 from argparse import Namespace
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
-from vedro.core import ArgumentParser, ConfigType, Dispatcher
+from vedro import Scenario
+from vedro.core import ArgumentParser, ConfigType, Dispatcher, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.orderer import Orderer, OrdererPlugin
 
@@ -18,6 +21,21 @@ def orderer(dispatcher: Dispatcher) -> OrdererPlugin:
     orderer = OrdererPlugin(Orderer)
     orderer.subscribe(dispatcher)
     return orderer
+
+
+@contextmanager
+def seeded(seed: str):
+    state = random.getstate()
+    random.seed(seed)
+    yield random.seed(seed)
+    random.setstate(state)
+
+
+def make_vscenario(path: str) -> VirtualScenario:
+    class _Scenario(Scenario):
+        __file__ = Path(path).absolute()
+
+    return VirtualScenario(_Scenario, steps=[])
 
 
 async def fire_config_loaded_event(dispatcher: Dispatcher, config: ConfigType) -> None:
