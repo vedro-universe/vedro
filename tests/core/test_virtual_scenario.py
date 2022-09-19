@@ -6,9 +6,11 @@ from unittest.mock import Mock
 
 import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro import Scenario
 from vedro.core import VirtualScenario, VirtualStep
+from vedro.core._virtual_scenario import ScenarioInitError
 
 
 @pytest.fixture()
@@ -170,6 +172,21 @@ def test_virtual_scenario_skip(*, scenario_: Type[Scenario]):
     with then:
         assert res is None
         assert virtual_scenario.is_skipped() is True
+
+
+def test_virtual_scenario_init(*, scenario_: Type[Scenario]):
+    with given:
+        exc_msg = "<message>"
+        scenario_.side_effect = (TypeError(exc_msg),)
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when, raises(BaseException) as exc_info:
+        virtual_scenario()
+
+    with then:
+        assert exc_info.type is ScenarioInitError
+        assert str(exc_info.value) == ('Can\'t initialize scenario "scenario" '
+                                       f'at "scenarios/scenario.py" ({exc_msg})')
 
 
 def test_virtual_scenario_repr(*, scenario_: Type[Scenario], method_: MethodType):
