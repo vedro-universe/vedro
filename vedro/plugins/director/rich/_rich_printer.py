@@ -16,7 +16,7 @@ __all__ = ("RichPrinter",)
 
 
 def make_console() -> Console:
-    return Console(highlight=False, force_terminal=True)
+    return Console(highlight=False, force_terminal=True, markup=False)
 
 
 class RichPrinter:
