@@ -18,7 +18,6 @@ class SystemUpgradePlugin(Plugin):
         self._thread: Union[Thread, None] = None
         self._latest_version: Union[str, None] = None
         self._cur_version = vedro.__version__
-        self._cur_version = "1.7.1"  # debug
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(StartupEvent, self.on_startup) \
@@ -44,14 +43,22 @@ class SystemUpgradePlugin(Plugin):
         self._thread = Thread(target=self._get_latest_version, daemon=True)
         self._thread.start()
 
+    def _is_up_to_date(self, cur_version: str, new_version: str) -> bool:
+        cur_ver = tuple(map(int, cur_version.split(".")))
+        new_ver = tuple(map(int, new_version.split(".")))
+        return cur_ver >= new_ver
+
     def on_cleanup(self, event: CleanupEvent) -> None:
         if self._thread:
             self._thread.join(0.0)
             self._thread = None
 
-        if self._latest_version and (self._latest_version != self._cur_version):
-            event.report.add_summary(
-                f"(!) Vedro update available: {self._cur_version} → {self._latest_version}")
+        if self._latest_version is None:
+            return
+
+        if not self._is_up_to_date(self._cur_version, self._latest_version):
+            message = f"(!) Vedro update available: {self._cur_version} → {self._latest_version}"
+            event.report.add_summary(message)
 
 
 class SystemUpgrade(PluginConfig):
