@@ -1,6 +1,7 @@
 from contextlib import contextmanager
+from time import sleep
 from typing import Any, Callable
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -35,20 +36,32 @@ class urlopen:
         return self._callable()
 
 
+def _wait_for_mock_calls(patched: MagicMock, *,
+                         expected: int, attempts: int = 3, delay: float = 0.01) -> None:
+    attempt = 1
+    while attempt <= attempts:
+        if patched.call_count >= expected:
+            break
+        sleep(delay)
+        attempt += 1
+
+
 @contextmanager
-def mocked_response(new_version: str):
+def mocked_response(new_version: str, *, wait_for_calls: int = 0):
     return_value = urlopen(lambda: f'{{"version": "{new_version}"}}'.encode())
     with patch("urllib.request.urlopen", return_value=return_value) as patched:
         yield patched
+        _wait_for_mock_calls(patched,  expected=wait_for_calls)
 
 
 @contextmanager
-def mocked_error_response(exception: BaseException):
+def mocked_error_response(exception: BaseException, *, wait_for_calls: int = 0):
     def raise_():
         raise exception
 
     with patch("urllib.request.urlopen", return_value=urlopen(raise_)) as patched:
         yield patched
+        _wait_for_mock_calls(patched, expected=wait_for_calls)
 
 
 @pytest.fixture()

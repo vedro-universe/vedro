@@ -14,7 +14,7 @@ class SystemUpgradePlugin(Plugin):
     def __init__(self, config: Type["SystemUpgrade"]) -> None:
         super().__init__(config)
         self._api_url = config.api_url
-        self._timeout = 1.0
+        self._timeout = config.timeout
         self._thread: Union[Thread, None] = None
         self._latest_version: Union[str, None] = None
         self._cur_version = vedro.__version__
@@ -65,3 +65,4 @@ class SystemUpgrade(PluginConfig):
     plugin = SystemUpgradePlugin
 
     api_url: str = "https://api.vedro.io"
+    timeout: float = 1.0

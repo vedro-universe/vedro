@@ -27,18 +27,16 @@ __all__ = ("dispatcher", "system_upgrade", "cur_version")  # fixtures
 @pytest.mark.usefixtures(system_upgrade.__name__)
 async def test_update_available(*, cur_version: str, dispatcher: Dispatcher):
     new_version = gen_next_version(cur_version)
-    with mocked_response(new_version=new_version) as patched:
+    with given, mocked_response(new_version=new_version, wait_for_calls=1) as patched:
+        scheduler = Scheduler([])
+        startup_event = StartupEvent(scheduler)
+        await dispatcher.fire(startup_event)
 
-        with given:
-            scheduler = Scheduler([])
-            startup_event = StartupEvent(scheduler)
-            await dispatcher.fire(startup_event)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
-            report = Report()
-            cleanup_event = CleanupEvent(report)
-
-        with when:
-            await dispatcher.fire(cleanup_event)
+    with when:
+        await dispatcher.fire(cleanup_event)
 
     with then:
         assert report.summary == [
@@ -53,18 +51,16 @@ async def test_update_available(*, cur_version: str, dispatcher: Dispatcher):
 async def test_update_not_available(gen_version: Callable[[str], str], *,
                                     cur_version: str, dispatcher: Dispatcher):
     new_version = gen_version(cur_version)
-    with mocked_response(new_version=new_version) as patched:
+    with given, mocked_response(new_version=new_version, wait_for_calls=1) as patched:
+        scheduler = Scheduler([])
+        startup_event = StartupEvent(scheduler)
+        await dispatcher.fire(startup_event)
 
-        with given:
-            scheduler = Scheduler([])
-            startup_event = StartupEvent(scheduler)
-            await dispatcher.fire(startup_event)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
-            report = Report()
-            cleanup_event = CleanupEvent(report)
-
-        with when:
-            await dispatcher.fire(cleanup_event)
+    with when:
+        await dispatcher.fire(cleanup_event)
 
     with then:
         assert report.summary == []
@@ -74,19 +70,31 @@ async def test_update_not_available(gen_version: Callable[[str], str], *,
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(system_upgrade.__name__)
 async def test_update_error(cur_version: str, dispatcher: Dispatcher):
-    with mocked_error_response(URLError("msg")) as patched:
+    with given, mocked_error_response(URLError("msg"), wait_for_calls=1) as patched:
+        scheduler = Scheduler([])
+        startup_event = StartupEvent(scheduler)
+        await dispatcher.fire(startup_event)
 
-        with given:
-            scheduler = Scheduler([])
-            startup_event = StartupEvent(scheduler)
-            await dispatcher.fire(startup_event)
+        report = Report()
+        cleanup_event = CleanupEvent(report)
 
-            report = Report()
-            cleanup_event = CleanupEvent(report)
-
-        with when:
-            await dispatcher.fire(cleanup_event)
+    with when:
+        await dispatcher.fire(cleanup_event)
 
     with then:
         assert report.summary == []
         assert patched.assert_called_once() is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(system_upgrade.__name__)
+async def test_thread_stop(cur_version: str, dispatcher: Dispatcher):
+    with given:
+        report = Report()
+        cleanup_event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(cleanup_event)
+
+    with then:
+        assert report.summary == []
