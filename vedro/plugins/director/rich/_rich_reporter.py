@@ -210,7 +210,8 @@ class RichReporterPlugin(Reporter):
                                          passed=event.report.passed,
                                          failed=event.report.failed,
                                          skipped=event.report.skipped,
-                                         elapsed=event.report.elapsed)
+                                         elapsed=event.report.elapsed,
+                                         interrupted=event.report._interrupted is not None)
 
 
 class RichReporter(PluginConfig):

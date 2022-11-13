@@ -1,5 +1,6 @@
 from typing import Any, List, Union, cast
 
+from ._exc_info import ExcInfo
 from ._scenario_result import AggregatedResult
 
 __all__ = ("Report",)
@@ -14,6 +15,7 @@ class Report:
         self._passed: int = 0
         self._failed: int = 0
         self._skipped: int = 0
+        self._interrupted: Union[ExcInfo, None] = None
 
     @property
     def started_at(self) -> Union[float, None]:

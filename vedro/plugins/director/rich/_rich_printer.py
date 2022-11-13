@@ -169,11 +169,14 @@ class RichPrinter:
         self._console.out(text, style=Style(color="grey70"))
 
     def print_report_stats(self, *, total: int, passed: int, failed: int, skipped: int,
-                           elapsed: float) -> None:
-        if (failed == 0) and (passed > 0):
-            style = Style(color="green", bold=True)
-        else:
+                           elapsed: float, interrupted: bool = False) -> None:
+        if interrupted or (failed > 0 or passed == 0):
             style = Style(color="red", bold=True)
+        else:
+            style = Style(color="green", bold=True)
+
+        if interrupted:
+            self._console.out("~ Interrupted", style=Style(color="yellow"))
 
         scenarios = "scenario" if (total == 1) else "scenarios"
         self._console.out(f"# {total} {scenarios}, "

@@ -22,7 +22,7 @@ from .._scenario_scheduler import ScenarioScheduler
 from .._step_result import StepResult
 from .._virtual_scenario import VirtualScenario
 from .._virtual_step import VirtualStep
-from ._interrupted import Interrupted, ScenarioInterrupted, StepInterrupted
+from ._interrupted import Interrupted, RunInterrupted, ScenarioInterrupted, StepInterrupted
 from ._scenario_runner import ScenarioRunner
 
 __all__ = ("MonotonicScenarioRunner",)
@@ -84,11 +84,15 @@ class MonotonicScenarioRunner(ScenarioRunner):
         for step in scenario.steps:
             try:
                 step_result = await self.run_step(step, ref)
-            except StepInterrupted as e:
-                scenario_result.add_step_result(e.step_result)
+            except self._interrupt_exceptions as e:
+                if isinstance(e, StepInterrupted):
+                    scenario_result.add_step_result(e.step_result)
+                    exc_info = e.exc_info
+                else:
+                    exc_info = ExcInfo(*sys.exc_info())
                 scenario_result.set_ended_at(time()).mark_failed()
                 await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
-                raise ScenarioInterrupted(e.exc_info, scenario_result)
+                raise ScenarioInterrupted(exc_info, scenario_result)
             else:
                 scenario_result.add_step_result(step_result)
 
@@ -103,36 +107,45 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         return scenario_result
 
+    async def _report_scenario_results(self, scenario_results: List[ScenarioResult],
+                                       report: Report, scheduler: ScenarioScheduler) -> None:
+        aggregated_result = scheduler.aggregate_results(scenario_results)
+        report.add_result(aggregated_result)
+        await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
+
     async def _run(self, scheduler: ScenarioScheduler, report: Report) -> None:
         scenario_results: List[ScenarioResult] = []
 
         async for scenario in scheduler:
             prev_scenario = scenario_results[-1].scenario if len(scenario_results) > 0 else None
             if prev_scenario and prev_scenario.unique_id != scenario.unique_id:
-                aggregated_result = scheduler.aggregate_results(scenario_results)
-                report.add_result(aggregated_result)
-                await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
+                await self._report_scenario_results(scenario_results, report, scheduler)
                 scenario_results = []
 
             try:
                 scenario_result = await self.run_scenario(scenario)
-            except ScenarioInterrupted as e:
-                scenario_results.append(e.scenario_result)
-                break
+            except self._interrupt_exceptions as e:
+                if isinstance(e, ScenarioInterrupted):
+                    scenario_results.append(e.scenario_result)
+                    exc_info = e.exc_info
+                else:
+                    exc_info = ExcInfo(*sys.exc_info())
+                if len(scenario_results) > 0:
+                    await self._report_scenario_results(scenario_results, report, scheduler)
+                raise RunInterrupted(exc_info)
             else:
                 scenario_results.append(scenario_result)
 
         if len(scenario_results) > 0:
-            aggregated_result = scheduler.aggregate_results(scenario_results)
-            report.add_result(aggregated_result)
-            await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
+            await self._report_scenario_results(scenario_results, report, scheduler)
 
     async def run(self, scheduler: ScenarioScheduler) -> Report:
         report = Report()
-
         try:
             await self._run(scheduler, report)
-        except:  # noqa: E722
-            raise
-
+        except self._interrupt_exceptions as e:
+            if isinstance(e, RunInterrupted):
+                report._interrupted = e.exc_info
+            else:
+                report._interrupted = ExcInfo(*sys.exc_info())
         return report
