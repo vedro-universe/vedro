@@ -218,5 +218,6 @@ async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
                                     passed=report.passed,
                                     failed=report.failed,
                                     skipped=report.skipped,
-                                    elapsed=report.elapsed)
+                                    elapsed=report.elapsed,
+                                    interrupted=False)
         ]
