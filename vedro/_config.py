@@ -6,6 +6,7 @@ import vedro.plugins.assert_rewriter as assert_rewriter
 import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.interrupter as interrupter
+import vedro.plugins.orderer as orderer
 import vedro.plugins.repeater as repeater
 import vedro.plugins.rerunner as rerunner
 import vedro.plugins.seeder as seeder
@@ -78,6 +79,9 @@ class Config(core.Config):
             enabled = True
 
         class PyCharmReporter(director.PyCharmReporter):
+            enabled = True
+
+        class Orderer(orderer.Orderer):
             enabled = True
 
         class Deferrer(deferrer.Deferrer):
