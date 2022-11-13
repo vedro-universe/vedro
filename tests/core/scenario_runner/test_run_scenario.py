@@ -6,7 +6,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import Dispatcher, MonotonicScenarioRunner, ScenarioResult
-from vedro.core._scenario_runner import ScenarioInterrupted
+from vedro.core._scenario_runner import Interrupted, ScenarioInterrupted
 from vedro.events import (
     ExceptionRaisedEvent,
     ScenarioFailedEvent,
@@ -188,44 +188,44 @@ async def test_multiple_steps_failed(*, runner: MonotonicScenarioRunner, dispatc
 
 
 @pytest.mark.asyncio
-async def test_step_interruped(*, dispatcher_: Dispatcher):
+@pytest.mark.parametrize("interrupt_exception", (KeyboardInterrupt, Interrupted))
+async def test_step_interruped(interrupt_exception, *, dispatcher_: Dispatcher):
     with given:
-        interrupt_exception = KeyboardInterrupt
+        exception = interrupt_exception()
+        step1_, step2_ = Mock(side_effect=exception), Mock(return_value=None)
+        vstep1, vstep2 = make_vstep(step1_), make_vstep(step2_)
+        vscenario = make_vscenario(steps=[vstep1, vstep2])
+
         runner = MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
 
-        step1_ = Mock(return_value=None)
-        step2_ = Mock(side_effect=interrupt_exception())
-        step3_ = Mock(return_value=None)
-        vstep1, vstep2, vstep3 = make_vstep(step1_), make_vstep(step2_), make_vstep(step3_)
-        vscenario = make_vscenario(steps=[vstep1, vstep2, vstep3])
-
-    with when, raises(BaseException) as exception:
+    with when, raises(BaseException) as exc:
         await runner.run_scenario(vscenario)
 
     with then("exception raised"):
-        assert exception.type is ScenarioInterrupted
+        assert exc.type is ScenarioInterrupted
 
-        orig_exc = cast(ScenarioInterrupted, exception.value)
+        orig_exc = cast(ScenarioInterrupted, exc.value)
         assert isinstance(orig_exc.exc_info.value, interrupt_exception)
         assert isinstance(orig_exc.scenario_result, ScenarioResult)
 
-    with then("step called"):
+    with then("scenario_result created"):
+        scenario_result = orig_exc.scenario_result
+        assert scenario_result.is_failed() is True
+        assert isinstance(scenario_result.started_at, float)
+        assert isinstance(scenario_result.ended_at, float)
+
+    with then("first step called"):
         assert step1_.assert_called_once() is None
-        assert step2_.assert_called_once() is None
-        assert step3_.assert_not_called() is None
+        assert step2_.assert_not_called() is None
 
     with then("events fired"):
-        step_result1 = orig_exc.scenario_result.step_results[0]
-        step_result2 = orig_exc.scenario_result.step_results[1]
+        step_result = orig_exc.scenario_result.step_results[0]
         assert dispatcher_.mock_calls == [
-            call.fire(ScenarioRunEvent(orig_exc.scenario_result)),
+            call.fire(ScenarioRunEvent(scenario_result)),
 
-            call.fire(StepRunEvent(step_result1)),
-            call.fire(StepPassedEvent(step_result1)),
-
-            call.fire(StepRunEvent(step_result2)),
+            call.fire(StepRunEvent(step_result)),
             call.fire(ExceptionRaisedEvent(orig_exc.exc_info)),
-            call.fire(StepFailedEvent(step_result2)),
+            call.fire(StepFailedEvent(step_result)),
 
-            call.fire(ScenarioFailedEvent(orig_exc.scenario_result)),
+            call.fire(ScenarioFailedEvent(scenario_result)),
         ]
