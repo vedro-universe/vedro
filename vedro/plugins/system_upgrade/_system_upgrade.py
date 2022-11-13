@@ -51,11 +51,11 @@ class SystemUpgradePlugin(Plugin):
 
     def _is_up_to_date(self, cur_version: str, new_version: str) -> bool:
         try:
-            from pkg_resources import parse_version
+            from pkg_resources import parse_version  # type: ignore
         except ImportError:
             def parse_version(version: str) -> Tuple[str, ...]:
                 return tuple(x.zfill(8) for x in version.split("."))
-        return parse_version(cur_version) >= parse_version(new_version)
+        return bool(parse_version(cur_version) >= parse_version(new_version))
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if self._thread:
