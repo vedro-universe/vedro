@@ -62,7 +62,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
 
 
 def make_vstep(name: Optional[str] = None) -> VirtualStep:
-    def step():
+    def step(self):
         pass
     step.__name__ = name or f"step_{monotonic_ns()}"
     return VirtualStep(step)
