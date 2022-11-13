@@ -1,7 +1,8 @@
 import json
+import platform
 import urllib.request
 from threading import Thread
-from typing import Any, Dict, Type, Union
+from typing import Any, Dict, Tuple, Type, Union
 
 import vedro
 from vedro.core import Dispatcher, Plugin, PluginConfig
@@ -32,9 +33,14 @@ class SystemUpgradePlugin(Plugin):
         except BaseException:
             return None
 
+    def _get_user_agent(self) -> str:
+        python_version = platform.python_version()
+        platform_info = platform.platform(terse=True)
+        return f"Vedro/{self._cur_version} (Python/{python_version}; {platform_info})"
+
     def _get_latest_version(self) -> None:
         url = f"{self._api_url}/v1/last-version"
-        headers = {"User-Agent": "Mozilla/5.0"}
+        headers = {"User-Agent": self._get_user_agent()}
         response = self._send_request(url, headers=headers, timeout=self._timeout)
         if isinstance(response, dict) and ("version" in response):
             self._latest_version = response["version"]
@@ -44,9 +50,12 @@ class SystemUpgradePlugin(Plugin):
         self._thread.start()
 
     def _is_up_to_date(self, cur_version: str, new_version: str) -> bool:
-        cur_ver = tuple(map(int, cur_version.split(".")))
-        new_ver = tuple(map(int, new_version.split(".")))
-        return cur_ver >= new_ver
+        try:
+            from pkg_resources import parse_version
+        except ImportError:
+            def parse_version(version: str) -> Tuple[str, ...]:
+                return tuple(x.zfill(8) for x in version.split("."))
+        return parse_version(cur_version) >= parse_version(new_version)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if self._thread:
@@ -64,5 +73,8 @@ class SystemUpgradePlugin(Plugin):
 class SystemUpgrade(PluginConfig):
     plugin = SystemUpgradePlugin
 
+    # URL to the Vedro API
     api_url: str = "https://api.vedro.io"
+
+    # Timeout for the request to the API
     timeout: float = 1.0
