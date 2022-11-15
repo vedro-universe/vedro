@@ -1,5 +1,5 @@
 from inspect import isclass
-from typing import Callable, Optional, Type, cast
+from typing import Callable, Optional, Type, TypeVar
 
 from vedro._scenario import Scenario
 
@@ -7,16 +7,17 @@ from ._skip import skip
 
 __all__ = ("skip_if",)
 
-RetType = Callable[[Type[Scenario]], Type[Scenario]]
+
+T = TypeVar("T", bound=Type[Scenario])
 
 
-def skip_if(cond: Callable[[], bool], reason: Optional[str] = None) -> RetType:
+def skip_if(cond: Callable[[], bool], reason: Optional[str] = None, /) -> Callable[[T], T]:
     if isclass(cond) and issubclass(cond, Scenario):
-        raise TypeError()
+        raise TypeError("Usage: @skip_if(condition, reason?)")
 
-    def wrapped(scenario: Type[Scenario]) -> Type[Scenario]:
+    def wrapped(scenario: T) -> T:
         if cond():
-            return cast(Type[Scenario], skip(reason)(scenario))
+            return skip(reason)(scenario)
         return scenario
 
     return wrapped
