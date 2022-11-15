@@ -11,9 +11,9 @@ __all__ = ("skip_if",)
 T = TypeVar("T", bound=Type[Scenario])
 
 
-def skip_if(cond: Callable[[], bool], reason: Optional[str] = None, /) -> Callable[[T], T]:
+def skip_if(cond: Callable[[], bool], reason: Optional[str] = None) -> Callable[[T], T]:
     if isclass(cond) and issubclass(cond, Scenario):
-        raise TypeError("Usage: @skip_if(condition, reason?)")
+        raise TypeError('Usage: @skip_if(<condition>, "reason?")')
 
     def wrapped(scenario: T) -> T:
         if cond():
