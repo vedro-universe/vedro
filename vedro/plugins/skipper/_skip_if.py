@@ -12,10 +12,12 @@ T = TypeVar("T", bound=Type[Scenario])
 
 
 def skip_if(cond: Callable[[], bool], reason: Optional[str] = None) -> Callable[[T], T]:
-    if isclass(cond) and issubclass(cond, Scenario):
+    if isclass(cond) or not callable(cond):
         raise TypeError('Usage: @skip_if(<condition>, "reason?")')
 
     def wrapped(scenario: T) -> T:
+        if not issubclass(scenario, Scenario):
+            raise TypeError("Decorator @skip_if can be used only with 'vedro.Scenario' subclasses")
         if cond():
             return skip(reason)(scenario)
         return scenario

@@ -6,16 +6,6 @@ from vedro import Scenario
 from vedro.plugins.skipper import skip_if
 
 
-def test_skip_if():
-    with when, raises(Exception) as exc:
-        @skip_if
-        class _Scenario(Scenario):
-            pass
-
-    with then:
-        assert exc.type is TypeError
-
-
 def test_skip_if_truthy():
     with when:
         @skip_if(lambda: True)
@@ -45,7 +35,7 @@ def test_skip_if_with_reason():
         reason = "<reason>"
 
     with when:
-        @skip_if(lambda: True, "<reason>")
+        @skip_if(lambda: True, reason)
         class _Scenario(Scenario):
             pass
 
@@ -56,10 +46,34 @@ def test_skip_if_with_reason():
 
 
 def test_skip_if_not_subclass():
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         @skip_if(lambda: True)
         class _Scenario:
             pass
 
     with then:
-        assert exc.type is AssertionError
+        assert exc.type is TypeError
+        assert str(exc.value) == ("Decorator @skip_if can be used only with "
+                                  "'vedro.Scenario' subclasses")
+
+
+def test_skip_if():
+    with when, raises(BaseException) as exc:
+        @skip_if
+        class _Scenario(Scenario):
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == 'Usage: @skip_if(<condition>, "reason?")'
+
+
+def test_skip_if_not_callable():
+    with when, raises(BaseException) as exc:
+        @skip_if("not callable")
+        class _Scenario(Scenario):
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == 'Usage: @skip_if(<condition>, "reason?")'

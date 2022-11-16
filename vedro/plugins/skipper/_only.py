@@ -9,24 +9,25 @@ T = TypeVar("T", bound=Type[Scenario])
 
 
 @overload
-def only(scenario_or_reason: T) -> T:
+def only(scenario_or_reason: T) -> T:  # pragma: no cover
     pass
 
 
 @overload
-def only(scenario_or_reason: None = None) -> Callable[[T], T]:
+def only(scenario_or_reason: None = None) -> Callable[[T], T]:  # pragma: no cover
     pass
 
 
 def only(scenario_or_nothing=None):  # type: ignore
     def wrapped(scenario: T) -> T:
-        assert issubclass(scenario, Scenario)
+        if not issubclass(scenario, Scenario):
+            raise TypeError("Decorator @only can be used only with 'vedro.Scenario' subclasses")
         setattr(scenario, "__vedro__only__", True)
         return scenario
 
     if scenario_or_nothing is None:
         return wrapped
-    elif isclass(scenario_or_nothing) and issubclass(scenario_or_nothing, Scenario):
+    elif isclass(scenario_or_nothing):
         return wrapped(scenario_or_nothing)
     else:
         raise TypeError("Usage: @only")

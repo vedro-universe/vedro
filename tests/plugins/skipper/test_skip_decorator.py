@@ -46,10 +46,35 @@ def test_skip_called_with_reason():
 
 
 def test_skip_not_subclass():
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         @skip
         class _Scenario:
             pass
 
     with then:
         assert exc.type is TypeError
+        assert str(exc.value) == ("Decorator @skip can be used only with """
+                                  "'vedro.Scenario' subclasses")
+
+
+def test_skip_called_not_subclass():
+    with when, raises(BaseException) as exc:
+        @skip()
+        class _Scenario:
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == ("Decorator @skip can be used only with """
+                                  "'vedro.Scenario' subclasses")
+
+
+def test_skip_called_with_incorrect_arg():
+    with when, raises(BaseException) as exc:
+        @skip(1)
+        class _Scenario:
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == 'Usage: @skip or @skip("reason")'
