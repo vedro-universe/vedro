@@ -162,6 +162,18 @@ class RichPrinter:
     def print_scope_val(self, val: Any) -> None:
         self._console.print(val)
 
+    def print_interrupted(self, interrupted: ExcInfo, *, show_traceback: bool = False) -> None:
+        message = f"!!! Interrupted by “{interrupted.value!r}“ !!!"
+        spaces = " " * (len(message) - 6)
+        multiline_message = "\n".join([
+            "!!!" + spaces + "!!!",
+            message,
+            "!!!" + spaces + "!!!",
+        ])
+        self._console.out(multiline_message, style=Style(color="yellow"))
+        if show_traceback:
+            self.print_exception(interrupted)
+
     def print_report_summary(self, summary: List[str]) -> None:
         if len(summary) == 0:
             return
@@ -169,14 +181,11 @@ class RichPrinter:
         self._console.out(text, style=Style(color="grey70"))
 
     def print_report_stats(self, *, total: int, passed: int, failed: int, skipped: int,
-                           elapsed: float, interrupted: bool = False) -> None:
-        if interrupted or (failed > 0 or passed == 0):
+                           elapsed: float, is_interrupted: bool = False) -> None:
+        if is_interrupted or (failed > 0 or passed == 0):
             style = Style(color="red", bold=True)
         else:
             style = Style(color="green", bold=True)
-
-        if interrupted:
-            self._console.out("~ Interrupted", style=Style(color="yellow"))
 
         scenarios = "scenario" if (total == 1) else "scenarios"
         self._console.out(f"# {total} {scenarios}, "

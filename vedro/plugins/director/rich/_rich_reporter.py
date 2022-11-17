@@ -205,13 +205,19 @@ class RichReporterPlugin(Reporter):
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         self._printer.print_empty_line()
+
+        is_interrupted = False
+        if event.report.interrupted:
+            is_interrupted = True
+            self._printer.print_interrupted(event.report.interrupted)
+
         self._printer.print_report_summary(event.report.summary)
         self._printer.print_report_stats(total=event.report.total,
                                          passed=event.report.passed,
                                          failed=event.report.failed,
                                          skipped=event.report.skipped,
                                          elapsed=event.report.elapsed,
-                                         interrupted=event.report._interrupted is not None)
+                                         is_interrupted=is_interrupted)
 
 
 class RichReporter(PluginConfig):
@@ -244,3 +250,5 @@ class RichReporter(PluginConfig):
 
     # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8
+
+    # show_interrupted_traceback: bool = False
