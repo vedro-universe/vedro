@@ -1,6 +1,4 @@
-from ._interrupted import Interrupted, RunInterrupted, ScenarioInterrupted, StepInterrupted
-from ._monotonic_scenario_runner import MonotonicScenarioRunner
-from ._scenario_runner import ScenarioRunner
+# this module is for backward compatibility
+from ..scenario_runner import MonotonicScenarioRunner, ScenarioRunner
 
-__all__ = ("ScenarioRunner", "MonotonicScenarioRunner",
-           "Interrupted", "StepInterrupted", "ScenarioInterrupted", "RunInterrupted",)
+__all__ = ("ScenarioRunner", "MonotonicScenarioRunner",)

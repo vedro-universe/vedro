@@ -9,7 +9,7 @@ from pytest import raises
 from vedro.core import Event, MonotonicScenarioRunner
 from vedro.core import MonotonicScenarioScheduler as Scheduler
 from vedro.core import Report
-from vedro.core._scenario_runner import RunInterrupted
+from vedro.core.scenario_runner import RunInterrupted
 from vedro.events import ScenarioPassedEvent, ScenarioReportedEvent, ScenarioRunEvent
 
 from ._utils import (

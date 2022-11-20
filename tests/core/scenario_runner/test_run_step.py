@@ -7,7 +7,7 @@ from pytest import raises
 
 from vedro import Scenario
 from vedro.core import MonotonicScenarioRunner, StepResult, VirtualStep
-from vedro.core._scenario_runner import Interrupted, StepInterrupted
+from vedro.core.scenario_runner import Interrupted, StepInterrupted
 from vedro.events import ExceptionRaisedEvent, StepFailedEvent, StepPassedEvent, StepRunEvent
 
 from ._utils import AsyncMock, dispatcher_, interrupt_exception, runner
