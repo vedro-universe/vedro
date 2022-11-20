@@ -1,8 +1,10 @@
+import sys
 from time import time
 from typing import List, Tuple, Type
 
 from vedro.core import (
     Dispatcher,
+    ExcInfo,
     Report,
     ScenarioResult,
     ScenarioScheduler,
@@ -25,7 +27,7 @@ __all__ = ("DryRunner",)
 
 
 class DryRunner(ScenarioRunner):
-    def __init__(self, dispatcher: Dispatcher,
+    def __init__(self, dispatcher: Dispatcher, *,
                  interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
         self._dispatcher = dispatcher
         assert isinstance(interrupt_exceptions, tuple)
@@ -76,8 +78,7 @@ class DryRunner(ScenarioRunner):
         report.add_result(aggregated_result)
         await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
 
-    async def run(self, scheduler: ScenarioScheduler) -> Report:
-        report = Report()
+    async def _run_scenarios(self, scheduler: ScenarioScheduler, report: Report) -> None:
         scenario_results: List[ScenarioResult] = []
 
         async for scenario in scheduler:
@@ -92,4 +93,11 @@ class DryRunner(ScenarioRunner):
         if len(scenario_results) > 0:
             await self._report_scenario_results(scenario_results, report, scheduler)
 
+    async def run(self, scheduler: ScenarioScheduler) -> Report:
+        report = Report()
+        try:
+            await self._run_scenarios(scheduler, report)
+        except self._interrupt_exceptions:
+            exc_info = ExcInfo(*sys.exc_info())
+            report.set_interrupted(exc_info)
         return report

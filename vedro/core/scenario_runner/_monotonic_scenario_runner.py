@@ -29,7 +29,7 @@ __all__ = ("MonotonicScenarioRunner",)
 
 
 class MonotonicScenarioRunner(ScenarioRunner):
-    def __init__(self, dispatcher: Dispatcher,
+    def __init__(self, dispatcher: Dispatcher, *,
                  interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
         self._dispatcher = dispatcher
         assert isinstance(interrupt_exceptions, tuple)

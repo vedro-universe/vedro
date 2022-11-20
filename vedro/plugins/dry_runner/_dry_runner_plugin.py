@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Tuple, Type
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
@@ -9,7 +9,8 @@ from ._dry_runner import DryRunner as DryRunnerImpl
 class DryRunnerPlugin(Plugin):
     def __init__(self, config: Type["DryRunner"]) -> None:
         super().__init__(config)
-        self._dry_run: bool = False
+        self._dry_run = False
+        self._interrupt_exceptions = config.interrupt_exceptions
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
@@ -28,10 +29,14 @@ class DryRunnerPlugin(Plugin):
         self._dry_run = event.args.dry_run
         if self._dry_run:
             self._global_config.Registry.ScenarioRunner.register(
-                resolver=lambda: DryRunnerImpl(self._global_config.Registry.Dispatcher()),
+                resolver=lambda: DryRunnerImpl(self._global_config.Registry.Dispatcher(),
+                                               interrupt_exceptions=self._interrupt_exceptions),
                 registrant=self
             )
 
 
 class DryRunner(PluginConfig):
     plugin = DryRunnerPlugin
+
+    # Exceptions that will interrupt scenario execution
+    interrupt_exceptions: Tuple[Type[BaseException], ...] = (KeyboardInterrupt, SystemExit,)

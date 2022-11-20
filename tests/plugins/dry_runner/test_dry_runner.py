@@ -1,9 +1,11 @@
 import sys
+from typing import Type
 from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
 
+from vedro.core import ExcInfo
 from vedro.core import MonotonicScenarioScheduler as Scheduler
 from vedro.core import Report
 from vedro.events import (
@@ -114,6 +116,7 @@ async def test_run_no_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock)
     with then:
         assert isinstance(report, Report)
         assert report.total == 0
+        assert report.interrupted is None
 
         assert dispatcher_.mock_calls == []
 
@@ -135,6 +138,7 @@ async def test_run_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
         assert isinstance(report, Report)
         assert report.total == 1
         assert report.passed == 1
+        assert report.interrupted is None
 
         scenario_results = scheduler.aggregate_results.mock_calls[0].args[0]
         assert len(scenario_results) == 1
@@ -169,6 +173,7 @@ async def test_run_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
         assert isinstance(report, Report)
         assert report.total == 2
         assert report.passed == 2
+        assert report.interrupted is None
 
         # new_vscenario was scheduled twice
         new_scenario_results = scheduler.aggregate_results.mock_calls[0].args[0]
@@ -188,4 +193,31 @@ async def test_run_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
             call.fire(ScenarioRunEvent(scenario_results[0])),
             call.fire(ScenarioPassedEvent(scenario_results[0])),
             call.fire(ScenarioReportedEvent(second_aggregate_result)),
+        ]
+
+
+@pytest.mark.asyncio
+async def test_run_interrupted(*, dry_runner: DryRunnerImpl,
+                               interrupt_exception: Type[BaseException], dispatcher_: Mock):
+    with given:
+        vscenario = make_vscenario()
+        scheduler = Scheduler([vscenario])
+        scheduler.aggregate_results = Mock(side_effect=interrupt_exception())
+
+    with when:
+        report = await dry_runner.run(scheduler)
+
+    with then:
+        assert isinstance(report, Report)
+        assert report.total == 0
+
+        assert isinstance(report.interrupted, ExcInfo)
+        assert isinstance(report.interrupted.value, interrupt_exception)
+
+        scenario_results = scheduler.aggregate_results.mock_calls[0].args[0]
+        assert len(scenario_results) == 1
+
+        assert dispatcher_.mock_calls == [
+            call.fire(ScenarioRunEvent(scenario_results[0])),
+            call.fire(ScenarioPassedEvent(scenario_results[0])),
         ]
