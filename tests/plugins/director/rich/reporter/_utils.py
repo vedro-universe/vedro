@@ -98,7 +98,7 @@ def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> 
     return AggregatedResult.from_existing(scenario_result, [scenario_result])
 
 
-def make_exc_info(exc_val: Exception) -> ExcInfo:
+def make_exc_info(exc_val: BaseException) -> ExcInfo:
     try:
         raise exc_val
     except type(exc_val):

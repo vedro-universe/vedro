@@ -144,8 +144,6 @@ class MonotonicScenarioRunner(ScenarioRunner):
         try:
             await self._run(scheduler, report)
         except self._interrupt_exceptions as e:
-            if isinstance(e, RunInterrupted):
-                report.set_interrupted(e.exc_info)
-            else:
-                report.set_interrupted(ExcInfo(*sys.exc_info()))
+            exc_info = e.exc_info if isinstance(e, RunInterrupted) else ExcInfo(*sys.exc_info())
+            report.set_interrupted(exc_info)
         return report

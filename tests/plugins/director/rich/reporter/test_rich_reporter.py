@@ -3,7 +3,7 @@ from unittest.mock import Mock, call
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Dispatcher
+from vedro.core import Dispatcher, ExcInfo
 from vedro.core import MonotonicScenarioScheduler as ScenarioScheduler
 from vedro.core import Report
 from vedro.events import (
@@ -25,6 +25,7 @@ from ._utils import (
     dispatcher,
     fire_arg_parsed_event,
     make_aggregated_result,
+    make_exc_info,
     make_scenario_result,
     printer_,
     rich_reporter,
@@ -220,4 +221,33 @@ async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
                                     skipped=report.skipped,
                                     elapsed=report.elapsed,
                                     is_interrupted=False)
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        exc_info = make_exc_info(KeyboardInterrupt())
+        report.set_interrupted(exc_info)
+
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_empty_line(),
+            call.print_interrupted(exc_info),
+            call.print_report_summary(report.summary),
+            call.print_report_stats(total=report.total,
+                                    passed=report.passed,
+                                    failed=report.failed,
+                                    skipped=report.skipped,
+                                    elapsed=report.elapsed,
+                                    is_interrupted=True)
         ]
