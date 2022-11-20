@@ -3,8 +3,9 @@ from unittest.mock import Mock, call
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Dispatcher, ScenarioStatus, StepStatus
+from vedro.core import Dispatcher, Report, ScenarioStatus, StepStatus
 from vedro.events import (
+    CleanupEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
     ScenarioRunEvent,
@@ -276,6 +277,62 @@ async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher, printer_: Mo
 
         scenario_result = make_scenario_result().mark_skipped()
         event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        exc_info = make_exc_info(KeyboardInterrupt())
+        report.set_interrupted(exc_info)
+
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_interrupted(exc_info)
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_cleanup_interrupted_no_output(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, no_output=True)
+
+        report = Report()
+        exc_info = make_exc_info(KeyboardInterrupt())
+        report.set_interrupted(exc_info)
+
+        event = CleanupEvent(report)
 
     with when:
         await dispatcher.fire(event)

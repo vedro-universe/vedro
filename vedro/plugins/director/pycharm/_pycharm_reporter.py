@@ -4,6 +4,7 @@ from vedro.core import Dispatcher, PluginConfig, ScenarioResult
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
+    CleanupEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
     ScenarioRunEvent,
@@ -37,7 +38,8 @@ class PyCharmReporterPlugin(Reporter):
                         .listen(ScenarioRunEvent, self.on_scenario_run) \
                         .listen(ScenarioPassedEvent, self.on_scenario_passed) \
                         .listen(ScenarioFailedEvent, self.on_scenario_failed) \
-                        .listen(ScenarioSkippedEvent, self.on_scenario_skipped)
+                        .listen(ScenarioSkippedEvent, self.on_scenario_skipped) \
+                        .listen(CleanupEvent, self.on_cleanup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("PyCharm Reporter")
@@ -117,6 +119,13 @@ class PyCharmReporterPlugin(Reporter):
             "name": scenario_result.scenario.subject,
         })
 
+    def on_cleanup(self, event: CleanupEvent) -> None:
+        if self._no_output:
+            return
+
+        if event.report.interrupted:
+            self._printer.print_interrupted(event.report.interrupted)
+
     def _escape_value(self, value: str) -> str:
         symbols = {"'": "|'", "\n": "|n", "\r": "|r", "|": "||", "[": "|[", "]": "|]"}
         return value.translate({ord(k): v for k, v in symbols.items()})
@@ -139,5 +148,5 @@ class PyCharmReporter(PluginConfig):
     # Show skipped scenarios
     show_skipped: bool = True
 
-    # Don't produce report output (if value is True)
+    # Don't produce report output
     no_output: bool = False
