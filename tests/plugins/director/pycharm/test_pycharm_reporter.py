@@ -3,8 +3,9 @@ from unittest.mock import Mock, call
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import Dispatcher, ScenarioStatus, StepStatus
+from vedro.core import Dispatcher, Report, ScenarioStatus, StepStatus
 from vedro.events import (
+    CleanupEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
     ScenarioRunEvent,
@@ -50,9 +51,10 @@ async def test_subscribe(*, dispatcher: Dispatcher):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
-async def test_scenario_run(*, dispatcher: Dispatcher, printer_: Mock):
+@pytest.mark.parametrize("no_output", [False, True])
+async def test_scenario_run(no_output: bool, *, dispatcher: Dispatcher, printer_: Mock):
     with given:
-        await fire_arg_parsed_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher, no_output=no_output)
 
         scenario_result = make_scenario_result()
         event = ScenarioRunEvent(scenario_result)
@@ -86,6 +88,25 @@ async def test_scenario_passed(*, dispatcher: Dispatcher, printer_: Mock):
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.PASSED, prefix=" "),
             call.console.out(f"##teamcity[testFinished name='{subject}' duration='2000']")
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_scenario_passed_no_output(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, no_output=True)
+
+        scenario_result = make_scenario_result().mark_passed()
+        event = ScenarioPassedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = scenario_result.scenario.subject
+        assert printer_.mock_calls == [
+            call.console.out(f"##teamcity[testFinished name='{subject}' duration='0']")
         ]
 
 
@@ -183,6 +204,33 @@ async def test_scenario_failed_with_scope(*, dispatcher: Dispatcher, printer_: M
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_scenario_failed_no_output(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, no_output=True)
+
+        scenario_result = make_scenario_result()
+
+        exc_info = make_exc_info(AssertionError())
+        step_result = make_step_result().mark_failed().set_exc_info(exc_info)
+        scenario_result.add_step_result(step_result)
+
+        scenario_result.set_scope({"key": "val"})
+
+        event = ScenarioFailedEvent(scenario_result.mark_failed())
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = scenario_result.scenario.subject
+        assert printer_.mock_calls == [
+            call.console.out(f"##teamcity[testFailed name='{subject}' message='' details='']"),
+            call.console.out(f"##teamcity[testFinished name='{subject}' duration='0']")
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher)
@@ -204,12 +252,87 @@ async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_scenario_skipped_no_output(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, no_output=True)
+
+        scenario_result = make_scenario_result().mark_skipped()
+        event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = scenario_result.scenario.subject
+        assert printer_.mock_calls == [
+            call.console.out(f"##teamcity[testIgnored name='{subject}']")
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, show_skipped=False)
 
         scenario_result = make_scenario_result().mark_skipped()
         event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        exc_info = make_exc_info(KeyboardInterrupt())
+        report.set_interrupted(exc_info)
+
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_interrupted(exc_info)
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(pycharm_reporter.__name__)
+async def test_cleanup_interrupted_no_output(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, no_output=True)
+
+        report = Report()
+        exc_info = make_exc_info(KeyboardInterrupt())
+        report.set_interrupted(exc_info)
+
+        event = CleanupEvent(report)
 
     with when:
         await dispatcher.fire(event)
