@@ -25,6 +25,7 @@ from ._utils import (
     dispatcher,
     fire_arg_parsed_event,
     make_aggregated_result,
+    make_exc_info,
     make_scenario_result,
     printer_,
     rich_reporter,
@@ -182,6 +183,23 @@ async def test_scenario_skipped_same_namespace(*, dispatcher: Dispatcher, printe
 
 
 @pytest.mark.asyncio
+async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher,
+                                         rich_reporter: RichReporterPlugin, printer_: Mock):
+    with given:
+        rich_reporter._show_skipped = False
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result()
+        event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert len(printer_.mock_calls) == 0
+
+
+@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -201,5 +219,35 @@ async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
                                     passed=report.passed,
                                     failed=report.failed,
                                     skipped=report.skipped,
-                                    elapsed=report.elapsed)
+                                    elapsed=report.elapsed,
+                                    is_interrupted=False)
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        exc_info = make_exc_info(KeyboardInterrupt())
+        report.set_interrupted(exc_info)
+
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_empty_line(),
+            call.print_interrupted(exc_info, show_traceback=False),
+            call.print_report_summary(report.summary),
+            call.print_report_stats(total=report.total,
+                                    passed=report.passed,
+                                    failed=report.failed,
+                                    skipped=report.skipped,
+                                    elapsed=report.elapsed,
+                                    is_interrupted=True)
         ]

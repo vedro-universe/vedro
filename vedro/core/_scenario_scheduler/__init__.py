@@ -1,4 +1,4 @@
-from ._monotonic_scenario_scheduler import MonotonicScenarioScheduler
-from ._scenario_scheduler import ScenarioScheduler
+# this module is for backward compatibility
+from ..scenario_scheduler import MonotonicScenarioScheduler, ScenarioScheduler
 
 __all__ = ("ScenarioScheduler", "MonotonicScenarioScheduler",)

@@ -1,8 +1,7 @@
 from pathlib import Path
 from typing import Any, List, Tuple
 
-from .._virtual_scenario import VirtualScenario
-from ._scenario_orderer import ScenarioOrderer
+from vedro.core import ScenarioOrderer, VirtualScenario
 
 __all__ = ("StableScenarioOrderer",)
 

@@ -114,8 +114,8 @@ async def test_scenario_passed_aggregated_result(*, dispatcher: Dispatcher, prin
         await fire_arg_parsed_event(dispatcher)
 
         scenario_results = [
-            make_scenario_result().mark_failed(),
             make_scenario_result().mark_passed(),
+            make_scenario_result().mark_failed(),
         ]
 
         aggregated_result = AggregatedResult.from_existing(scenario_results[0], scenario_results)
@@ -127,14 +127,14 @@ async def test_scenario_passed_aggregated_result(*, dispatcher: Dispatcher, prin
     with then:
         assert printer_.mock_calls == [
             call.print_scenario_subject(aggregated_result.scenario.subject,
-                                        ScenarioStatus.FAILED, elapsed=None, prefix=" "),
+                                        ScenarioStatus.PASSED, elapsed=None, prefix=" "),
 
             call.print_scenario_subject(aggregated_result.scenario_results[0].scenario.subject,
-                                        ScenarioStatus.FAILED,
+                                        ScenarioStatus.PASSED,
                                         elapsed=None,
                                         prefix=" │\n ├─[1/2] "),
             call.print_scenario_subject(aggregated_result.scenario_results[1].scenario.subject,
-                                        ScenarioStatus.PASSED,
+                                        ScenarioStatus.FAILED,
                                         elapsed=None,
                                         prefix=" │\n ├─[2/2] "),
 

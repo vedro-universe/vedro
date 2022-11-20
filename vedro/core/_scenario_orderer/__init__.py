@@ -1,4 +1,4 @@
-from ._scenario_orderer import ScenarioOrderer
-from ._stable_scenario_orderer import StableScenarioOrderer
+# this module is for backward compatibility
+from ..scenario_orderer import PlainScenarioOrderer, ScenarioOrderer
 
-__all__ = ("ScenarioOrderer", "StableScenarioOrderer",)
+__all__ = ("ScenarioOrderer", "PlainScenarioOrderer",)

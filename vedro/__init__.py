@@ -11,10 +11,10 @@ from ._scenario import Scenario
 from ._version import version
 from .core import ConfigFileLoader, Lifecycle, Plugin
 from .plugins.deferrer import defer
-from .plugins.skipper import only, skip
+from .plugins.skipper import only, skip, skip_if
 
 __version__ = version
-__all__ = ("Scenario", "Interface", "run", "only", "skip", "params",
+__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
            "context", "defer", "Config",)
 
 

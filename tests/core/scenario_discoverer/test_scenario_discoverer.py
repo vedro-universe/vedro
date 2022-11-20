@@ -31,7 +31,9 @@ def make_loader(scenarios):
 
 
 def make_orderer():
-    return Mock(ScenarioOrderer, sort=AsyncMock())
+    async def sort(scenarios):
+        return scenarios
+    return Mock(ScenarioOrderer, sort=sort)
 
 
 def create_scenario(filename):

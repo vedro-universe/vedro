@@ -52,6 +52,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 verbose: int = 0,
                                 show_timings: bool = RichReporter.show_timings,
                                 show_paths: bool = RichReporter.show_paths,
+                                hide_namespaces: bool = RichReporter.hide_namespaces,
                                 tb_show_internal_calls: bool = RichReporter.tb_show_internal_calls,
                                 tb_show_locals: bool = RichReporter.tb_show_locals) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
@@ -62,6 +63,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
     namespace = Namespace(verbose=verbose,
                           show_timings=show_timings,
                           show_paths=show_paths,
+                          hide_namespaces=hide_namespaces,
                           tb_show_internal_calls=tb_show_internal_calls,
                           tb_show_locals=tb_show_locals)
     arg_parsed_event = ArgParsedEvent(namespace)
@@ -69,7 +71,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
 
 
 def make_vstep(name: Optional[str] = None) -> VirtualStep:
-    def step():
+    def step(self):
         pass
     step.__name__ = name or f"step_{monotonic_ns()}"
     return VirtualStep(step)
@@ -96,7 +98,7 @@ def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> 
     return AggregatedResult.from_existing(scenario_result, [scenario_result])
 
 
-def make_exc_info(exc_val: Exception) -> ExcInfo:
+def make_exc_info(exc_val: BaseException) -> ExcInfo:
     try:
         raise exc_val
     except type(exc_val):
