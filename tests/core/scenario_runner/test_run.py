@@ -78,7 +78,6 @@ async def test_run_scenario_interrupted(*, runner: MonotonicScenarioRunner, disp
         report = await runner.run(scheduler)
 
     with then:
-        print(report)
         assert isinstance(report, Report)
         assert report.total == 0
 

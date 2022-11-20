@@ -6,7 +6,14 @@ from typing import Any, Callable, List, Optional
 import pytest
 
 from vedro import Scenario
-from vedro.core import Dispatcher, MonotonicScenarioRunner, VirtualScenario, VirtualStep
+from vedro.core import (
+    AggregatedResult,
+    Dispatcher,
+    MonotonicScenarioRunner,
+    ScenarioResult,
+    VirtualScenario,
+    VirtualStep,
+)
 
 if sys.version_info >= (3, 8):
     from unittest.mock import AsyncMock
@@ -14,7 +21,8 @@ else:
     from asynctest.mock import CoroutineMock as AsyncMock
 
 
-__all__ = ("dispatcher_", "runner", "make_vstep", "make_vscenario", "AsyncMock",)
+__all__ = ("dispatcher_", "runner", "make_vstep", "make_vscenario", "make_aggregated_result",
+           "AsyncMock",)
 
 
 @pytest.fixture()
@@ -44,3 +52,13 @@ def make_vscenario(steps: Optional[List[VirtualStep]] = None, *,
     if is_skipped:
         vsenario.skip()
     return vsenario
+
+
+def make_scenario_result() -> ScenarioResult:
+    return ScenarioResult(make_vscenario())
+
+
+def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> AggregatedResult:
+    if scenario_result is None:
+        scenario_result = make_scenario_result()
+    return AggregatedResult.from_existing(scenario_result, [scenario_result])

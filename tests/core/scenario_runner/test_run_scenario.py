@@ -5,7 +5,7 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core import Dispatcher, Event, MonotonicScenarioRunner, ScenarioResult
+from vedro.core import Event, MonotonicScenarioRunner, ScenarioResult
 from vedro.core._scenario_runner import Interrupted, ScenarioInterrupted
 from vedro.events import (
     ExceptionRaisedEvent,
