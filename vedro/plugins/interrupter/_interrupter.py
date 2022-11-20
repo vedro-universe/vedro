@@ -1,12 +1,19 @@
-from typing import Type
+from typing import Type, Union
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
-from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioReportedEvent, ScenarioRunEvent
+from vedro.core.scenario_runner import Interrupted
+from vedro.events import (
+    ArgParsedEvent,
+    ArgParseEvent,
+    ScenarioReportedEvent,
+    ScenarioRunEvent,
+    ScenarioSkippedEvent,
+)
 
-__all__ = ("Interrupter", "InterrupterPlugin", "Interrupted",)
+__all__ = ("Interrupter", "InterrupterPlugin", "InterrupterPluginTriggered",)
 
 
-class Interrupted(Exception):
+class InterrupterPluginTriggered(Interrupted):
     pass
 
 
@@ -20,6 +27,7 @@ class InterrupterPlugin(Plugin):
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed) \
                   .listen(ScenarioRunEvent, self.on_scenario_run) \
+                  .listen(ScenarioSkippedEvent, self.on_scenario_run) \
                   .listen(ScenarioReportedEvent, self.on_scenario_reported)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
@@ -35,9 +43,9 @@ class InterrupterPlugin(Plugin):
         if event.aggregated_result.is_failed():
             self._failed += 1
 
-    def on_scenario_run(self, event: ScenarioRunEvent) -> None:
+    def on_scenario_run(self, event: Union[ScenarioRunEvent, ScenarioSkippedEvent]) -> None:
         if self._fail_fast and self._failed > 0:
-            raise Interrupted()
+            raise InterrupterPluginTriggered("Stop after first failed scenario")
 
 
 class Interrupter(PluginConfig):
