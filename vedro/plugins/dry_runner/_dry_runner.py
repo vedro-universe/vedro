@@ -5,12 +5,12 @@ from vedro.core import (
     Dispatcher,
     Report,
     ScenarioResult,
-    ScenarioRunner,
     ScenarioScheduler,
     StepResult,
     VirtualScenario,
     VirtualStep,
 )
+from vedro.core.scenario_runner import Interrupted, ScenarioRunner
 from vedro.events import (
     ScenarioFailedEvent,
     ScenarioPassedEvent,
@@ -28,7 +28,8 @@ class DryRunner(ScenarioRunner):
     def __init__(self, dispatcher: Dispatcher,
                  interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
         self._dispatcher = dispatcher
-        self._interrupt_exceptions = interrupt_exceptions
+        assert isinstance(interrupt_exceptions, tuple)
+        self._interrupt_exceptions = interrupt_exceptions + (Interrupted,)
 
     async def run_step(self, step: VirtualStep) -> StepResult:
         step_result = StepResult(step)
@@ -42,8 +43,8 @@ class DryRunner(ScenarioRunner):
 
     async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
         scenario_result = ScenarioResult(scenario)
-        # ref = scenario()
-        scenario_result.set_scope({})
+        ref = scenario()
+        scenario_result.set_scope(ref.__dict__)
 
         if scenario.is_skipped():
             scenario_result.mark_skipped()
@@ -69,24 +70,26 @@ class DryRunner(ScenarioRunner):
 
         return scenario_result
 
+    async def _report_scenario_results(self, scenario_results: List[ScenarioResult],
+                                       report: Report, scheduler: ScenarioScheduler) -> None:
+        aggregated_result = scheduler.aggregate_results(scenario_results)
+        report.add_result(aggregated_result)
+        await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
+
     async def run(self, scheduler: ScenarioScheduler) -> Report:
         report = Report()
         scenario_results: List[ScenarioResult] = []
 
         async for scenario in scheduler:
-            if len(scenario_results) > 0 and \
-               scenario_results[-1].scenario.unique_id != scenario.unique_id:
-                aggregated_result = scheduler.aggregate_results(scenario_results)
-                report.add_result(aggregated_result)
-                await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
+            prev_scenario = scenario_results[-1].scenario if len(scenario_results) > 0 else None
+            if prev_scenario and prev_scenario.unique_id != scenario.unique_id:
+                await self._report_scenario_results(scenario_results, report, scheduler)
                 scenario_results = []
 
             scenario_result = await self.run_scenario(scenario)
             scenario_results.append(scenario_result)
 
         if len(scenario_results) > 0:
-            aggregated_result = scheduler.aggregate_results(scenario_results)
-            report.add_result(aggregated_result)
-            await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
+            await self._report_scenario_results(scenario_results, report, scheduler)
 
         return report

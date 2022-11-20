@@ -1,3 +1,5 @@
+from typing import Type
+
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 
@@ -5,6 +7,10 @@ from ._dry_runner import DryRunner as DryRunnerImpl
 
 
 class DryRunnerPlugin(Plugin):
+    def __init__(self, config: Type["DryRunner"]) -> None:
+        super().__init__(config)
+        self._dry_run: bool = False
+
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
                   .listen(ArgParseEvent, self.on_arg_parse) \
@@ -15,7 +21,8 @@ class DryRunnerPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Dry Runner")
-        group.add_argument("--dry-run", action="store_true", default=False, help="")
+        group.add_argument("--dry-run", action="store_true", default=self._dry_run,
+                           help="Run scenarios without executing them")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._dry_run = event.args.dry_run
