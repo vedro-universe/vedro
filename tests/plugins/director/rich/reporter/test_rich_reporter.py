@@ -242,7 +242,7 @@ async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
     with then:
         assert printer_.mock_calls == [
             call.print_empty_line(),
-            call.print_interrupted(exc_info),
+            call.print_interrupted(exc_info, show_traceback=False),
             call.print_report_summary(report.summary),
             call.print_report_stats(total=report.total,
                                     passed=report.passed,
