@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from time import monotonic_ns
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Type
 
 import pytest
 
@@ -21,8 +21,8 @@ else:
     from asynctest.mock import CoroutineMock as AsyncMock
 
 
-__all__ = ("dispatcher_", "runner", "make_vstep", "make_vscenario", "make_aggregated_result",
-           "AsyncMock",)
+__all__ = ("dispatcher_", "runner", "interrupt_exception", "make_vstep", "make_vscenario",
+           "make_aggregated_result", "AsyncMock",)
 
 
 @pytest.fixture()
@@ -31,8 +31,17 @@ def dispatcher_():
 
 
 @pytest.fixture()
-def runner(dispatcher_: Dispatcher):
-    return MonotonicScenarioRunner(dispatcher_)
+def interrupt_exception():
+    class InterruptException(KeyboardInterrupt):
+        pass
+
+    return InterruptException
+
+
+@pytest.fixture()
+def runner(dispatcher_: Dispatcher, interrupt_exception: Type[BaseException]):
+    interrupt_exceptions = (interrupt_exception,)
+    return MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=interrupt_exceptions)
 
 
 def make_vstep(callable: Callable[..., Any] = None, *, name: Optional[str] = None) -> VirtualStep:

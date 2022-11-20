@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Type, cast
 from unittest.mock import Mock, call
 
 import pytest
@@ -11,9 +11,16 @@ from vedro.core import Report
 from vedro.core._scenario_runner import RunInterrupted
 from vedro.events import ScenarioPassedEvent, ScenarioReportedEvent, ScenarioRunEvent
 
-from ._utils import dispatcher_, make_aggregated_result, make_vscenario, make_vstep, runner
+from ._utils import (
+    dispatcher_,
+    interrupt_exception,
+    make_aggregated_result,
+    make_vscenario,
+    make_vstep,
+    runner,
+)
 
-__all__ = ("dispatcher_", "runner")  # fixtures
+__all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
 @pytest.mark.asyncio
@@ -104,18 +111,16 @@ async def test_run_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mo
 
 
 @pytest.mark.asyncio
-async def test_step_interrupted(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
+async def test_step_interrupted(*, runner: MonotonicScenarioRunner,
+                                interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
-        interrupt_exception = KeyboardInterrupt
         vstep = make_vstep(Mock(side_effect=interrupt_exception()))
         vscenario = make_vscenario(steps=[vstep])
 
+        report = Report()
         scheduler = Scheduler([vscenario])
         aggregate_result = make_aggregated_result().mark_failed()
         scheduler.aggregate_results = Mock(return_value=aggregate_result)
-
-        runner = MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
-        report = Report()
 
     with when, raises(BaseException) as exc:
         await runner._run_scenarios(scheduler, report)
@@ -136,13 +141,11 @@ async def test_step_interrupted(*, runner: MonotonicScenarioRunner, dispatcher_:
 
 
 @pytest.mark.asyncio
-async def test_scenario_interrupted(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
+async def test_scenario_interrupted(*, runner: MonotonicScenarioRunner,
+                                    interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
-        interrupt_exception = KeyboardInterrupt
         vscenario = make_vscenario()
         scheduler = Scheduler([vscenario])
-
-        runner = MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
         report = Report()
 
         async def fire(event: Event):

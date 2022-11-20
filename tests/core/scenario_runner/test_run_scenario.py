@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Type, cast
 from unittest.mock import Mock, call
 
 import pytest
@@ -18,9 +18,9 @@ from vedro.events import (
     StepRunEvent,
 )
 
-from ._utils import dispatcher_, make_vscenario, make_vstep, runner
+from ._utils import dispatcher_, interrupt_exception, make_vscenario, make_vstep, runner
 
-__all__ = ("dispatcher_", "runner")  # fixtures
+__all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
 @pytest.mark.asyncio
@@ -188,7 +188,7 @@ async def test_multiple_steps_failed(*, runner: MonotonicScenarioRunner, dispatc
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("interrupt_exception", (KeyboardInterrupt, Interrupted))
-async def test_step_interruped(interrupt_exception, *, dispatcher_: Mock):
+async def test_step_interruped(interrupt_exception: Type[BaseException], *, dispatcher_: Mock):
     with given:
         exception = interrupt_exception()
         step1_, step2_ = Mock(side_effect=exception), Mock(return_value=None)
@@ -231,11 +231,9 @@ async def test_step_interruped(interrupt_exception, *, dispatcher_: Mock):
 
 
 @pytest.mark.asyncio
-async def test_scenario_interrupted(*, dispatcher_: Mock):
+async def test_scenario_interrupted(*, runner: MonotonicScenarioRunner,
+                                    interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
-        interrupt_exception = KeyboardInterrupt
-        runner = MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
-
         step1_, step2_ = Mock(), Mock()
         vstep1, vstep2 = make_vstep(step1_), make_vstep(step2_)
         vscenario = make_vscenario(steps=[vstep1, vstep2])

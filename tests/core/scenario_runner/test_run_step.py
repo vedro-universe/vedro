@@ -10,9 +10,9 @@ from vedro.core import MonotonicScenarioRunner, StepResult, VirtualStep
 from vedro.core._scenario_runner import Interrupted, StepInterrupted
 from vedro.events import ExceptionRaisedEvent, StepFailedEvent, StepPassedEvent, StepRunEvent
 
-from ._utils import AsyncMock, dispatcher_, runner
+from ._utils import AsyncMock, dispatcher_, interrupt_exception, runner
 
-__all__ = ("dispatcher_", "runner")  # fixtures
+__all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
 @pytest.mark.asyncio

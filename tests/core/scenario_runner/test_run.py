@@ -1,3 +1,4 @@
+from typing import Type
 from unittest.mock import Mock
 
 import pytest
@@ -7,9 +8,9 @@ from vedro.core import ExcInfo, MonotonicScenarioRunner
 from vedro.core import MonotonicScenarioScheduler as Scheduler
 from vedro.core import Report
 
-from ._utils import dispatcher_, make_vscenario, make_vstep, runner
+from ._utils import dispatcher_, interrupt_exception, make_vscenario, make_vstep, runner
 
-__all__ = ("dispatcher_", "runner")  # fixtures
+__all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
 @pytest.mark.asyncio
@@ -42,14 +43,12 @@ async def test_run_scenario(*, runner: MonotonicScenarioRunner, dispatcher_: Moc
 
 
 @pytest.mark.asyncio
-async def test_run_step_interrupted(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
+async def test_run_step_interrupted(*, runner: MonotonicScenarioRunner,
+                                    interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
-        interrupt_exception = KeyboardInterrupt
         step_ = Mock(side_effect=interrupt_exception())
         vscenario = make_vscenario(steps=[make_vstep(step_)])
-
         scheduler = Scheduler([vscenario])
-        runner = MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
 
     with when:
         report = await runner.run(scheduler)
@@ -64,15 +63,13 @@ async def test_run_step_interrupted(*, runner: MonotonicScenarioRunner, dispatch
 
 
 @pytest.mark.asyncio
-async def test_run_scenario_interrupted(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
+async def test_run_scenario_interrupted(*, runner: MonotonicScenarioRunner,
+                                        interrupt_exception: Type[BaseException],
+                                        dispatcher_: Mock):
     with given:
-        interrupt_exception = KeyboardInterrupt
         vscenario = make_vscenario()
-
         scheduler = Scheduler([vscenario])
         scheduler.aggregate_results = Mock(side_effect=interrupt_exception())
-
-        runner = MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=(interrupt_exception,))
 
     with when:
         report = await runner.run(scheduler)
