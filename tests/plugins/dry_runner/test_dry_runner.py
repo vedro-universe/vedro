@@ -197,6 +197,7 @@ async def test_run_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_interrupted(*, dry_runner: DryRunnerImpl,
                                interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
