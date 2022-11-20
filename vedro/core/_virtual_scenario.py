@@ -99,7 +99,7 @@ class VirtualScenario:
         try:
             return self._orig_scenario()
         except Exception as exc:
-            message = f'Can\'t initialize scenario "{self.subject}" at "{self.rel_path}" ({exc})'
+            message = f'Can\'t initialize scenario "{self.subject}" at "{self.rel_path}" ({exc!r})'
             raise ScenarioInitError(message) from None
 
     def __repr__(self) -> str:

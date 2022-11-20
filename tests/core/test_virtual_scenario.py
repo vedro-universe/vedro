@@ -176,8 +176,8 @@ def test_virtual_scenario_skip(*, scenario_: Type[Scenario]):
 
 def test_virtual_scenario_init(*, scenario_: Type[Scenario]):
     with given:
-        exc_msg = "<message>"
-        scenario_.side_effect = (TypeError(exc_msg),)
+        exception = TypeError("<message>")
+        scenario_.side_effect = (exception,)
         virtual_scenario = VirtualScenario(scenario_, [])
 
     with when, raises(BaseException) as exc_info:
@@ -186,7 +186,7 @@ def test_virtual_scenario_init(*, scenario_: Type[Scenario]):
     with then:
         assert exc_info.type is ScenarioInitError
         assert str(exc_info.value) == ('Can\'t initialize scenario "scenario" '
-                                       f'at "scenarios/scenario.py" ({exc_msg})')
+                                       f'at "scenarios/scenario.py" ({exception!r})')
 
 
 def test_virtual_scenario_repr(*, scenario_: Type[Scenario], method_: MethodType):

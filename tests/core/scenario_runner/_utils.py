@@ -22,7 +22,7 @@ else:
 
 
 __all__ = ("dispatcher_", "runner", "interrupt_exception", "make_vstep", "make_vscenario",
-           "make_aggregated_result", "AsyncMock",)
+           "make_scenario_result", "make_aggregated_result", "AsyncMock",)
 
 
 @pytest.fixture()
