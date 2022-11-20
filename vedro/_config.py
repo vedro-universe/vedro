@@ -36,7 +36,7 @@ from vedro.core._scenario_finder._file_filters import (
     ExtFilter,
     HiddenFilter,
 )
-from vedro.core._scenario_orderer import PlainScenarioOrderer
+from vedro.core.scenario_orderer import PlainScenarioOrderer
 
 __all__ = ("Config",)
 

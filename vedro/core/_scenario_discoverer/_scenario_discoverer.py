@@ -4,8 +4,8 @@ from typing import List
 
 from .._scenario_finder import ScenarioFinder
 from .._scenario_loader import ScenarioLoader
-from .._scenario_orderer import ScenarioOrderer
 from .._virtual_scenario import VirtualScenario
+from ..scenario_orderer import ScenarioOrderer
 
 __all__ = ("ScenarioDiscoverer",)
 
