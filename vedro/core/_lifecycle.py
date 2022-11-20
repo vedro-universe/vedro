@@ -71,7 +71,10 @@ class Lifecycle:
 
         start_dir = os.path.relpath(Path("scenarios"))
         discoverer = config.Registry.ScenarioDiscoverer()
-        scenarios = await discoverer.discover(Path(start_dir))
+        try:
+            scenarios = await discoverer.discover(Path(start_dir))
+        except SystemExit as e:
+            raise Exception(f"SystemExit({e.code}) ⬆")
 
         scheduler = config.Registry.ScenarioScheduler(scenarios)
         await dispatcher.fire(StartupEvent(scheduler))

@@ -9,9 +9,9 @@ from ..core._event import Event
 from ..core._exc_info import ExcInfo
 from ..core._report import Report
 from ..core._scenario_result import AggregatedResult, ScenarioResult
-from ..core._scenario_scheduler import ScenarioScheduler
 from ..core._step_result import StepResult
 from ..core._virtual_scenario import VirtualScenario
+from ..core.scenario_scheduler import ScenarioScheduler
 
 
 class ConfigLoadedEvent(Event):

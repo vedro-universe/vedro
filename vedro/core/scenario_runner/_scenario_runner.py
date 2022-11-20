@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from .._report import Report
-from .._scenario_scheduler import ScenarioScheduler
+from ..scenario_scheduler import ScenarioScheduler
 
 __all__ = ("ScenarioRunner",)
 

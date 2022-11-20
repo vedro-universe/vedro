@@ -355,9 +355,69 @@ def test_print_report_stats(stats: Dict[str, int], color: str, *,
         printer.print_report_stats(**stats, elapsed=0.0)
 
     with then:
+        message = ("# {total} scenarios, {passed} passed,"
+                   " {failed} failed, {skipped} skipped").format(**stats)
         assert console_.mock_calls == [
             call.out(message, style=Style(color=color, bold=True), end=""),
             call.out(" (0.00s)", style=Style(color="blue")),
+        ]
+
+
+def test_print_report_stats_interrupted(printer: RichPrinter, console_: Mock):
+    with given:
+        stats = {
+            "total": 0,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+        }
+        message = ("# {total} scenarios, {passed} passed,"
+                   " {failed} failed, {skipped} skipped").format(**stats)
+
+    with when:
+        printer.print_report_stats(**stats, is_interrupted=True, elapsed=0.0)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(message, style=Style(color="red", bold=True), end=""),
+            call.out(" (0.00s)", style=Style(color="blue")),
+        ]
+
+
+def test_print_interrupted(printer: RichPrinter, console_: Mock):
+    with given:
+        exc_info = ExcInfo(KeyboardInterrupt, KeyboardInterrupt("msg"), None)
+        message = "\n".join([
+            "!!!                                           !!!",
+            "!!! Interrupted by “KeyboardInterrupt('msg')“ !!!",
+            "!!!                                           !!!",
+        ])
+
+    with when:
+        printer.print_interrupted(exc_info)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(message, style=Style(color="yellow")),
+        ]
+
+
+def test_print_interrupted_with_traceback(printer: RichPrinter, exc_info: ExcInfo, console_: Mock):
+    with given:
+        message = "\n".join([
+            "!!!                             !!!",
+            "!!! Interrupted by “KeyError()“ !!!",
+            "!!!                             !!!",
+        ])
+        formatted = format_exception(exc_info.type, exc_info.value, exc_info.traceback)
+
+    with when:
+        printer.print_interrupted(exc_info, show_traceback=True)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(message, style=Style(color="yellow")),
+            call.out("".join(formatted), style=Style(color="yellow")),
         ]
 
 

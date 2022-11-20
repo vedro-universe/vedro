@@ -1,5 +1,6 @@
 from typing import Any, List, Union, cast
 
+from ._exc_info import ExcInfo
 from ._scenario_result import AggregatedResult
 
 __all__ = ("Report",)
@@ -14,6 +15,11 @@ class Report:
         self._passed: int = 0
         self._failed: int = 0
         self._skipped: int = 0
+        self._interrupted: Union[ExcInfo, None] = None
+
+    @property
+    def interrupted(self) -> Union[ExcInfo, None]:
+        return self._interrupted
 
     @property
     def started_at(self) -> Union[float, None]:
@@ -71,10 +77,15 @@ class Report:
     def add_summary(self, summary: str) -> None:
         self._summary.append(summary)
 
+    def set_interrupted(self, exc_info: ExcInfo) -> None:
+        self._interrupted = exc_info
+
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, self.__class__) and (self.__dict__ == other.__dict__)
 
     def __repr__(self) -> str:
+        interrupted = self.interrupted.type if self.interrupted else None
         return (f"<{self.__class__.__name__} "
                 f"total={self._total} passed={self._passed} "
-                f"failed={self._failed} skipped={self._skipped}>")
+                f"failed={self._failed} skipped={self._skipped} "
+                f"interrupted={interrupted}>")

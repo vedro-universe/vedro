@@ -33,6 +33,7 @@ class RichReporterPlugin(Reporter):
         self._show_paths = config.show_paths
         self._hide_namespaces = config.hide_namespaces
         self._show_scenario_spinner = config.show_scenario_spinner
+        self._show_interrupted_traceback = config.show_interrupted_traceback
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -205,12 +206,20 @@ class RichReporterPlugin(Reporter):
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         self._printer.print_empty_line()
+
+        is_interrupted = False
+        if event.report.interrupted:
+            is_interrupted = True
+            self._printer.print_interrupted(event.report.interrupted,
+                                            show_traceback=self._show_interrupted_traceback)
+
         self._printer.print_report_summary(event.report.summary)
         self._printer.print_report_stats(total=event.report.total,
                                          passed=event.report.passed,
                                          failed=event.report.failed,
                                          skipped=event.report.skipped,
-                                         elapsed=event.report.elapsed)
+                                         elapsed=event.report.elapsed,
+                                         is_interrupted=is_interrupted)
 
 
 class RichReporter(PluginConfig):
@@ -243,3 +252,6 @@ class RichReporter(PluginConfig):
 
     # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8
+
+    # Show traceback if the execution is interrupted
+    show_interrupted_traceback: bool = False
