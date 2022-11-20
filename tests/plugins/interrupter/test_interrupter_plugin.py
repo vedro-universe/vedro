@@ -28,7 +28,8 @@ __all__ = ("dispatcher", "interrupter",)  # fixtures
     lambda: ScenarioRunEvent(make_scenario_result().mark_failed()),
     lambda: ScenarioSkippedEvent(make_scenario_result().mark_skipped()),
 ])
-async def test_scenario_run_no_fail_fast(get_event: Callable[[], Event], *, dispatcher: Dispatcher):
+async def test_scenario_run_no_fail_fast(get_event: Callable[[], Event], *,
+                                         dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, fail_fast=False)
 
@@ -102,7 +103,7 @@ async def test_scenario_run_passed_fail_fast(get_event: Callable[[], Event], *,
     lambda: ScenarioSkippedEvent(make_scenario_result().mark_skipped()),
 ])
 async def test_scenario_run_skipped_fail_fast(get_event: Callable[[], Event], *,
-                                             dispatcher: Dispatcher):
+                                              dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, fail_fast=True)
 
