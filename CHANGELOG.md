@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.8
+
+### v1.8.0 (2022-11-20)
+
+- [Core] Add graceful interruptions [#39](https://github.com/nikitanovosibirsk/vedro/pull/39)
+- [Interrupter] Add `-f` argument [#39](https://github.com/nikitanovosibirsk/vedro/pull/39)
+- [Skipper] Add `@skip_if` [#32](https://github.com/nikitanovosibirsk/vedro/pull/42)
+- [Orderer] Add plugin [#37](https://github.com/nikitanovosibirsk/vedro/pull/37)
+- [DryRunner] Add plugin [#36](https://github.com/nikitanovosibirsk/vedro/pull/36)
+- [RichReporter] Add `--hide-namespaces"` argument [#ad75e42](https://github.com/nikitanovosibirsk/vedro/commit/ad75e42a71d032669da61e14b4eccf3119261683)
+- [PyCharm Reporter] Add `--pycharm-no-output` argument [#38](https://github.com/nikitanovosibirsk/vedro/pull/38)
+
+
 ## v1.7
 
 ### v1.7.0 (2022-09-04)
@@ -15,7 +28,7 @@
 - [Rich Reporter] Add `RichPrinter` [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
 - [Rich Reporter] Add `show_skipped` param [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
 - [PyCharm Reporter] Set `show_skipped=True` by default [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
-- [Interrupter] Add `-ff` argument [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
+- [Interrupter] Add `--ff` argument [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
 - [Repeater] Add plugin [#32](https://github.com/nikitanovosibirsk/vedro/pull/32)
 
 
