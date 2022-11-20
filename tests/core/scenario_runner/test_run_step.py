@@ -6,7 +6,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro import Scenario
-from vedro.core import Dispatcher, MonotonicScenarioRunner, StepResult, VirtualStep
+from vedro.core import MonotonicScenarioRunner, StepResult, VirtualStep
 from vedro.core._scenario_runner import Interrupted, StepInterrupted
 from vedro.events import ExceptionRaisedEvent, StepFailedEvent, StepPassedEvent, StepRunEvent
 
@@ -18,7 +18,7 @@ __all__ = ("dispatcher_", "runner")  # fixtures
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock,))
 async def test_step_passed(method_mock_factory: Mock, *,
-                           runner: MonotonicScenarioRunner, dispatcher_: Dispatcher):
+                           runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         step_ = method_mock_factory(return_value=None, __name__="step")
         scenario_ = Mock(Scenario, step=step_)
@@ -46,7 +46,7 @@ async def test_step_passed(method_mock_factory: Mock, *,
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
 async def test_step_failed(method_mock_factory: Mock, *,
-                           runner: MonotonicScenarioRunner, dispatcher_: Dispatcher):
+                           runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         exception = AssertionError()
         step_ = method_mock_factory(side_effect=exception, __name__="step")

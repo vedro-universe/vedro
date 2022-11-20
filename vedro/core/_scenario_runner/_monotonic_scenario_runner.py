@@ -113,7 +113,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
         report.add_result(aggregated_result)
         await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
 
-    async def _run(self, scheduler: ScenarioScheduler, report: Report) -> None:
+    async def _run_scenarios(self, scheduler: ScenarioScheduler, report: Report) -> None:
         scenario_results: List[ScenarioResult] = []
 
         async for scenario in scheduler:
@@ -142,7 +142,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
     async def run(self, scheduler: ScenarioScheduler) -> Report:
         report = Report()
         try:
-            await self._run(scheduler, report)
+            await self._run_scenarios(scheduler, report)
         except self._interrupt_exceptions as e:
             exc_info = e.exc_info if isinstance(e, RunInterrupted) else ExcInfo(*sys.exc_info())
             report.set_interrupted(exc_info)
