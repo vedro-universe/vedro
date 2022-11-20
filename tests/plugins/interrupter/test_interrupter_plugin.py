@@ -1,6 +1,14 @@
 import signal
+import sys
 from typing import Callable
 from unittest.mock import Mock
+
+if sys.version_info >= (3, 8):
+    from signal import raise_signal
+else:
+    def raise_signal(sig: int) -> None:
+        import os
+        os.kill(os.getpid(), sig)
 
 import pytest
 from _pytest.python_api import raises
@@ -135,7 +143,7 @@ async def test_signal_handler(sig_handler_: Mock, dispatcher: Dispatcher):
         await dispatcher.fire(StartupEvent(scheduler))
 
     with when, raises(BaseException) as exc:
-        signal.raise_signal(HANDLE_SIGNAL)
+        raise_signal(HANDLE_SIGNAL)
 
     with then:
         assert exc.type is InterrupterPluginTriggered
@@ -155,7 +163,7 @@ async def test_signal_handler_no_fail_fast(sig_handler_: Mock, dispatcher: Dispa
         await dispatcher.fire(StartupEvent(scheduler))
 
     with when:
-        signal.raise_signal(HANDLE_SIGNAL)
+        raise_signal(HANDLE_SIGNAL)
 
     with then:
         assert len(sig_handler_.mock_calls) == 1
