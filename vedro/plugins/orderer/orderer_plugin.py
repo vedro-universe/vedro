@@ -21,7 +21,7 @@ class OrdererPlugin(Plugin):
         group = event.arg_parser.add_argument_group("Orderer")
         exgroup = group.add_mutually_exclusive_group()
 
-        exgroup.add_argument("--order-stable", action="store_true", default=True,
+        exgroup.add_argument("--order-stable", action="store_true", default=False,
                              help="Set stable scenario order (default)")
         exgroup.add_argument("--order-reversed", action="store_true", default=False,
                              help="Set reversed scenario order")
@@ -29,14 +29,12 @@ class OrdererPlugin(Plugin):
                              help="Set random scenario order")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        if event.args.order_stable:
-            self._global_config.Registry.ScenarioOrderer.register(StableScenarioOrderer, self)
-
         if event.args.order_reversed:
             self._global_config.Registry.ScenarioOrderer.register(ReversedOrderer, self)
-
-        if event.args.order_random:
+        elif event.args.order_random:
             self._global_config.Registry.ScenarioOrderer.register(RandomOrderer, self)
+        else:
+            self._global_config.Registry.ScenarioOrderer.register(StableScenarioOrderer, self)
 
 
 class Orderer(PluginConfig):
