@@ -37,7 +37,8 @@ class ScenarioFileLoader(ScenarioLoader):
         self._exec_module(cast(Loader, spec.loader), module)
 
         loaded = []
-        for name in dir(module):
+        # used module.__dict__ instead of dir(module) because __dict__ preserves order
+        for name in module.__dict__:
             val = getattr(module, name)
             if inspect.isclass(val) and issubclass(val, Scenario) and val != Scenario:
                 if not (val.__name__.startswith("Scenario") or val.__name__.endswith("Scenario")):
