@@ -45,8 +45,6 @@ class DryRunner(ScenarioRunner):
 
     async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
         scenario_result = ScenarioResult(scenario)
-        ref = scenario()
-        scenario_result.set_scope(ref.__dict__)
 
         if scenario.is_skipped():
             scenario_result.mark_skipped()
@@ -55,6 +53,10 @@ class DryRunner(ScenarioRunner):
 
         await self._dispatcher.fire(ScenarioRunEvent(scenario_result))
         scenario_result.set_started_at(time())
+
+        ref = scenario()
+        scenario_result.set_scope(ref.__dict__)
+
         for step in scenario.steps:
             step_result = await self.run_step(step)
             scenario_result.add_step_result(step_result)
