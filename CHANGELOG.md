@@ -2,6 +2,10 @@
 
 ## v1.8
 
+### v1.8.1 (2022-11-21)
+
+- Fix Orderer plugin [#8ecb35f](https://github.com/nikitanovosibirsk/vedro/commit/8ecb35f44ae54ef343e38c21238ede24dcc91545)
+
 ### v1.8.0 (2022-11-20)
 
 - [Core] Add graceful interruptions [#39](https://github.com/nikitanovosibirsk/vedro/pull/39)
@@ -9,7 +13,7 @@
 - [Skipper] Add `@skip_if` [#32](https://github.com/nikitanovosibirsk/vedro/pull/42)
 - [Orderer] Add plugin [#37](https://github.com/nikitanovosibirsk/vedro/pull/37)
 - [DryRunner] Add plugin [#36](https://github.com/nikitanovosibirsk/vedro/pull/36)
-- [RichReporter] Add `--hide-namespaces"` argument [#ad75e42](https://github.com/nikitanovosibirsk/vedro/commit/ad75e42a71d032669da61e14b4eccf3119261683)
+- [RichReporter] Add `--hide-namespaces` argument [#ad75e42](https://github.com/nikitanovosibirsk/vedro/commit/ad75e42a71d032669da61e14b4eccf3119261683)
 - [PyCharm Reporter] Add `--pycharm-no-output` argument [#38](https://github.com/nikitanovosibirsk/vedro/pull/38)
 
 
