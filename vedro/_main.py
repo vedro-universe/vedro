@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Type, cast
 
 from ._config import Config
-from .commands import CommandArgumentParser, RunCommand
+from .commands._cmd_arg_parser import CommandArgumentParser
+from .commands._run_command import RunCommand
+from .commands._version_command import VersionCommand
 from .core import ConfigFileLoader
 
 
@@ -37,6 +39,11 @@ async def main() -> None:
     if args.command == "run":
         parser = arg_parser_factory("vedro run")
         await RunCommand(config, parser).run()
+
+    elif args.command == "version":
+        parser = arg_parser_factory("vedro version")
+        await VersionCommand(config, parser).run()
+
     else:
         arg_parser.print_help()
         arg_parser.exit()
