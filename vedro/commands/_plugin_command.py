@@ -1,5 +1,13 @@
+import sys
+
+if sys.version_info >= (3, 8):
+    from importlib.metadata import PackageNotFoundError, metadata
+else:
+    def metadata(name: str) -> None:
+        raise PackageNotFoundError(name)
+    PackageNotFoundError = Exception
+
 from dataclasses import dataclass
-from importlib.metadata import PackageNotFoundError, metadata  # python 3.8+
 from typing import Callable, Type
 
 from rich.console import Console
@@ -42,18 +50,21 @@ class PluginCommand(Command):
         module = plugin.__module__
         package = module.split(".")[0]
 
+        # core plugin
+        if package == "vedro":
+            plugin_info.package = ".".join(module.split(".")[:-1])
+            plugin_info.version = vedro.__version__
+            plugin_info.summary = "Core plugin"
+            return plugin_info
+
         try:
             meta = metadata(package)
         except PackageNotFoundError:
-            if package == "vedro":  # core plugin
-                plugin_info.package = ".".join(module.split(".")[:-1])
-                plugin_info.version = vedro.__version__
-                plugin_info.summary = "Core plugin"
-        else:
-            plugin_info.version = meta.get("Version", "Unknown")
-            plugin_info.summary = meta.get("Summary", "Unknown")
-            plugin_info.package = package
+            return plugin_info
 
+        plugin_info.version = meta.get("Version", "Unknown")
+        plugin_info.summary = meta.get("Summary", "Unknown")
+        plugin_info.package = package
         return plugin_info
 
     async def run(self) -> None:
