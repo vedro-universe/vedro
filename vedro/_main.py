@@ -23,7 +23,7 @@ async def main() -> None:
     config_loader = ConfigFileLoader(Config)
     config = cast(Type[Config], await config_loader.load(config_path))
 
-    arg_parser.add_argument("command", nargs="?", help="Command to run {run, version, plugin}")
+    arg_parser.add_argument("command", nargs="?", help="Command to run {run, version, plugins}")
     args, unknown_args = arg_parser.parse_known_args()
 
     # backward compatibility

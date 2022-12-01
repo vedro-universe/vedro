@@ -1,14 +1,16 @@
 import sys
+from typing import Dict, List, cast
 
 if sys.version_info >= (3, 8):
     from importlib.metadata import PackageNotFoundError, metadata
 else:
-    from typing import Dict
-
     def metadata(name: str) -> Dict[str, str]:
         raise PackageNotFoundError(name)
     PackageNotFoundError = Exception
 
+import json
+import platform
+import urllib.request
 from dataclasses import dataclass
 from typing import Callable, Type
 
@@ -64,16 +66,15 @@ class PluginCommand(Command):
         except PackageNotFoundError:
             return plugin_info
 
-        plugin_info.version = meta.get("Version", "Unknown")
-        plugin_info.summary = meta.get("Summary", "Unknown")
         plugin_info.package = package
+        if "Version" in meta:
+            plugin_info.version = meta["Version"]
+        if "Summary" in meta:
+            plugin_info.summary = meta["Summary"]
         return plugin_info
 
-    async def run(self) -> None:
-        self._arg_parser.parse_args()
-
+    async def _show_installed_plugins(self) -> None:
         table = Table(expand=True, border_style="grey50")
-
         for column in ("Name", "Package", "Description", "Version", "Enabled"):
             table.add_column(column)
 
@@ -85,3 +86,45 @@ class PluginCommand(Command):
                           plugin_info.version, str(plugin_info.enabled), style=color)
 
         self._console.print(table)
+
+    def _get_user_agent(self) -> str:
+        python_version = platform.python_version()
+        platform_info = platform.platform(terse=True)
+        return f"Vedro/{vedro.__version__} (Python/{python_version}; {platform_info})"
+
+    def _send_request(self, url: str, *,
+                      headers: Dict[str, str], timeout: float) -> List[Dict[str, str]]:
+        request = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            result = json.loads(response.read())
+        return cast(List[Dict[str, str]], result)
+
+    async def _show_top_plugins(self) -> None:
+        url = "https://api.vedro.io/v1/plugins/top"
+        headers = {"User-Agent": self._get_user_agent()}
+        try:
+            plugins = self._send_request(url, headers=headers, timeout=10.0)
+        except Exception as e:
+            self._console.print(f"Failed to fetch popular plugins: {e}", style="red")
+            return
+
+        table = Table(expand=True, border_style="grey50")
+        table.add_column("Package", style="blue")
+        table.add_column("Description")
+        table.add_column("URL")
+
+        for plugin in plugins:
+            table.add_row(plugin["name"], plugin["description"], plugin["url"])
+
+        self._console.print(table)
+
+    async def run(self) -> None:
+        subparsers = self._arg_parser.add_subparsers(dest="subparser")
+        subparsers.add_parser("list", help="Show installed plugins")
+        subparsers.add_parser("top", help="Show popular plugins")
+
+        args = self._arg_parser.parse_args()
+        if args.subparser == "top":
+            await self._show_top_plugins()
+        else:
+            await self._show_installed_plugins()
