@@ -1,5 +1,5 @@
 import sys
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
 from typing import Any, Callable, List, Optional, Type
@@ -9,7 +9,6 @@ import pytest
 from vedro import Scenario
 from vedro.core import (
     AggregatedResult,
-    ArgumentParser,
     Config,
     ConfigType,
     Dispatcher,

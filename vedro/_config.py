@@ -1,4 +1,5 @@
 from asyncio import CancelledError
+from pathlib import Path
 
 import vedro.core as core
 import vedro.plugins.artifacted as artifacted
@@ -43,6 +44,7 @@ __all__ = ("Config",)
 
 
 class Config(core.Config):
+    path = Path(__file__)
 
     class Registry(core.Config.Registry):
         Dispatcher = Singleton[Dispatcher](Dispatcher)

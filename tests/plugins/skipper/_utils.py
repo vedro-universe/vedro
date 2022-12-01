@@ -1,4 +1,4 @@
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from os import chdir
 from pathlib import Path
 from time import monotonic_ns
@@ -7,7 +7,7 @@ from typing import Callable, Iterable, List, Optional, Tuple
 import pytest
 
 from vedro import Scenario
-from vedro.core import ArgumentParser, Dispatcher, VirtualScenario
+from vedro.core import Dispatcher, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent
 from vedro.plugins.skipper import Skipper, SkipperPlugin
 from vedro.plugins.skipper import only as only_scenario

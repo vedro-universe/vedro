@@ -6,10 +6,11 @@ from typing import List, Optional
 from ._config import Config
 from ._context import context
 from ._interface import Interface
+from ._main import main
 from ._params import params
 from ._scenario import Scenario
 from ._version import version
-from .core import ConfigFileLoader, Lifecycle, Plugin
+from .core import Plugin
 from .plugins.deferrer import defer
 from .plugins.skipper import only, skip, skip_if
 
@@ -27,5 +28,4 @@ def run(*, plugins: Optional[List[Plugin]] = None) -> None:
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
 
-    lifecycle = Lifecycle(ConfigFileLoader(Config))
-    asyncio.run(lifecycle.start())
+    asyncio.run(main())

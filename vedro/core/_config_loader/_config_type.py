@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Type
 
 import cabina
@@ -21,6 +22,8 @@ class Section(cabina.Section, metaclass=_MetaBase):
 
 
 class Config(cabina.Config, Section):
+    path = Path(__file__)
+
     class Registry(Section):
         pass
 
