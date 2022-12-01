@@ -6,6 +6,7 @@ from typing import Type, cast
 
 from ._config import Config
 from .commands._cmd_arg_parser import CommandArgumentParser
+from .commands._plugin_command import PluginCommand
 from .commands._run_command import RunCommand
 from .commands._version_command import VersionCommand
 from .core import ConfigFileLoader
@@ -43,6 +44,10 @@ async def main() -> None:
     elif args.command == "version":
         parser = arg_parser_factory("vedro version")
         await VersionCommand(config, parser).run()
+
+    elif args.command == "plugins":
+        parser = arg_parser_factory("vedro plugins")
+        await PluginCommand(config, parser).run()
 
     else:
         arg_parser.print_help()
