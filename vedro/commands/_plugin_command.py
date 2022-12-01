@@ -3,7 +3,9 @@ import sys
 if sys.version_info >= (3, 8):
     from importlib.metadata import PackageNotFoundError, metadata
 else:
-    def metadata(name: str) -> None:
+    from typing import Dict
+
+    def metadata(name: str) -> Dict[str, str]:
         raise PackageNotFoundError(name)
     PackageNotFoundError = Exception
 
@@ -68,6 +70,8 @@ class PluginCommand(Command):
         return plugin_info
 
     async def run(self) -> None:
+        self._arg_parser.parse_args()
+
         table = Table(expand=True, border_style="grey50")
 
         for column in ("Name", "Package", "Description", "Version", "Enabled"):
