@@ -23,13 +23,14 @@ async def main() -> None:
     config_loader = ConfigFileLoader(Config)
     config = cast(Type[Config], await config_loader.load(config_path))
 
-    arg_parser.add_argument("command", nargs="?", help="Command to run {run, version, plugins}")
+    commands = ["run", "version", "plugins"]
+    arg_parser.add_argument("command", nargs="?", help=f"Command to run {{{', '.join(commands)}}}")
     args, unknown_args = arg_parser.parse_known_args()
 
     # backward compatibility
     # vedro <args> -> vedro run <args>
     help_args = {"-h", "--help"}
-    if (args.command is None) and (not help_args.intersection(set(unknown_args))):
+    if (args.command not in commands) and (not help_args.intersection(set(unknown_args))):
         default_command = "run"
         sys.argv.insert(1, default_command)
         args.command = default_command
