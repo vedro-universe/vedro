@@ -1,6 +1,6 @@
 from baby_steps import then, when
 
-from vedro import Plugin
+from vedro.core import Plugin
 from vedro.plugins.assert_rewriter import AssertRewriter, AssertRewriterPlugin
 
 

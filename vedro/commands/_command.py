@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Type
 
-from .._config import Config
+from vedro import Config
+
 from ._cmd_arg_parser import CommandArgumentParser
 
 __all__ = ("Command",)

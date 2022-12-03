@@ -4,8 +4,8 @@ from rich.console import Console
 from rich.style import Style
 
 import vedro
+from vedro import Config
 
-from .._config import Config
 from ._cmd_arg_parser import CommandArgumentParser
 from ._command import Command
 

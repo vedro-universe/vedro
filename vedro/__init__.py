@@ -1,7 +1,7 @@
 import asyncio
 import os
 import sys
-from typing import List, Optional
+from typing import Any
 
 from ._config import Config
 from ._context import context
@@ -10,7 +10,6 @@ from ._main import main
 from ._params import params
 from ._scenario import Scenario
 from ._version import version
-from .core import Plugin
 from .plugins.deferrer import defer
 from .plugins.skipper import only, skip, skip_if
 
@@ -19,7 +18,7 @@ __all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
            "context", "defer", "Config",)
 
 
-def run(*, plugins: Optional[List[Plugin]] = None) -> None:
+def run(*, plugins: Any = None) -> None:
     if plugins is not None:
         raise DeprecationWarning("Argument 'plugins' is deprecated, "
                                  "declare plugins in config (vedro.cfg.py)")

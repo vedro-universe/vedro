@@ -36,8 +36,9 @@ class PluginInfo:
     name: str
     enabled: bool
     package: str = "Unknown"
-    version: str = "Unknown"
-    summary: str = "Unknown"
+    version: str = "0.0.0"
+    summary: str = "No data"
+    is_default: bool = False
 
 
 class PluginCommand(Command):
@@ -54,11 +55,16 @@ class PluginCommand(Command):
         module = plugin.__module__
         package = module.split(".")[0]
 
-        # core plugin
+        # plugin declared in vedro.cfg.py
+        if module == self._config.__module__:
+            return plugin_info
+
+        # default plugin
         if package == "vedro":
             plugin_info.package = ".".join(module.split(".")[:-1])
             plugin_info.version = vedro.__version__
             plugin_info.summary = "Core plugin"
+            plugin_info.is_default = True
             return plugin_info
 
         try:
@@ -100,31 +106,39 @@ class PluginCommand(Command):
         return cast(List[Dict[str, str]], result)
 
     async def _show_top_plugins(self) -> None:
-        url = "https://api.vedro.io/v1/plugins/top"
+        url = "https://api.vedro.io/v1/plugins/top?limit=10"
         headers = {"User-Agent": self._get_user_agent()}
-        try:
-            plugins = self._send_request(url, headers=headers, timeout=10.0)
-        except Exception as e:
-            self._console.print(f"Failed to fetch popular plugins: {e}", style="red")
-            return
+
+        with self._console.status("Fetching plugins..."):
+            try:
+                plugins = self._send_request(url, headers=headers, timeout=10.0)
+            except Exception as e:
+                self._console.print(f"Failed to fetch popular plugins ({e})", style="red")
+                return
 
         table = Table(expand=True, border_style="grey50")
-        table.add_column("Package", style="blue")
-        table.add_column("Description")
-        table.add_column("URL")
+        table.add_column("Package", overflow="fold", style="blue")
+        table.add_column("Description", overflow="fold")
+        table.add_column("URL", overflow="fold")
+        table.add_column("Popularity", justify="right")
 
         for plugin in plugins:
-            table.add_row(plugin["name"], plugin["description"], plugin["url"])
+            table.add_row(plugin["name"], plugin["description"],
+                          plugin["url"], str(plugin["popularity"]))
 
         self._console.print(table)
 
     async def run(self) -> None:
         subparsers = self._arg_parser.add_subparsers(dest="subparser")
+
         subparsers.add_parser("list", help="Show installed plugins")
         subparsers.add_parser("top", help="Show popular plugins")
 
         args = self._arg_parser.parse_args()
         if args.subparser == "top":
             await self._show_top_plugins()
-        else:
+        elif args.subparser == "list":
             await self._show_installed_plugins()
+        else:
+            self._arg_parser.print_help()
+            self._arg_parser.exit()
