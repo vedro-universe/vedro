@@ -2,6 +2,15 @@
 
 ## v1.8
 
+### v1.8.3 (2022-12-04)
+
+- Fix Orderer [#44](https://github.com/nikitanovosibirsk/vedro/pull/44)
+
+### v1.8.2 (2022-11-27)
+
+- Fix file loader [#4466e9f](https://github.com/nikitanovosibirsk/vedro/commit/4466e9f0b3bb036f836851fb22e754022fb8c795)
+- Fix scenario init order [#239b05a](https://github.com/nikitanovosibirsk/vedro/commit/239b05a40847ce51306b991064cfd812f8db9bbb)
+
 ### v1.8.1 (2022-11-21)
 
 - Fix Orderer plugin [#8ecb35f](https://github.com/nikitanovosibirsk/vedro/commit/8ecb35f44ae54ef343e38c21238ede24dcc91545)
