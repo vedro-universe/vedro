@@ -1,8 +1,7 @@
 from typing import List
 
 from vedro.core import VirtualScenario
-
-from .stable_orderer import StableScenarioOrderer
+from vedro.core.scenario_orderer import StableScenarioOrderer
 
 __all__ = ("ReversedOrderer",)
 

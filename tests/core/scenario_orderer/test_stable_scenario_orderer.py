@@ -1,7 +1,7 @@
 import pytest
 from baby_steps import given, then, when
 
-from vedro.plugins.orderer import StableScenarioOrderer
+from vedro.core.scenario_orderer import StableScenarioOrderer
 
 from ._utils import make_vscenario
 
