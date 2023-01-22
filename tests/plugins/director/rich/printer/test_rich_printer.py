@@ -348,12 +348,12 @@ def test_print_report_summary_empty(*, printer: RichPrinter, console_: Mock):
     (9 * 60 + 30.0, "9m 30s"),
     (1 * 60 + 0.0, "1m 0s"),
     # seconds
-    (59.999, "59s 999ms"),
+    (59.99, "59.99s"),
     # milliseconds
-    (0.1, "0s 100ms"),
-    (0.01, "0s 10ms"),
-    (0.001, "0s 1ms"),
-    (0.0001, "0s 0ms"),
+    (0.1, "0.10s"),
+    (0.01, "0.01s"),
+    (0.001, "0.00s"),
+    (0.0001, "0.00s"),
 ])
 def test_elapsed_formatter(elapsed: float, formatted: str, *, printer: RichPrinter):
     with when:
@@ -380,7 +380,7 @@ def test_print_report_stats(stats: Dict[str, int], color: str, *,
     with then:
         assert console_.mock_calls == [
             call.out(message, style=Style(color=color, bold=True), end=""),
-            call.out(" (0s 0ms)", style=Style(color="blue")),
+            call.out(" (0.00s)", style=Style(color="blue")),
         ]
 
 
@@ -401,7 +401,7 @@ def test_print_report_stats_interrupted(printer: RichPrinter, console_: Mock):
     with then:
         assert console_.mock_calls == [
             call.out(message, style=Style(color="red", bold=True), end=""),
-            call.out(" (0s 0ms)", style=Style(color="blue")),
+            call.out(" (0.00s)", style=Style(color="blue")),
         ]
 
 

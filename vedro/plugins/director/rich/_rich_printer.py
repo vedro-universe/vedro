@@ -54,7 +54,7 @@ class RichPrinter:
         self._console.out(prefix, end="")
         if elapsed is not None:
             self._console.out(subject, style=style, end="")
-            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+            self._console.out(f" ({self.format_elapsed(elapsed)})", style=Style(color="grey50"))
         else:
             self._console.out(subject, style=style)
 
@@ -76,7 +76,7 @@ class RichPrinter:
         self._console.out(prefix, end="")
         if elapsed is not None:
             self._console.out(name, style=style, end="")
-            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+            self._console.out(f" ({self.format_elapsed(elapsed)})", style=Style(color="grey50"))
         else:
             self._console.out(name, style=style)
 
@@ -183,10 +183,9 @@ class RichPrinter:
     def format_elapsed(self, elapsed: float) -> str:
         hours = int(elapsed // 3600)
         minutes = int((elapsed - hours * 3600) // 60)
-        seconds = int(elapsed - hours * 3600 - minutes * 60)
-        milliseconds = int((elapsed - int(elapsed)) * 1000)
+        seconds = elapsed - hours * 3600 - minutes * 60
 
-        formatted = f"{seconds}s {milliseconds}ms" if (elapsed < 60) else f"{seconds}s"
+        formatted = f"{seconds:.2f}s" if elapsed < 60 else f"{int(seconds)}s"
         if (minutes > 0) or (hours > 0):
             formatted = f"{minutes}m {formatted}"
         if hours > 0:
