@@ -349,7 +349,6 @@ def test_print_report_summary_empty(*, printer: RichPrinter, console_: Mock):
     (1 * 60 + 0.0, "1m 0s"),
     # seconds
     (59.99, "59.99s"),
-    # milliseconds
     (0.1, "0.10s"),
     (0.01, "0.01s"),
     (0.001, "0.00s"),
