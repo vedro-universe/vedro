@@ -180,6 +180,19 @@ class RichPrinter:
         text = "# " + "\n# ".join(summary)
         self._console.out(text, style=Style(color="grey70"))
 
+    def format_elapsed(self, elapsed: float) -> str:
+        hours = int(elapsed // 3600)
+        minutes = int((elapsed - hours * 3600) // 60)
+        seconds = int(elapsed - hours * 3600 - minutes * 60)
+        milliseconds = int((elapsed - int(elapsed)) * 1000)
+
+        formatted = f"{seconds}s {milliseconds}ms" if (elapsed < 60) else f"{seconds}s"
+        if (minutes > 0) or (hours > 0):
+            formatted = f"{minutes}m {formatted}"
+        if hours > 0:
+            formatted = f"{hours}h {formatted}"
+        return formatted
+
     def print_report_stats(self, *, total: int, passed: int, failed: int, skipped: int,
                            elapsed: float, is_interrupted: bool = False) -> None:
         if is_interrupted or (failed > 0 or passed == 0):
@@ -191,7 +204,7 @@ class RichPrinter:
         self._console.out(f"# {total} {scenarios}, "
                           f"{passed} passed, {failed} failed, {skipped} skipped",
                           style=style, end="")
-        self._console.out(f" ({elapsed:.2f}s)", style=Style(color="blue"))
+        self._console.out(f" ({self.format_elapsed(elapsed)})", style=Style(color="blue"))
 
     def print_empty_line(self) -> None:
         self._console.out(" ")
