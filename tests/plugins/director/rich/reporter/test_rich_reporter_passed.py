@@ -3,7 +3,7 @@ from unittest.mock import Mock, call
 import pytest
 from baby_steps import given, then, when
 
-from vedro.core import AggregatedResult, Dispatcher, ScenarioStatus
+from vedro.core import AggregatedResult, Dispatcher, ScenarioStatus, StepStatus
 from vedro.events import ScenarioReportedEvent, ScenarioRunEvent
 from vedro.plugins.director import RichReporterPlugin
 
@@ -13,6 +13,7 @@ from ._utils import (
     fire_arg_parsed_event,
     make_aggregated_result,
     make_scenario_result,
+    make_step_result,
     printer_,
     rich_reporter,
 )
@@ -79,6 +80,37 @@ async def test_scenario_passed_show_paths(*, dispatcher: Dispatcher, printer_: M
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.PASSED, elapsed=None, prefix=" "),
             call.print_scenario_caption(f"> {scenario_result.scenario.path.name}", prefix=" " * 3)
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_passed_show_steps(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, show_steps=True)
+
+        scenario_result = make_scenario_result().mark_passed()
+
+        step1_result_passed = make_step_result().mark_passed()
+        scenario_result.add_step_result(step1_result_passed)
+
+        step2_result_passed = make_step_result().mark_passed()
+        scenario_result.add_step_result(step2_result_passed)
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = aggregated_result.scenario.subject
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(subject, ScenarioStatus.PASSED, elapsed=None, prefix=" "),
+            call.print_step_name(step1_result_passed.step_name, StepStatus.PASSED,
+                                 elapsed=None, prefix=" " * 3),
+            call.print_step_name(step2_result_passed.step_name, StepStatus.PASSED,
+                                 elapsed=None, prefix=" " * 3),
         ]
 
 
