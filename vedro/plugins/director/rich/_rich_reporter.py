@@ -34,6 +34,7 @@ class RichReporterPlugin(Reporter):
         self._hide_namespaces = config.hide_namespaces
         self._show_scenario_spinner = config.show_scenario_spinner
         self._show_interrupted_traceback = config.show_interrupted_traceback
+        self._v2_verbosity = config.v2_verbosity
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -83,6 +84,8 @@ class RichReporterPlugin(Reporter):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
+        if self._v2_verbosity:
+            self._verbosity = self._verbosity + 2
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
         self._hide_namespaces = event.args.hide_namespaces
@@ -255,3 +258,6 @@ class RichReporter(PluginConfig):
 
     # Show traceback if the execution is interrupted
     show_interrupted_traceback: bool = False
+
+    # Enable new verbose levels
+    v2_verbosity: bool = False
