@@ -189,6 +189,18 @@ class RichPrinter:
         if show_traceback:
             self.print_exception(exc_info)
 
+    def print_interrupted(self, exc_info: ExcInfo, *, show_traceback: bool = False) -> None:
+        message = f"!!! Interrupted by “{exc_info.value!r}“ !!!"
+        spaces = " " * (len(message) - 6)
+        multiline_message = "\n".join([
+            "!!!" + spaces + "!!!",
+            message,
+            "!!!" + spaces + "!!!",
+        ])
+        self._console.out(multiline_message, style=Style(color="yellow"))
+        if show_traceback:
+            self.print_exception(exc_info)
+
     def print_report_summary(self, summary: List[str]) -> None:
         if len(summary) == 0:
             return
