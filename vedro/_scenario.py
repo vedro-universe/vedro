@@ -25,7 +25,13 @@ class _Meta(type):
         cls_globals = getattr(cls_constructor, "__globals__")
         for idx, (args, kwargs) in enumerate(reversed(cls_params), start=1):
             signature = inspect.signature(cls_constructor)  # type: ignore
-            bound_args = signature.bind(None, *args, **kwargs)
+
+            try:
+                bound_args = signature.bind(None, *args, **kwargs)
+            except BaseException as e:
+                module = namespace.get("__module__", "")
+                raise TypeError(f"{e} <{module}.{name}>") from None
+
             bound_args.apply_defaults()
 
             cls_name = f"{name}_{idx}_VedroScenario"

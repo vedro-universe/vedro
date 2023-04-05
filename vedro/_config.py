@@ -5,7 +5,9 @@ import vedro.plugins.artifacted as artifacted
 import vedro.plugins.assert_rewriter as assert_rewriter
 import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
+import vedro.plugins.dry_runner as dry_runner
 import vedro.plugins.interrupter as interrupter
+import vedro.plugins.orderer as orderer
 import vedro.plugins.repeater as repeater
 import vedro.plugins.rerunner as rerunner
 import vedro.plugins.seeder as seeder
@@ -28,7 +30,6 @@ from vedro.core import (
     ScenarioRunner,
     ScenarioScheduler,
     Singleton,
-    StableScenarioOrderer,
 )
 from vedro.core._scenario_finder._file_filters import (
     AnyFilter,
@@ -36,6 +37,7 @@ from vedro.core._scenario_finder._file_filters import (
     ExtFilter,
     HiddenFilter,
 )
+from vedro.core.scenario_orderer import StableScenarioOrderer
 
 __all__ = ("Config",)
 
@@ -80,6 +82,9 @@ class Config(core.Config):
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
 
+        class Orderer(orderer.Orderer):
+            enabled = True
+
         class Deferrer(deferrer.Deferrer):
             enabled = True
 
@@ -108,6 +113,9 @@ class Config(core.Config):
             enabled = True
 
         class AssertRewriter(assert_rewriter.AssertRewriter):
+            enabled = True
+
+        class DryRunner(dry_runner.DryRunner):
             enabled = True
 
         class Terminator(terminator.Terminator):

@@ -1,22 +1,14 @@
-from pathlib import Path
-
 import pytest
 from baby_steps import given, then, when
 
-from vedro import Scenario
-from vedro.core import StableScenarioOrderer, VirtualScenario
+from vedro.core.scenario_orderer import StableScenarioOrderer
+
+from ._utils import make_vscenario
 
 
 @pytest.fixture()
-def orderer():
+def orderer() -> StableScenarioOrderer:
     return StableScenarioOrderer()
-
-
-def make_vscenario(path: str) -> VirtualScenario:
-    class _Scenario(Scenario):
-        __file__ = Path(path).absolute()
-
-    return VirtualScenario(_Scenario, steps=[])
 
 
 @pytest.mark.asyncio

@@ -278,6 +278,18 @@ def test_print_scope_val(*, printer: RichPrinter, console_: Mock):
         ]
 
 
+def test_print_scope_val_long_str(*, printer: RichPrinter, console_: Mock):
+    with given:
+        val = "bananabanana"
+    with when:
+        printer.print_scope_val(val, length_long_str=10)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print("ban...nana"),
+        ]
+
+
 def test_print_empty_scope(*, printer: RichPrinter, console_: Mock):
     with given:
         scope = {}
@@ -340,6 +352,28 @@ def test_print_report_summary_empty(*, printer: RichPrinter, console_: Mock):
         assert console_.mock_calls == []
 
 
+@pytest.mark.parametrize(("elapsed", "formatted"), [
+    # hours
+    (25 * 3600 + 0 * 60 + 5.0, "25h 0m 5s"),
+    (3 * 3600 + 15 * 60 + 0.0, "3h 15m 0s"),
+    # minutes
+    (9 * 60 + 30.0, "9m 30s"),
+    (1 * 60 + 0.0, "1m 0s"),
+    # seconds
+    (59.99, "59.99s"),
+    (0.1, "0.10s"),
+    (0.01, "0.01s"),
+    (0.001, "0.00s"),
+    (0.0001, "0.00s"),
+])
+def test_elapsed_formatter(elapsed: float, formatted: str, *, printer: RichPrinter):
+    with when:
+        result = printer.format_elapsed(elapsed)
+
+    with then:
+        assert result == formatted
+
+
 @pytest.mark.parametrize(("stats", "color"), [
     ({"total": 4, "passed": 3, "failed": 0, "skipped": 1}, "green"),
     ({"total": 5, "passed": 3, "failed": 1, "skipped": 1}, "red"),
@@ -358,6 +392,64 @@ def test_print_report_stats(stats: Dict[str, int], color: str, *,
         assert console_.mock_calls == [
             call.out(message, style=Style(color=color, bold=True), end=""),
             call.out(" (0.00s)", style=Style(color="blue")),
+        ]
+
+
+def test_print_report_stats_interrupted(printer: RichPrinter, console_: Mock):
+    with given:
+        stats = {
+            "total": 0,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+        }
+        message = ("# {total} scenarios, {passed} passed,"
+                   " {failed} failed, {skipped} skipped").format(**stats)
+
+    with when:
+        printer.print_report_stats(**stats, is_interrupted=True, elapsed=0.0)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(message, style=Style(color="red", bold=True), end=""),
+            call.out(" (0.00s)", style=Style(color="blue")),
+        ]
+
+
+def test_print_interrupted(printer: RichPrinter, console_: Mock):
+    with given:
+        exc_info = ExcInfo(KeyboardInterrupt, KeyboardInterrupt("msg"), None)
+        message = "\n".join([
+            "!!!                                           !!!",
+            "!!! Interrupted by “KeyboardInterrupt('msg')“ !!!",
+            "!!!                                           !!!",
+        ])
+
+    with when:
+        printer.print_interrupted(exc_info)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(message, style=Style(color="yellow")),
+        ]
+
+
+def test_print_interrupted_with_traceback(printer: RichPrinter, exc_info: ExcInfo, console_: Mock):
+    with given:
+        message = "\n".join([
+            "!!!                             !!!",
+            "!!! Interrupted by “KeyError()“ !!!",
+            "!!!                             !!!",
+        ])
+        formatted = format_exception(exc_info.type, exc_info.value, exc_info.traceback)
+
+    with when:
+        printer.print_interrupted(exc_info, show_traceback=True)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(message, style=Style(color="yellow")),
+            call.out("".join(formatted), style=Style(color="yellow")),
         ]
 
 
