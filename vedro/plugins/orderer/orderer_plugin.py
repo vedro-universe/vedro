@@ -39,3 +39,4 @@ class OrdererPlugin(Plugin):
 
 class Orderer(PluginConfig):
     plugin = OrdererPlugin
+    description = "Configures the execution order of scenarios"

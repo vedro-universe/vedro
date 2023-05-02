@@ -132,3 +132,4 @@ class SkipperPlugin(Plugin):
 
 class Skipper(PluginConfig):
     plugin = SkipperPlugin
+    description = "Allows selective scenario skipping and selection based on file/directory or subject"

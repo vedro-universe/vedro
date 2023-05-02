@@ -50,3 +50,4 @@ class SlicerPlugin(Plugin):
 
 class Slicer(PluginConfig):
     plugin = SlicerPlugin
+    description = "Provides a way to distribute scenarios among multiple workers"

@@ -81,6 +81,7 @@ class InterrupterPlugin(Plugin):
 
 class Interrupter(PluginConfig):
     plugin = InterrupterPlugin
+    description = "Stops test execution after the first failed scenario or on specified signals"
 
     # Raise Interrupted exception on these signals
     handle_signals: Tuple[signal.Signals, ...] = (signal.SIGTERM,)

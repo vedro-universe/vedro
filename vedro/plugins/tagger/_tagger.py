@@ -27,9 +27,12 @@ class TaggerPlugin(Plugin):
             return
         async for scenario in event.scheduler:
             tags = getattr(scenario._orig_scenario, "tags", ())
+            # validate tags
+            # x.isidentifier()
             if self._tags not in tags:
                 event.scheduler.ignore(scenario)
 
 
 class Tagger(PluginConfig):
     plugin = TaggerPlugin
+    description = "Allows scenarios to be selectively run based on user-defined tags"

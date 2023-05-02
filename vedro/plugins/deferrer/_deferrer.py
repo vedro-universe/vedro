@@ -42,3 +42,4 @@ class DeferrerPlugin(Plugin):
 
 class Deferrer(PluginConfig):
     plugin = DeferrerPlugin
+    description = "Executes deferred functions at the end of each scenario"

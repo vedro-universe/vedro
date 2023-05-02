@@ -74,3 +74,4 @@ class RepeaterPlugin(Plugin):
 
 class Repeater(PluginConfig):
     plugin = RepeaterPlugin
+    description = "Repeat scenarios a specified number of times"

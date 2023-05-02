@@ -43,3 +43,4 @@ class DirectorPlugin(Plugin):
 
 class Director(PluginConfig):
     plugin = DirectorPlugin
+    description = "Manages and configures reporters for scenario execution"

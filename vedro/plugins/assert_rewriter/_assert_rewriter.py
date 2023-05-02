@@ -32,3 +32,4 @@ class AssertRewriterPlugin(Plugin):
 
 class AssertRewriter(PluginConfig):
     plugin = AssertRewriterPlugin
+    description = "Rewrites assert statements to provide better error messages"
