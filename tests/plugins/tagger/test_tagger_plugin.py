@@ -12,6 +12,7 @@ __all__ = ("dispatcher", "tagger")  # fixtures
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures(tagger.__name__)
 async def test_no_tags(*, tagger: TaggerPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, tags=None)
