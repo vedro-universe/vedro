@@ -1,6 +1,5 @@
-import asyncio
 import sys
-from typing import Dict, List, Union, cast
+from typing import Dict, List, cast
 
 if sys.version_info >= (3, 8):
     from importlib.metadata import PackageNotFoundError, metadata

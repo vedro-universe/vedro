@@ -30,10 +30,11 @@ class ConfigParser:
     def _parse_config_section(self, st: ast.AST) -> Union[ConfigSectionType, None]:
         for node in ast.iter_child_nodes(st):
             if isinstance(node, ast.ClassDef) and (node.name == "Config"):
+                end_lineno = getattr(node, "end_lineno", 0)
                 return {
                     "plugins": self._parse_plugin_list_section(node),
                     "start": node.lineno,
-                    "end": node.end_lineno,
+                    "end": end_lineno,
                     "offset": node.col_offset,
                 }
         return None
@@ -41,21 +42,23 @@ class ConfigParser:
     def _parse_plugin_list_section(self, st: ast.ClassDef) -> Union[PluginListSectionType, None]:
         for node in ast.iter_child_nodes(st):
             if isinstance(node, ast.ClassDef) and (node.name == "Plugins"):
+                end_lineno = getattr(node, "end_lineno", 0)
                 return {
                     "start": node.lineno,
-                    "end": node.end_lineno,
+                    "end": end_lineno,
                     "offset": node.col_offset,
                     "children": self._parse_plugin_section(node),
                 }
         return None
 
     def _parse_plugin_section(self, st: ast.ClassDef) -> Dict[str, PluginSectionType]:
-        res = {}
+        res: Dict[str, PluginSectionType] = {}
         for node in ast.iter_child_nodes(st):
             if isinstance(node, ast.ClassDef):
+                end_lineno = getattr(node, "end_lineno", 0)
                 res[node.name] = {
                     "start": node.lineno,
-                    "end": node.end_lineno,
+                    "end": end_lineno,
                     "offset": node.col_offset,
                     "enabled": self._parse_enabled_attr(node),
                 }
@@ -67,9 +70,10 @@ class ConfigParser:
                 continue
             target = node.targets[0]
             if isinstance(target, ast.Name) and (target.id == "enabled"):
+                end_lineno = getattr(node, "end_lineno", 0)
                 return {
                     "start": node.lineno,
-                    "end": node.end_lineno,
+                    "end": end_lineno,
                     "offset": node.col_offset,
                 }
         return None

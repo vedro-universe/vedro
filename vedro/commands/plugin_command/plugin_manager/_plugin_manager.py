@@ -34,7 +34,7 @@ class PluginManager:
             await self._config_updater.update(plugin_package, plugin_name, enabled=enabled)
 
     def _get_plugins(self, plugin_package: str) -> List[Tuple[str, str]]:
-        plugins = []
+        plugins: List[Tuple[str, str]] = []
 
         plugin_package = plugin_package.replace("-", "_")
         module = self._import_module(plugin_package)

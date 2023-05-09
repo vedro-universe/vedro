@@ -62,7 +62,7 @@ class VirtualScenario:
     @property
     def rel_path(self) -> Path:
         return self._path.relative_to(Path.cwd())
-    
+
     @property
     def name(self) -> str:
         return getattr(self._orig_scenario, "__vedro__template_name__",

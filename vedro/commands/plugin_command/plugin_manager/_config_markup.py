@@ -1,34 +1,42 @@
-from typing import Dict, TypedDict, Union
+import sys
+from typing import Dict, Union
 
 __all__ = ("ConfigMarkup", "ConfigSectionType", "PluginListSectionType",
            "PluginSectionType", "EnabledAttrType")
 
 
-class EnabledAttrType(TypedDict):
-    offset: int
-    start: int
-    end: Union[int, None]
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
 
+    class EnabledAttrType(TypedDict):
+        offset: int
+        start: int
+        end: int
 
-class PluginSectionType(TypedDict):
-    offset: int
-    start: int
-    end: Union[int, None]
-    enabled: Union[EnabledAttrType, None]
+    class PluginSectionType(TypedDict):
+        offset: int
+        start: int
+        end: int
+        enabled: Union[EnabledAttrType, None]
 
+    class PluginListSectionType(TypedDict):
+        offset: int
+        start: int
+        end: int
+        children: Dict[str, PluginSectionType]
 
-class PluginListSectionType(TypedDict):
-    offset: int
-    start: int
-    end: Union[int, None]
-    children: Union[Dict[str, PluginSectionType], None]
+    class ConfigSectionType(TypedDict):
+        offset: int
+        start: int
+        end: int
+        plugins: Union[PluginListSectionType, None]
 
-
-class ConfigSectionType(TypedDict):
-    offset: int
-    start: int
-    end: Union[int, None]
-    plugins: Union[PluginListSectionType, None]
+else:
+    from typing import Any
+    EnabledAttrType = Dict[Any, Any]
+    PluginSectionType = Dict[Any, Any]
+    PluginListSectionType = Dict[Any, Any]
+    ConfigSectionType = Dict[Any, Any]
 
 
 class ConfigMarkup:
@@ -48,7 +56,7 @@ class ConfigMarkup:
 
     def get_plugin_section(self, plugin_name: str) -> Union[PluginSectionType, None]:
         plugin_list_section = self.get_plugin_list_section()
-        return plugin_list_section["children"][plugin_name] if plugin_list_section else None
+        return plugin_list_section["children"].get(plugin_name) if plugin_list_section else None
 
     def get_enabled_attr(self, plugin_name: str) -> Union[EnabledAttrType, None]:
         plugin_section = self.get_plugin_section(plugin_name)

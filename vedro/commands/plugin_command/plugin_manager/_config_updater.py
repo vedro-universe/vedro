@@ -31,21 +31,25 @@ class ConfigUpdater:
                 config_generator.gen_plugin_section(plugin_package, plugin_name, enabled)
             )
             config_section = config_markup.get_config_section()
+            assert config_section is not None
             start_lineno = config_section["end"] + 2  # next line + blank line
 
         elif not config_markup.get_plugin_section(plugin_name):
             generated = config_generator.gen_plugin_section(plugin_package, plugin_name, enabled)
             plugin_list_section = config_markup.get_plugin_list_section()
+            assert plugin_list_section is not None
             start_lineno = plugin_list_section["end"] + 2  # next line + blank line
 
         elif not config_markup.get_enabled_attr(plugin_name):
             generated = config_generator.gen_enabled_attr(enabled)
             plugin_section = config_markup.get_plugin_section(plugin_name)
+            assert plugin_section is not None
             start_lineno = plugin_section["end"] + 1  # next line
 
         else:
             generated = config_generator.gen_enabled_attr(enabled)
             enabled_attr = config_markup.get_enabled_attr(plugin_name)
+            assert enabled_attr is not None
             start_lineno = enabled_attr["start"]
 
         config_source = self._apply(config_source, generated, start_lineno)
@@ -63,7 +67,6 @@ class ConfigUpdater:
             else:
                 config_lines[num + lineno] = line
         return linesep.join(config_lines)
-
 
     async def _read_config(self) -> str:
         with open(self._config_path, "r") as f:
