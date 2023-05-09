@@ -11,8 +11,8 @@ from vedro.events import (
     StartupEvent,
 )
 
-from ._cmd_arg_parser import CommandArgumentParser
-from ._command import Command
+from .._cmd_arg_parser import CommandArgumentParser
+from .._command import Command
 
 __all__ = ("RunCommand",)
 

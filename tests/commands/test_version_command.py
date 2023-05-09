@@ -6,9 +6,8 @@ from rich.console import Console
 from rich.style import Style
 
 import vedro
-from vedro.commands._cmd_arg_parser import CommandArgumentParser
-from vedro.commands._command import Command
-from vedro.commands._version_command import VersionCommand
+from vedro.commands import Command, CommandArgumentParser
+from vedro.commands.version_command import VersionCommand
 from vedro.core import Config
 
 

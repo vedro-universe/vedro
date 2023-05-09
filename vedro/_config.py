@@ -44,7 +44,8 @@ __all__ = ("Config",)
 
 
 class Config(core.Config):
-    path = Path(__file__)
+    class Runtime(core.Config):
+        path = Path(__file__)
 
     class Registry(core.Config.Registry):
         Dispatcher = Singleton[Dispatcher](Dispatcher)

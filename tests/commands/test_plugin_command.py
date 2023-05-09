@@ -1,8 +1,7 @@
 from baby_steps import given, then, when
 
-from vedro.commands._cmd_arg_parser import CommandArgumentParser
-from vedro.commands._command import Command
-from vedro.commands._plugin_command import PluginCommand
+from vedro.commands import Command, CommandArgumentParser
+from vedro.commands.plugin_command import PluginCommand
 from vedro.core import Config
 
 

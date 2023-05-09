@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import Type, cast
 
 from ._config import Config
-from .commands._cmd_arg_parser import CommandArgumentParser
-from .commands._plugin_command import PluginCommand
-from .commands._run_command import RunCommand
-from .commands._version_command import VersionCommand
+from .commands import CommandArgumentParser
+from .commands.plugin_command import PluginCommand
+from .commands.run_command import RunCommand
+from .commands.version_command import VersionCommand
 from .core import ConfigFileLoader
 
 
@@ -23,7 +23,7 @@ async def main() -> None:
     config_loader = ConfigFileLoader(Config)
     config = cast(Type[Config], await config_loader.load(config_path))
 
-    commands = ["run", "version", "plugins"]
+    commands = ["run", "version", "plugin"]
     arg_parser.add_argument("command", nargs="?", help=f"Command to run {{{', '.join(commands)}}}")
     args, unknown_args = arg_parser.parse_known_args()
 
@@ -46,8 +46,8 @@ async def main() -> None:
         parser = arg_parser_factory("vedro version")
         await VersionCommand(config, parser).run()
 
-    elif args.command == "plugins":
-        parser = arg_parser_factory("vedro plugins")
+    elif args.command == "plugin":
+        parser = arg_parser_factory("vedro plugin")
         await PluginCommand(config, parser).run()
 
     else:

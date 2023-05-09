@@ -1,5 +1,6 @@
+import asyncio
 import sys
-from typing import Dict, List, cast
+from typing import Dict, List, Union, cast
 
 if sys.version_info >= (3, 8):
     from importlib.metadata import PackageNotFoundError, metadata
@@ -21,8 +22,8 @@ import vedro
 from vedro import Config
 from vedro.core import PluginConfig
 
-from ._cmd_arg_parser import CommandArgumentParser
-from ._command import Command
+from .._cmd_arg_parser import CommandArgumentParser
+from .._command import Command
 
 __all__ = ("PluginCommand", "PluginInfo",)
 
@@ -47,7 +48,7 @@ class PluginCommand(Command):
         super().__init__(config, arg_parser)
         self._console = console_factory()
 
-    def _get_plugin_info(self, plugin_config: PluginConfig) -> PluginInfo:
+    def _get_plugin_info(self, plugin_config: Type[PluginConfig]) -> PluginInfo:
         plugin_name = getattr(plugin_config, "__name__", "Plugin")
         plugin_info = PluginInfo(plugin_name, plugin_config.enabled)
 
@@ -61,9 +62,10 @@ class PluginCommand(Command):
 
         # default plugin
         if package == "vedro":
+            summary = plugin_config.description or "Core Plugin"
             plugin_info.package = ".".join(module.split(".")[:-1])
             plugin_info.version = vedro.__version__
-            plugin_info.summary = "Core plugin"
+            plugin_info.summary = summary
             plugin_info.is_default = True
             return plugin_info
 
@@ -134,11 +136,20 @@ class PluginCommand(Command):
         subparsers.add_parser("list", help="Show installed plugins")
         subparsers.add_parser("top", help="Show popular plugins")
 
+        install_subparser = subparsers.add_parser("install", help="Install plugin")
+        install_subparser.add_argument("package", help="Package name")
+        install_subparser.add_argument("--pip-args", default="", help="Additional pip arguments")
+
         args = self._arg_parser.parse_args()
         if args.subparser == "top":
             await self._show_top_plugins()
         elif args.subparser == "list":
             await self._show_installed_plugins()
+        elif args.subparser == "install":
+            if sys.version_info < (3, 8):
+                self._console.print("Python 3.8+ required for this command", style="red")
+                return
+            self._console.print(f"Installing plugin '{args.package}'..", style="blue")
         else:
             self._arg_parser.print_help()
             self._arg_parser.exit()
