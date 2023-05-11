@@ -1,7 +1,7 @@
 asynctest==0.13.0
 baby-steps==1.2.3
 bump2version==1.0.1
-codecov==2.1.12
+codecov==2.1.13
 coverage==7.0.5
 flake8==5.0.4
 isort==5.11.4
