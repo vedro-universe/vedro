@@ -5,7 +5,7 @@ from vedro.commands.plugin_command import PluginCommand
 from vedro.core import Config
 
 
-def test_inheritance():
+def test_plugin_command():
     with given:
         config = Config
         arg_parser = CommandArgumentParser()

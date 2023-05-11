@@ -11,8 +11,8 @@ else:
         os.kill(os.getpid(), sig)
 
 import pytest
-from _pytest.python_api import raises
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.core import Dispatcher, Event
 from vedro.core import MonotonicScenarioScheduler as Scheduler
