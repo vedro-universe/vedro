@@ -31,7 +31,7 @@ if sys.version_info >= (3, 8):
         end: int
         plugins: Union[PluginListSectionType, None]
 
-else:
+else:  # pragma: no cover
     from typing import Any
     EnabledAttrType = Dict[Any, Any]
     PluginSectionType = Dict[Any, Any]

@@ -29,8 +29,9 @@ class ConfigGenerator:
             "",
         ]
 
-    def gen_enabled_attr(self, enabled: bool, *, offset: int = 3) -> List[str]:
-        return [
-            f"{self._indent * offset}enabled = {enabled}",
-            ""
-        ]
+    def gen_enabled_attr(self, enabled: bool, new_line: bool = True, *,
+                         offset: int = 3) -> List[str]:
+        res = [f"{self._indent * offset}enabled = {enabled}"]
+        if new_line:
+            res.append("")
+        return res

@@ -17,9 +17,6 @@ class PluginManager:
         self._config_path = config_path
         self._config_updater = ConfigUpdater(config_path)
 
-    async def install(self, plugin_name: str) -> None:
-        raise NotImplementedError()
-
     async def enable(self, plugin_name: str) -> None:
         return await self.toogle(plugin_name, enabled=True)
 

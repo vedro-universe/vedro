@@ -1,5 +1,5 @@
 import sys
-from typing import Dict, List, cast
+from typing import Dict
 
 if sys.version_info >= (3, 8):
     from importlib.metadata import PackageNotFoundError, metadata
@@ -8,9 +8,6 @@ else:
         raise PackageNotFoundError(name)
     PackageNotFoundError = Exception
 
-import json
-import platform
-import urllib.request
 from dataclasses import dataclass
 from typing import Callable, Type
 
@@ -23,6 +20,8 @@ from vedro.core import PluginConfig
 
 from .._cmd_arg_parser import CommandArgumentParser
 from .._command import Command
+from ._fetch_plugins import fetch_top_plugins
+from ._install_plugin import install_plugin
 
 __all__ = ("PluginCommand", "PluginInfo",)
 
@@ -94,41 +93,6 @@ class PluginCommand(Command):
 
         self._console.print(table)
 
-    def _get_user_agent(self) -> str:
-        python_version = platform.python_version()
-        platform_info = platform.platform(terse=True)
-        return f"Vedro/{vedro.__version__} (Python/{python_version}; {platform_info})"
-
-    def _send_request(self, url: str, *,
-                      headers: Dict[str, str], timeout: float) -> List[Dict[str, str]]:
-        request = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            result = json.loads(response.read())
-        return cast(List[Dict[str, str]], result)
-
-    async def _show_top_plugins(self) -> None:
-        url = "https://api.vedro.io/v1/plugins/top?limit=10"
-        headers = {"User-Agent": self._get_user_agent()}
-
-        with self._console.status("Fetching plugins..."):
-            try:
-                plugins = self._send_request(url, headers=headers, timeout=10.0)
-            except Exception as e:
-                self._console.print(f"Failed to fetch popular plugins ({e})", style="red")
-                return
-
-        table = Table(expand=True, border_style="grey50")
-        table.add_column("Package", overflow="fold", style="blue")
-        table.add_column("Description", overflow="fold")
-        table.add_column("URL", overflow="fold")
-        table.add_column("Popularity", justify="right")
-
-        for plugin in plugins:
-            table.add_row(plugin["name"], plugin["description"],
-                          plugin["url"], str(plugin["popularity"]))
-
-        self._console.print(table)
-
     async def run(self) -> None:
         subparsers = self._arg_parser.add_subparsers(dest="subparser")
 
@@ -148,7 +112,36 @@ class PluginCommand(Command):
             if sys.version_info < (3, 8):
                 self._console.print("Python 3.8+ required for this command", style="red")
                 return
-            self._console.print(f"Installing plugin '{args.package}'..", style="blue")
+            await self._install_plugin(args.package, args.pip_args)
         else:
             self._arg_parser.print_help()
             self._arg_parser.exit()
+
+    async def _show_top_plugins(self) -> None:
+        with self._console.status("Fetching plugins..."):
+            try:
+                plugins = await fetch_top_plugins(limit=10, timeout=10.0)
+            except Exception as e:
+                self._console.print(f"Failed to fetch popular plugins ({e})", style="red")
+                return
+
+        table = Table(expand=True, border_style="grey50")
+        table.add_column("Package", overflow="fold", style="blue")
+        table.add_column("Description", overflow="fold")
+        table.add_column("URL", overflow="fold")
+        table.add_column("Popularity", justify="right")
+
+        for plugin in plugins:
+            table.add_row(plugin["name"], plugin["description"],
+                          plugin["url"], str(plugin["popularity"]))
+
+        self._console.print(table)
+
+    async def _install_plugin(self, package: str, pip_args: str) -> None:
+        with self._console.status(f"Installing '{package}' package..."):
+            await install_plugin(
+                package=package,
+                pip_args=pip_args,
+                on_stdout=lambda x: self._console.print(x, style="grey50", end=""),
+                on_stderr=lambda x: self._console.print(x, style="yellow", end=""),
+            )

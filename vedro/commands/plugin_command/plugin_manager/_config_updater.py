@@ -24,7 +24,7 @@ class ConfigUpdater:
                     config_generator.gen_plugin_section(plugin_package, plugin_name, enabled)
                 )
             )
-            start_lineno = 0
+            start_lineno = 1
 
         elif not config_markup.get_plugin_list_section():
             generated = config_generator.gen_plugins_section(
@@ -47,31 +47,35 @@ class ConfigUpdater:
             start_lineno = plugin_section["end"] + 1  # next line
 
         else:
-            generated = config_generator.gen_enabled_attr(enabled)
+            generated = config_generator.gen_enabled_attr(enabled, new_line=False)
             enabled_attr = config_markup.get_enabled_attr(plugin_name)
             assert enabled_attr is not None
             start_lineno = enabled_attr["start"]
 
         config_source = self._apply(config_source, generated, start_lineno)
-        print(f"config_source:\n{config_source}")
-        # await self._save_config(config_source)
+        await self._save_config(config_source)
 
     def _apply(self, config_source: str, generated: List[str], lineno: int, *,
                linesep: str = os.linesep) -> str:
-        config_lines = config_source.splitlines()
-        for num, line in enumerate(generated):
-            if num + lineno >= len(config_lines):
-                for _ in range(num + lineno - len(config_lines) - 1):
-                    config_lines.append("")
-                config_lines.append(f"{line}")
+        config_lines = config_source.split(linesep)
+
+        if lineno > len(config_lines):
+            for _ in range(lineno - len(config_lines)):
+                config_lines.append("")
+
+        new_config_lines = []
+        for num, line in enumerate(config_lines, start=1):
+            if num == lineno:
+                new_config_lines.extend(generated)
             else:
-                config_lines[num + lineno] = line
-        return linesep.join(config_lines)
+                new_config_lines.append(line)
+
+        return linesep.join(new_config_lines)
 
     async def _read_config(self) -> str:
         with open(self._config_path, "r") as f:
             return f.read()
 
-    async def _save_config(self, config_source: List[str]) -> None:
+    async def _save_config(self, config_source: str) -> None:
         with open(self._config_path, "w") as f:
-            f.writelines(config_source)
+            f.write(config_source)
