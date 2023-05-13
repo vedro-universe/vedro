@@ -4,6 +4,8 @@ from pytest import raises
 from vedro import Scenario
 from vedro.plugins.skipper import only
 
+from ._utils import get_only_attr
+
 
 def test_only():
     with when:
@@ -13,7 +15,7 @@ def test_only():
 
     with then:
         assert issubclass(_Scenario, Scenario)
-        assert getattr(_Scenario, "__vedro__only__") is True
+        assert get_only_attr(_Scenario) is True
 
 
 def test_only_called():
@@ -24,7 +26,7 @@ def test_only_called():
 
     with then:
         assert issubclass(_Scenario, Scenario)
-        assert getattr(_Scenario, "__vedro__only__") is True
+        assert get_only_attr(_Scenario) is True
 
 
 def test_only_not_subclass():

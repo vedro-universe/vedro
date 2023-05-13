@@ -5,6 +5,8 @@ from pytest import raises
 from vedro import Scenario
 from vedro.plugins.skipper import skip
 
+from ._utils import get_skip_attr, get_skip_reason_attr
+
 
 def test_skip():
     with when:
@@ -14,8 +16,8 @@ def test_skip():
 
     with then:
         assert issubclass(_Scenario, Scenario)
-        assert getattr(_Scenario, "__vedro__skipped__") is True
-        assert getattr(_Scenario, "__vedro__skip_reason__", Nil) is Nil
+        assert get_skip_attr(_Scenario) is True
+        assert get_skip_reason_attr(_Scenario) is Nil
 
 
 def test_skip_called():
@@ -26,8 +28,8 @@ def test_skip_called():
 
     with then:
         assert issubclass(_Scenario, Scenario)
-        assert getattr(_Scenario, "__vedro__skipped__") is True
-        assert getattr(_Scenario, "__vedro__skip_reason__", Nil) is Nil
+        assert get_skip_attr(_Scenario) is True
+        assert get_skip_reason_attr(_Scenario) is Nil
 
 
 def test_skip_called_with_reason():
@@ -41,8 +43,8 @@ def test_skip_called_with_reason():
 
     with then:
         assert issubclass(_Scenario, Scenario)
-        assert getattr(_Scenario, "__vedro__skipped__") is True
-        assert getattr(_Scenario, "__vedro__skip_reason__") == reason
+        assert get_skip_attr(_Scenario) is True
+        assert get_skip_reason_attr(_Scenario) == reason
 
 
 def test_skip_not_subclass():
