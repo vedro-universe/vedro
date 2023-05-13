@@ -2,7 +2,7 @@ from argparse import Namespace
 from os import chdir
 from pathlib import Path
 from time import monotonic_ns
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pytest
 
@@ -106,3 +106,15 @@ def touch(path: Path) -> Path:
 
 def get_skipped(scenarios: Iterable[VirtualScenario]) -> List[VirtualScenario]:
     return [scn for scn in scenarios if scn.is_skipped()]
+
+
+def get_scenarios(key: str, globals_: Dict[str, Any]) -> List[Type[Scenario]]:
+    return [scn for name, scn in globals_.items() if name.startswith(key)]
+
+
+def get_only_attr(scenario: Type[Scenario]) -> bool:
+    return getattr(scenario, "__vedro__only__", False)
+
+
+def get_skip_attr(scenario: Type[Scenario]) -> bool:
+    return getattr(scenario, "__vedro__skipped__", False)
