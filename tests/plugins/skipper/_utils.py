@@ -5,6 +5,7 @@ from time import monotonic_ns
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pytest
+from niltype import Nil, Nilable
 
 from vedro import Scenario
 from vedro.core import ArgumentParser, Dispatcher, VirtualScenario
@@ -118,3 +119,7 @@ def get_only_attr(scenario: Type[Scenario]) -> bool:
 
 def get_skip_attr(scenario: Type[Scenario]) -> bool:
     return getattr(scenario, "__vedro__skipped__", False)
+
+
+def get_skip_reason_attr(scenario: Type[Scenario]) -> Nilable[str]:
+    return getattr(scenario, "__vedro__skip_reason__", Nil)
