@@ -1,8 +1,9 @@
 import sys
 from dataclasses import dataclass
-from typing import Callable, Type
+from typing import Callable, List, Type
 
 from rich.console import Console
+from rich.status import Status
 from rich.table import Table
 
 from vedro import Config
@@ -45,7 +46,7 @@ class PluginCommand(Command):
         subparsers.add_parser("top", help="Show popular plugins")
 
         install_subparser = subparsers.add_parser("install", help="Install plugin")
-        install_subparser.add_argument("package", help="Package name")
+        install_subparser.add_argument("packages", nargs="+", help="Package name(s)")
         install_subparser.add_argument("--pip-args", default="", help="Additional pip arguments")
 
         args = self._arg_parser.parse_args()
@@ -57,7 +58,7 @@ class PluginCommand(Command):
             if sys.version_info < (3, 8):
                 self._console.print("Python 3.8+ required for this command", style="red")
                 return
-            await self._install_plugin(args.package, args.pip_args)
+            await self._install_packages(args.packages, args.pip_args)
         else:
             self._arg_parser.print_help()
             self._arg_parser.exit()
@@ -82,15 +83,39 @@ class PluginCommand(Command):
 
         self._console.print(table)
 
-    async def _install_plugin(self, package: str, pip_args: str) -> None:
-        with self._console.status(f"Installing '{package}' package..."):
-            await install_plugin(
+    async def _install_packages(self, packages: List[str], pip_args: str) -> None:
+        for package in packages:
+            await self._install_package(package, pip_args)
+
+    async def _install_package(self, package: str, pip_args: str) -> None:
+        message = f"Installing '{package}'..."
+        stdout, stderr = [], []
+
+        def on_stdout(line: str, st: Status) -> None:
+            stdout.append(line)
+            last_line = "".join(stdout[-1:])
+            st.update(f"{message}\n[grey50]{last_line}[/]")
+
+        def on_stderr(line: str, st: Status) -> None:
+            stderr.append(line)
+            last_line = "".join(stderr[-1:])
+            st.update(f"{message}\n[yellow]{last_line}[/]")
+
+        with self._console.status(message) as status:
+            return_code = await install_plugin(
                 package=package,
                 pip_args=pip_args,
-                on_stdout=lambda x: self._console.print(x, style="grey50", end=""),
-                on_stderr=lambda x: self._console.print(x, style="yellow", end=""),
+                on_stdout=lambda line: on_stdout(line, status),
+                on_stderr=lambda line: on_stderr(line, status),
             )
-        await self._plugin_manager.enable(package)
+
+        if return_code == 0:
+            await self._plugin_manager.enable(package)
+            self._console.print(f"✔ Successfully installed '{package}'", style="green")
+        else:
+            self._console.print(f"✗ Failed to install '{package}'", style="red")
+            self._console.print("".join(stdout), style="grey50", end="")
+            self._console.print("".join(stderr), style="yellow", end="")
 
     async def _show_installed_plugins(self) -> None:
         table = Table(expand=True, border_style="grey50")
