@@ -36,7 +36,7 @@ class PluginCommand(Command):
                  console_factory: Callable[[], Console] = make_console) -> None:
         super().__init__(config, arg_parser)
         self._console = console_factory()
-        self._plugin_manager = PluginManager(config.Runtime.path)
+        self._plugin_manager = PluginManager(config.path)
 
     async def run(self) -> None:
         subparsers = self._arg_parser.add_subparsers(dest="subparser")

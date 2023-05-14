@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Type
 
 import cabina
-from cabina import MetaBase, computed
+from cabina import MetaBase
 from cabina.errors import ConfigError
 
 __all__ = ("Config", "Section", "ConfigType",)
@@ -22,12 +22,9 @@ class Section(cabina.Section, metaclass=_MetaBase):
 
 
 class Config(cabina.Config, Section):
-    class Runtime(Section):
-        __frozen__ = False
-
-        @computed
-        def path(cls) -> Path:
-            return Path(__file__)
+    # Here, we set __file__ as the fallback value for 'path'
+    # However, the actual path will be determined at runtime
+    path: Path = Path(__file__)
 
     class Registry(Section):
         pass
