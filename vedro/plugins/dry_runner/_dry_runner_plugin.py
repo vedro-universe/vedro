@@ -37,6 +37,7 @@ class DryRunnerPlugin(Plugin):
 
 class DryRunner(PluginConfig):
     plugin = DryRunnerPlugin
+    description = "Simulates scenario execution without actually executing them"
 
     # Exceptions that will interrupt scenario execution
     interrupt_exceptions: Tuple[Type[BaseException], ...] = (KeyboardInterrupt, SystemExit,)

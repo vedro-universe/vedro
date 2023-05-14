@@ -116,7 +116,7 @@ class RichPrinter:
             for frame in stack.frames:
                 if frame.locals is not None:
                     frame.locals = {k: v for k, v in frame.locals.items()
-                                    if k != "self" and not k.startswith("@")}
+                                    if k != "self" and k.isidentifier()}
 
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)

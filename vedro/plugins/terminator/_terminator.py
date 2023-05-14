@@ -30,3 +30,4 @@ class TerminatorPlugin(Plugin):
 
 class Terminator(PluginConfig):
     plugin = TerminatorPlugin
+    description = "Handles test exit status based on test results and interruptions"

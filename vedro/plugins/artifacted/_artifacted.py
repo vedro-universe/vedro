@@ -63,3 +63,4 @@ class ArtifactedPlugin(Plugin):
 
 class Artifacted(PluginConfig):
     plugin = ArtifactedPlugin
+    description = "Manages artifacts for step and scenario results"

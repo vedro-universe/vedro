@@ -39,7 +39,7 @@ class SystemUpgradePlugin(Plugin):
         return f"Vedro/{self._cur_version} (Python/{python_version}; {platform_info})"
 
     def _get_latest_version(self) -> None:
-        url = f"{self._api_url}/v1/last-version"
+        url = f"{self._api_url}/v1/latest-version"
         headers = {"User-Agent": self._get_user_agent()}
         response = self._send_request(url, headers=headers, timeout=self._timeout)
         if isinstance(response, dict) and ("version" in response):
@@ -72,6 +72,7 @@ class SystemUpgradePlugin(Plugin):
 
 class SystemUpgrade(PluginConfig):
     plugin = SystemUpgradePlugin
+    description = "Checks for Vedro updates and notifies when a newer version is available"
 
     # URL to the Vedro API
     api_url: str = "https://api.vedro.io"

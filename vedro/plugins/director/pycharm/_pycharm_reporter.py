@@ -141,6 +141,7 @@ class PyCharmReporterPlugin(Reporter):
 
 class PyCharmReporter(PluginConfig):
     plugin = PyCharmReporterPlugin
+    description = "Outputs scenario results in a PyCharm-friendly format"
 
     # Show internal calls in the traceback output
     show_internal_calls: bool = False

@@ -1,9 +1,8 @@
 import warnings
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import List
 
-from ..core._arg_parser import ArgumentParser
 from ..core._config_loader import ConfigType
 from ..core._event import Event
 from ..core._exc_info import ExcInfo

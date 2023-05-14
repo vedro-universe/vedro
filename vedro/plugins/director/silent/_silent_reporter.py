@@ -22,3 +22,4 @@ class SilentReporterPlugin(Reporter):
 
 class SilentReporter(PluginConfig):
     plugin = SilentReporterPlugin
+    description = "Minimizes output during scenario execution"

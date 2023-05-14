@@ -24,4 +24,5 @@ class Plugin(Subscriber):
 
 class PluginConfig(Section):
     plugin: Type[Plugin] = Plugin
+    description: str = ""
     enabled: bool = True

@@ -239,6 +239,7 @@ class RichReporterPlugin(Reporter):
 
 class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
+    description = "Enhanced, customizable scenario reporting with rich output"
 
     # Show skipped scenarios
     show_skipped: bool = True

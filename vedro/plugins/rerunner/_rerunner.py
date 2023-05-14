@@ -81,3 +81,4 @@ class RerunnerPlugin(Plugin):
 
 class Rerunner(PluginConfig):
     plugin = RerunnerPlugin
+    description = "Reruns failed scenarios a specified number of times"

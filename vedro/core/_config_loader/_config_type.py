@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Type
 
 import cabina
@@ -21,6 +22,10 @@ class Section(cabina.Section, metaclass=_MetaBase):
 
 
 class Config(cabina.Config, Section):
+    # Here, we set __file__ as the fallback value for 'path'
+    # However, the actual path will be determined at runtime
+    path: Path = Path(__file__)
+
     class Registry(Section):
         pass
 

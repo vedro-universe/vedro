@@ -43,7 +43,6 @@ __all__ = ("Config",)
 
 
 class Config(core.Config):
-
     class Registry(core.Config.Registry):
         Dispatcher = Singleton[Dispatcher](Dispatcher)
 
