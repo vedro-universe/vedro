@@ -8,6 +8,7 @@ from ._config_markup import (
     ConfigMarkup,
     ConfigSectionType,
     EnabledAttrType,
+    ImportType,
     PluginListSectionType,
     PluginSectionType,
 )
@@ -18,14 +19,30 @@ __all__ = ("ConfigParser",)
 class ConfigParser:
     async def parse(self, config_source: str, *, default_indent: str = " " * 4) -> ConfigMarkup:
         config_ast = ast.parse(config_source)
+        imports = self._parse_imports(config_ast)
         config_section = self._parse_config_section(config_ast)
         indent = self._get_indent(config_source, default_indent)
-        return ConfigMarkup(config_section, indent)
+        return ConfigMarkup(config_section, imports, indent)
 
     def _get_indent(self, config_source: str, default_indent: str) -> str:
         stream = BytesIO(config_source.encode())
         indents = [tok.string for tok in tokenize(stream.readline) if tok.type == token.INDENT]
         return min(indents, key=len) if indents else default_indent
+
+    def _parse_imports(self, st: ast.AST) -> Dict[str, ImportType]:
+        res: Dict[str, ImportType] = {}
+        for node in ast.iter_child_nodes(st):
+            if not isinstance(node, ast.Import):
+                continue
+            end_lineno = getattr(node, "end_lineno", 0)
+            for alias in node.names:
+                res[alias.name] = {
+                    "alias": alias.asname,
+                    "start": node.lineno,
+                    "end": end_lineno,
+                    "offset": node.col_offset,
+                }
+        return res
 
     def _parse_config_section(self, st: ast.AST) -> Union[ConfigSectionType, None]:
         for node in ast.iter_child_nodes(st):

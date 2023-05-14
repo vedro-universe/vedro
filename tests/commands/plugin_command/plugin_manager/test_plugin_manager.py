@@ -10,6 +10,32 @@ from ._utils import create_config, read_config
 
 
 @pytest.mark.asyncio
+async def test_plugin_manager_no_file(tmp_path: Path):
+    with given:
+        config_path = create_config(tmp_path)
+        plugin_manager = PluginManager(config_path)
+
+    with when:
+        await plugin_manager.enable("tagger")
+
+    with then:
+        config = read_config(config_path)
+        assert config == linesep.join([
+            "import vedro",
+            "import vedro.plugins.tagger",
+            "",
+            "",
+            "class Config(vedro.Config):",
+            "",
+            "    class Plugins(vedro.Config.Plugins):",
+            "",
+            "        class Tagger(vedro.plugins.tagger.Tagger):",
+            "            enabled = True",
+            "",
+        ])
+
+
+@pytest.mark.asyncio
 async def test_plugin_manager_no_config(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [])
@@ -21,6 +47,10 @@ async def test_plugin_manager_no_config(tmp_path: Path):
     with then:
         config = read_config(config_path)
         assert config == linesep.join([
+            "import vedro",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -35,6 +65,9 @@ async def test_plugin_manager_no_config(tmp_path: Path):
 async def test_plugin_manager_no_plugins_section(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
+            "import vedro",
+            "",
+            "",
             "class Config(vedro.Config):",
             "    pass",
         ])
@@ -46,6 +79,10 @@ async def test_plugin_manager_no_plugins_section(tmp_path: Path):
     with then:
         config = read_config(config_path)
         assert config == linesep.join([
+            "import vedro.plugins.tagger",
+            "import vedro",
+            "",
+            "",
             "class Config(vedro.Config):",
             "    pass",
             "",
@@ -61,6 +98,9 @@ async def test_plugin_manager_no_plugins_section(tmp_path: Path):
 async def test_plugin_manager_no_plugins(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
+            "import vedro",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -74,6 +114,10 @@ async def test_plugin_manager_no_plugins(tmp_path: Path):
     with then:
         config = read_config(config_path)
         assert config == linesep.join([
+            "import vedro.plugins.tagger",
+            "import vedro",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -89,6 +133,11 @@ async def test_plugin_manager_no_plugins(tmp_path: Path):
 async def test_plugin_manager_no_target_plugin(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
+            "import vedro",
+            "import vedro.plugins.skipper",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -105,6 +154,11 @@ async def test_plugin_manager_no_target_plugin(tmp_path: Path):
     with then:
         config = read_config(config_path)
         assert config == linesep.join([
+            "import vedro",
+            "import vedro.plugins.skipper",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -122,6 +176,11 @@ async def test_plugin_manager_no_target_plugin(tmp_path: Path):
 async def test_plugin_manager_no_enabled_attr(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
+            "import vedro",
+            "import vedro.plugins.skipper",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -141,6 +200,11 @@ async def test_plugin_manager_no_enabled_attr(tmp_path: Path):
     with then:
         config = read_config(config_path)
         assert config == linesep.join([
+            "import vedro",
+            "import vedro.plugins.skipper",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -160,6 +224,10 @@ async def test_plugin_manager_no_enabled_attr(tmp_path: Path):
 async def test_plugin_manager_enabled_enabled(enabled: bool, *, tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
+            "import vedro",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -176,6 +244,10 @@ async def test_plugin_manager_enabled_enabled(enabled: bool, *, tmp_path: Path):
     with then:
         config = read_config(config_path)
         assert config == linesep.join([
+            "import vedro",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -191,6 +263,10 @@ async def test_plugin_manager_enabled_enabled(enabled: bool, *, tmp_path: Path):
 async def test_plugin_manager_disabled_enabled(enabled: bool, *, tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
+            "import vedro",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
@@ -207,6 +283,10 @@ async def test_plugin_manager_disabled_enabled(enabled: bool, *, tmp_path: Path)
     with then:
         config = read_config(config_path)
         assert config == linesep.join([
+            "import vedro",
+            "import vedro.plugins.tagger",
+            "",
+            "",
             "class Config(vedro.Config):",
             "",
             "    class Plugins(vedro.Config.Plugins):",
