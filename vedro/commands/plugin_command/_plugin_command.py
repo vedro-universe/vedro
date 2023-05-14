@@ -1,27 +1,18 @@
 import sys
-from typing import Dict
-
-if sys.version_info >= (3, 8):
-    from importlib.metadata import PackageNotFoundError, metadata
-else:
-    def metadata(name: str) -> Dict[str, str]:
-        raise PackageNotFoundError(name)
-    PackageNotFoundError = Exception
-
 from dataclasses import dataclass
 from typing import Callable, Type
 
 from rich.console import Console
 from rich.table import Table
 
-import vedro
 from vedro import Config
-from vedro.core import PluginConfig
 
 from .._cmd_arg_parser import CommandArgumentParser
 from .._command import Command
 from ._fetch_plugins import fetch_top_plugins
+from ._get_plugin_info import get_plugin_info
 from ._install_plugin import install_plugin
+from .plugin_manager import PluginManager
 
 __all__ = ("PluginCommand", "PluginInfo",)
 
@@ -45,53 +36,7 @@ class PluginCommand(Command):
                  console_factory: Callable[[], Console] = make_console) -> None:
         super().__init__(config, arg_parser)
         self._console = console_factory()
-
-    def _get_plugin_info(self, plugin_config: Type[PluginConfig]) -> PluginInfo:
-        plugin_name = getattr(plugin_config, "__name__", "Plugin")
-        plugin_info = PluginInfo(plugin_name, plugin_config.enabled)
-
-        plugin = plugin_config.plugin
-        module = plugin.__module__
-        package = module.split(".")[0]
-
-        # plugin declared in vedro.cfg.py
-        if module == self._config.__module__:
-            return plugin_info
-
-        # default plugin
-        if package == "vedro":
-            summary = plugin_config.description or "Core Plugin"
-            plugin_info.package = ".".join(module.split(".")[:-1])
-            plugin_info.version = vedro.__version__
-            plugin_info.summary = summary
-            plugin_info.is_default = True
-            return plugin_info
-
-        try:
-            meta = metadata(package)
-        except PackageNotFoundError:
-            return plugin_info
-
-        plugin_info.package = package
-        if "Version" in meta:
-            plugin_info.version = meta["Version"]
-        if "Summary" in meta:
-            plugin_info.summary = meta["Summary"]
-        return plugin_info
-
-    async def _show_installed_plugins(self) -> None:
-        table = Table(expand=True, border_style="grey50")
-        for column in ("Name", "Package", "Description", "Version", "Enabled"):
-            table.add_column(column)
-
-        for plugin_config in self._config.Plugins.values():
-            plugin_info = self._get_plugin_info(plugin_config)
-
-            color = "blue" if plugin_config.enabled else "grey70"
-            table.add_row(plugin_info.name, plugin_info.package, plugin_info.summary,
-                          plugin_info.version, str(plugin_info.enabled), style=color)
-
-        self._console.print(table)
+        self._plugin_manager = PluginManager(config.Runtime.path)
 
     async def run(self) -> None:
         subparsers = self._arg_parser.add_subparsers(dest="subparser")
@@ -145,3 +90,18 @@ class PluginCommand(Command):
                 on_stdout=lambda x: self._console.print(x, style="grey50", end=""),
                 on_stderr=lambda x: self._console.print(x, style="yellow", end=""),
             )
+        await self._plugin_manager.enable(package)
+
+    async def _show_installed_plugins(self) -> None:
+        table = Table(expand=True, border_style="grey50")
+        for column in ("Name", "Package", "Description", "Version", "Enabled"):
+            table.add_column(column)
+
+        for plugin_config in self._config.Plugins.values():
+            plugin_info = get_plugin_info(plugin_config)
+
+            color = "blue" if plugin_config.enabled else "grey70"
+            table.add_row(plugin_info.name, plugin_info.package, plugin_info.summary,
+                          plugin_info.version, str(plugin_info.enabled), style=color)
+
+        self._console.print(table)
