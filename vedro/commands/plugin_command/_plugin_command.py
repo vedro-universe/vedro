@@ -49,6 +49,12 @@ class PluginCommand(Command):
         install_subparser.add_argument("packages", nargs="+", help="Package name(s)")
         install_subparser.add_argument("--pip-args", default="", help="Additional pip arguments")
 
+        enable_subparser = subparsers.add_parser("enable", help="Enable plugin")
+        enable_subparser.add_argument("plugin", help="Plugin name")
+
+        disable_subparser = subparsers.add_parser("disable", help="Disable plugin")
+        disable_subparser.add_argument("plugin", help="Plugin name")
+
         args = self._arg_parser.parse_args()
         if args.subparser == "top":
             await self._show_top_plugins()
@@ -59,6 +65,10 @@ class PluginCommand(Command):
                 self._console.print("Python 3.8+ required for this command", style="red")
                 return
             await self._install_packages(args.packages, args.pip_args)
+        elif args.subparser == "enable":
+            await self._enable_plugin(args.plugin)
+        elif args.subparser == "disable":
+            await self._disable_plugin(args.plugin)
         else:
             self._arg_parser.print_help()
             self._arg_parser.exit()
@@ -110,12 +120,28 @@ class PluginCommand(Command):
             )
 
         if return_code == 0:
-            await self._plugin_manager.enable(package)
+            enabled = await self._plugin_manager.enable(package)
             self._console.print(f"✔ Successfully installed '{package}'", style="green")
+            if len(enabled) == 0:
+                self._console.print(f"✗ Failed to enable '{package}'", style="red")
         else:
             self._console.print(f"✗ Failed to install '{package}'", style="red")
             self._console.print("".join(stdout), style="grey50", end="")
             self._console.print("".join(stderr), style="yellow", end="")
+
+    async def _enable_plugin(self, plugin_name: str) -> None:
+        enabled = await self._plugin_manager.enable(plugin_name)
+        if len(enabled) == 0:
+            self._console.print(f"✗ Plugin '{plugin_name}' not found", style="red")
+        else:
+            self._console.print(f"✔ Plugin '{plugin_name}' enabled", style="green")
+
+    async def _disable_plugin(self, plugin_name: str) -> None:
+        disabled = await self._plugin_manager.disable(plugin_name)
+        if len(disabled) == 0:
+            self._console.print(f"✗ Plugin '{plugin_name}' not found", style="red")
+        else:
+            self._console.print(f"✔ Plugin '{plugin_name}' disabled", style="green")
 
     async def _show_installed_plugins(self) -> None:
         table = Table(expand=True, border_style="grey50")

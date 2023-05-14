@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from typing import List, Union
 
+from vedro.core import Config
+
 from ._config_generator import ConfigGenerator
 from ._config_markup import ConfigMarkup
 from ._config_parser import ConfigParser
@@ -12,9 +14,11 @@ __all__ = ("ConfigUpdater",)
 class ConfigUpdater:
     def __init__(self, config_path: Path) -> None:
         self._config_path = config_path
+        self._default_config_path = Path("vedro.cfg.py")
 
     async def update(self, plugin_package: str, plugin_name: str, *, enabled: bool) -> None:
-        config_source = await self._read_config()
+        config_path = self._get_config_path()
+        config_source = await self._read_config(config_path)
         config_parser = ConfigParser()
         config_markup = await config_parser.parse(config_source)
         config_generator = ConfigGenerator(config_markup.get_indent())
@@ -69,7 +73,7 @@ class ConfigUpdater:
 
         config_source = self.apply(config_source, generated, start_lineno, replace)
         config_source = self.apply(config_source, imports, 1)
-        await self._save_config(config_source)
+        await self._save_config(config_path, config_source)
 
     def _gen_imports_if_needed(self, imports: List[str],
                                markup: ConfigMarkup,
@@ -115,13 +119,19 @@ class ConfigUpdater:
 
         return linesep.join(new_config_lines)
 
-    async def _read_config(self) -> str:
+    def _get_config_path(self) -> Path:
+        path = self._config_path.absolute()
+        if path == Config.path:
+            return self._default_config_path
+        return path
+
+    async def _read_config(self, config_path: Path) -> str:
         try:
-            with open(self._config_path, "r") as f:
+            with open(config_path, "r") as f:
                 return f.read()
         except FileNotFoundError:
             return ""
 
-    async def _save_config(self, config_source: str) -> None:
-        with open(self._config_path, "w") as f:
+    async def _save_config(self, config_path: Path, config_source: str) -> None:
+        with open(config_path, "w") as f:
             f.write(config_source)
