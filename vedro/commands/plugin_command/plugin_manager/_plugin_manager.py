@@ -7,8 +7,9 @@ from pathlib import Path
 from types import ModuleType
 from typing import List, Tuple, Union
 
-from vedro.commands.plugin_command.plugin_manager._config_updater import ConfigUpdater
 from vedro.core import PluginConfig
+
+from ._config_updater import ConfigUpdater
 
 __all__ = ("PluginManager",)
 
