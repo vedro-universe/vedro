@@ -340,6 +340,28 @@ def test_print_report_summary_empty(*, printer: RichPrinter, console_: Mock):
         assert console_.mock_calls == []
 
 
+@pytest.mark.parametrize(("elapsed", "formatted"), [
+    # hours
+    (25 * 3600 + 0 * 60 + 5.0, "25h 0m 5s"),
+    (3 * 3600 + 15 * 60 + 0.0, "3h 15m 0s"),
+    # minutes
+    (9 * 60 + 30.0, "9m 30s"),
+    (1 * 60 + 0.0, "1m 0s"),
+    # seconds
+    (59.99, "59.99s"),
+    (0.1, "0.10s"),
+    (0.01, "0.01s"),
+    (0.001, "0.00s"),
+    (0.0001, "0.00s"),
+])
+def test_elapsed_formatter(elapsed: float, formatted: str, *, printer: RichPrinter):
+    with when:
+        result = printer.format_elapsed(elapsed)
+
+    with then:
+        assert result == formatted
+
+
 @pytest.mark.parametrize(("stats", "color"), [
     ({"total": 4, "passed": 3, "failed": 0, "skipped": 1}, "green"),
     ({"total": 5, "passed": 3, "failed": 1, "skipped": 1}, "red"),
@@ -355,8 +377,6 @@ def test_print_report_stats(stats: Dict[str, int], color: str, *,
         printer.print_report_stats(**stats, elapsed=0.0)
 
     with then:
-        message = ("# {total} scenarios, {passed} passed,"
-                   " {failed} failed, {skipped} skipped").format(**stats)
         assert console_.mock_calls == [
             call.out(message, style=Style(color=color, bold=True), end=""),
             call.out(" (0.00s)", style=Style(color="blue")),

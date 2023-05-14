@@ -1,9 +1,9 @@
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
+from vedro.core.scenario_orderer import StableScenarioOrderer
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 
 from .random_orderer import RandomOrderer
 from .reversed_orderer import ReversedOrderer
-from .stable_orderer import StableScenarioOrderer
 
 __all__ = ("Orderer", "OrdererPlugin")
 
@@ -29,11 +29,15 @@ class OrdererPlugin(Plugin):
                              help="Set random scenario order")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
+        if event.args.order_random:
+            self._global_config.Registry.ScenarioOrderer.register(RandomOrderer, self)
+            return
+
         if event.args.order_reversed:
             self._global_config.Registry.ScenarioOrderer.register(ReversedOrderer, self)
-        elif event.args.order_random:
-            self._global_config.Registry.ScenarioOrderer.register(RandomOrderer, self)
-        else:
+            return
+
+        if event.args.order_stable:
             self._global_config.Registry.ScenarioOrderer.register(StableScenarioOrderer, self)
 
 

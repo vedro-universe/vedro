@@ -19,7 +19,7 @@ class TerminatorPlugin(Plugin):
         if event.report.interrupted:
             exc = event.report.interrupted.value
             if isinstance(exc, SystemExit) and (exc.code is not None):
-                self._exit_fn(exc.code)
+                self._exit_fn(int(exc.code))
             else:
                 self._exit_fn(130)
         elif event.report.failed > 0 or event.report.passed == 0:

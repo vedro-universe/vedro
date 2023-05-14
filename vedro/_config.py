@@ -37,7 +37,7 @@ from vedro.core._scenario_finder._file_filters import (
     ExtFilter,
     HiddenFilter,
 )
-from vedro.core.scenario_orderer import PlainScenarioOrderer
+from vedro.core.scenario_orderer import StableScenarioOrderer
 
 __all__ = ("Config",)
 
@@ -53,7 +53,7 @@ class Config(core.Config):
 
         ScenarioLoader = Factory[ScenarioLoader](ScenarioFileLoader)
 
-        ScenarioOrderer = Factory[ScenarioOrderer](PlainScenarioOrderer)
+        ScenarioOrderer = Factory[ScenarioOrderer](StableScenarioOrderer)
 
         ScenarioDiscoverer = Factory[ScenarioDiscoverer](lambda: MultiScenarioDiscoverer(
             finder=Config.Registry.ScenarioFinder(),

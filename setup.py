@@ -13,17 +13,17 @@ def find_dev_required():
 
 setup(
     name="vedro",
-    version="1.8.2",
+    version="1.8.3",
     description="Pragmatic BDD Framework",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Nikita Tsvetkov",
-    author_email="nikitanovosibirsk@yandex.com",
+    author_email="tsv1@fastmail.com",
     python_requires=">=3.7",
-    url="https://github.com/nikitanovosibirsk/vedro",
+    url="https://github.com/tsv1/vedro",
     project_urls={
         "Docs": "https://vedro.io/",
-        "GitHub": "https://github.com/nikitanovosibirsk/vedro",
+        "GitHub": "https://github.com/tsv1/vedro",
     },
     license="Apache-2.0",
     packages=find_packages(exclude=["tests", "tests.*"]),
