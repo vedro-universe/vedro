@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9
+
+### v1.9.0 (2023-05-14)
+
+- [RichReporter] Humanize elapsed time [#45](https://github.com/tsv1/vedro/pull/45)
+- [RichReporter] Add `v2_verbosity` param [#47](https://github.com/tsv1/vedro/pull/47)
+- [RichReporter] Add `show_steps` param [#46](https://github.com/tsv1/vedro/pull/46)
+- [Core] Add parameterized scenario decorators [#50](https://github.com/tsv1/vedro/pull/50)
+- [Core] Add plugin command [#43](https://github.com/tsv1/vedro/pull/43)
+
 ## v1.8
 
 ### v1.8.3 (2022-12-04)
