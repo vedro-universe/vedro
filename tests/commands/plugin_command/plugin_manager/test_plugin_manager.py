@@ -1,3 +1,4 @@
+import sys
 from os import linesep
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from ._utils import create_config, read_config
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 async def test_plugin_manager_no_file(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path)
@@ -36,6 +38,7 @@ async def test_plugin_manager_no_file(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 async def test_plugin_manager_no_config(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [])
@@ -62,6 +65,7 @@ async def test_plugin_manager_no_config(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 async def test_plugin_manager_no_plugins_section(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
@@ -95,6 +99,7 @@ async def test_plugin_manager_no_plugins_section(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 async def test_plugin_manager_no_plugins(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
@@ -130,6 +135,7 @@ async def test_plugin_manager_no_plugins(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 async def test_plugin_manager_no_target_plugin(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
@@ -173,6 +179,7 @@ async def test_plugin_manager_no_target_plugin(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 async def test_plugin_manager_no_enabled_attr(tmp_path: Path):
     with given:
         config_path = create_config(tmp_path, [
@@ -220,6 +227,7 @@ async def test_plugin_manager_no_enabled_attr(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 @pytest.mark.parametrize("enabled", [True, False])
 async def test_plugin_manager_enabled_enabled(enabled: bool, *, tmp_path: Path):
     with given:
@@ -259,6 +267,7 @@ async def test_plugin_manager_enabled_enabled(enabled: bool, *, tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 @pytest.mark.parametrize("enabled", [True, False])
 async def test_plugin_manager_disabled_enabled(enabled: bool, *, tmp_path: Path):
     with given:
