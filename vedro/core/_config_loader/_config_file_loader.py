@@ -25,8 +25,7 @@ class ConfigFileLoader(ConfigLoader):
         assert issubclass(config, Config)
 
         # backward compatibility
-        config.__frozen__ = False
-        config.path = path
-        config.__frozen__ = True
+        config.Runtime.__frozen__ = False
+        config.Runtime.path = path
 
         return cast(ConfigType, config)

@@ -42,7 +42,7 @@ class RunCommand(Command):
         dispatcher = self._config.Registry.Dispatcher()
         await self._register_plugins(dispatcher)
 
-        await dispatcher.fire(ConfigLoadedEvent(self._config.path, self._config))
+        await dispatcher.fire(ConfigLoadedEvent(self._config.Runtime.path, self._config))
 
         await self._parse_args(dispatcher)
 
