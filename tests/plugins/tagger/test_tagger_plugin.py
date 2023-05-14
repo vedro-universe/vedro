@@ -1,5 +1,6 @@
 import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.core import Dispatcher
 from vedro.core import MonotonicScenarioScheduler as Scheduler
@@ -85,3 +86,43 @@ async def test_tags_skipped(*, tagger: TaggerPlugin, dispatcher: Dispatcher):
 
     with then:
         assert list(scheduler.scheduled) == [scenarios[0]]
+
+
+@pytest.mark.asyncio
+async def test_tags_type_validation(*, tagger: TaggerPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, tags="SMOKE")
+
+        scenario = make_vscenario(tags="SMOKE")
+        scheduler = Scheduler([scenario])
+
+        startup_event = StartupEvent(scheduler)
+
+    with when, raises(BaseException) as exc:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == (
+            f"Scenario '{scenario.rel_path}' tags must be a list, tuple or set, got <class 'str'>"
+        )
+
+
+@pytest.mark.asyncio
+async def test_tags_value_validation(*, tagger: TaggerPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, tags="SMOKE")
+
+        scenario = make_vscenario(tags=["-SMOKE"])
+        scheduler = Scheduler([scenario])
+
+        startup_event = StartupEvent(scheduler)
+
+    with when, raises(BaseException) as exc:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value) == (
+            f"Scenario '{scenario.rel_path}' tag '-SMOKE' is not a valid identifier"
+        )
