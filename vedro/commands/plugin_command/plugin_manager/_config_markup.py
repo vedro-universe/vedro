@@ -30,12 +30,12 @@ if sys.version_info >= (3, 8):
 
 else:  # pragma: no cover
     from typing import Any
-    MarkupElement = Dict[Any, Any]
-    ImportType = Dict[Any, Any]
-    EnabledAttrType = Dict[Any, Any]
-    PluginSectionType = Dict[Any, Any]
-    PluginListSectionType = Dict[Any, Any]
-    ConfigSectionType = Dict[Any, Any]
+    MarkupElement = Dict[str, Any]
+    ImportType = Dict[str, Any]
+    EnabledAttrType = Dict[str, Any]
+    PluginSectionType = Dict[str, Any]
+    PluginListSectionType = Dict[str, Any]
+    ConfigSectionType = Dict[str, Any]
 
 
 class ConfigMarkup:
@@ -50,7 +50,7 @@ class ConfigMarkup:
         return self._indent
 
     def get_import_list(self) -> List[ImportType]:
-        return list(sorted(self._imports.values(), key=lambda x: x["start"]))
+        return list(self._imports.values())
 
     def get_import(self, package_name: str) -> Union[ImportType, None]:
         return self._imports.get(package_name, None)
