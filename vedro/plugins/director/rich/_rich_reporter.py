@@ -27,6 +27,7 @@ class RichReporterPlugin(Reporter):
         self._tb_pretty = config.tb_pretty
         self._tb_show_internal_calls = config.tb_show_internal_calls
         self._tb_show_locals = config.tb_show_locals
+        self._scope_width = config.scope_width
         self._tb_max_frames = config.tb_max_frames
         self._show_skipped = config.show_skipped
         self._show_timings = config.show_timings
@@ -181,7 +182,7 @@ class RichReporterPlugin(Reporter):
 
         if self._verbosity > 2:
             if scenario_result.scope:
-                self._printer.print_scope(scenario_result.scope)
+                self._printer.print_scope(scenario_result.scope, scope_width=self._scope_width)
 
     def _print_scenario_skipped(self, scenario_result: ScenarioResult, *,
                                 prefix: str = "") -> None:
@@ -268,6 +269,9 @@ class RichReporter(PluginConfig):
     # Show local variables in the traceback output
     # Available if tb_pretty is True
     tb_show_locals: bool = False
+
+    # Cuts long scope
+    scope_width: int = -1
 
     # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8

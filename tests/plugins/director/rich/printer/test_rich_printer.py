@@ -270,11 +270,48 @@ def test_print_scope_val(*, printer: RichPrinter, console_: Mock):
         val = "<val>"
 
     with when:
-        printer.print_scope_val(val)
+        printer.print_scope_val(val, scope_width=-1)
 
     with then:
         assert console_.mock_calls == [
             call.print(val),
+        ]
+
+
+def test_print_scope_val_with_short_str(*, printer: RichPrinter, console_: Mock):
+    with given:
+        val = "<val>"
+
+    with when:
+        printer.print_scope_val(val, scope_width=1000)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(val),
+        ]
+
+
+def test_print_scope_val_with_long_substr(*, printer: RichPrinter, console_: Mock):
+    with given:
+        val = "string with \n bananabanana \n with ending"
+    with when:
+        printer.print_scope_val(val, scope_width=10)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print("str...ith \n ba...ana \n wi...ding"),
+        ]
+
+
+def test_print_scope_val_with_long_str(*, printer: RichPrinter, console_: Mock):
+    with given:
+        val = "bananabanana"
+    with when:
+        printer.print_scope_val(val, scope_width=10)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print("ban...nana"),
         ]
 
 
