@@ -1,13 +1,14 @@
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from os import chdir
 from pathlib import Path
 from time import monotonic_ns
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pytest
+from niltype import Nil, Nilable
 
 from vedro import Scenario
-from vedro.core import ArgumentParser, Dispatcher, VirtualScenario
+from vedro.core import Dispatcher, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent
 from vedro.plugins.skipper import Skipper, SkipperPlugin
 from vedro.plugins.skipper import only as only_scenario
@@ -106,3 +107,19 @@ def touch(path: Path) -> Path:
 
 def get_skipped(scenarios: Iterable[VirtualScenario]) -> List[VirtualScenario]:
     return [scn for scn in scenarios if scn.is_skipped()]
+
+
+def get_scenarios(key: str, globals_: Dict[str, Any]) -> List[Type[Scenario]]:
+    return [scn for name, scn in globals_.items() if name.startswith(key)]
+
+
+def get_only_attr(scenario: Type[Scenario]) -> bool:
+    return getattr(scenario, "__vedro__only__", False)
+
+
+def get_skip_attr(scenario: Type[Scenario]) -> bool:
+    return getattr(scenario, "__vedro__skipped__", False)
+
+
+def get_skip_reason_attr(scenario: Type[Scenario]) -> Nilable[str]:
+    return getattr(scenario, "__vedro__skip_reason__", Nil)

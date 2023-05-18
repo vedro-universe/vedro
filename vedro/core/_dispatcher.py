@@ -49,6 +49,7 @@ class Dispatcher:
         subscriber.subscribe(self)
 
     def listen(self, event: Type[Event], handler: HandlerType, priority: int = 0) -> "Dispatcher":
+        assert issubclass(event, Event), "Event must be a subclass of 'vedro.events.Event'"
         if event.__name__ not in self._events:
             self._events[event.__name__] = []
         heappush(self._events[event.__name__], EventHandler(priority, monotonic_ns(), handler))

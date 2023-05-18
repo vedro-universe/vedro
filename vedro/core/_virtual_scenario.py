@@ -8,7 +8,11 @@ from typing import Any, List, Type, Union, cast
 from .._scenario import Scenario
 from ._virtual_step import VirtualStep
 
-__all__ = ("VirtualScenario",)
+__all__ = ("VirtualScenario", "ScenarioInitError",)
+
+
+class ScenarioInitError(Exception):
+    pass
 
 
 class VirtualScenario:
@@ -92,7 +96,11 @@ class VirtualScenario:
         return self._is_skipped
 
     def __call__(self) -> Scenario:
-        return self._orig_scenario()
+        try:
+            return self._orig_scenario()
+        except Exception as exc:
+            message = f'Can\'t initialize scenario "{self.subject}" at "{self.rel_path}" ({exc!r})'
+            raise ScenarioInitError(message) from None
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {str(self.rel_path)!r}>"

@@ -23,9 +23,15 @@ class _Meta(type):
         created = super().__new__(mcs, updated_name, bases, updated_namespace)
 
         cls_globals = getattr(cls_constructor, "__globals__")
-        for idx, (args, kwargs) in enumerate(reversed(cls_params), start=1):
+        for idx, (args, kwargs, decorators) in enumerate(reversed(cls_params), start=1):
             signature = inspect.signature(cls_constructor)  # type: ignore
-            bound_args = signature.bind(None, *args, **kwargs)
+
+            try:
+                bound_args = signature.bind(None, *args, **kwargs)
+            except BaseException as e:
+                module = namespace.get("__module__", "")
+                raise TypeError(f"{e} <{module}.{name}>") from None
+
             bound_args.apply_defaults()
 
             cls_name = f"{name}_{idx}_VedroScenario"
@@ -39,7 +45,10 @@ class _Meta(type):
                 "__vedro__template_total__": len(cls_params),
                 "__vedro__template_args__": bound_args,
             }
-            cls_globals[cls_name] = type(cls_name, bases, cls_namespace)
+            cls = type(cls_name, bases, cls_namespace)
+            for decorator in decorators:
+                cls = decorator(cls)
+            cls_globals[cls_name] = cls
 
         return created
 

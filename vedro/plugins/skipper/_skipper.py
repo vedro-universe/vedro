@@ -67,13 +67,23 @@ class SkipperPlugin(Plugin):
             path = os.path.join("scenarios", path)
         return os.path.abspath(path)
 
-    def _is_scenario_skipped(self, scenario: VirtualScenario) -> bool:
+    def _get_scenario_attr(self, scenario: VirtualScenario, attr: str) -> bool:
         template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        return getattr(template or scenario._orig_scenario, "__vedro__skipped__", False)
+        return getattr(template or scenario._orig_scenario, attr, False)
+
+    def _is_scenario_skipped(self, scenario: VirtualScenario) -> bool:
+        attr_name = "__vedro__skipped__"
+        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
+        if template and hasattr(template, attr_name):
+            return bool(getattr(template, attr_name))
+        return getattr(scenario._orig_scenario, attr_name, False)
 
     def _is_scenario_special(self, scenario: VirtualScenario) -> bool:
+        attr_name = "__vedro__only__"
         template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        return getattr(template or scenario._orig_scenario, "__vedro__only__", False)
+        if template and hasattr(template, attr_name):
+            return bool(getattr(template, attr_name))
+        return getattr(scenario._orig_scenario, attr_name, False)
 
     def _is_match_scenario(self, path: _CompositePath, scenario: VirtualScenario) -> bool:
         if os.path.commonpath([path.file_path, scenario.path]) != path.file_path:
@@ -132,3 +142,5 @@ class SkipperPlugin(Plugin):
 
 class Skipper(PluginConfig):
     plugin = SkipperPlugin
+    description = "Allows selective scenario skipping and selection " \
+                  "based on file/directory or subject"

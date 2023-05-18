@@ -12,11 +12,13 @@ from rich.traceback import Trace, Traceback
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 
+from ._cut_str import cut_lines_len_in_multiline_string
+
 __all__ = ("RichPrinter",)
 
 
 def make_console() -> Console:
-    return Console(highlight=False, force_terminal=True, markup=False)
+    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True)
 
 
 class RichPrinter:
@@ -54,7 +56,7 @@ class RichPrinter:
         self._console.out(prefix, end="")
         if elapsed is not None:
             self._console.out(subject, style=style, end="")
-            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+            self._console.out(f" ({self.format_elapsed(elapsed)})", style=Style(color="grey50"))
         else:
             self._console.out(subject, style=style)
 
@@ -76,7 +78,7 @@ class RichPrinter:
         self._console.out(prefix, end="")
         if elapsed is not None:
             self._console.out(name, style=style, end="")
-            self._console.out(f" ({elapsed:.2f}s)", style=Style(color="grey50"))
+            self._console.out(f" ({self.format_elapsed(elapsed)})", style=Style(color="grey50"))
         else:
             self._console.out(name, style=style)
 
@@ -116,7 +118,7 @@ class RichPrinter:
             for frame in stack.frames:
                 if frame.locals is not None:
                     frame.locals = {k: v for k, v in frame.locals.items()
-                                    if k != "self" and not k.startswith("@")}
+                                    if k != "self" and k.isidentifier()}
 
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
@@ -144,11 +146,11 @@ class RichPrinter:
         except BaseException:
             return repr(value)
 
-    def print_scope(self, scope: Dict[str, Any]) -> None:
+    def print_scope(self, scope: Dict[str, Any], scope_width: int = -1) -> None:
         self.print_scope_header("Scope")
         for key, val in scope.items():
             self.print_scope_key(key, indent=1)
-            self.print_scope_val(self.pretty_format(val))
+            self.print_scope_val(self.pretty_format(val), scope_width)
         self.print_empty_line()
 
     def print_scope_header(self, title: str) -> None:
@@ -159,8 +161,21 @@ class RichPrinter:
         end = "\n" if line_break else ""
         self._console.out(f"{prepend}{key}: ", end=end, style=Style(color="blue"))
 
-    def print_scope_val(self, val: Any) -> None:
-        self._console.print(val)
+    def print_scope_val(self, val: Any, scope_width: int) -> None:
+        val_folded_str = cut_lines_len_in_multiline_string(val, scope_width)
+        self._console.print(val_folded_str)
+
+    def print_interrupted(self, exc_info: ExcInfo, *, show_traceback: bool = False) -> None:
+        message = f"!!! Interrupted by “{exc_info.value!r}“ !!!"
+        spaces = " " * (len(message) - 6)
+        multiline_message = "\n".join([
+            "!!!" + spaces + "!!!",
+            message,
+            "!!!" + spaces + "!!!",
+        ])
+        self._console.out(multiline_message, style=Style(color="yellow"))
+        if show_traceback:
+            self.print_exception(exc_info)
 
     def print_report_summary(self, summary: List[str]) -> None:
         if len(summary) == 0:
@@ -168,18 +183,30 @@ class RichPrinter:
         text = "# " + "\n# ".join(summary)
         self._console.out(text, style=Style(color="grey70"))
 
+    def format_elapsed(self, elapsed: float) -> str:
+        hours = int(elapsed // 3600)
+        minutes = int((elapsed - hours * 3600) // 60)
+        seconds = elapsed - hours * 3600 - minutes * 60
+
+        formatted = f"{seconds:.2f}s" if elapsed < 60 else f"{int(seconds)}s"
+        if (minutes > 0) or (hours > 0):
+            formatted = f"{minutes}m {formatted}"
+        if hours > 0:
+            formatted = f"{hours}h {formatted}"
+        return formatted
+
     def print_report_stats(self, *, total: int, passed: int, failed: int, skipped: int,
-                           elapsed: float) -> None:
-        if (failed == 0) and (passed > 0):
-            style = Style(color="green", bold=True)
-        else:
+                           elapsed: float, is_interrupted: bool = False) -> None:
+        if is_interrupted or (failed > 0 or passed == 0):
             style = Style(color="red", bold=True)
+        else:
+            style = Style(color="green", bold=True)
 
         scenarios = "scenario" if (total == 1) else "scenarios"
         self._console.out(f"# {total} {scenarios}, "
                           f"{passed} passed, {failed} failed, {skipped} skipped",
                           style=style, end="")
-        self._console.out(f" ({elapsed:.2f}s)", style=Style(color="blue"))
+        self._console.out(f" ({self.format_elapsed(elapsed)})", style=Style(color="blue"))
 
     def print_empty_line(self) -> None:
         self._console.out(" ")

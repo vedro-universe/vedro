@@ -1,12 +1,12 @@
 import random
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
 from vedro import Scenario
-from vedro.core import ArgumentParser, ConfigType, Dispatcher, VirtualScenario
+from vedro.core import ConfigType, Dispatcher, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.orderer import Orderer, OrdererPlugin
 

@@ -1,8 +1,11 @@
-from baby_steps import then, when
+from baby_steps import given, then, when
+from niltype import Nil
 from pytest import raises
 
 from vedro import Scenario
 from vedro.plugins.skipper import skip
+
+from ._utils import get_skip_attr, get_skip_reason_attr
 
 
 def test_skip():
@@ -13,7 +16,8 @@ def test_skip():
 
     with then:
         assert issubclass(_Scenario, Scenario)
-        assert getattr(_Scenario, "__vedro__skipped__") is True
+        assert get_skip_attr(_Scenario) is True
+        assert get_skip_reason_attr(_Scenario) is Nil
 
 
 def test_skip_called():
@@ -24,14 +28,55 @@ def test_skip_called():
 
     with then:
         assert issubclass(_Scenario, Scenario)
-        assert getattr(_Scenario, "__vedro__skipped__") is True
+        assert get_skip_attr(_Scenario) is True
+        assert get_skip_reason_attr(_Scenario) is Nil
+
+
+def test_skip_called_with_reason():
+    with given:
+        reason = "<reason>"
+
+    with when:
+        @skip(reason)
+        class _Scenario(Scenario):
+            pass
+
+    with then:
+        assert issubclass(_Scenario, Scenario)
+        assert get_skip_attr(_Scenario) is True
+        assert get_skip_reason_attr(_Scenario) == reason
 
 
 def test_skip_not_subclass():
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         @skip
         class _Scenario:
             pass
 
     with then:
         assert exc.type is TypeError
+        assert str(exc.value) == ("Decorator @skip can be used only with """
+                                  "'vedro.Scenario' subclasses")
+
+
+def test_skip_called_not_subclass():
+    with when, raises(BaseException) as exc:
+        @skip()
+        class _Scenario:
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == ("Decorator @skip can be used only with """
+                                  "'vedro.Scenario' subclasses")
+
+
+def test_skip_called_with_incorrect_arg():
+    with when, raises(BaseException) as exc:
+        @skip(1)
+        class _Scenario:
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == 'Usage: @skip or @skip("reason")'

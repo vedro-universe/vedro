@@ -49,20 +49,21 @@ def pycharm_reporter(dispatcher: Dispatcher, director: DirectorPlugin,
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 show_internal_calls: bool = PyCharmReporter.show_internal_calls,
-                                show_skipped: bool = PyCharmReporter.show_skipped) -> None:
+                                show_skipped: bool = PyCharmReporter.show_skipped,
+                                no_output: bool = PyCharmReporter.no_output) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
     namespace = Namespace(pycharm_show_internal_calls=show_internal_calls,
-                          pycharm_show_skipped=show_skipped)
+                          pycharm_show_skipped=show_skipped, pycharm_no_output=no_output)
     arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)
 
 
 def make_vstep(name: Optional[str] = None) -> VirtualStep:
-    def step():
+    def step(self):
         pass
     step.__name__ = name or f"step_{monotonic_ns()}"
     return VirtualStep(step)
@@ -85,7 +86,7 @@ def make_step_result(vstep: Optional[VirtualStep] = None) -> StepResult:
     return StepResult(vstep or make_vstep())
 
 
-def make_exc_info(exc_val: Exception) -> ExcInfo:
+def make_exc_info(exc_val: BaseException) -> ExcInfo:
     try:
         raise exc_val
     except type(exc_val):

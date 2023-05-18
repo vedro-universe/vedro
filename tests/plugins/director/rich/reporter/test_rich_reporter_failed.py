@@ -51,7 +51,7 @@ async def test_scenario_failed_verbose0_show_timings(*, dispatcher: Dispatcher, 
         await fire_arg_parsed_event(dispatcher, show_timings=True)
 
         scenario_result = make_scenario_result().mark_failed() \
-                                                .set_started_at(1.0).set_ended_at(3.0)
+            .set_started_at(1.0).set_ended_at(3.0)
         aggregated_result = make_aggregated_result(scenario_result)
         event = ScenarioReportedEvent(aggregated_result)
 
@@ -120,13 +120,13 @@ async def test_scenario_failed_verbose2_show_timings(dispatcher: Dispatcher,
         scenario_result = make_scenario_result().set_started_at(1.0).set_ended_at(7.0)
 
         step_result_passed = make_step_result().mark_passed() \
-                                               .set_started_at(1.0).set_ended_at(3.0)
+            .set_started_at(1.0).set_ended_at(3.0)
         scenario_result.add_step_result(step_result_passed)
 
         exc_info = make_exc_info(AssertionError())
         step_result_failed = make_step_result().mark_failed() \
-                                               .set_exc_info(exc_info) \
-                                               .set_started_at(3.0).set_ended_at(6.0)
+            .set_exc_info(exc_info) \
+            .set_started_at(3.0).set_ended_at(6.0)
         scenario_result.add_step_result(step_result_failed)
 
         aggregated_result = make_aggregated_result(scenario_result.mark_failed())
@@ -207,5 +207,5 @@ async def test_scenario_failed_verbose3_with_scope(*, dispatcher: Dispatcher, pr
 
             call.print_pretty_exception(exc_info, max_frames=8, show_locals=False,
                                         show_internal_calls=False),
-            call.print_scope(scope)
+            call.print_scope(scope, scope_width=-1)
         ]

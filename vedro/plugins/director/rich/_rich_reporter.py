@@ -27,12 +27,16 @@ class RichReporterPlugin(Reporter):
         self._tb_pretty = config.tb_pretty
         self._tb_show_internal_calls = config.tb_show_internal_calls
         self._tb_show_locals = config.tb_show_locals
+        self._scope_width = config.scope_width
         self._tb_max_frames = config.tb_max_frames
         self._show_skipped = config.show_skipped
         self._show_timings = config.show_timings
         self._show_paths = config.show_paths
+        self._show_steps = config.show_steps
         self._hide_namespaces = config.hide_namespaces
         self._show_scenario_spinner = config.show_scenario_spinner
+        self._show_interrupted_traceback = config.show_interrupted_traceback
+        self._v2_verbosity = config.v2_verbosity
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -63,6 +67,10 @@ class RichReporterPlugin(Reporter):
                            action="store_true",
                            default=self._show_timings,
                            help="Show the elapsed time of each scenario")
+        group.add_argument("--show-steps",
+                           action="store_true",
+                           default=self._show_steps,
+                           help="Show scenario step names")
         group.add_argument("--show-paths",
                            action="store_true",
                            default=self._show_paths,
@@ -82,8 +90,11 @@ class RichReporterPlugin(Reporter):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
+        if self._v2_verbosity:
+            self._verbosity = self._verbosity + 2
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
+        self._show_steps = event.args.show_steps
         self._hide_namespaces = event.args.hide_namespaces
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
@@ -138,6 +149,12 @@ class RichReporterPlugin(Reporter):
                                              scenario_result.status,
                                              elapsed=elapsed,
                                              prefix=prefix)
+        if self._show_steps:
+            for step_result in scenario_result.step_results:
+                elapsed = step_result.elapsed if self._show_timings else None
+                step_prefix = self._prefix_to_indent(prefix, indent=2)
+                self._printer.print_step_name(step_result.step_name, step_result.status,
+                                              elapsed=elapsed, prefix=step_prefix)
 
         if self._show_paths:
             caption = f"> {scenario_result.scenario.rel_path}"
@@ -165,7 +182,7 @@ class RichReporterPlugin(Reporter):
 
         if self._verbosity > 2:
             if scenario_result.scope:
-                self._printer.print_scope(scenario_result.scope)
+                self._printer.print_scope(scenario_result.scope, scope_width=self._scope_width)
 
     def _print_scenario_skipped(self, scenario_result: ScenarioResult, *,
                                 prefix: str = "") -> None:
@@ -205,16 +222,25 @@ class RichReporterPlugin(Reporter):
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         self._printer.print_empty_line()
+
+        is_interrupted = False
+        if event.report.interrupted:
+            is_interrupted = True
+            self._printer.print_interrupted(event.report.interrupted,
+                                            show_traceback=self._show_interrupted_traceback)
+
         self._printer.print_report_summary(event.report.summary)
         self._printer.print_report_stats(total=event.report.total,
                                          passed=event.report.passed,
                                          failed=event.report.failed,
                                          skipped=event.report.skipped,
-                                         elapsed=event.report.elapsed)
+                                         elapsed=event.report.elapsed,
+                                         is_interrupted=is_interrupted)
 
 
 class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
+    description = "Enhanced, customizable scenario reporting with rich output"
 
     # Show skipped scenarios
     show_skipped: bool = True
@@ -224,6 +250,9 @@ class RichReporter(PluginConfig):
 
     # Show the relative path of each passed scenario
     show_paths: bool = False
+
+    # Show scenario step names
+    show_steps: bool = False
 
     # Don't show scenario namespaces
     hide_namespaces: bool = False
@@ -241,5 +270,14 @@ class RichReporter(PluginConfig):
     # Available if tb_pretty is True
     tb_show_locals: bool = False
 
+    # Cuts long scope
+    scope_width: int = -1
+
     # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8
+
+    # Show traceback if the execution is interrupted
+    show_interrupted_traceback: bool = False
+
+    # Enable new verbose levels
+    v2_verbosity: bool = False

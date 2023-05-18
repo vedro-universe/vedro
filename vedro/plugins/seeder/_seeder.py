@@ -89,3 +89,4 @@ class SeederPlugin(Plugin):
 
 class Seeder(PluginConfig):
     plugin = SeederPlugin
+    description = "Sets seeds for deterministic random behavior in scenarios"

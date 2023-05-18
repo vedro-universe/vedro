@@ -1,17 +1,16 @@
 import warnings
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import List
 
-from ..core._arg_parser import ArgumentParser
 from ..core._config_loader import ConfigType
 from ..core._event import Event
 from ..core._exc_info import ExcInfo
 from ..core._report import Report
 from ..core._scenario_result import AggregatedResult, ScenarioResult
-from ..core._scenario_scheduler import ScenarioScheduler
 from ..core._step_result import StepResult
 from ..core._virtual_scenario import VirtualScenario
+from ..core.scenario_scheduler import ScenarioScheduler
 
 
 class ConfigLoadedEvent(Event):
@@ -65,7 +64,7 @@ class StartupEvent(Event):
 
     @property
     def scenarios(self) -> List[VirtualScenario]:
-        warnings.warn("Deprecated: use scheduler.scenarios instead", DeprecationWarning)
+        warnings.warn("Deprecated: use scheduler.discovered instead", DeprecationWarning)
         return list(self._scheduler.discovered)
 
     def __repr__(self) -> str:

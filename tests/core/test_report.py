@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from baby_steps import given, then, when
 
-from vedro.core import Report, ScenarioResult, VirtualScenario
+from vedro.core import ExcInfo, Report, ScenarioResult, VirtualScenario
 
 
 def make_scenario_result() -> ScenarioResult:
@@ -24,6 +24,8 @@ def test_defaults():
         assert report.started_at is None
         assert report.ended_at is None
         assert report.elapsed == 0.0
+
+        assert report.interrupted is None
 
 
 def test_passed():
@@ -205,6 +207,31 @@ def test_get_summary():
         assert res == [summary]
 
 
+def test_set_interrupted():
+    with given:
+        report = Report()
+        exc_info = ExcInfo(KeyboardInterrupt, KeyboardInterrupt(), None)
+
+    with when:
+        res = report.set_interrupted(exc_info)
+
+    with then:
+        assert res is None
+
+
+def test_get_interrupted():
+    with given:
+        report = Report()
+        exc_info = ExcInfo(KeyboardInterrupt, KeyboardInterrupt(), None)
+        report.set_interrupted(exc_info)
+
+    with when:
+        res = report.interrupted
+
+    with then:
+        assert res == exc_info
+
+
 def test_repr():
     with given:
         report = Report()
@@ -213,4 +240,18 @@ def test_repr():
         res = repr(report)
 
     with then:
-        assert res == "<Report total=0 passed=0 failed=0 skipped=0>"
+        assert res == "<Report total=0 passed=0 failed=0 skipped=0 interrupted=None>"
+
+
+def test_repr_with_interrupted():
+    with given:
+        report = Report()
+        exc_info = ExcInfo(KeyboardInterrupt, KeyboardInterrupt(), None)
+        report.set_interrupted(exc_info)
+
+    with when:
+        res = repr(report)
+
+    with then:
+        assert res == ("<Report total=0 passed=0 failed=0 skipped=0"
+                       " interrupted=<class 'KeyboardInterrupt'>>")
