@@ -107,7 +107,9 @@ class RichReporterPlugin(Reporter):
                 "RichReporter: to enable `tb_show_locals` set `tb_pretty` to `True`"
 
     def on_startup(self, event: StartupEvent) -> None:
-        self._printer.print_header()
+        discovered = len(list(event.scheduler.discovered))
+        planned = len([scn for scn in event.scheduler.scheduled if not scn.is_skipped()])
+        self._printer.print_header(f"Scenario ({planned} of {discovered})")
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         namespace = event.scenario_result.scenario.namespace
