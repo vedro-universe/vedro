@@ -3,6 +3,7 @@ import os
 import sys
 from typing import Any
 
+from ._catched import catched
 from ._config import Config
 from ._context import context
 from ._interface import Interface
@@ -15,7 +16,7 @@ from .plugins.skipper import only, skip, skip_if
 
 __version__ = version
 __all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
-           "context", "defer", "Config",)
+           "context", "defer", "Config", "catched",)
 
 
 def run(*, plugins: Any = None) -> None:
