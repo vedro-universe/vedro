@@ -141,6 +141,8 @@ class RichPrinter:
         self.print_empty_line()
 
     def pretty_format(self, value: Any) -> Any:
+        if hasattr(value, "__rich__") or hasattr(value, "__rich_console__"):
+            return value
         try:
             return json.dumps(value, ensure_ascii=False, indent=4)
         except BaseException:
