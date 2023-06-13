@@ -12,8 +12,6 @@ from rich.traceback import Trace, Traceback
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 
-from ._cut_str import cut_lines_len_in_multiline_string
-
 __all__ = ("RichPrinter",)
 
 
@@ -148,7 +146,7 @@ class RichPrinter:
         except BaseException:
             return repr(value)
 
-    def print_scope(self, scope: Dict[str, Any], scope_width: int = -1) -> None:
+    def print_scope(self, scope: Dict[str, Any], scope_width: Union[int, None] = None) -> None:
         self.print_scope_header("Scope")
         for key, val in scope.items():
             self.print_scope_key(key, indent=1)
@@ -163,9 +161,17 @@ class RichPrinter:
         end = "\n" if line_break else ""
         self._console.out(f"{prepend}{key}: ", end=end, style=Style(color="blue"))
 
-    def print_scope_val(self, val: Any, scope_width: int) -> None:
-        val_folded_str = cut_lines_len_in_multiline_string(val, scope_width)
-        self._console.print(val_folded_str)
+    def __truncate_line(self, line: str, width: int, separator: str = "...") -> str:
+        if len(line) <= width:
+            return line
+        width -= len(separator)
+        return line[:width // 2] + separator + line[-width // 2:]
+
+    def print_scope_val(self, val: Any, scope_width: Union[int, None] = None) -> None:
+        if isinstance(val, str) and (scope_width is None or scope_width > 0):
+            width = scope_width or self._console.size.width
+            val = os.linesep.join(self.__truncate_line(line, width) for line in val.splitlines())
+        self._console.print(val)
 
     def print_interrupted(self, exc_info: ExcInfo, *, show_traceback: bool = False) -> None:
         message = f"!!! Interrupted by “{exc_info.value!r}“ !!!"

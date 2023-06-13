@@ -1,4 +1,4 @@
-import sys
+from os import linesep
 from traceback import format_exception
 from typing import Dict, Union
 from unittest.mock import Mock, call
@@ -267,7 +267,37 @@ def test_print_scope_key_with_line_break(*, printer: RichPrinter, console_: Mock
 
 def test_print_scope_val(*, printer: RichPrinter, console_: Mock):
     with given:
-        val = "<val>"
+        val = "value1\nvalue2"
+
+    with when:
+        printer.print_scope_val(val)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(val),
+        ]
+
+
+def test_print_scope_val_term_width(*, printer: RichPrinter, console_: Mock):
+    with given:
+        val = "x" * console_.size.width * 2
+
+    with when:
+        printer.print_scope_val(val)
+
+    with then:
+        width = console_.size.width - len("...")
+        assert console_.mock_calls == [
+            call.print(val[:width // 2] + "..." + val[-width // 2:]),
+        ]
+
+
+def test_print_scope_val_unlimited_width(printer: RichPrinter, console_: Mock):
+    with given:
+        val = linesep.join([
+            "x" * console_.size.width * 2,
+            "y" * console_.size.width * 2,
+        ])
 
     with when:
         printer.print_scope_val(val, scope_width=-1)
@@ -278,40 +308,43 @@ def test_print_scope_val(*, printer: RichPrinter, console_: Mock):
         ]
 
 
-def test_print_scope_val_with_short_str(*, printer: RichPrinter, console_: Mock):
+def test_print_scope_val_concrete_width(*, printer: RichPrinter, console_: Mock):
     with given:
-        val = "<val>"
+        scope_width = 20
+        val = linesep.join([
+            "x" * scope_width * 2,
+            "y" * scope_width * 2,
+        ])
 
     with when:
-        printer.print_scope_val(val, scope_width=1000)
+        printer.print_scope_val(val, scope_width=scope_width)
 
     with then:
         assert console_.mock_calls == [
-            call.print(val),
+            call.print(linesep.join([
+                "xxxxxxxx...xxxxxxxxx",
+                "yyyyyyyy...yyyyyyyyy",
+            ]))
         ]
 
 
-def test_print_scope_val_with_long_substr(*, printer: RichPrinter, console_: Mock):
+def test_print_scope_val_concrete_width_escaped(*, printer: RichPrinter, console_: Mock):
     with given:
-        val = "string with \n bananabanana \n with ending"
+        scope_width = 10
+        val = linesep.join([
+            "x\\n" * scope_width * 2,
+            "y\\n" * scope_width * 2,
+        ])
+
     with when:
-        printer.print_scope_val(val, scope_width=10)
+        printer.print_scope_val(val, scope_width=scope_width)
 
     with then:
         assert console_.mock_calls == [
-            call.print("str...ith \n ba...ana \n wi...ding"),
-        ]
-
-
-def test_print_scope_val_with_long_str(*, printer: RichPrinter, console_: Mock):
-    with given:
-        val = "bananabanana"
-    with when:
-        printer.print_scope_val(val, scope_width=10)
-
-    with then:
-        assert console_.mock_calls == [
-            call.print("ban...nana"),
+            call.print(linesep.join([
+                "x\\n...nx\\n",
+                "y\\n...ny\\n",
+            ]))
         ]
 
 
@@ -538,17 +571,66 @@ def test_pretty_format(*, printer: RichPrinter):
         ])
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.__repr__ returns 'call'")
 def test_pretty_format_unknown_type(*, printer: RichPrinter):
     with given:
-        mock_ = Mock(__repr__=Mock(return_value="<repr>"))
+        class User:
+            pass
+        user = User()
 
     with when:
-        res = printer.pretty_format(mock_)
+        res = printer.pretty_format(user)
 
     with then:
-        assert res == "<repr>"
-        assert mock_.mock_calls == [call.__repr__()]
+        assert isinstance(res, str)
+        assert res == repr(user)
+
+
+def test_pretty_format_unknown_type_with_repr(*, printer: RichPrinter):
+    with given:
+        class User:
+            def __repr__(self):
+                return "<User>"
+
+        user = User()
+
+    with when:
+        res = printer.pretty_format(user)
+
+    with then:
+        assert isinstance(res, str)
+        assert res == "<User>"
+
+
+def test_pretty_format_unknown_type_with_rich(*, printer: RichPrinter):
+    with given:
+        class User:
+            def __rich__(self):
+                pass
+
+        user = User()
+
+    with when:
+        res = printer.pretty_format(user)
+
+    with then:
+        assert isinstance(res, User)
+        assert res == user
+
+
+def test_pretty_format_unknown_type_with_rich_console(*, printer: RichPrinter):
+    with given:
+        class User:
+            def __rich_console__(self, console, options):
+                pass
+
+        user = User()
+
+    with when:
+        res = printer.pretty_format(user)
+
+    with then:
+        assert isinstance(res, User)
+        assert res == user
 
 
 def test_show_spinner(*, printer: RichPrinter, console_: Mock):

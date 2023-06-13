@@ -87,7 +87,7 @@ class PyCharmReporterPlugin(Reporter):
                                               show_internal_calls=self._show_internal_calls)
 
         if scenario_result.scope:
-            self._printer.print_scope(scenario_result.scope, scope_width=-1)
+            self._printer.print_scope(scenario_result.scope)
 
     def on_scenario_passed(self, event: ScenarioPassedEvent) -> None:
         scenario_result = event.scenario_result
