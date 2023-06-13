@@ -195,7 +195,7 @@ async def test_scenario_failed_with_scope(*, dispatcher: Dispatcher, printer_: M
 
             call.print_step_name(step_result.step_name, StepStatus.FAILED, prefix=" " * 3),
             call.print_exception(exc_info, show_internal_calls=False),
-            call.print_scope(scope, scope_width=-1),
+            call.print_scope(scope),
 
             call.console.out(f"##teamcity[testFailed name='{subject}' message='' details='']"),
             call.console.out(f"##teamcity[testFinished name='{subject}' duration='2000']")

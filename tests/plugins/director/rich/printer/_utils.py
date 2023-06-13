@@ -3,7 +3,7 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
-from rich.console import Console
+from rich.console import Console, ConsoleDimensions
 
 from vedro.core import ExcInfo
 from vedro.plugins.director.rich import RichPrinter
@@ -11,7 +11,7 @@ from vedro.plugins.director.rich import RichPrinter
 
 @pytest.fixture()
 def console_() -> Mock:
-    return Mock(Console)
+    return Mock(Console, size=ConsoleDimensions(80, 25))
 
 
 @pytest.fixture()

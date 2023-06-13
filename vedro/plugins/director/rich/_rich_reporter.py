@@ -270,8 +270,11 @@ class RichReporter(PluginConfig):
     # Available if tb_pretty is True
     tb_show_locals: bool = False
 
-    # Cuts long scope
-    scope_width: int = -1
+    # Truncate lines in Scope based on scope_width value.
+    # If scope_width is None, lines are truncated to the terminal's width.
+    # If scope_width is -1, lines aren't truncated.
+    # Otherwise, lines are truncated to the given length.
+    scope_width: Union[int, None] = None
 
     # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8
