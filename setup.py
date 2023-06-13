@@ -13,7 +13,7 @@ def find_dev_required():
 
 setup(
     name="vedro",
-    version="1.9.0",
+    version="1.9.1",
     description="Pragmatic BDD Framework",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
