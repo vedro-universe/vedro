@@ -22,10 +22,9 @@ __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
-@pytest.mark.parametrize("show_paths", [False, True])
-async def test_scenario_skipped(show_paths: bool, *, dispatcher: Dispatcher, printer_: Mock):
+async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
-        await fire_arg_parsed_event(dispatcher, show_paths=show_paths)
+        await fire_arg_parsed_event(dispatcher)
 
         scenario_result = make_scenario_result().mark_skipped()
         aggregated_result = make_aggregated_result(scenario_result)
@@ -38,6 +37,27 @@ async def test_scenario_skipped(show_paths: bool, *, dispatcher: Dispatcher, pri
         subject = aggregated_result.scenario.subject
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.SKIPPED, elapsed=None, prefix=" ")
+        ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_skipped_show_paths(dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, show_paths=True)
+
+        scenario_result = make_scenario_result().mark_skipped()
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = aggregated_result.scenario.subject
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(subject, ScenarioStatus.SKIPPED, elapsed=None, prefix=" "),
+            call.print_scenario_caption(f"> {scenario_result.scenario.path.name}", prefix=" " * 3)
         ]
 
 

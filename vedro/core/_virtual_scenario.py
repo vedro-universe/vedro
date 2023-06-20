@@ -3,7 +3,7 @@ from base64 import b64encode
 from hashlib import blake2b
 from inspect import BoundArguments
 from pathlib import Path
-from typing import Any, List, Type, Union, cast
+from typing import Any, List, Optional, Type, Union, cast
 
 from .._scenario import Scenario
 from ._virtual_step import VirtualStep
@@ -21,6 +21,7 @@ class VirtualScenario:
         self._steps = steps
         self._path = Path(getattr(orig_scenario, "__file__", "."))
         self._is_skipped = False
+        self._skip_reason: Union[str, None] = None
 
     @property
     def steps(self) -> List[VirtualStep]:
@@ -89,8 +90,14 @@ class VirtualScenario:
         rel_path = os.path.relpath(self._path, module.split(".")[0])
         return os.path.dirname(rel_path)
 
-    def skip(self) -> None:
+    def skip(self, reason: Optional[str] = None) -> None:
         self._is_skipped = True
+        if reason:
+            self._skip_reason = reason
+
+    @property
+    def skip_reason(self) -> Optional[str]:
+        return self._skip_reason
 
     def is_skipped(self) -> bool:
         return self._is_skipped

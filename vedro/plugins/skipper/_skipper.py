@@ -121,6 +121,9 @@ class SkipperPlugin(Plugin):
 
         return False
 
+    def _get_skip_reason(self, scenario: VirtualScenario) -> Union[str, None]:
+        return getattr(scenario._orig_scenario, "__vedro__skip_reason__", None)
+
     async def on_startup(self, event: StartupEvent) -> None:
         special_scenarios = set()
 
@@ -130,7 +133,8 @@ class SkipperPlugin(Plugin):
                 scheduler.ignore(scenario)
             else:
                 if self._is_scenario_skipped(scenario):
-                    scenario.skip()
+                    reason = self._get_skip_reason(scenario)
+                    scenario.skip(reason)
                 if self._is_scenario_special(scenario):
                     special_scenarios.add(scenario.unique_id)
 
