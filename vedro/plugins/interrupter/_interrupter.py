@@ -25,6 +25,8 @@ class InterrupterPlugin(Plugin):
     def __init__(self, config: Type["Interrupter"]) -> None:
         super().__init__(config)
         self._fail_fast: bool = False
+        self._fail_after_count: Union[int, None] = None
+        self._fail_after_percent: Union[int, None] = None
         self._failed: int = 0
         self._signals: Tuple[signal.Signals, ...] = config.handle_signals
         self._orig_handlers: Dict[signal.Signals, Any] = {}
@@ -39,17 +41,37 @@ class InterrupterPlugin(Plugin):
                   .listen(CleanupEvent, self.on_cleanup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("--fail-fast", "--ff", "-f",
-                                      action="store_true",
-                                      default=self._fail_fast,
-                                      help="Stop after first failed scenario")
+        group = event.arg_parser.add_argument_group("Interrupter")
+        exclusive_group = group.add_mutually_exclusive_group()
+
+        # --ff will be removed in v2.0
+        exclusive_group.add_argument("--fail-fast", "--ff", "-f",
+                                     action="store_true",
+                                     default=self._fail_fast,
+                                     help="Stop after first failed scenario")
+        exclusive_group.add_argument("--fail-after-count", type=int, default=None,
+                                     help="Stop after N failed scenarios")
+        exclusive_group.add_argument("--fail-after-percent", type=int, default=None,
+                                     help="Stop after X%% failed scenarios")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        self._fail_fast = event.args.fail_fast
+        self._fail_after_percent = event.args.fail_after_percent
+        self._fail_after_count = event.args.fail_after_count
+        if event.args.fail_fast:
+            self._fail_fast = True
+            self._fail_after_count = 1
+        elif self._fail_after_count is not None:
+            self._fail_fast = True
+        elif self._fail_after_percent is not None:
+            self._fail_fast = True
 
     def on_startup(self, event: StartupEvent) -> None:
         if not self._fail_fast:
             return
+
+        if self._fail_after_percent is not None:
+            scheduled = len(list(event.scheduler.scheduled))
+            self._fail_after_count = max(1, int(scheduled * self._fail_after_percent / 100))
 
         def handler(signum: int, frame: Optional[FrameType]) -> None:
             try:
@@ -67,7 +89,10 @@ class InterrupterPlugin(Plugin):
             self._failed += 1
 
     def on_scenario_run(self, event: Union[ScenarioRunEvent, ScenarioSkippedEvent]) -> None:
-        if self._fail_fast and self._failed > 0:
+        if not self._fail_fast:
+            return
+
+        if (self._fail_after_count is not None) and self._failed >= self._fail_after_count:
             raise InterrupterPluginTriggered("Stop after first failed scenario")
 
     def on_cleanup(self, event: CleanupEvent) -> None:

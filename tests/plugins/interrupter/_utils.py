@@ -63,7 +63,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, fail_fast: Optional[bool
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(fail_fast=fail_fast))
+    namespace = Namespace(fail_fast=fail_fast, fail_after_count=None, fail_after_percent=None)
+    arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)
 
 
