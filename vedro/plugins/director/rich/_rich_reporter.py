@@ -57,8 +57,11 @@ class RichReporterPlugin(Reporter):
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Rich Reporter")
 
-        help_message = ("Increase verbosity level "
-                        "(-v: show steps, -vv: show exception, -vvv: show scope)")
+        if self._v2_verbosity:
+            help_message = "Increase verbosity level"
+        else:
+            help_message = ("Increase verbosity level "
+                            "(-v: show steps, -vv: show exception, -vvv: show scope)")
         group.add_argument("-v", "--verbose",
                            action="count",
                            default=self._verbosity,
@@ -283,4 +286,4 @@ class RichReporter(PluginConfig):
     show_interrupted_traceback: bool = False
 
     # Enable new verbose levels
-    v2_verbosity: bool = False
+    v2_verbosity: bool = True
