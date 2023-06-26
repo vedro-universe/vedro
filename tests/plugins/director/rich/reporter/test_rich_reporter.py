@@ -108,11 +108,10 @@ async def test_scenario_run_same_namespace(*, dispatcher: Dispatcher, printer_: 
 
 
 @pytest.mark.asyncio
-async def test_scenario_run_show_spinner(*, dispatcher: Dispatcher,
-                                         rich_reporter: RichReporterPlugin, printer_: Mock):
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_run_show_spinner(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
-        rich_reporter._show_scenario_spinner = True
-        await fire_arg_parsed_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher, show_scenario_spinner=True)
 
         scenario_result = make_scenario_result()
         event = ScenarioRunEvent(scenario_result)
