@@ -58,7 +58,7 @@ class RichReporterPlugin(Reporter):
         group = event.arg_parser.add_argument_group("Rich Reporter")
 
         if self._v2_verbosity:
-            help_message = "Increase verbosity level"
+            help_message = "Increase verbosity level (show scope)"
         else:
             help_message = ("Increase verbosity level "
                             "(-v: show steps, -vv: show exception, -vvv: show scope)")
@@ -78,6 +78,10 @@ class RichReporterPlugin(Reporter):
                            action="store_true",
                            default=self._show_paths,
                            help="Show the relative path of each passed scenario")
+        group.add_argument("--show-scenario-spinner",
+                           action="store_true",
+                           default=self._show_scenario_spinner,
+                           help="Show scenario spinner")
         group.add_argument("--hide-namespaces",
                            action="store_true",
                            default=self._hide_namespaces,
@@ -98,6 +102,7 @@ class RichReporterPlugin(Reporter):
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
         self._show_steps = event.args.show_steps
+        self._show_scenario_spinner = event.args.show_scenario_spinner
         self._hide_namespaces = event.args.hide_namespaces
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
