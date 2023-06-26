@@ -118,8 +118,7 @@ async def test_scenario_passed_show_steps(*, dispatcher: Dispatcher, printer_: M
 async def test_scenario_passed_show_spinner(*, dispatcher: Dispatcher,
                                             rich_reporter: RichReporterPlugin, printer_: Mock):
     with given:
-        rich_reporter._show_scenario_spinner = True
-        await fire_arg_parsed_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher, show_scenario_spinner=True)
 
         scenario_result = make_scenario_result()
         await dispatcher.fire(ScenarioRunEvent(scenario_result))
