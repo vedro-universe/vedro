@@ -172,6 +172,21 @@ def test_virtual_scenario_skip(*, scenario_: Type[Scenario]):
     with then:
         assert res is None
         assert virtual_scenario.is_skipped() is True
+        assert virtual_scenario.skip_reason is None
+
+
+def test_virtual_scenario_skip_with_reason(*, scenario_: Type[Scenario]):
+    with given:
+        virtual_scenario = VirtualScenario(scenario_, [])
+        reason = "<reason>"
+
+    with when:
+        res = virtual_scenario.skip(reason)
+
+    with then:
+        assert res is None
+        assert virtual_scenario.is_skipped() is True
+        assert virtual_scenario.skip_reason == reason
 
 
 def test_virtual_scenario_init(*, scenario_: Type[Scenario]):

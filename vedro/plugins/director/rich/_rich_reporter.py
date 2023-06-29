@@ -30,6 +30,7 @@ class RichReporterPlugin(Reporter):
         self._scope_width = config.scope_width
         self._tb_max_frames = config.tb_max_frames
         self._show_skipped = config.show_skipped
+        self._show_skip_reason = config.show_skip_reason
         self._show_timings = config.show_timings
         self._show_paths = config.show_paths
         self._show_steps = config.show_steps
@@ -118,23 +119,14 @@ class RichReporterPlugin(Reporter):
         self._printer.print_header()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
-        namespace = event.scenario_result.scenario.namespace
-        if namespace != self._namespace:
-            self._namespace = namespace
-            if self._hide_namespaces is False:
-                self._printer.print_namespace(namespace)
-
+        self._print_namespace(event.scenario_result.scenario.namespace)
         if self._show_scenario_spinner:
             self._printer.show_spinner(f" {event.scenario_result.scenario.subject}")
 
     def on_scenario_skipped(self, event: ScenarioSkippedEvent) -> None:
         if not self._show_skipped:
             return
-        namespace = event.scenario_result.scenario.namespace
-        if namespace != self._namespace:
-            self._namespace = namespace
-            if self._hide_namespaces is False:
-                self._printer.print_namespace(namespace)
+        self._print_namespace(event.scenario_result.scenario.namespace)
 
     def _print_exception(self, exc_info: ExcInfo) -> None:
         if self._tb_pretty:
@@ -151,6 +143,12 @@ class RichReporterPlugin(Reporter):
         last_line = prefix.split("\n")[-1]
         return (len(last_line) + indent) * " "
 
+    def _print_namespace(self, namespace: str) -> None:
+        if namespace != self._namespace:
+            self._namespace = namespace
+            if self._hide_namespaces is False:
+                self._printer.print_namespace(namespace)
+
     def _print_scenario_passed(self, scenario_result: ScenarioResult, *, prefix: str = "") -> None:
         elapsed = scenario_result.elapsed if self._show_timings else None
         self._printer.print_scenario_subject(scenario_result.scenario.subject,
@@ -165,9 +163,7 @@ class RichReporterPlugin(Reporter):
                                               elapsed=elapsed, prefix=step_prefix)
 
         if self._show_paths:
-            caption = f"> {scenario_result.scenario.rel_path}"
-            caption_prefix = self._prefix_to_indent(prefix, indent=2)
-            self._printer.print_scenario_caption(caption, prefix=caption_prefix)
+            self._print_scenario_caption(f"{scenario_result.scenario.rel_path}", prefix=prefix)
 
     def _print_scenario_failed(self, scenario_result: ScenarioResult, *, prefix: str = "") -> None:
         elapsed = scenario_result.elapsed if self._show_timings else None
@@ -201,6 +197,17 @@ class RichReporterPlugin(Reporter):
                                              scenario_result.status,
                                              elapsed=elapsed,
                                              prefix=prefix)
+
+        skip_reason = scenario_result.scenario.skip_reason
+        if self._show_skip_reason and skip_reason:
+            self._print_scenario_caption(f"{skip_reason}", prefix=prefix)
+
+        if self._show_paths:
+            self._print_scenario_caption(f"{scenario_result.scenario.rel_path}", prefix=prefix)
+
+    def _print_scenario_caption(self, caption: str, *, prefix: str = "") -> None:
+        caption_prefix = self._prefix_to_indent(prefix, indent=2)
+        self._printer.print_scenario_caption(f"> {caption}", prefix=caption_prefix)
 
     def _print_scenario_result(self, scenario_result: ScenarioResult, *, prefix: str = "") -> None:
         if scenario_result.is_passed():
@@ -252,6 +259,9 @@ class RichReporter(PluginConfig):
 
     # Show skipped scenarios
     show_skipped: bool = True
+
+    # Show reason of skipped scenarios
+    show_skip_reason: bool = True
 
     # Show the elapsed time of each scenario
     show_timings: bool = False

@@ -2,6 +2,10 @@
 
 ## v1.9
 
+### v1.9.1 (2023-06-13)
+
+- [RichReporter] Add `scope_width` param [#49](https://github.com/tsv1/vedro/pull/49)
+
 ### v1.9.0 (2023-05-14)
 
 - [RichReporter] Humanize elapsed time [#45](https://github.com/tsv1/vedro/pull/45)
