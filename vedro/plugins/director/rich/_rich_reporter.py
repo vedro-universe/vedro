@@ -30,6 +30,7 @@ class RichReporterPlugin(Reporter):
         self._scope_width = config.scope_width
         self._tb_max_frames = config.tb_max_frames
         self._show_skipped = config.show_skipped
+        self._show_skip_reason = config.show_skip_reason
         self._show_timings = config.show_timings
         self._show_paths = config.show_paths
         self._show_steps = config.show_steps
@@ -198,7 +199,7 @@ class RichReporterPlugin(Reporter):
                                              prefix=prefix)
 
         skip_reason = scenario_result.scenario.skip_reason
-        if skip_reason:
+        if self._show_skip_reason and skip_reason:
             self._print_scenario_caption(f"{skip_reason}", prefix=prefix)
 
         if self._show_paths:
@@ -258,6 +259,9 @@ class RichReporter(PluginConfig):
 
     # Show skipped scenarios
     show_skipped: bool = True
+
+    # Show reason of skipped scenarios
+    show_skip_reason: bool = True
 
     # Show the elapsed time of each scenario
     show_timings: bool = False

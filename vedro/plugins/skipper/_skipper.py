@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Type, Union
+from typing import Any, List, Optional, Type, Union, cast
 
 from vedro.core import Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
@@ -67,9 +67,11 @@ class SkipperPlugin(Plugin):
             path = os.path.join("scenarios", path)
         return os.path.abspath(path)
 
-    def _get_scenario_attr(self, scenario: VirtualScenario, attr: str) -> bool:
+    def _get_scenario_attr(self, scenario: VirtualScenario, name: str, default_value: Any) -> Any:
         template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        return getattr(template or scenario._orig_scenario, attr, False)
+        if template and hasattr(template, name):
+            return getattr(template, name)
+        return getattr(scenario._orig_scenario, name, default_value)
 
     def _is_scenario_skipped(self, scenario: VirtualScenario) -> bool:
         attr_name = "__vedro__skipped__"
@@ -122,7 +124,8 @@ class SkipperPlugin(Plugin):
         return False
 
     def _get_skip_reason(self, scenario: VirtualScenario) -> Union[str, None]:
-        return getattr(scenario._orig_scenario, "__vedro__skip_reason__", None)
+        skip_reason = self._get_scenario_attr(scenario, "__vedro__skip_reason__", None)
+        return cast(Union[str, None], skip_reason)
 
     async def on_startup(self, event: StartupEvent) -> None:
         special_scenarios = set()
@@ -133,8 +136,7 @@ class SkipperPlugin(Plugin):
                 scheduler.ignore(scenario)
             else:
                 if self._is_scenario_skipped(scenario):
-                    reason = self._get_skip_reason(scenario)
-                    scenario.skip(reason)
+                    scenario.skip(reason=self._get_skip_reason(scenario))
                 if self._is_scenario_special(scenario):
                     special_scenarios.add(scenario.unique_id)
 
