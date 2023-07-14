@@ -32,7 +32,8 @@ async def test_rerun_validation(dispatcher: Dispatcher):
         await fire_arg_parsed_event(dispatcher, reruns=-1)
 
     with then:
-        assert exc_info.type is AssertionError
+        assert exc_info.type is ValueError
+        assert str(exc_info.value) == "--reruns must be >= 0"
 
 
 @pytest.mark.asyncio
