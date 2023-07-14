@@ -91,6 +91,7 @@ def test_from_existing_status_scope(get_scenario_result: Callable[[], ScenarioRe
         assert aggregated_result.scope == scenario_result.scope
         assert aggregated_result.artifacts == scenario_result.artifacts
         assert aggregated_result.step_results == scenario_result.step_results
+        assert aggregated_result.extra_details == scenario_result.extra_details
 
 
 @pytest.mark.parametrize("get_scenario_result", [
@@ -111,6 +112,7 @@ def test_from_existing_started_ended(get_scenario_result: Callable[[], ScenarioR
         assert aggregated_result.scope == scenario_result.scope
         assert aggregated_result.artifacts == scenario_result.artifacts
         assert aggregated_result.step_results == scenario_result.step_results
+        assert aggregated_result.extra_details == scenario_result.extra_details
 
 
 def test_from_existing_artifacts():
@@ -133,6 +135,27 @@ def test_from_existing_artifacts():
         assert aggregated_result.scope == scenario_result.scope
         assert aggregated_result.artifacts == scenario_result.artifacts
         assert aggregated_result.step_results == scenario_result.step_results
+        assert aggregated_result.extra_details == scenario_result.extra_details
+
+
+def test_from_existing_extra_details():
+    with given:
+        scenario_result = make_scenario_result()
+
+        scenario_result.add_extra_details("<extra-detail-1>")
+        scenario_result.add_extra_details("<extra-detail-2>")
+
+    with when:
+        aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
+
+    with then:
+        assert aggregated_result.status == scenario_result.status
+        assert aggregated_result.started_at == scenario_result.started_at
+        assert aggregated_result.ended_at == scenario_result.ended_at
+        assert aggregated_result.scope == scenario_result.scope
+        assert aggregated_result.artifacts == scenario_result.artifacts
+        assert aggregated_result.step_results == scenario_result.step_results
+        assert aggregated_result.extra_details == scenario_result.extra_details
 
 
 def test_from_existing_step_results():
@@ -154,6 +177,7 @@ def test_from_existing_step_results():
         assert aggregated_result.scope == scenario_result.scope
         assert aggregated_result.artifacts == scenario_result.artifacts
         assert aggregated_result.step_results == scenario_result.step_results
+        assert aggregated_result.extra_details == scenario_result.extra_details
 
 
 def test_repr(*, aggregated_result: AggregatedResult):

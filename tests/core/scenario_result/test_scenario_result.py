@@ -57,6 +57,7 @@ def test_scenario_result():
         assert scenario_result.ended_at is None
         assert scenario_result.scope == {}
         assert scenario_result.status == ScenarioStatus.PENDING
+        assert scenario_result.extra_details == []
 
 
 def test_scenario_result_mark_passed(*, virtual_scenario: VirtualScenario):
@@ -251,3 +252,28 @@ def test_scenario_result_get_artifacts(*, virtual_scenario: VirtualScenario):
 
     with then:
         assert artifacts == [artifact1, artifact2]
+
+
+def test_scenario_result_add_extra_details(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+
+    with when:
+        res = scenario_result.add_extra_details("<extra-details>")
+
+    with then:
+        assert res is None
+
+
+def test_scenario_result_get_extra_details(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+
+        scenario_result.add_extra_details("<extra-detail-1>")
+        scenario_result.add_extra_details("<extra-detail-2>")
+
+    with when:
+        extra_details = scenario_result.extra_details
+
+    with then:
+        assert extra_details == ["<extra-detail-1>", "<extra-detail-2>"]
