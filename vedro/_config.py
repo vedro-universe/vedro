@@ -90,9 +90,6 @@ class Config(core.Config):
         class Artifacted(artifacted.Artifacted):
             enabled = True
 
-        class Interrupter(interrupter.Interrupter):
-            enabled = True
-
         class Seeder(seeder.Seeder):
             enabled = True
 
@@ -115,6 +112,9 @@ class Config(core.Config):
             enabled = True
 
         class DryRunner(dry_runner.DryRunner):
+            enabled = True
+
+        class Interrupter(interrupter.Interrupter):
             enabled = True
 
         class Terminator(terminator.Terminator):
