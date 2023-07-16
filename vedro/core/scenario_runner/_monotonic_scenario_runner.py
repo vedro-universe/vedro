@@ -17,10 +17,10 @@ from ...events import (
 from .._dispatcher import Dispatcher
 from .._exc_info import ExcInfo
 from .._report import Report
-from .._scenario_result import ScenarioResult
 from .._step_result import StepResult
 from .._virtual_scenario import VirtualScenario
 from .._virtual_step import VirtualStep
+from ..scenario_result import ScenarioResult
 from ..scenario_scheduler import ScenarioScheduler
 from ._interrupted import Interrupted, RunInterrupted, ScenarioInterrupted, StepInterrupted
 from ._scenario_runner import ScenarioRunner

@@ -1,6 +1,6 @@
 from .._exc_info import ExcInfo
-from .._scenario_result import ScenarioResult
 from .._step_result import StepResult
+from ..scenario_result import ScenarioResult
 
 __all__ = ("Interrupted", "StepInterrupted", "ScenarioInterrupted", "RunInterrupted")
 
