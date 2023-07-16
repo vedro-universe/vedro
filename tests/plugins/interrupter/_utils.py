@@ -2,7 +2,7 @@ import signal
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
-from typing import Optional
+from typing import Optional, Tuple
 from unittest.mock import Mock
 
 import pytest
@@ -20,14 +20,20 @@ def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
-@pytest.fixture()
-def interrupter(dispatcher: Dispatcher) -> InterrupterPlugin:
+def create_interrupter(dispatcher: Dispatcher,
+                       signals: Tuple[signal.Signals, ...] = (HANDLE_SIGNAL,)
+                       ) -> InterrupterPlugin:
     class _Interrupter(Interrupter):
-        handle_signals = (HANDLE_SIGNAL,)
+        handle_signals = signals
 
     interrupter = InterrupterPlugin(_Interrupter)
     interrupter.subscribe(dispatcher)
     return interrupter
+
+
+@pytest.fixture()
+def interrupter(dispatcher: Dispatcher) -> InterrupterPlugin:
+    return create_interrupter(dispatcher)
 
 
 @pytest.fixture()
@@ -59,11 +65,13 @@ def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> 
     return AggregatedResult.from_existing(scenario_result, [scenario_result])
 
 
-async def fire_arg_parsed_event(dispatcher: Dispatcher, fail_fast: Optional[bool] = None) -> None:
+async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
+                                fail_fast: Optional[bool] = None,
+                                fail_after_count: Optional[int] = None) -> None:
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    namespace = Namespace(fail_fast=fail_fast, fail_after_count=None, fail_after_percent=None)
+    namespace = Namespace(fail_fast=fail_fast, fail_after_count=fail_after_count)
     arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)
 

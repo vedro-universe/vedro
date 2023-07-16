@@ -1,10 +1,8 @@
-import signal
 import sys
-from typing import Callable
-from unittest.mock import Mock
+from typing import Callable, Optional
 
 if sys.version_info >= (3, 8):
-    from signal import raise_signal
+    pass
 else:
     def raise_signal(sig: int) -> None:
         import os
@@ -15,14 +13,11 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import Dispatcher, Event
-from vedro.core import MonotonicScenarioScheduler as Scheduler
-from vedro.core import Report
 from vedro.core.scenario_runner import Interrupted
-from vedro.events import CleanupEvent, ScenarioRunEvent, ScenarioSkippedEvent, StartupEvent
+from vedro.events import ScenarioRunEvent, ScenarioSkippedEvent
 from vedro.plugins.interrupter import InterrupterPluginTriggered
 
 from ._utils import (
-    HANDLE_SIGNAL,
     dispatcher,
     fire_arg_parsed_event,
     fire_scenario_reported_event,
@@ -38,22 +33,21 @@ __all__ = ("dispatcher", "interrupter", "sig_handler_",)  # fixtures
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
-    lambda: ScenarioRunEvent(make_scenario_result().mark_passed()),
-    lambda: ScenarioRunEvent(make_scenario_result().mark_failed()),
-    lambda: ScenarioSkippedEvent(make_scenario_result().mark_skipped()),
+    lambda: ScenarioRunEvent(make_scenario_result()),
+    lambda: ScenarioRunEvent(make_scenario_result()),
+    lambda: ScenarioSkippedEvent(make_scenario_result()),
 ])
-async def test_scenario_run_no_fail_fast(get_event: Callable[[], Event], *,
-                                         dispatcher: Dispatcher):
+async def test_no_fail_fast(get_event: Callable[[], Event], *, dispatcher: Dispatcher):
     with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=False)
+        await fire_arg_parsed_event(dispatcher, fail_fast=False, fail_after_count=None)
 
         scenario_result = make_scenario_result().mark_failed()
         await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result))
 
-        scenario_run_event = get_event()
+        event = get_event()
 
     with when:
-        await dispatcher.fire(scenario_run_event)
+        await dispatcher.fire(event)
 
     with then:
         assert "no exception"
@@ -62,48 +56,108 @@ async def test_scenario_run_no_fail_fast(get_event: Callable[[], Event], *,
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
-    lambda: ScenarioRunEvent(make_scenario_result().mark_passed()),
-    lambda: ScenarioRunEvent(make_scenario_result().mark_failed()),
-    lambda: ScenarioSkippedEvent(make_scenario_result().mark_skipped()),
+    lambda: ScenarioRunEvent(make_scenario_result()),
+    lambda: ScenarioSkippedEvent(make_scenario_result()),
 ])
-async def test_scenario_run_failed_fail_fast(get_event: Callable[[], Event], *,
-                                             dispatcher: Dispatcher):
+async def test_failed_fail_after_count1(get_event: Callable[[], Event], *, dispatcher: Dispatcher):
     with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=True)
+        fail_after_count = 1
+        await fire_arg_parsed_event(dispatcher, fail_fast=False, fail_after_count=fail_after_count)
 
         scenario_result = make_scenario_result().mark_failed()
         await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result))
 
-        scenario_run_event = get_event()
+        event = get_event()
 
     with when, raises(BaseException) as exc:
-        await dispatcher.fire(scenario_run_event)
+        await dispatcher.fire(event)
 
     with then:
         assert exc.type is InterrupterPluginTriggered
         assert isinstance(exc.value, Interrupted)
-        assert str(exc.value) == "Stop after first failed scenario"
+        assert str(exc.value) == f"Stop after {fail_after_count} failed scenario"
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
-    lambda: ScenarioRunEvent(make_scenario_result().mark_passed()),
-    lambda: ScenarioRunEvent(make_scenario_result().mark_failed()),
-    lambda: ScenarioSkippedEvent(make_scenario_result().mark_skipped()),
+    lambda: ScenarioRunEvent(make_scenario_result()),
+    lambda: ScenarioSkippedEvent(make_scenario_result()),
 ])
-async def test_scenario_run_passed_fail_fast(get_event: Callable[[], Event], *,
-                                             dispatcher: Dispatcher):
+async def test_failed_no_fail_after_count2(get_event: Callable[[], Event], *,
+                                           dispatcher: Dispatcher):
     with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=True)
+        fail_after_count = 2
+        await fire_arg_parsed_event(dispatcher, fail_fast=False, fail_after_count=fail_after_count)
+
+        scenario_result1 = make_scenario_result().mark_passed()
+        await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result1))
+
+        scenario_result2 = make_scenario_result().mark_failed()
+        await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result2))
+
+        event = get_event()
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert "no exception"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(interrupter.__name__)
+@pytest.mark.parametrize("get_event", [
+    lambda: ScenarioRunEvent(make_scenario_result()),
+    lambda: ScenarioSkippedEvent(make_scenario_result()),
+])
+async def test_failed_fail_after_count2(get_event: Callable[[], Event], *, dispatcher: Dispatcher):
+    with given:
+        fail_after_count = 2
+        await fire_arg_parsed_event(dispatcher, fail_fast=False, fail_after_count=fail_after_count)
+
+        scenario_result1 = make_scenario_result().mark_failed()
+        await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result1))
+
+        scenario_result2 = make_scenario_result().mark_failed()
+        await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result2))
+
+        event = get_event()
+
+    with when, raises(BaseException) as exc:
+        await dispatcher.fire(event)
+
+    with then:
+        assert exc.type is InterrupterPluginTriggered
+        assert isinstance(exc.value, Interrupted)
+        assert str(exc.value) == f"Stop after {fail_after_count} failed scenario"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(interrupter.__name__)
+@pytest.mark.parametrize(("fail_fast", "fail_after_count"), [
+    (True, None),
+    (None, 1),
+])
+@pytest.mark.parametrize("get_event", [
+    lambda: ScenarioRunEvent(make_scenario_result()),
+    lambda: ScenarioSkippedEvent(make_scenario_result()),
+])
+async def test_passed_fail_fast(get_event: Callable[[], Event],
+                                fail_fast: Optional[bool], fail_after_count: Optional[int], *,
+                                dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher,
+                                    fail_fast=fail_fast,
+                                    fail_after_count=fail_after_count)
 
         scenario_result = make_scenario_result().mark_passed()
         await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result))
 
-        scenario_run_event = get_event()
+        event = get_event()
 
     with when:
-        await dispatcher.fire(scenario_run_event)
+        await dispatcher.fire(event)
 
     with then:
         assert "no exception"
@@ -112,91 +166,28 @@ async def test_scenario_run_passed_fail_fast(get_event: Callable[[], Event], *,
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
-    lambda: ScenarioRunEvent(make_scenario_result().mark_passed()),
-    lambda: ScenarioRunEvent(make_scenario_result().mark_failed()),
-    lambda: ScenarioSkippedEvent(make_scenario_result().mark_skipped()),
+    lambda: ScenarioRunEvent(make_scenario_result()),
+    lambda: ScenarioSkippedEvent(make_scenario_result()),
 ])
-async def test_scenario_run_skipped_fail_fast(get_event: Callable[[], Event], *,
-                                              dispatcher: Dispatcher):
+@pytest.mark.parametrize(("fail_fast", "fail_after_count"), [
+    (True, None),
+    (None, 1),
+])
+async def test_skipped_fail_fast(get_event: Callable[[], Event],
+                                 fail_fast: Optional[bool], fail_after_count: Optional[int], *,
+                                 dispatcher: Dispatcher):
     with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=True)
+        await fire_arg_parsed_event(dispatcher,
+                                    fail_fast=fail_fast,
+                                    fail_after_count=fail_after_count)
 
         scenario_result = make_scenario_result().mark_skipped()
         await fire_scenario_reported_event(dispatcher, make_aggregated_result(scenario_result))
 
-        scenario_run_event = get_event()
+        event = get_event()
 
     with when:
-        await dispatcher.fire(scenario_run_event)
+        await dispatcher.fire(event)
 
     with then:
         assert "no exception"
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures(interrupter.__name__)
-async def test_signal_handler(sig_handler_: Mock, dispatcher: Dispatcher):
-    with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=True)
-
-        scheduler = Scheduler([])
-        await dispatcher.fire(StartupEvent(scheduler))
-
-    with when, raises(BaseException) as exc:
-        raise_signal(HANDLE_SIGNAL)
-
-    with then:
-        assert exc.type is InterrupterPluginTriggered
-        assert isinstance(exc.value, Interrupted)
-        assert str(exc.value) == f"Stop after signal {HANDLE_SIGNAL!r} received"
-
-        assert len(sig_handler_.mock_calls) == 0
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures(interrupter.__name__)
-async def test_signal_handler_no_fail_fast(sig_handler_: Mock, dispatcher: Dispatcher):
-    with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=False)
-
-        scheduler = Scheduler([])
-        await dispatcher.fire(StartupEvent(scheduler))
-
-    with when:
-        raise_signal(HANDLE_SIGNAL)
-
-    with then:
-        assert len(sig_handler_.mock_calls) == 1
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures(interrupter.__name__)
-async def test_signal_handler_cleanup(sig_handler_: Mock, dispatcher: Dispatcher):
-    with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=True)
-
-        scheduler = Scheduler([])
-        await dispatcher.fire(StartupEvent(scheduler))
-
-        event = CleanupEvent(Report())
-
-    with when:
-        await dispatcher.fire(event)
-
-    with then:
-        assert signal.getsignal(HANDLE_SIGNAL) == sig_handler_
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures(interrupter.__name__)
-async def test_cleanup(sig_handler_: Mock, dispatcher: Dispatcher):
-    with given:
-        await fire_arg_parsed_event(dispatcher, fail_fast=False)
-
-        event = CleanupEvent(Report())
-
-    with when:
-        await dispatcher.fire(event)
-
-    with then:
-        assert signal.getsignal(HANDLE_SIGNAL) == sig_handler_
