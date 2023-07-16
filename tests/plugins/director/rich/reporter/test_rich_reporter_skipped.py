@@ -74,7 +74,7 @@ async def test_scenario_skipped_with_reason_disabled(*, dispatcher: Dispatcher,
                                                      rich_reporter: RichReporterPlugin,
                                                      printer_: Mock):
     with given:
-        rich_reporter._show_skip_reason = False
+        rich_reporter._show_skip_reason = False  # move to config
         await fire_arg_parsed_event(dispatcher)
 
         vscenario = make_vscenario()
