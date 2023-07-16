@@ -114,12 +114,19 @@ class RichReporterPlugin(Reporter):
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
 
-        assert self._tb_max_frames >= 4, \
-            "RichReporter: `max_frames` must be >= 4"
+        if self._tb_max_frames < 4:
+            raise ValueError("RichReporter: `tb_max_frames` must be >= 4")
 
-        if self._tb_show_locals:
-            assert self._tb_pretty, \
-                "RichReporter: to enable `tb_show_locals` set `tb_pretty` to `True`"
+        if self._tb_show_locals and (not self._tb_pretty):
+            raise ValueError("RichReporter: to enable `tb_show_locals` set `tb_pretty` to `True`")
+
+        if self._show_paths and (not self._show_scenario_extras):
+            raise ValueError(
+                "RichReporter: to enable `show_paths` set `show_scenario_extras` to `True`")
+
+        if self._show_skip_reason and (not self._show_scenario_extras):
+            raise ValueError(
+                "RichReporter: to enable `show_skip_reason` set `show_scenario_extras` to `True`")
 
     def on_startup(self, event: StartupEvent) -> None:
         self._printer.print_header()
