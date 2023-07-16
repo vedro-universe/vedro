@@ -22,6 +22,7 @@ class StepResult:
         self._ended_at: Union[float, None] = None
         self._exc_info: Union[ExcInfo, None] = None
         self._artifacts: List[Artifact] = []
+        self._extra_details: List[str] = []
 
     @property
     def step_name(self) -> str:
@@ -82,6 +83,13 @@ class StepResult:
     @property
     def artifacts(self) -> List[Artifact]:
         return self._artifacts[:]
+
+    def add_extra_details(self, extra: str) -> None:
+        self._extra_details.append(extra)
+
+    @property
+    def extra_details(self) -> List[str]:
+        return self._extra_details[:]
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self._step!r} {self._status.value}>"

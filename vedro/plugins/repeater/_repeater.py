@@ -19,6 +19,7 @@ __all__ = ("Repeater", "RepeaterPlugin",)
 class RepeaterPlugin(Plugin):
     def __init__(self, config: Type["Repeater"]) -> None:
         super().__init__(config)
+        self._scheduler_factory = config.scheduler_factory
         self._repeats: int = 0
         self._global_config: Union[ConfigType, None] = None
         self._scheduler: Union[ScenarioScheduler, None] = None
@@ -43,13 +44,14 @@ class RepeaterPlugin(Plugin):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._repeats = event.args.repeats
-        assert self._repeats >= 1
+        if self._repeats < 1:
+            raise ValueError("--repeats must be >= 1")
 
         if self._repeats <= 1:
             return
 
-        assert self._global_config is not None
-        self._global_config.Registry.ScenarioScheduler.register(RepeaterScenarioScheduler, self)
+        assert self._global_config is not None  # for type checking
+        self._global_config.Registry.ScenarioScheduler.register(self._scheduler_factory, self)
 
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
@@ -58,7 +60,7 @@ class RepeaterPlugin(Plugin):
         if self._repeats <= 1:
             return
 
-        assert isinstance(self._scheduler, RepeaterScenarioScheduler)
+        assert isinstance(self._scheduler, RepeaterScenarioScheduler)  # for type checking
 
         if self._repeat_scenario_id == event.scenario_result.scenario.unique_id:
             return
@@ -75,3 +77,6 @@ class RepeaterPlugin(Plugin):
 class Repeater(PluginConfig):
     plugin = RepeaterPlugin
     description = "Repeat scenarios a specified number of times"
+
+    # Scheduler that will be used to create aggregated result for repeated scenarios
+    scheduler_factory: Type[ScenarioScheduler] = RepeaterScenarioScheduler

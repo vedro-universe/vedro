@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 from typing import Iterator, List
 
-from .._scenario_result import AggregatedResult, ScenarioResult
 from .._virtual_scenario import VirtualScenario
+from ..scenario_result import AggregatedResult, ScenarioResult
 
 __all__ = ("ScenarioScheduler",)
 

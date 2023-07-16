@@ -115,17 +115,38 @@ def test_print_scenario_subject_unknown_status(*, printer: RichPrinter, console_
 
 
 @pytest.mark.parametrize("prefix", ["", "---"])
-def test_print_scenario_caption(prefix: str, *, printer: RichPrinter, console_: Mock):
+def test_print_scenario_extra_details(prefix: str, *, printer: RichPrinter, console_: Mock):
     with given:
-        caption = "<caption>"
+        extra_details = ["<extra-detail-1>", "<extra-detail-2>"]
 
     with when:
-        printer.print_scenario_caption(caption, prefix=prefix)
+        printer.print_scenario_extra_details(extra_details, prefix=prefix)
 
     with then:
         assert console_.mock_calls == [
             call.out(prefix, end=""),
-            call.out(caption, style=Style(color="grey50"))
+            call.out(f"|> {extra_details[0]}", style=Style(color="grey50")),
+
+            call.out(prefix, end=""),
+            call.out(f"|> {extra_details[-1]}", style=Style(color="grey50"))
+        ]
+
+
+@pytest.mark.parametrize("prefix", ["", "---"])
+def test_print_step_extra_details(prefix: str, *, printer: RichPrinter, console_: Mock):
+    with given:
+        extra_details = ["<extra-detail-1>", "<extra-detail-2>"]
+
+    with when:
+        printer.print_step_extra_details(extra_details, prefix=prefix)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(prefix, end=""),
+            call.out(f"|> {extra_details[0]}", style=Style(color="grey50")),
+
+            call.out(prefix, end=""),
+            call.out(f"|> {extra_details[-1]}", style=Style(color="grey50"))
         ]
 
 
