@@ -9,12 +9,12 @@ T = TypeVar("T", bound=Type[Scenario])
 
 
 @overload
-def only(scenario_or_reason: T) -> T:  # pragma: no cover
+def only(scenario_or_nothing: T) -> T:  # pragma: no cover
     pass
 
 
 @overload
-def only(scenario_or_reason: None = None) -> Callable[[T], T]:  # pragma: no cover
+def only(scenario_or_nothing: None = None) -> Callable[[T], T]:  # pragma: no cover
     pass
 
 

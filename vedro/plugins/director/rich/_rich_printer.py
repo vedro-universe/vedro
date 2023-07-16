@@ -1,5 +1,6 @@
 import json
 import os
+import warnings
 from traceback import format_exception
 from types import FrameType, TracebackType
 from typing import Any, Callable, Dict, List, Optional, Union, cast
@@ -58,9 +59,17 @@ class RichPrinter:
         else:
             self._console.out(subject, style=style)
 
+    def print_scenario_extra_details(self, extras: List[str], *, prefix: str = "") -> None:
+        for extra in extras:
+            self._console.out(prefix, end="")
+            self._console.out(f"|> {extra}", style=Style(color="grey50"))
+
+    def print_step_extra_details(self, extras: List[str], *, prefix: str = "") -> None:
+        self.print_scenario_extra_details(extras, prefix=prefix)
+
     def print_scenario_caption(self, caption: str, *, prefix: str = "") -> None:
-        self._console.out(prefix, end="")
-        self._console.out(f"{caption}", style=Style(color="grey50"))
+        warnings.warn("Deprecated: use print_extra_details instead", DeprecationWarning)
+        self.print_scenario_extra_details([caption], prefix=prefix)
 
     def print_step_name(self, name: str, status: StepStatus, *,
                         elapsed: Optional[float] = None, prefix: str = "") -> None:

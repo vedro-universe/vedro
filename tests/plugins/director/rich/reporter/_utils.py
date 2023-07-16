@@ -19,7 +19,9 @@ from vedro.core import (
     VirtualStep,
 )
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
-from vedro.plugins.director import Director, DirectorPlugin, RichReporter, RichReporterPlugin
+from vedro.plugins.director import Director, DirectorPlugin
+from vedro.plugins.director import RichReporter as RichReporter_
+from vedro.plugins.director import RichReporterPlugin
 from vedro.plugins.director.rich import RichPrinter
 
 
@@ -43,19 +45,20 @@ def director(dispatcher: Dispatcher) -> DirectorPlugin:
 @pytest.fixture()
 def rich_reporter(dispatcher: Dispatcher,
                   director: DirectorPlugin, printer_: Mock) -> RichReporterPlugin:
-    reporter = RichReporterPlugin(RichReporter, printer_factory=lambda: printer_)
+    reporter = RichReporterPlugin(RichReporter_, printer_factory=lambda: printer_)
     reporter.subscribe(dispatcher)
     return reporter
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 verbose: int = 0,
-                                show_timings: bool = RichReporter.show_timings,
-                                show_paths: bool = RichReporter.show_paths,
-                                show_steps: bool = RichReporter.show_steps,
-                                hide_namespaces: bool = RichReporter.hide_namespaces,
-                                tb_show_internal_calls: bool = RichReporter.tb_show_internal_calls,
-                                tb_show_locals: bool = RichReporter.tb_show_locals) -> None:
+                                show_timings: bool = RichReporter_.show_timings,
+                                show_paths: bool = RichReporter_.show_paths,
+                                show_steps: bool = RichReporter_.show_steps,
+                                show_scenario_spinner: bool = RichReporter_.show_scenario_spinner,
+                                hide_namespaces: bool = RichReporter_.hide_namespaces,
+                                tb_show_internal_calls: bool = RichReporter_.tb_show_internal_calls,  # noqa: E501
+                                tb_show_locals: bool = RichReporter_.tb_show_locals) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
@@ -65,6 +68,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                           show_timings=show_timings,
                           show_paths=show_paths,
                           show_steps=show_steps,
+                          show_scenario_spinner=show_scenario_spinner,
                           hide_namespaces=hide_namespaces,
                           tb_show_internal_calls=tb_show_internal_calls,
                           tb_show_locals=tb_show_locals)

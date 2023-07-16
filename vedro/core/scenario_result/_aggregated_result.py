@@ -44,6 +44,9 @@ class AggregatedResult(ScenarioResult):
         for artifact in main_scenario_result.artifacts:
             result.attach(artifact)
 
+        for extra in main_scenario_result.extra_details:
+            result.add_extra_details(extra)
+
         assert len(scenario_results) > 0
         for scenario_result in scenario_results:
             result.add_scenario_result(scenario_result)

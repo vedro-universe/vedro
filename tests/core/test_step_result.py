@@ -32,6 +32,7 @@ def test_step_result(*, method_: MethodType, virtual_step: VirtualStep):
         assert step_result.ended_at is None
         assert step_result.exc_info is None
         assert step_result.status == StepStatus.PENDING
+        assert step_result.extra_details == []
         assert repr(step_result) == f"<StepResult {virtual_step!r} {step_result.status.value}>"
 
 
@@ -168,3 +169,28 @@ def test_step_result_get_artifacts(*, virtual_step: VirtualStep):
 
     with then:
         assert artifacts == [artifact1, artifact2]
+
+
+def test_step_result_add_extra_details(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+
+    with when:
+        res = step_result.add_extra_details("<extra-details>")
+
+    with then:
+        assert res is None
+
+
+def test_step_result_get_extra_details(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+
+        step_result.add_extra_details("<extra-detail-1>")
+        step_result.add_extra_details("<extra-detail-2>")
+
+    with when:
+        extra_details = step_result.extra_details
+
+    with then:
+        assert extra_details == ["<extra-detail-1>", "<extra-detail-2>"]

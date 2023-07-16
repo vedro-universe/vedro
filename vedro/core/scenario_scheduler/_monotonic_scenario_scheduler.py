@@ -1,8 +1,8 @@
 from collections import OrderedDict
 from typing import Iterator, List, Tuple
 
-from .._scenario_result import AggregatedResult, ScenarioResult
 from .._virtual_scenario import VirtualScenario
+from ..scenario_result import AggregatedResult, ScenarioResult
 from ._scenario_scheduler import ScenarioScheduler
 
 __all__ = ("MonotonicScenarioScheduler",)

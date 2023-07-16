@@ -18,7 +18,7 @@ async def test_plugin_manager_no_file(tmp_path: Path):
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.enable("tagger")
+        await plugin_manager.enable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)
@@ -45,7 +45,7 @@ async def test_plugin_manager_no_config(tmp_path: Path):
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.enable("tagger")
+        await plugin_manager.enable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)
@@ -78,7 +78,7 @@ async def test_plugin_manager_no_plugins_section(tmp_path: Path):
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.enable("tagger")
+        await plugin_manager.enable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)
@@ -114,7 +114,7 @@ async def test_plugin_manager_no_plugins(tmp_path: Path):
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.enable("tagger")
+        await plugin_manager.enable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)
@@ -155,7 +155,7 @@ async def test_plugin_manager_no_target_plugin(tmp_path: Path):
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.enable("tagger")
+        await plugin_manager.enable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)
@@ -202,7 +202,7 @@ async def test_plugin_manager_no_enabled_attr(tmp_path: Path):
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.enable("tagger")
+        await plugin_manager.enable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)
@@ -247,7 +247,7 @@ async def test_plugin_manager_enabled_enabled(enabled: bool, *, tmp_path: Path):
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.enable("tagger")
+        await plugin_manager.enable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)
@@ -287,7 +287,7 @@ async def test_plugin_manager_disabled_enabled(enabled: bool, *, tmp_path: Path)
         plugin_manager = PluginManager(config_path)
 
     with when:
-        await plugin_manager.disable("tagger")
+        await plugin_manager.disable("vedro.plugins.tagger")
 
     with then:
         config = read_config(config_path)

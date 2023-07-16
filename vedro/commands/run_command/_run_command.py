@@ -1,8 +1,9 @@
+import warnings
 from pathlib import Path
 from typing import Type
 
 from vedro import Config
-from vedro.core import Dispatcher, Plugin
+from vedro.core import Dispatcher, MonotonicScenarioRunner, Plugin
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -10,6 +11,7 @@ from vedro.events import (
     ConfigLoadedEvent,
     StartupEvent,
 )
+from vedro.plugins.dry_runner import DryRunner
 
 from .._cmd_arg_parser import CommandArgumentParser
 from .._command import Command
@@ -57,6 +59,8 @@ class RunCommand(Command):
         await dispatcher.fire(StartupEvent(scheduler))
 
         runner = self._config.Registry.ScenarioRunner()
+        if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
+            warnings.warn("Deprecated: custom runners will be removed in v2.0", DeprecationWarning)
         report = await runner.run(scheduler)
 
         await dispatcher.fire(CleanupEvent(report))

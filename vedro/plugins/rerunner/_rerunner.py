@@ -19,6 +19,7 @@ __all__ = ("Rerunner", "RerunnerPlugin",)
 class RerunnerPlugin(Plugin):
     def __init__(self, config: Type["Rerunner"]) -> None:
         super().__init__(config)
+        self._scheduler_factory = config.scheduler_factory
         self._reruns: int = 0
         self._global_config: Union[ConfigType, None] = None
         self._scheduler: Union[ScenarioScheduler, None] = None
@@ -45,13 +46,14 @@ class RerunnerPlugin(Plugin):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._reruns = event.args.reruns
-        assert self._reruns >= 0
+        if self._reruns < 0:
+            raise ValueError("--reruns must be >= 0")
 
         if self._reruns == 0:
             return
 
-        assert self._global_config is not None
-        self._global_config.Registry.ScenarioScheduler.register(RerunnerScenarioScheduler, self)
+        assert self._global_config is not None  # for type checking
+        self._global_config.Registry.ScenarioScheduler.register(self._scheduler_factory, self)
 
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
@@ -60,7 +62,7 @@ class RerunnerPlugin(Plugin):
         if self._reruns == 0:
             return
 
-        assert isinstance(self._scheduler, RerunnerScenarioScheduler)
+        assert isinstance(self._scheduler, RerunnerScenarioScheduler)  # for type checking
 
         if self._rerun_scenario_id == event.scenario_result.scenario.unique_id:
             return
@@ -82,3 +84,6 @@ class RerunnerPlugin(Plugin):
 class Rerunner(PluginConfig):
     plugin = RerunnerPlugin
     description = "Reruns failed scenarios a specified number of times"
+
+    # Scheduler that will be used to create aggregated result for rerun scenarios
+    scheduler_factory: Type[ScenarioScheduler] = RerunnerScenarioScheduler

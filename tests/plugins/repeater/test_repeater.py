@@ -32,7 +32,8 @@ async def test_repeat_validation(dispatcher: Dispatcher):
         await fire_arg_parsed_event(dispatcher, repeats=0)
 
     with then:
-        assert exc_info.type is AssertionError
+        assert exc_info.type is ValueError
+        assert str(exc_info.value) == "--repeats must be >= 1"
 
 
 @pytest.mark.asyncio

@@ -27,6 +27,7 @@ from ._utils import (
     make_aggregated_result,
     make_exc_info,
     make_scenario_result,
+    make_vscenario,
     printer_,
     rich_reporter,
 )
@@ -108,11 +109,10 @@ async def test_scenario_run_same_namespace(*, dispatcher: Dispatcher, printer_: 
 
 
 @pytest.mark.asyncio
-async def test_scenario_run_show_spinner(*, dispatcher: Dispatcher,
-                                         rich_reporter: RichReporterPlugin, printer_: Mock):
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_run_show_spinner(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
-        rich_reporter._show_scenario_spinner = True
-        await fire_arg_parsed_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher, show_scenario_spinner=True)
 
         scenario_result = make_scenario_result()
         event = ScenarioRunEvent(scenario_result)
@@ -186,7 +186,7 @@ async def test_scenario_skipped_same_namespace(*, dispatcher: Dispatcher, printe
 async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher,
                                          rich_reporter: RichReporterPlugin, printer_: Mock):
     with given:
-        rich_reporter._show_skipped = False
+        rich_reporter._show_skipped = False  # move to config
         await fire_arg_parsed_event(dispatcher)
 
         scenario_result = make_scenario_result()
@@ -197,6 +197,43 @@ async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher,
 
     with then:
         assert len(printer_.mock_calls) == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_skipped_show_paths(*, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, show_paths=True)
+
+        scenario_result = make_scenario_result().mark_skipped()
+        event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert scenario_result.extra_details == [f"{scenario_result.scenario.path.name}"]
+
+
+@pytest.mark.asyncio
+async def test_scenario_skipped_show_reason(*, dispatcher: Dispatcher,
+                                            rich_reporter: RichReporterPlugin):
+    with given:
+        rich_reporter._show_skip_reason = True
+        await fire_arg_parsed_event(dispatcher)
+
+        reason = "<reason>"
+        vscenario = make_vscenario()
+        vscenario.skip(reason)
+
+        scenario_result = make_scenario_result(vscenario).mark_skipped()
+        event = ScenarioSkippedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert scenario_result.extra_details == [reason]
 
 
 @pytest.mark.asyncio
