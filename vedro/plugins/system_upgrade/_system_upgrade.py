@@ -1,21 +1,28 @@
 import json
 import platform
+import time
 import urllib.request
 from threading import Thread
 from typing import Any, Dict, Tuple, Type, Union
 
+from niltype import Nil
+
 import vedro
 from vedro.core import Dispatcher, Plugin, PluginConfig
+from vedro.core.local_storage import LocalStorage
+from vedro.core.local_storage import local_storage as _local_storage
 from vedro.events import CleanupEvent, StartupEvent
 
 __all__ = ("SystemUpgrade", "SystemUpgradePlugin",)
 
 
 class SystemUpgradePlugin(Plugin):
-    def __init__(self, config: Type["SystemUpgrade"]) -> None:
+    def __init__(self, config: Type["SystemUpgrade"], *,
+                 local_storage: LocalStorage = _local_storage) -> None:
         super().__init__(config)
         self._api_url = config.api_url
         self._timeout = config.timeout
+        self._local_storage = local_storage
         self._thread: Union[Thread, None] = None
         self._latest_version: Union[str, None] = None
         self._cur_version = vedro.__version__
@@ -45,7 +52,14 @@ class SystemUpgradePlugin(Plugin):
         if isinstance(response, dict) and ("version" in response):
             self._latest_version = response["version"]
 
-    def on_startup(self, event: StartupEvent) -> None:
+    def _now(self) -> int:
+        return int(time.time() * 1000)
+
+    async def on_startup(self, event: StartupEvent) -> None:
+        last_request = await self._local_storage.get("last_request", self)
+        if (last_request is not Nil) and (last_request + 3600*1000 > self._now()):
+            return
+
         self._thread = Thread(target=self._get_latest_version, daemon=True)
         self._thread.start()
 
@@ -57,13 +71,16 @@ class SystemUpgradePlugin(Plugin):
                 return tuple(x.zfill(8) for x in version.split("."))
         return bool(parse_version(cur_version) >= parse_version(new_version))
 
-    def on_cleanup(self, event: CleanupEvent) -> None:
+    async def on_cleanup(self, event: CleanupEvent) -> None:
         if self._thread:
             self._thread.join(0.0)
             self._thread = None
 
         if self._latest_version is None:
             return
+
+        await self._local_storage.put("last_request", self._now(), self)
+        await self._local_storage.flush(self)
 
         if not self._is_up_to_date(self._cur_version, self._latest_version):
             message = f"(!) Vedro update available: {self._cur_version} → {self._latest_version}"

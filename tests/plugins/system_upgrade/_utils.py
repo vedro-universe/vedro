@@ -1,12 +1,14 @@
 from contextlib import contextmanager
 from time import sleep
 from typing import Any, Callable
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from niltype import Nil
 
 import vedro
 from vedro.core import Dispatcher
+from vedro.core.local_storage import LocalStorage
 from vedro.plugins.system_upgrade import SystemUpgrade, SystemUpgradePlugin
 
 
@@ -17,7 +19,8 @@ def dispatcher() -> Dispatcher:
 
 @pytest.fixture()
 def system_upgrade(dispatcher: Dispatcher) -> SystemUpgradePlugin:
-    tagger = SystemUpgradePlugin(SystemUpgrade)
+    local_storage_ = Mock(LocalStorage, get=AsyncMock(return_value=Nil))
+    tagger = SystemUpgradePlugin(SystemUpgrade, local_storage=local_storage_)
     tagger.subscribe(dispatcher)
     return tagger
 
