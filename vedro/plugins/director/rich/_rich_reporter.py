@@ -337,7 +337,7 @@ class RichReporter(PluginConfig):
     # If scope_width is None, lines are truncated to the terminal's width.
     # If scope_width is -1, lines aren't truncated.
     # Otherwise, lines are truncated to the given length.
-    scope_width: Union[int, None] = None
+    scope_width: Union[int, None] = -1
 
     # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8

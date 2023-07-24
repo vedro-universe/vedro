@@ -6,6 +6,7 @@ from types import FrameType, TracebackType
 from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 from rich.console import Console, RenderableType
+from rich.pretty import Pretty
 from rich.status import Status
 from rich.style import Style
 from rich.traceback import Trace, Traceback
@@ -159,7 +160,7 @@ class RichPrinter:
         self.print_scope_header("Scope")
         for key, val in scope.items():
             self.print_scope_key(key, indent=1)
-            self.print_scope_val(self.pretty_format(val), scope_width)
+            self.print_scope_val(val, scope_width=scope_width)
         self.print_empty_line()
 
     def print_scope_header(self, title: str) -> None:
@@ -170,17 +171,17 @@ class RichPrinter:
         end = "\n" if line_break else ""
         self._console.out(f"{prepend}{key}: ", end=end, style=Style(color="blue"))
 
-    def __truncate_line(self, line: str, width: int, separator: str = "...") -> str:
-        if len(line) <= width:
-            return line
-        width -= len(separator)
-        return line[:width // 2] + separator + line[-width // 2:]
-
     def print_scope_val(self, val: Any, scope_width: Union[int, None] = None) -> None:
-        if isinstance(val, str) and (scope_width is None or scope_width > 0):
-            width = scope_width or self._console.size.width
-            val = os.linesep.join(self.__truncate_line(line, width) for line in val.splitlines())
-        self._console.print(val)
+        if scope_width is None:
+            scope_width = self._console.size.width
+
+        if scope_width > 0:
+            self._console.print(
+                Pretty(val, overflow="ellipsis", no_wrap=True),
+                width=scope_width
+            )
+        else:
+            self._console.print(Pretty(val))
 
     def print_interrupted(self, exc_info: ExcInfo, *, show_traceback: bool = False) -> None:
         message = f"!!! Interrupted by “{exc_info.value!r}“ !!!"
