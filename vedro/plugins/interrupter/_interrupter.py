@@ -18,6 +18,14 @@ __all__ = ("Interrupter", "InterrupterPlugin", "InterrupterPluginTriggered",)
 
 
 class InterrupterPluginTriggered(Interrupted):
+    """
+    Exception raised when the `InterrupterPlugin` conditions are met.
+
+    This exception inherits from the `Interrupted` exception and is used
+    specifically by the `InterrupterPlugin` when it is triggered. This could be
+    due to the occurrence of specific signals that the plugin is set to handle, or
+    when the limit of allowed scenario failures is reached during test execution.
+    """
     pass
 
 
@@ -93,7 +101,7 @@ class InterrupterPlugin(Plugin):
 
 class Interrupter(PluginConfig):
     plugin = InterrupterPlugin
-    description = "Stops test execution after N failed scenarios or on specified signals"
+    description = "Halts test execution after N failed scenarios or on specified signals"
 
     # Raise Interrupted exception on these signals
     handle_signals: Tuple[signal.Signals, ...] = (signal.SIGTERM,)
