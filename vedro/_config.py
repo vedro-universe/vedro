@@ -7,6 +7,7 @@ import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.dry_runner as dry_runner
 import vedro.plugins.interrupter as interrupter
+import vedro.plugins.last_failed as last_failed
 import vedro.plugins.orderer as orderer
 import vedro.plugins.repeater as repeater
 import vedro.plugins.rerunner as rerunner
@@ -83,6 +84,9 @@ class Config(core.Config):
             enabled = True
 
         class Orderer(orderer.Orderer):
+            enabled = True
+
+        class LastFailed(last_failed.LastFailed):
             enabled = True
 
         class Deferrer(deferrer.Deferrer):
