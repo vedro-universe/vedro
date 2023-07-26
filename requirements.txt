@@ -2,4 +2,4 @@ dessert>=1.4,<2.0
 rich>=10.0,<14.0
 cabina>=0.7,<1.0
 filelock>=3.5,<4.0
-niltype>=0.3,<1.0
+niltype>=0.3,<2.0
