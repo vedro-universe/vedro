@@ -13,6 +13,7 @@ import vedro.plugins.rerunner as rerunner
 import vedro.plugins.seeder as seeder
 import vedro.plugins.skipper as skipper
 import vedro.plugins.slicer as slicer
+import vedro.plugins.system_upgrade as system_upgrade
 import vedro.plugins.tagger as tagger
 import vedro.plugins.terminator as terminator
 from vedro.core import (
@@ -115,6 +116,9 @@ class Config(core.Config):
             enabled = True
 
         class Interrupter(interrupter.Interrupter):
+            enabled = True
+
+        class SystemUpgrade(system_upgrade.SystemUpgrade):
             enabled = True
 
         class Terminator(terminator.Terminator):

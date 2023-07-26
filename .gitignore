@@ -155,5 +155,8 @@ cython_debug/
 # PyCharm
 .idea/
 
+# Vedro
+.vedro/
+
 # pytest basetemp
 __tmpdir__/
