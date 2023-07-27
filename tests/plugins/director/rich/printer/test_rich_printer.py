@@ -1,4 +1,3 @@
-from os import linesep
 from traceback import format_exception
 from typing import Dict, Union
 from unittest.mock import Mock, call
@@ -11,7 +10,7 @@ from rich.traceback import Traceback
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 from vedro.plugins.director.rich import RichPrinter
 
-from ._utils import TestTraceback, console_, exc_info, printer
+from ._utils import TestPretty, TestTraceback, console_, exc_info, printer
 
 __all__ = ("printer", "exc_info", "console_")  # fixtures
 
@@ -288,84 +287,28 @@ def test_print_scope_key_with_line_break(*, printer: RichPrinter, console_: Mock
 
 def test_print_scope_val(*, printer: RichPrinter, console_: Mock):
     with given:
-        val = "value1\nvalue2"
-
-    with when:
-        printer.print_scope_val(val)
-
-    with then:
-        assert console_.mock_calls == [
-            call.print(val),
-        ]
-
-
-def test_print_scope_val_term_width(*, printer: RichPrinter, console_: Mock):
-    with given:
         val = "x" * console_.size.width * 2
 
     with when:
         printer.print_scope_val(val)
 
     with then:
-        width = console_.size.width - len("...")
         assert console_.mock_calls == [
-            call.print(val[:width // 2] + "..." + val[-width // 2:]),
-        ]
-
-
-def test_print_scope_val_unlimited_width(printer: RichPrinter, console_: Mock):
-    with given:
-        val = linesep.join([
-            "x" * console_.size.width * 2,
-            "y" * console_.size.width * 2,
-        ])
-
-    with when:
-        printer.print_scope_val(val, scope_width=-1)
-
-    with then:
-        assert console_.mock_calls == [
-            call.print(val),
+            call.print(TestPretty(val)),
         ]
 
 
 def test_print_scope_val_concrete_width(*, printer: RichPrinter, console_: Mock):
     with given:
         scope_width = 20
-        val = linesep.join([
-            "x" * scope_width * 2,
-            "y" * scope_width * 2,
-        ])
+        val = "x" * scope_width * 2
 
     with when:
         printer.print_scope_val(val, scope_width=scope_width)
 
     with then:
         assert console_.mock_calls == [
-            call.print(linesep.join([
-                "xxxxxxxx...xxxxxxxxx",
-                "yyyyyyyy...yyyyyyyyy",
-            ]))
-        ]
-
-
-def test_print_scope_val_concrete_width_escaped(*, printer: RichPrinter, console_: Mock):
-    with given:
-        scope_width = 10
-        val = linesep.join([
-            "x\\n" * scope_width * 2,
-            "y\\n" * scope_width * 2,
-        ])
-
-    with when:
-        printer.print_scope_val(val, scope_width=scope_width)
-
-    with then:
-        assert console_.mock_calls == [
-            call.print(linesep.join([
-                "x\\n...nx\\n",
-                "y\\n...ny\\n",
-            ]))
+            call.print(TestPretty(val, overflow="ellipsis", no_wrap=True), width=scope_width),
         ]
 
 
@@ -398,10 +341,35 @@ def test_print_scope(*, printer: RichPrinter, console_: Mock):
             call.out("Scope", style=Style(color="blue", bold=True)),
 
             call.out(" id: ", end="", style=Style(color="blue")),
-            call.print("1"),
+            call.print(TestPretty(1)),
 
             call.out(" name: ", end="", style=Style(color="blue")),
-            call.print('"Bob"'),
+            call.print(TestPretty("Bob")),
+
+            call.out(" "),
+        ]
+
+
+def test_print_scope_with_width(*, printer: RichPrinter, console_: Mock):
+    with given:
+        scope = {
+            "id": 1,
+            "name": "Bob"
+        }
+        width = 80
+
+    with when:
+        printer.print_scope(scope, scope_width=width)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out("Scope", style=Style(color="blue", bold=True)),
+
+            call.out(" id: ", end="", style=Style(color="blue")),
+            call.print(TestPretty(1, overflow="ellipsis", no_wrap=True), width=width),
+
+            call.out(" name: ", end="", style=Style(color="blue")),
+            call.print(TestPretty("Bob", overflow="ellipsis", no_wrap=True), width=width),
 
             call.out(" "),
         ]

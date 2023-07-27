@@ -151,7 +151,7 @@ async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock
                                         show_locals=False,
                                         show_internal_calls=False),
 
-            call.print_scope(scope, scope_width=None),
+            call.print_scope(scope, scope_width=-1),
         ]
 
 

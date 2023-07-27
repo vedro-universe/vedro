@@ -231,7 +231,8 @@ class RichReporterPlugin(Reporter):
 
         if self._verbosity > 2:
             if scenario_result.scope:
-                self._printer.print_scope(scenario_result.scope, scope_width=self._scope_width)
+                scope_width = self._scope_width or self._printer.console.size.width - 1
+                self._printer.print_scope(scenario_result.scope, scope_width=scope_width)
 
     def _print_scenario_skipped(self, scenario_result: ScenarioResult, *,
                                 prefix: str = "") -> None:

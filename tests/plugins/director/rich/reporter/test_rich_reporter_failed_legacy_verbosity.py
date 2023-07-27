@@ -188,5 +188,5 @@ async def test_scenario_failed_verbose3_with_scope(*, dispatcher: Dispatcher, pr
             call.print_pretty_exception(exc_info, max_frames=8, show_locals=False,
                                         show_internal_calls=False),
 
-            call.print_scope(scope, scope_width=None)
+            call.print_scope(scope, scope_width=-1)
         ]

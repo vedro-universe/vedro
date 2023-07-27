@@ -22,10 +22,12 @@ def make_console() -> Console:
 
 
 class RichPrinter:
-    def __init__(self, console_factory: Callable[[], Console] = make_console,
-                 *, traceback_factory: Callable[..., Traceback] = Traceback) -> None:
+    def __init__(self, console_factory: Callable[[], Console] = make_console, *,
+                 traceback_factory: Callable[..., Traceback] = Traceback,
+                 pretty_factory: Callable[..., Pretty] = Pretty) -> None:
         self._console = console_factory()
         self._traceback_factory = traceback_factory
+        self._pretty_factory = pretty_factory
         self._scenario_spinner: Union[Status, None] = None
 
     @property
@@ -149,6 +151,7 @@ class RichPrinter:
         self.print_empty_line()
 
     def pretty_format(self, value: Any) -> Any:
+        warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)
         if hasattr(value, "__rich__") or hasattr(value, "__rich_console__"):
             return value
         try:
@@ -156,7 +159,7 @@ class RichPrinter:
         except BaseException:
             return repr(value)
 
-    def print_scope(self, scope: Dict[str, Any], scope_width: Union[int, None] = None) -> None:
+    def print_scope(self, scope: Dict[str, Any], *, scope_width: int = -1) -> None:
         self.print_scope_header("Scope")
         for key, val in scope.items():
             self.print_scope_key(key, indent=1)
@@ -171,17 +174,18 @@ class RichPrinter:
         end = "\n" if line_break else ""
         self._console.out(f"{prepend}{key}: ", end=end, style=Style(color="blue"))
 
-    def print_scope_val(self, val: Any, scope_width: Union[int, None] = None) -> None:
-        if scope_width is None:
+    def print_scope_val(self, val: Any, *, scope_width: int = -1) -> None:
+        # backward compatibility
+        if scope_width is None:  # pragma: no cover
             scope_width = self._console.size.width
 
         if scope_width > 0:
             self._console.print(
-                Pretty(val, overflow="ellipsis", no_wrap=True),
+                self._pretty_factory(val, overflow="ellipsis", no_wrap=True),
                 width=scope_width
             )
         else:
-            self._console.print(Pretty(val))
+            self._console.print(self._pretty_factory(val))
 
     def print_interrupted(self, exc_info: ExcInfo, *, show_traceback: bool = False) -> None:
         message = f"!!! Interrupted by “{exc_info.value!r}“ !!!"
