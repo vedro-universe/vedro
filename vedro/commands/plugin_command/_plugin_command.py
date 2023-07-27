@@ -152,7 +152,8 @@ class PluginCommand(Command):
             plugin_info = get_plugin_info(plugin_config)
 
             color = "blue" if plugin_config.enabled else "grey70"
+            enabled = "yes" if plugin_config.enabled else "no"
             table.add_row(plugin_info.name, plugin_info.package, plugin_info.summary,
-                          plugin_info.version, str(plugin_info.enabled), style=color)
+                          plugin_info.version, enabled, style=color)
 
         self._console.print(table)
