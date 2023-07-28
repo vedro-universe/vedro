@@ -375,6 +375,60 @@ def test_print_scope_with_width(*, printer: RichPrinter, console_: Mock):
         ]
 
 
+def test_pretty_value_print(*, printer: RichPrinter, console_: Mock):
+    with given:
+        val = "<value>"
+
+    with when:
+        printer.pretty_print(val)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(TestPretty(val)),
+        ]
+
+
+def test_pretty_print_value_with_concrete_width(*, printer: RichPrinter, console_: Mock):
+    with given:
+        width = 20
+        val = "<value>"
+
+    with when:
+        printer.pretty_print(val, width=width)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(TestPretty(val, overflow="ellipsis", no_wrap=True), width=width),
+        ]
+
+
+def test_pretty_print_renderable(*, printer: RichPrinter, console_: Mock):
+    with given:
+        renderable = Mock(__rich__=lambda _: "Renderable()")
+
+    with when:
+        printer.pretty_print(renderable)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(renderable),
+        ]
+
+
+def test_pretty_print_renderable_with_concrete_width(*, printer: RichPrinter, console_: Mock):
+    with given:
+        width = 20
+        renderable = Mock(__rich__=lambda _: "Renderable()")
+
+    with when:
+        printer.pretty_print(renderable, width=width)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(renderable, overflow="ellipsis", no_wrap=True, width=width),
+        ]
+
+
 def test_print_report_summary(*, printer: RichPrinter, console_: Mock):
     with given:
         summary = ["line1", "line2"]
