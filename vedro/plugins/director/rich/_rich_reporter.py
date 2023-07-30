@@ -231,7 +231,8 @@ class RichReporterPlugin(Reporter):
 
         if self._verbosity > 2:
             if scenario_result.scope:
-                self._printer.print_scope(scenario_result.scope, scope_width=self._scope_width)
+                scope_width = self._scope_width or self._printer.console.size.width - 1
+                self._printer.print_scope(scenario_result.scope, scope_width=scope_width)
 
     def _print_scenario_skipped(self, scenario_result: ScenarioResult, *,
                                 prefix: str = "") -> None:
@@ -337,7 +338,7 @@ class RichReporter(PluginConfig):
     # If scope_width is None, lines are truncated to the terminal's width.
     # If scope_width is -1, lines aren't truncated.
     # Otherwise, lines are truncated to the given length.
-    scope_width: Union[int, None] = None
+    scope_width: Union[int, None] = -1
 
     # Max stack trace entries to show (min=4)
     tb_max_frames: int = 8

@@ -1,11 +1,13 @@
 import json
 import os
 import warnings
+from os import linesep
 from traceback import format_exception
 from types import FrameType, TracebackType
 from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 from rich.console import Console, RenderableType
+from rich.pretty import Pretty
 from rich.status import Status
 from rich.style import Style
 from rich.traceback import Trace, Traceback
@@ -21,10 +23,12 @@ def make_console() -> Console:
 
 
 class RichPrinter:
-    def __init__(self, console_factory: Callable[[], Console] = make_console,
-                 *, traceback_factory: Callable[..., Traceback] = Traceback) -> None:
+    def __init__(self, console_factory: Callable[[], Console] = make_console, *,
+                 traceback_factory: Callable[..., Traceback] = Traceback,
+                 pretty_factory: Callable[..., Pretty] = Pretty) -> None:
         self._console = console_factory()
         self._traceback_factory = traceback_factory
+        self._pretty_factory = pretty_factory
         self._scenario_spinner: Union[Status, None] = None
 
     @property
@@ -148,6 +152,7 @@ class RichPrinter:
         self.print_empty_line()
 
     def pretty_format(self, value: Any) -> Any:
+        warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)
         if hasattr(value, "__rich__") or hasattr(value, "__rich_console__"):
             return value
         try:
@@ -155,11 +160,26 @@ class RichPrinter:
         except BaseException:
             return repr(value)
 
-    def print_scope(self, scope: Dict[str, Any], scope_width: Union[int, None] = None) -> None:
+    def pretty_print(self, smth: Any, *, width: int = -1) -> None:
+        if hasattr(smth, "__rich__") or hasattr(smth, "__rich_console__"):
+            if width > 0:
+                self._console.print(smth, width=width, overflow="ellipsis", no_wrap=True)
+            else:
+                self._console.print(smth)
+        else:
+            if width > 0:
+                self._console.print(
+                    self._pretty_factory(smth, overflow="ellipsis", no_wrap=True),
+                    width=width,
+                )
+            else:
+                self._console.print(self._pretty_factory(smth))
+
+    def print_scope(self, scope: Dict[str, Any], *, scope_width: int = -1) -> None:
         self.print_scope_header("Scope")
         for key, val in scope.items():
             self.print_scope_key(key, indent=1)
-            self.print_scope_val(self.pretty_format(val), scope_width)
+            self.print_scope_val(val, scope_width=scope_width)
         self.print_empty_line()
 
     def print_scope_header(self, title: str) -> None:
@@ -167,25 +187,20 @@ class RichPrinter:
 
     def print_scope_key(self, key: str, *, indent: int = 0, line_break: bool = False) -> None:
         prepend = " " * indent
-        end = "\n" if line_break else ""
+        end = linesep if line_break else ""
         self._console.out(f"{prepend}{key}: ", end=end, style=Style(color="blue"))
 
-    def __truncate_line(self, line: str, width: int, separator: str = "...") -> str:
-        if len(line) <= width:
-            return line
-        width -= len(separator)
-        return line[:width // 2] + separator + line[-width // 2:]
+    def print_scope_val(self, val: Any, *, scope_width: int = -1) -> None:
+        if scope_width is None:  # pragma: no cover
+            # backward compatibility
+            scope_width = self._console.size.width
 
-    def print_scope_val(self, val: Any, scope_width: Union[int, None] = None) -> None:
-        if isinstance(val, str) and (scope_width is None or scope_width > 0):
-            width = scope_width or self._console.size.width
-            val = os.linesep.join(self.__truncate_line(line, width) for line in val.splitlines())
-        self._console.print(val)
+        self.pretty_print(val, width=scope_width)
 
     def print_interrupted(self, exc_info: ExcInfo, *, show_traceback: bool = False) -> None:
         message = f"!!! Interrupted by “{exc_info.value!r}“ !!!"
         spaces = " " * (len(message) - 6)
-        multiline_message = "\n".join([
+        multiline_message = linesep.join([
             "!!!" + spaces + "!!!",
             message,
             "!!!" + spaces + "!!!",
@@ -197,7 +212,7 @@ class RichPrinter:
     def print_report_summary(self, summary: List[str]) -> None:
         if len(summary) == 0:
             return
-        text = "# " + "\n# ".join(summary)
+        text = "# " + f"{linesep}# ".join(summary)
         self._console.out(text, style=Style(color="grey70"))
 
     def format_elapsed(self, elapsed: float) -> str:
@@ -228,7 +243,7 @@ class RichPrinter:
     def print_empty_line(self) -> None:
         self._console.out(" ")
 
-    def print(self, smth: Any, *, end: str = "\n") -> None:
+    def print(self, smth: Any, *, end: str = linesep) -> None:
         self._console.out(smth, end=end)
 
     def show_spinner(self, status: RenderableType = "") -> None:
