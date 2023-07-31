@@ -8,7 +8,8 @@ __all__ = ("Plugin", "PluginConfig",)
 
 class Plugin(Subscriber):
     def __init__(self, config: Type["PluginConfig"]) -> None:
-        assert issubclass(config, PluginConfig)
+        if not issubclass(config, PluginConfig):
+            raise TypeError(f"PluginConfig {config} should be subclass of vedro.core.PluginConfig")
         self._config = config
 
     @property
