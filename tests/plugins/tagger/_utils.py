@@ -6,8 +6,10 @@ from typing import List, Optional
 import pytest
 
 from vedro import Scenario
-from vedro.core import Dispatcher, VirtualScenario
-from vedro.events import ArgParsedEvent, ArgParseEvent
+from vedro.core import Dispatcher
+from vedro.core import MonotonicScenarioScheduler as Scheduler
+from vedro.core import VirtualScenario
+from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 from vedro.plugins.tagger import Tagger, TaggerPlugin
 
 
@@ -43,3 +45,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *, tags: Optional[str] =
 
     arg_parsed_event = ArgParsedEvent(Namespace(tags=tags))
     await dispatcher.fire(arg_parsed_event)
+
+
+async def fire_startup_event(dispatcher: Dispatcher, scheduler: Scheduler) -> None:
+    startup_event = StartupEvent(scheduler)
+    await dispatcher.fire(startup_event)
