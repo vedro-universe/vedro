@@ -21,7 +21,7 @@ def test_plugin_incorrect_config():
         Plugin(Section)
 
     with then:
-        assert exc.type is AssertionError
+        assert exc.type is TypeError
 
 
 def test_plugin_subscribe():
