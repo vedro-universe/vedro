@@ -1,3 +1,4 @@
+from re import fullmatch
 from typing import Set, cast
 
 from pyparsing import Literal
@@ -12,10 +13,11 @@ __all__ = ("LogicTagMatcher",)
 
 
 class LogicTagMatcher(TagMatcher):
+    tag_pattern = r'(?!and$|or$|not$)[A-Za-z_][A-Za-z0-9_]*'
+
     def __init__(self, expr: str) -> None:
         super().__init__(expr)
-        pattern = r'(?!and$|or$|not$)[A-Za-z_][A-Za-z0-9_]*'
-        operand = Regex(pattern).setParseAction(self._create_tag)
+        operand = Regex(self.tag_pattern).setParseAction(self._create_tag)
         self._parser = infixNotation(operand, [
             (Literal("not"), 1, opAssoc.RIGHT, self._create_not),
             (Literal("and"), 2, opAssoc.LEFT, self._create_and),
@@ -25,6 +27,9 @@ class LogicTagMatcher(TagMatcher):
 
     def match(self, tags: Set[str]) -> bool:
         return self._grammar(tags)
+
+    def validate(self, tag: str) -> bool:
+        return fullmatch(self.tag_pattern, tag) is not None
 
     def _create_tag(self, orig: str, location: int, tokens: ParseResults) -> Expr:
         tag = tokens[0]

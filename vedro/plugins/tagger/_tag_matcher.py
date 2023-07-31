@@ -11,3 +11,7 @@ class TagMatcher(ABC):
     @abstractmethod
     def match(self, tags: Set[str]) -> bool:
         pass
+
+    @abstractmethod
+    def validate(self, tag: str) -> bool:
+        pass

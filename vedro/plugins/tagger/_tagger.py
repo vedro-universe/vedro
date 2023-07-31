@@ -23,24 +23,18 @@ class TaggerPlugin(Plugin):
             .listen(StartupEvent, self.on_startup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        # help message
         event.arg_parser.add_argument("-t", "--tags",
                                       help="Specify tags to selectively run scenarios")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._tags_expr = event.args.tags
 
-    def _validate_tags(self, scenario: VirtualScenario, tags: Any) -> bool:
+    def _get_tags(self, scenario: VirtualScenario) -> Any:
+        tags = getattr(scenario._orig_scenario, "tags", ())
         if not isinstance(tags, (list, tuple, set)):
             raise TypeError(f"Scenario '{scenario.rel_path}' tags must be a list, tuple or set, "
                             f"got {type(tags)}")
-
-        for tag in tags:
-            if not tag.isidentifier():
-                raise ValueError(
-                    f"Scenario '{scenario.rel_path}' tag '{tag}' is not a valid identifier")
-
-        return True
+        return tags
 
     async def on_startup(self, event: StartupEvent) -> None:
         if self._tags_expr is None:
@@ -48,8 +42,12 @@ class TaggerPlugin(Plugin):
 
         self._matcher = self._matcher_factory(self._tags_expr)
         async for scenario in event.scheduler:
-            tags = getattr(scenario._orig_scenario, "tags", ())
-            self._validate_tags(scenario, tags)
+            tags = self._get_tags(scenario)
+
+            for tag in tags:
+                if not self._matcher.validate(tag):
+                    raise ValueError(f"Scenario '{scenario.rel_path}' tag '{tag}' is not valid")
+
             if not self._matcher.match(set(tags)):
                 event.scheduler.ignore(scenario)
 

@@ -210,5 +210,5 @@ async def test_tags_value_validation(*, dispatcher: Dispatcher):
     with then:
         assert exc.type is ValueError
         assert str(exc.value) == (
-            f"Scenario '{scenario.rel_path}' tag '-SMOKE' is not a valid identifier"
+            f"Scenario '{scenario.rel_path}' tag '-SMOKE' is not valid"
         )

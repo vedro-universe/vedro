@@ -3,4 +3,4 @@ dessert>=1.4,<2.0
 filelock>=3.5,<4.0
 niltype>=0.3,<2.0
 pyparsing>=3.0,<4.0
-rich>=10.0,<14.0
+rich>=11.0,<14.0
