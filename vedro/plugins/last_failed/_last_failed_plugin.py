@@ -43,9 +43,7 @@ class LastFailedPlugin(Plugin):
             return
 
         last_failed = await self._local_storage.get("last_failed")
-        if last_failed is Nil:
-            return
-        failed_scenarios = set(last_failed)
+        failed_scenarios = set(last_failed) if (last_failed is not Nil) else set()
 
         async for scenario in event.scheduler:
             if scenario.unique_id not in failed_scenarios:

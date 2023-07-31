@@ -38,7 +38,7 @@ async def test_startup_without_last_failed_file(*, dispatcher: Dispatcher):
         await dispatcher.fire(event)
 
     with then:
-        assert list(scheduler.scheduled) == scenarios
+        assert list(scheduler.scheduled) == []
 
 
 @pytest.mark.asyncio
