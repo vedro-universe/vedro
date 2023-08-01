@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.10
+
+### v1.10.0 (2023-08-01)
+
+- [RichReporter] Improve scope formatting [#59](https://github.com/vedro-universe/vedro/pull/59)
+- [RichReporter] Add `show_skip_reason` param [#54](https://github.com/vedro-universe/vedro/pull/54)
+- [RichReporter] Update verbosity levels [#56](https://github.com/vedro-universe/vedro/pull/56)
+- [LastFailed] Add plugin [#60](https://github.com/vedro-universe/vedro/pull/60)
+- [Interrupter] Add `--fail-after-count` arg [#55](https://github.com/vedro-universe/vedro/pull/55)
+- [Tagger] Add `LogicTagMatcher` [#61](https://github.com/vedro-universe/vedro/pull/61)
+- [Core] Add `catched` function [#52](https://github.com/vedro-universe/vedro/pull/52)
+- [Core] Add plugin config validation [#62](https://github.com/vedro-universe/vedro/pull/62)
+
 ## v1.9
 
 ### v1.9.1 (2023-06-13)
