@@ -25,6 +25,10 @@ class StepResult:
         self._extra_details: List[str] = []
 
     @property
+    def step(self) -> VirtualStep:
+        return self._step
+
+    @property
     def step_name(self) -> str:
         return self._step.name
 

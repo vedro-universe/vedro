@@ -25,6 +25,7 @@ def test_step_result(*, method_: MethodType, virtual_step: VirtualStep):
         step_result = StepResult(virtual_step)
 
     with then:
+        assert step_result.step == virtual_step
         assert step_result.step_name == method_.__name__
         assert step_result.is_passed() is False
         assert step_result.is_failed() is False
