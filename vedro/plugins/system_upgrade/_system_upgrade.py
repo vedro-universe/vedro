@@ -25,6 +25,7 @@ class SystemUpgradePlugin(Plugin):
         self._thread: Union[Thread, None] = None
         self._latest_version: Union[str, None] = None
         self._last_request_ts: Union[int, None] = None
+        self._last_request_error: Union[str, None] = None
         self._cur_version = vedro.__version__
         self._check_interval = config.update_check_interval
 
@@ -50,24 +51,24 @@ class SystemUpgradePlugin(Plugin):
             self._thread.join(0.0)
             self._thread = None
 
-        if self._latest_version is None:
-            return
+        if self._last_request_ts is None:
+            self._last_request_ts = self._now()
+            self._last_request_error = f"Request aborted (timeout {self._request_timeout})"
 
         await self._local_storage.put("last_request_ts", self._last_request_ts)
+        await self._local_storage.put("last_request_error", self._last_request_error)
         await self._local_storage.flush()
 
-        if not self._is_up_to_date(self._cur_version, self._latest_version):
-            message = f"(!) Vedro update available: {self._cur_version} → {self._latest_version}"
-            event.report.add_summary(message)
+        if self._latest_version:
+            if not self._is_up_to_date(self._cur_version, self._latest_version):
+                event.report.add_summary(
+                    f"(!) Vedro update available: {self._cur_version} → {self._latest_version}"
+                )
 
-    def _send_request(self, url: str, *,
-                      headers: Dict[str, str], timeout: float) -> Union[Any, None]:
+    def _send_request(self, url: str, *, headers: Dict[str, str], timeout: float) -> Any:
         request = urllib.request.Request(url, headers=headers)
-        try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                return json.loads(response.read())
-        except BaseException:
-            return None
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read())
 
     def _get_user_agent(self) -> str:
         python_version = platform.python_version()
@@ -77,7 +78,12 @@ class SystemUpgradePlugin(Plugin):
     def _get_latest_version(self) -> None:
         url = f"{self._api_url}/v1/latest-version"
         headers = {"User-Agent": self._get_user_agent()}
-        response = self._send_request(url, headers=headers, timeout=self._request_timeout)
+        try:
+            response = self._send_request(url, headers=headers, timeout=self._request_timeout)
+        except BaseException as e:
+            self._last_request_error = str(e)
+            self._last_request_ts = self._now()
+            return
         if isinstance(response, dict) and ("version" in response):
             self._latest_version = response["version"]
             self._last_request_ts = self._now()
