@@ -25,6 +25,7 @@ class SeederPlugin(Plugin):
         super().__init__(config)
         self._random = random
 
+        self._use_fixed_seed = config.use_fixed_seed
         self._inital_seed: Union[str, None] = None
         self._discovered_seed: Union[int, None] = None
         self._scheduled_seed: Union[int, None] = None
@@ -45,9 +46,13 @@ class SeederPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         event.arg_parser.add_argument("--seed", nargs="?", help="Set seed")
+        help_msg = "Use the same seed when a scenario is run multiple times in the same execution"
+        event.arg_parser.add_argument("--fixed-seed", action="store_true",
+                                      default=self._use_fixed_seed, help=help_msg)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._inital_seed = event.args.seed if (event.args.seed is not None) else str(uuid.uuid4())
+        self._use_fixed_seed = event.args.fixed_seed
 
     def on_startup(self, event: StartupEvent) -> None:
         assert self._inital_seed is not None
@@ -78,6 +83,9 @@ class SeederPlugin(Plugin):
         seed = self._scenarios[unique_id]
         self._random.set_seed(seed)
 
+        if self._use_fixed_seed:
+            return
+
         for _ in range(self._history[unique_id]):
             seed = self._generate_seed()
         self._random.set_seed(seed)
@@ -90,3 +98,6 @@ class SeederPlugin(Plugin):
 class Seeder(PluginConfig):
     plugin = SeederPlugin
     description = "Sets seeds for deterministic random behavior in scenarios"
+
+    # Use the same seed when a scenario is run multiple times in the same execution
+    use_fixed_seed: bool = False

@@ -44,7 +44,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *, seed: Optional[str] =
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(seed=seed))
+    arg_parsed_event = ArgParsedEvent(Namespace(seed=seed, fixed_seed=False))
     await dispatcher.fire(arg_parsed_event)
 
 
