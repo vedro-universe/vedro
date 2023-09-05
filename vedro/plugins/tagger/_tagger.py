@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any, Callable, Type, Union
 
 from vedro.core import Dispatcher, Plugin, PluginConfig, VirtualScenario
@@ -45,6 +46,11 @@ class TaggerPlugin(Plugin):
             tags = self._get_tags(scenario)
 
             for tag in tags:
+                if isinstance(tag, Enum):
+                    tag = tag.value
+                if not isinstance(tag, str):
+                    raise TypeError(f"Scenario '{scenario.rel_path}' tag must be a str or Enum, "
+                                    f"got {tag} ({type(tag)})")
                 if not self._matcher.validate(tag):
                     raise ValueError(f"Scenario '{scenario.rel_path}' tag '{tag}' is not valid")
 

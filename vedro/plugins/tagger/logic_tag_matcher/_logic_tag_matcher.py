@@ -29,7 +29,10 @@ class LogicTagMatcher(TagMatcher):
         return self._grammar(tags)
 
     def validate(self, tag: str) -> bool:
-        return fullmatch(self.tag_pattern, tag) is not None
+        try:
+            return fullmatch(self.tag_pattern, tag) is not None
+        except TypeError:
+            return False
 
     def _create_tag(self, orig: str, location: int, tokens: ParseResults) -> Expr:
         tag = tokens[0]
