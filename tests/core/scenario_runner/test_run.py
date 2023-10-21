@@ -1,7 +1,6 @@
 from typing import Type
 from unittest.mock import Mock
 
-import pytest
 from baby_steps import given, then, when
 
 from vedro.core import ExcInfo, MonotonicScenarioRunner
@@ -13,7 +12,6 @@ from ._utils import dispatcher_, interrupt_exception, make_vscenario, make_vstep
 __all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_run_no_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         scheduler = Scheduler([])
@@ -27,7 +25,6 @@ async def test_run_no_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_:
         assert report.interrupted is None
 
 
-@pytest.mark.asyncio
 async def test_run_scenario(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         vscenario = make_vscenario(steps=[])
@@ -42,7 +39,6 @@ async def test_run_scenario(*, runner: MonotonicScenarioRunner, dispatcher_: Moc
         assert report.interrupted is None
 
 
-@pytest.mark.asyncio
 async def test_run_step_interrupted(*, runner: MonotonicScenarioRunner,
                                     interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
@@ -62,7 +58,6 @@ async def test_run_step_interrupted(*, runner: MonotonicScenarioRunner,
         assert isinstance(report.interrupted.value, interrupt_exception)
 
 
-@pytest.mark.asyncio
 async def test_run_scenario_interrupted(*, runner: MonotonicScenarioRunner,
                                         interrupt_exception: Type[BaseException],
                                         dispatcher_: Mock):

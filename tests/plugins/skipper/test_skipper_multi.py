@@ -20,7 +20,6 @@ from ._utils import (
 __all__ = ("dispatcher", "skipper", "tmp_dir",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_multi_same_name(*, dispatcher: Dispatcher, tmp_dir: Path):
     path = touch(tmp_dir / "scenarios/scn1.py")
@@ -43,7 +42,6 @@ async def test_multi_same_name(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_multi_diff_name(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -66,7 +64,6 @@ async def test_multi_diff_name(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 @pytest.mark.parametrize(("scn_name1", "scn_name2"), [
     ("Scenario1", "Scenario2"),
@@ -94,7 +91,6 @@ async def test_multi_only_first(scn_name1: str, scn_name2: str, *,
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_multi_nonexisting(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:

@@ -1,12 +1,4 @@
-import sys
 from typing import Callable, Optional
-
-if sys.version_info >= (3, 8):
-    pass
-else:
-    def raise_signal(sig: int) -> None:
-        import os
-        os.kill(os.getpid(), sig)
 
 import pytest
 from baby_steps import given, then, when
@@ -30,7 +22,6 @@ from ._utils import (
 __all__ = ("dispatcher", "interrupter", "sig_handler_",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 async def test_failed_count_validation(*, dispatcher: Dispatcher):
     with when, raises(BaseException) as exc:
@@ -41,7 +32,6 @@ async def test_failed_count_validation(*, dispatcher: Dispatcher):
         assert str(exc.value) == "InterrupterPlugin: `fail_after_count` must be >= 1"
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
     lambda: ScenarioRunEvent(make_scenario_result()),
@@ -63,7 +53,6 @@ async def test_no_fail_fast(get_event: Callable[[], Event], *, dispatcher: Dispa
         assert "no exception"
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
     lambda: ScenarioRunEvent(make_scenario_result()),
@@ -87,7 +76,6 @@ async def test_fail_fast(get_event: Callable[[], Event], *, dispatcher: Dispatch
         assert str(exc.value) == "Stop after first failed scenario"
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
     lambda: ScenarioRunEvent(make_scenario_result()),
@@ -112,7 +100,6 @@ async def test_failed_fail_after_count1(get_event: Callable[[], Event], *, dispa
         assert str(exc.value) == f"Stop after {fail_after_count} failed scenario"
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
     lambda: ScenarioRunEvent(make_scenario_result()),
@@ -139,7 +126,6 @@ async def test_failed_no_fail_after_count2(get_event: Callable[[], Event], *,
         assert "no exception"
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
     lambda: ScenarioRunEvent(make_scenario_result()),
@@ -167,7 +153,6 @@ async def test_failed_fail_after_count2(get_event: Callable[[], Event], *, dispa
         assert str(exc.value) == f"Stop after {fail_after_count} failed scenario"
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize(("fail_fast", "fail_after_count"), [
     (True, None),
@@ -197,7 +182,6 @@ async def test_passed_fail_fast(get_event: Callable[[], Event],
         assert "no exception"
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 @pytest.mark.parametrize("get_event", [
     lambda: ScenarioRunEvent(make_scenario_result()),

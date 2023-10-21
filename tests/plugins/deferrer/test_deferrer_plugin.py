@@ -1,28 +1,19 @@
-import sys
-
-from vedro import defer
-from vedro.plugins.deferrer import Deferrer, DeferrerPlugin
-
-if sys.version_info >= (3, 8):
-    from unittest.mock import AsyncMock
-else:
-    from asynctest.mock import CoroutineMock as AsyncMock
-
 from collections import deque
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from baby_steps import given, then, when
 
+from vedro import defer
 from vedro.core import Dispatcher, ScenarioResult
 from vedro.events import ScenarioFailedEvent, ScenarioPassedEvent, ScenarioRunEvent
+from vedro.plugins.deferrer import Deferrer, DeferrerPlugin
 
 from ._utils import deferrer, dispatcher, make_vscenario, queue
 
 __all__ = ("dispatcher", "deferrer", "queue")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(deferrer.__name__)
 async def test_scenario_run_event(*, dispatcher: Dispatcher, queue: deque):
     with given:
@@ -38,7 +29,6 @@ async def test_scenario_run_event(*, dispatcher: Dispatcher, queue: deque):
         assert len(queue) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(deferrer.__name__)
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_scenario_end_event(event_class, *, dispatcher: Dispatcher, queue: deque):
@@ -68,7 +58,6 @@ async def test_scenario_end_event(event_class, *, dispatcher: Dispatcher, queue:
         assert len(queue) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(deferrer.__name__)
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_scenario_end_event_async(event_class, *, dispatcher: Dispatcher, queue: deque):
@@ -100,7 +89,6 @@ async def test_scenario_end_event_async(event_class, *, dispatcher: Dispatcher, 
         assert len(queue) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_(event_class, *, dispatcher: Dispatcher):
     with given:

@@ -22,7 +22,6 @@ def director(dispatcher: Dispatcher) -> DirectorPlugin:
     return director
 
 
-@pytest.mark.asyncio
 async def test_init_event(*, director: DirectorPlugin, dispatcher: Dispatcher):
     with given:
         callback_ = Mock()
@@ -37,7 +36,6 @@ async def test_init_event(*, director: DirectorPlugin, dispatcher: Dispatcher):
         assert callback_.mock_calls == [call(DirectorInitEvent(director))]
 
 
-@pytest.mark.asyncio
 async def test_no_reporters(*, director: DirectorPlugin, dispatcher: Dispatcher):
     with given:
         await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
@@ -50,7 +48,6 @@ async def test_no_reporters(*, director: DirectorPlugin, dispatcher: Dispatcher)
         "no errors"
 
 
-@pytest.mark.asyncio
 async def test_default_reporter(*, director: DirectorPlugin, dispatcher: Dispatcher):
     with given:
         reporter1_ = Mock(Reporter)
@@ -72,7 +69,6 @@ async def test_default_reporter(*, director: DirectorPlugin, dispatcher: Dispatc
         assert reporter2_.mock_calls == []
 
 
-@pytest.mark.asyncio
 async def test_passed_reporters(*, director: DirectorPlugin, dispatcher: Dispatcher):
     with given:
         reporter1_ = Mock(Reporter)

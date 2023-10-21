@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import List
 
-import pytest
-
 from vedro.core._scenario_finder import ScenarioFileFinder
 from vedro.core._scenario_finder._file_filters import DunderFilter, HiddenFilter
 
@@ -14,7 +12,6 @@ def _create_file_tree(tree: List[Path]) -> List[Path]:
     return tree
 
 
-@pytest.mark.asyncio
 async def test_scenario_file_finder(tmp_path: Path):
     tree = _create_file_tree([
         (tmp_path / ".DS_Store"),
@@ -38,7 +35,6 @@ async def test_scenario_file_finder(tmp_path: Path):
     assert len(paths) == len(tree)
 
 
-@pytest.mark.asyncio
 async def test_scenario_file_finder_with_file_filter(tmp_path: Path):
     subtree = [
         (tmp_path / "scenario1.py"),
@@ -59,7 +55,6 @@ async def test_scenario_file_finder_with_file_filter(tmp_path: Path):
     assert len(paths) == len(subtree)
 
 
-@pytest.mark.asyncio
 async def test_scenario_file_finder_with_dir_filter(tmp_path: Path):
     subtree = [
         (tmp_path / "scenario1.py"),

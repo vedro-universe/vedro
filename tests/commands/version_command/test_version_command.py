@@ -33,7 +33,6 @@ def test_inheritance():
         assert isinstance(command, Command)
 
 
-@pytest.mark.asyncio
 async def test_run(*, console_, arg_parser_: Mock):
     with given:
         command = VersionCommand(Config, arg_parser_, console_factory=lambda: console_)

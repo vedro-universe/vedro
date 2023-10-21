@@ -1,8 +1,6 @@
-import sys
 from typing import Type, cast
 from unittest.mock import Mock, call
 
-import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
@@ -24,7 +22,6 @@ from ._utils import (
 __all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_run_no_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         report = Report()
@@ -40,8 +37,6 @@ async def test_run_no_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_:
         assert dispatcher_.mock_calls == []
 
 
-@pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenario(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         report = Report()
@@ -68,8 +63,6 @@ async def test_run_scenario(*, runner: MonotonicScenarioRunner, dispatcher_: Moc
         ]
 
 
-@pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         report = Report()
@@ -113,8 +106,6 @@ async def test_run_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mo
         ]
 
 
-@pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_step_interrupted(*, runner: MonotonicScenarioRunner,
                                 interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
@@ -144,7 +135,6 @@ async def test_step_interrupted(*, runner: MonotonicScenarioRunner,
         assert dispatcher_.mock_calls[-1] == call.fire(ScenarioReportedEvent(aggregate_result))
 
 
-@pytest.mark.asyncio
 async def test_scenario_interrupted(*, runner: MonotonicScenarioRunner,
                                     interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:

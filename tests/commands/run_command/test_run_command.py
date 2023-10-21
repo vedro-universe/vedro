@@ -1,7 +1,6 @@
 from pathlib import Path
 from unittest.mock import Mock
 
-import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
@@ -25,7 +24,6 @@ class CustomConfig(Config):
             pass
 
 
-@pytest.mark.asyncio
 async def test_run_command_without_scenarios(arg_parser_: Mock):
     with given:
         command = RunCommand(CustomConfig, arg_parser_)
@@ -38,7 +36,6 @@ async def test_run_command_without_scenarios(arg_parser_: Mock):
         assert str(exc.value) == "1"
 
 
-@pytest.mark.asyncio
 async def test_run_command_with_scenarios(tmp_dir: Path, arg_parser_: Mock):
     with given:
         command = RunCommand(CustomConfig, arg_parser_)
@@ -52,7 +49,6 @@ async def test_run_command_with_scenarios(tmp_dir: Path, arg_parser_: Mock):
         assert str(exc.value) == "0"
 
 
-@pytest.mark.asyncio
 async def test_run_command_validate_plugin(tmp_dir: Path, arg_parser_: Mock):
     with given:
         class ValidConfig(CustomConfig):
@@ -73,7 +69,6 @@ async def test_run_command_validate_plugin(tmp_dir: Path, arg_parser_: Mock):
         assert str(exc.value) == "0"
 
 
-@pytest.mark.asyncio
 async def test_run_command_validate_plugin_error(arg_parser_: Mock):
     with given:
         class InvalidConfig(CustomConfig):

@@ -32,7 +32,6 @@ from ._utils import (
 __all__ = ("dispatcher", "scenario_artifacts", "step_artifacts", "artifacted")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(artifacted.__name__)
 async def test_scenario_run_event(*, dispatcher: Dispatcher, scenario_artifacts: deque,
                                   step_artifacts: deque):
@@ -51,7 +50,6 @@ async def test_scenario_run_event(*, dispatcher: Dispatcher, scenario_artifacts:
         assert len(step_artifacts) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(artifacted.__name__)
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_scenario_end_event(event_class, *, dispatcher: Dispatcher,
@@ -73,7 +71,6 @@ async def test_scenario_end_event(event_class, *, dispatcher: Dispatcher,
         assert scenario_result.artifacts == [artifact1, artifact2]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(artifacted.__name__)
 @pytest.mark.parametrize("event_class", [StepPassedEvent, StepFailedEvent])
 async def test_step_end_event(event_class, *, dispatcher: Dispatcher, step_artifacts: deque):
@@ -94,7 +91,6 @@ async def test_step_end_event(event_class, *, dispatcher: Dispatcher, step_artif
         assert step_result.artifacts == [artifact1, artifact2]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_attach_scenario_artifact(event_class, *, dispatcher: Dispatcher):
     with given:
@@ -114,7 +110,6 @@ async def test_attach_scenario_artifact(event_class, *, dispatcher: Dispatcher):
         assert scenario_result.artifacts == [artifact]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("attach", [attach_artifact, attach_step_artifact])
 @pytest.mark.parametrize("event_class", [StepPassedEvent, StepFailedEvent])
 async def test_attach_step_artifact(attach, event_class, *, dispatcher: Dispatcher):

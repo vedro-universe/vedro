@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from baby_steps import given, then, when
 from niltype import Nil
 from pytest import raises
@@ -13,7 +12,6 @@ from ._utils import local_storage, plugin
 __all__ = ("plugin", "local_storage",)  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_put(local_storage: LocalStorage):
     with given:
         key, value = "<key>", "<value>"
@@ -25,7 +23,6 @@ async def test_put(local_storage: LocalStorage):
         assert res is None
 
 
-@pytest.mark.asyncio
 async def test_get(local_storage: LocalStorage):
     with given:
         key, value = "<key>", "<value>"
@@ -38,7 +35,6 @@ async def test_get(local_storage: LocalStorage):
         assert res == value
 
 
-@pytest.mark.asyncio
 async def test_get_nonexisting_key(local_storage: LocalStorage):
     with given:
         key = "<key>"
@@ -50,7 +46,6 @@ async def test_get_nonexisting_key(local_storage: LocalStorage):
         assert res is Nil
 
 
-@pytest.mark.asyncio
 async def test_get_without_flush(plugin: Plugin, tmp_path: Path):
     with given:
         key, value = "<key>", "<value>"
@@ -67,7 +62,6 @@ async def test_get_without_flush(plugin: Plugin, tmp_path: Path):
         assert res is Nil
 
 
-@pytest.mark.asyncio
 async def test_get_with_flush(plugin: Plugin, tmp_path: Path):
     with given:
         key, value = "<key>", "<value>"
@@ -85,7 +79,6 @@ async def test_get_with_flush(plugin: Plugin, tmp_path: Path):
         assert res == value
 
 
-@pytest.mark.asyncio
 async def test_flush_empty_storage(local_storage: LocalStorage):
     with when:
         res = await local_storage.flush()
@@ -94,7 +87,6 @@ async def test_flush_empty_storage(local_storage: LocalStorage):
         assert res is None
 
 
-@pytest.mark.asyncio
 async def test_flush(local_storage: LocalStorage):
     with given:
         key, value = "<key>", "<value>"

@@ -22,7 +22,6 @@ __all__ = ("dispatcher", "skipper", "tmp_dir",)  # fixtures
 
 # select
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_dir_and_ignore_file(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -49,7 +48,6 @@ async def test_select_dir_and_ignore_file(*, dispatcher: Dispatcher, tmp_dir: Pa
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_file_and_ignore_file(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -73,7 +71,6 @@ async def test_select_file_and_ignore_file(*, dispatcher: Dispatcher, tmp_dir: P
         assert list(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_file_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -98,7 +95,6 @@ async def test_select_file_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path)
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_dir_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -125,7 +121,6 @@ async def test_select_dir_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_file_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -149,7 +144,6 @@ async def test_select_file_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_dir_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -174,7 +168,6 @@ async def test_select_dir_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_file_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -198,7 +191,6 @@ async def test_select_file_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == [scenarios[0]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_dir_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -225,7 +217,6 @@ async def test_select_dir_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
 # ignore
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_ignore_file_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -250,7 +241,6 @@ async def test_ignore_file_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path)
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_ignore_dir_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -277,7 +267,6 @@ async def test_ignore_dir_and_subject(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_ignore_file_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -301,7 +290,6 @@ async def test_ignore_file_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_ignore_dir_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -326,7 +314,6 @@ async def test_ignore_dir_and_only(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_ignore_file_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -351,7 +338,6 @@ async def test_ignore_file_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == [scenarios[1]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_ignore_dir_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -380,7 +366,6 @@ async def test_ignore_dir_and_skip(*, dispatcher: Dispatcher, tmp_dir: Path):
 # subject
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_subject_and_only(*, dispatcher: Dispatcher):
     with given:
@@ -405,7 +390,6 @@ async def test_subject_and_only(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_subject_and_skip(*, dispatcher: Dispatcher):
     with given:
@@ -432,7 +416,6 @@ async def test_subject_and_skip(*, dispatcher: Dispatcher):
 
 # @only & @skip
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_only_and_skip(*, dispatcher: Dispatcher):
     with given:

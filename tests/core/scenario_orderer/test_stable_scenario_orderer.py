@@ -11,7 +11,6 @@ def orderer() -> StableScenarioOrderer:
     return StableScenarioOrderer()
 
 
-@pytest.mark.asyncio
 async def test_sort_no_scenarios(*, orderer: StableScenarioOrderer):
     with given:
         scenarios = []
@@ -24,7 +23,6 @@ async def test_sort_no_scenarios(*, orderer: StableScenarioOrderer):
         assert scenarios == []
 
 
-@pytest.mark.asyncio
 async def test_sort_scenarios(*, orderer: StableScenarioOrderer):
     with given:
         orig_scenarios = {path: make_vscenario(path) for path in [

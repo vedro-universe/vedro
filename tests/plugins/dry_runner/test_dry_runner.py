@@ -1,8 +1,6 @@
-import sys
 from typing import Type
 from unittest.mock import Mock, call
 
-import pytest
 from baby_steps import given, then, when
 
 from vedro.core import ExcInfo
@@ -30,7 +28,6 @@ from ._utils import (
 __all__ = ("dispatcher_", "dry_runner", "interrupt_exception",)  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_run_step(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         step_ = Mock()
@@ -52,7 +49,6 @@ async def test_run_step(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 async def test_run_passed_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         step1_, step2_ = Mock(), Mock()
@@ -83,7 +79,6 @@ async def test_run_passed_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mo
         ]
 
 
-@pytest.mark.asyncio
 async def test_run_skipped_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         step_ = Mock()
@@ -105,7 +100,6 @@ async def test_run_skipped_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: M
         ]
 
 
-@pytest.mark.asyncio
 async def test_run_no_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         scheduler = Scheduler([])
@@ -121,8 +115,6 @@ async def test_run_no_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock)
         assert dispatcher_.mock_calls == []
 
 
-@pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         vscenario = make_vscenario()
@@ -150,8 +142,6 @@ async def test_run_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
         ]
 
 
-@pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         vscenario = make_vscenario()
@@ -196,8 +186,6 @@ async def test_run_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
         ]
 
 
-@pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_interrupted(*, dry_runner: DryRunnerImpl,
                                interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:

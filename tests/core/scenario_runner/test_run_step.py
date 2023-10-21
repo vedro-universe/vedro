@@ -15,7 +15,6 @@ from ._utils import AsyncMock, dispatcher_, interrupt_exception, runner
 __all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock,))
 async def test_step_passed(method_mock_factory: Mock, *,
                            runner: MonotonicScenarioRunner, dispatcher_: Mock):
@@ -43,7 +42,6 @@ async def test_step_passed(method_mock_factory: Mock, *,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
 async def test_step_failed(method_mock_factory: Mock, *,
                            runner: MonotonicScenarioRunner, dispatcher_: Mock):
@@ -73,7 +71,6 @@ async def test_step_failed(method_mock_factory: Mock, *,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
 @pytest.mark.parametrize("interrupt_exception", (KeyboardInterrupt, Interrupted))
 async def test_step_interrupted(method_mock_factory: Mock, interrupt_exception: Type[Exception], *,

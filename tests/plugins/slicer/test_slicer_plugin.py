@@ -26,7 +26,6 @@ __all__ = ("dispatcher", "slicer",)  # fixtures
     (3, 1, {2}),
     (3, 2, {1, 3}),
 ])
-@pytest.mark.asyncio
 async def test_slicing(total: int, index: int, selected: Set[int], *,
                        slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
@@ -53,7 +52,6 @@ async def test_slicing(total: int, index: int, selected: Set[int], *,
     (2, 0, {0, 3, 4}),
     (2, 1, {1, 2, 5}),
 ])
-@pytest.mark.asyncio
 async def test_slicing_skipped(total: int, index: int, selected: Set[int], *,
                                slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
@@ -82,7 +80,6 @@ async def test_slicing_skipped(total: int, index: int, selected: Set[int], *,
     (None, None, {0, 1}),
     (1, 0, {0, 1}),
 ])
-@pytest.mark.asyncio
 async def test_slicing_all_skipped(total: int, index: int, selected: Set[int], *,
                                    slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
@@ -107,7 +104,6 @@ async def test_slicing_all_skipped(total: int, index: int, selected: Set[int], *
     (None, None),
     (1, 0),
 ])
-@pytest.mark.asyncio
 async def test_arg_validation(total: Union[int, None], index: Union[int, None], *,
                               slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
@@ -128,7 +124,6 @@ async def test_arg_validation(total: Union[int, None], index: Union[int, None], 
      "`--slicer-index` must be greater than 0 and less than `--slicer-total` (1), -1 given"),
     (1, 1, "`--slicer-index` must be greater than 0 and less than `--slicer-total` (1), 1 given"),
 ])
-@pytest.mark.asyncio
 async def test_arg_validation_error(total: Union[int, None], index: Union[int, None], error: str,
                                     *, slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:

@@ -37,7 +37,6 @@ RAND_SCHEDULED = [
 ]
 
 
-@pytest.mark.asyncio
 async def test_no_seed(*, dispatcher: Dispatcher):
     with given:
         random_ = Mock(wraps=StandardRandomGenerator())
@@ -56,7 +55,6 @@ async def test_no_seed(*, dispatcher: Dispatcher):
         assert random_.mock_calls[0] == call.set_seed(str(patched.return_value))
 
 
-@pytest.mark.asyncio
 async def test_seed(*, dispatcher: Dispatcher):
     with given:
         random_ = Mock(wraps=StandardRandomGenerator())
@@ -74,7 +72,6 @@ async def test_seed(*, dispatcher: Dispatcher):
         assert random_.mock_calls[0] == call.set_seed(SEED_INITIAL)
 
 
-@pytest.mark.asyncio
 async def test_run_discovered(*, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
@@ -91,7 +88,6 @@ async def test_run_discovered(*, seeder: SeederPlugin, dispatcher: Dispatcher):
 
 
 @pytest.mark.parametrize("index", [0, 1])
-@pytest.mark.asyncio
 async def test_run_discovered_subset(index: int, *, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
@@ -107,7 +103,6 @@ async def test_run_discovered_subset(index: int, *, seeder: SeederPlugin, dispat
         assert generated == [RAND_DISCOVERED[index][0]]
 
 
-@pytest.mark.asyncio
 async def test_run_discovered_and_rescheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
@@ -125,7 +120,6 @@ async def test_run_discovered_and_rescheduled(*, seeder: SeederPlugin, dispatche
         assert generated == [RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][1], RAND_DISCOVERED[1][0]]
 
 
-@pytest.mark.asyncio
 async def test_run_scheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
@@ -147,7 +141,6 @@ async def test_run_scheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
         assert generated == [RAND_SCHEDULED[0][0], RAND_SCHEDULED[1][0]]
 
 
-@pytest.mark.asyncio
 async def test_run_rescheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
@@ -167,7 +160,6 @@ async def test_run_rescheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
         assert generated == [RAND_SCHEDULED[0][0], RAND_SCHEDULED[0][1]]
 
 
-@pytest.mark.asyncio
 async def test_run_discovered_and_scheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
@@ -194,7 +186,6 @@ async def test_run_discovered_and_scheduled(*, seeder: SeederPlugin, dispatcher:
     lambda: [make_scenario_result().mark_passed()],
     lambda: [make_scenario_result().mark_failed()],
 ])
-@pytest.mark.asyncio
 async def test_show_summary(get_scenario_results: Callable[[], List[ScenarioResult]], *,
                             seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
@@ -218,7 +209,6 @@ async def test_show_summary(get_scenario_results: Callable[[], List[ScenarioResu
     lambda: [make_scenario_result()],
     lambda: [make_scenario_result().mark_skipped()],
 ])
-@pytest.mark.asyncio
 async def test_dont_show_summary(get_scenario_results: Callable[[], List[ScenarioResult]], *,
                                  seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:

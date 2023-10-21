@@ -1,7 +1,6 @@
 from pathlib import Path
 from textwrap import dedent
 
-import pytest
 from baby_steps import given, then, when
 from dessert import AssertionRewritingHook
 from pytest import raises
@@ -9,7 +8,6 @@ from pytest import raises
 from vedro.plugins.assert_rewriter import ScenarioAssertRewriterLoader
 
 
-@pytest.mark.asyncio
 async def test_load(tmp_path: Path):
     with given:
         path = tmp_path / "scenario.py"

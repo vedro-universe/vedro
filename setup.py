@@ -19,7 +19,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Nikita Tsvetkov",
     author_email="tsv1@fastmail.com",
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     url="https://github.com/vedro-universe/vedro",
     project_urls={
         "Docs": "https://vedro.io/",
@@ -36,7 +36,6 @@ setup(
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",

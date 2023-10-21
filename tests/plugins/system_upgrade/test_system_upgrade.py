@@ -25,7 +25,6 @@ from ._utils import (
 __all__ = ("dispatcher", "system_upgrade",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(system_upgrade.__name__)
 async def test_update_available_no_last_request(*, dispatcher: Dispatcher):
     with given:
@@ -48,7 +47,6 @@ async def test_update_available_no_last_request(*, dispatcher: Dispatcher):
         assert patched.assert_called_once() is None
 
 
-@pytest.mark.asyncio
 async def test_update_available_expired_last_request(*, dispatcher: Dispatcher, tmp_path: Path):
     with given:
         system_upgrade, local_storage = make_system_upgrade(dispatcher, tmp_path)
@@ -72,7 +70,6 @@ async def test_update_available_expired_last_request(*, dispatcher: Dispatcher, 
         assert patched.assert_called_once() is None
 
 
-@pytest.mark.asyncio
 async def test_update_available_fresh_last_request(*, dispatcher: Dispatcher, tmp_path: Path):
     with given:
         system_upgrade, local_storage = make_system_upgrade(dispatcher, tmp_path)
@@ -93,7 +90,6 @@ async def test_update_available_fresh_last_request(*, dispatcher: Dispatcher, tm
         assert patched.assert_not_called() is None
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(system_upgrade.__name__)
 @pytest.mark.parametrize("gen_version", [gen_prev_version, lambda _: get_cur_version()])
 async def test_update_not_available(gen_version: Callable[[str], str], *, dispatcher: Dispatcher):
@@ -113,7 +109,6 @@ async def test_update_not_available(gen_version: Callable[[str], str], *, dispat
         assert patched.assert_called_once() is None
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(system_upgrade.__name__)
 async def test_update_error(dispatcher: Dispatcher):
     with given:
@@ -131,7 +126,6 @@ async def test_update_error(dispatcher: Dispatcher):
         assert patched.assert_called_once() is None
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(system_upgrade.__name__)
 async def test_thread_stop(dispatcher: Dispatcher):
     with given:

@@ -1,13 +1,6 @@
 import signal
-import sys
+from signal import raise_signal
 from unittest.mock import Mock
-
-if sys.version_info >= (3, 8):
-    from signal import raise_signal
-else:
-    def raise_signal(sig: int) -> None:
-        import os
-        os.kill(os.getpid(), sig)
 
 import pytest
 from baby_steps import given, then, when
@@ -32,7 +25,6 @@ from ._utils import (
 __all__ = ("dispatcher", "interrupter", "sig_handler_",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 async def test_signal_handler(sig_handler_: Mock, dispatcher: Dispatcher):
     with given:
@@ -52,7 +44,6 @@ async def test_signal_handler(sig_handler_: Mock, dispatcher: Dispatcher):
         assert len(sig_handler_.mock_calls) == 0
 
 
-@pytest.mark.asyncio
 async def test_signal_handler_no_signals(sig_handler_: Mock, dispatcher: Dispatcher):
     with given:
         create_interrupter(dispatcher, signals=())
@@ -70,7 +61,6 @@ async def test_signal_handler_no_signals(sig_handler_: Mock, dispatcher: Dispatc
         assert len(sig_handler_.mock_calls) == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(interrupter.__name__)
 async def test_signal_handler_cleanup(sig_handler_: Mock, dispatcher: Dispatcher):
     with given:

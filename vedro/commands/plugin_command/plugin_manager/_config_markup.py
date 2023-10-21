@@ -1,41 +1,33 @@
-import sys
-from typing import Dict, List, Union
+from typing import Dict, List, TypedDict, Union
 
 __all__ = ("ConfigMarkup", "ConfigSectionType", "PluginListSectionType",
            "PluginSectionType", "EnabledAttrType", "ImportType", "MarkupElement",)
 
 
-if sys.version_info >= (3, 8):
-    from typing import TypedDict
+class MarkupElement(TypedDict):
+    offset: int
+    start: int
+    end: int
 
-    class MarkupElement(TypedDict):
-        offset: int
-        start: int
-        end: int
 
-    class ImportType(MarkupElement):
-        alias: Union[str, None]
+class ImportType(MarkupElement):
+    alias: Union[str, None]
 
-    class EnabledAttrType(MarkupElement):
-        pass
 
-    class PluginSectionType(MarkupElement):
-        enabled: Union[EnabledAttrType, None]
+class EnabledAttrType(MarkupElement):
+    pass
 
-    class PluginListSectionType(MarkupElement):
-        children: Dict[str, PluginSectionType]
 
-    class ConfigSectionType(MarkupElement):
-        plugins: Union[PluginListSectionType, None]
+class PluginSectionType(MarkupElement):
+    enabled: Union[EnabledAttrType, None]
 
-else:  # pragma: no cover
-    from typing import Any
-    MarkupElement = Dict[str, Any]
-    ImportType = Dict[str, Any]
-    EnabledAttrType = Dict[str, Any]
-    PluginSectionType = Dict[str, Any]
-    PluginListSectionType = Dict[str, Any]
-    ConfigSectionType = Dict[str, Any]
+
+class PluginListSectionType(MarkupElement):
+    children: Dict[str, PluginSectionType]
+
+
+class ConfigSectionType(MarkupElement):
+    plugins: Union[PluginListSectionType, None]
 
 
 class ConfigMarkup:

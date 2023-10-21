@@ -1,14 +1,5 @@
-import sys
-
-if sys.version_info >= (3, 8):
-    from unittest.mock import AsyncMock, MagicMock
-else:
-    from asynctest.mock import CoroutineMock as AsyncMock, MagicMock
-
 from pathlib import Path
-from unittest.mock import Mock, call
-
-import pytest
+from unittest.mock import AsyncMock, MagicMock, Mock, call
 
 from vedro import Scenario
 from vedro.core import (
@@ -40,7 +31,6 @@ def create_scenario(filename):
     return Mock(Scenario, __file__=filename)
 
 
-@pytest.mark.asyncio
 async def test_scenario_discoverer():
     root = Path("/tmp")
     scenario1 = create_scenario(root / "scenario-1.py")

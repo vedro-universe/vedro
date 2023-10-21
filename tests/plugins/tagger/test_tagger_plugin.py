@@ -11,7 +11,6 @@ from ._utils import dispatcher, fire_arg_parsed_event, make_vscenario, tagger
 __all__ = ("dispatcher", "tagger")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_no_tags(*, dispatcher: Dispatcher):
     with given:
@@ -28,7 +27,6 @@ async def test_no_tags(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == scenarios
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_nonexisting_tag(*, dispatcher: Dispatcher):
     with given:
@@ -45,7 +43,6 @@ async def test_nonexisting_tag(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tag(*, dispatcher: Dispatcher):
     with given:
@@ -66,7 +63,6 @@ async def test_tag(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == [scenarios[0], scenarios[2]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tag_not_operator(*, dispatcher: Dispatcher):
     with given:
@@ -87,7 +83,6 @@ async def test_tag_not_operator(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == [scenarios[1]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tag_and_operator(*, dispatcher: Dispatcher):
     with given:
@@ -109,7 +104,6 @@ async def test_tag_and_operator(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == [scenarios[2]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tag_or_operator(*, dispatcher: Dispatcher):
     with given:
@@ -130,7 +124,6 @@ async def test_tag_or_operator(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == [scenarios[0], scenarios[2]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tags_expr(*, dispatcher: Dispatcher):
     with given:
@@ -151,7 +144,6 @@ async def test_tags_expr(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == [scenarios[1]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tags_skipped(*, dispatcher: Dispatcher):
     with given:
@@ -172,7 +164,6 @@ async def test_tags_skipped(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == [scenarios[0]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tags_type_validation(*, dispatcher: Dispatcher):
     with given:
@@ -192,7 +183,6 @@ async def test_tags_type_validation(*, dispatcher: Dispatcher):
                                   "tuple or set, got <class 'dict'>")
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tags_value_validation(*, dispatcher: Dispatcher):
     with given:
@@ -213,7 +203,6 @@ async def test_tags_value_validation(*, dispatcher: Dispatcher):
         )
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(tagger.__name__)
 async def test_tags_tag_type_validation(*, dispatcher: Dispatcher):
     with given:

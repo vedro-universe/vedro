@@ -1,6 +1,5 @@
 from unittest.mock import Mock, call
 
-import pytest
 from baby_steps import given, then, when
 
 from vedro import Config
@@ -23,7 +22,6 @@ from ._utils import (
 __all__ = ("orderer", "dispatcher")  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_stable_orderer(*, orderer: OrdererPlugin, dispatcher: Dispatcher):
     with given:
         config_ = Mock(Config)
@@ -42,7 +40,6 @@ async def test_stable_orderer(*, orderer: OrdererPlugin, dispatcher: Dispatcher)
         ]
 
 
-@pytest.mark.asyncio
 async def test_reversed_orderer(*, orderer: OrdererPlugin, dispatcher: Dispatcher):
     with given:
         config_ = Mock(Config)
@@ -61,7 +58,6 @@ async def test_reversed_orderer(*, orderer: OrdererPlugin, dispatcher: Dispatche
         ]
 
 
-@pytest.mark.asyncio
 async def test_random_orderer(*, orderer: OrdererPlugin, dispatcher: Dispatcher):
     with given:
         config_ = Mock(Config)

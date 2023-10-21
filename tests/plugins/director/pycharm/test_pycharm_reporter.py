@@ -32,7 +32,6 @@ from ._utils import (
 __all__ = ("dispatcher", "pycharm_reporter", "director", "printer_")  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_subscribe(*, dispatcher: Dispatcher):
     with given:
         director_ = Mock(DirectorPlugin)
@@ -49,7 +48,6 @@ async def test_subscribe(*, dispatcher: Dispatcher):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 @pytest.mark.parametrize("no_output", [False, True])
 async def test_scenario_run(no_output: bool, *, dispatcher: Dispatcher, printer_: Mock):
@@ -70,7 +68,6 @@ async def test_scenario_run(no_output: bool, *, dispatcher: Dispatcher, printer_
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_passed(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -91,7 +88,6 @@ async def test_scenario_passed(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_passed_no_output(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -110,7 +106,6 @@ async def test_scenario_passed_no_output(*, dispatcher: Dispatcher, printer_: Mo
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_failed(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -132,7 +127,6 @@ async def test_scenario_failed(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 @pytest.mark.parametrize("show_internal_calls", [False, True])
 async def test_scenario_failed_with_steps(show_internal_calls: bool, *,
@@ -168,7 +162,6 @@ async def test_scenario_failed_with_steps(show_internal_calls: bool, *,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_failed_with_scope(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -202,7 +195,6 @@ async def test_scenario_failed_with_scope(*, dispatcher: Dispatcher, printer_: M
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_failed_no_output(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -229,7 +221,6 @@ async def test_scenario_failed_no_output(*, dispatcher: Dispatcher, printer_: Mo
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -250,7 +241,6 @@ async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_skipped_no_output(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -269,7 +259,6 @@ async def test_scenario_skipped_no_output(*, dispatcher: Dispatcher, printer_: M
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -285,7 +274,6 @@ async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher, printer_: Mo
         assert printer_.mock_calls == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -301,7 +289,6 @@ async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
         assert printer_.mock_calls == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -322,7 +309,6 @@ async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(pycharm_reporter.__name__)
 async def test_cleanup_interrupted_no_output(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
