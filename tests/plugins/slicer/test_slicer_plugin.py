@@ -120,16 +120,17 @@ async def test_arg_validation(total: Union[int, None], index: Union[int, None], 
         assert res is None
 
 
-@pytest.mark.parametrize(("total", "index"), [
-    (1, None),  # index is None
-    (None, 1),  # total is None
-    (0, 1),  # total <= 0
-    (1, -1),  # index < 0
-    (1, 1),  # index > total
+@pytest.mark.parametrize(("total", "index", "error"), [
+    (1, None, "`--slicer-index` must be specified if `--slicer-total` is specified"),
+    (None, 1, "`--slicer-total` must be specified if `--slicer-index` is specified"),
+    (0, 1, "`--slicer-total` must be greater than 0, 0 given"),
+    (1, -1,
+     "`--slicer-index` must be greater than 0 and less than `--slicer-total` (1), -1 given"),
+    (1, 1, "`--slicer-index` must be greater than 0 and less than `--slicer-total` (1), 1 given"),
 ])
 @pytest.mark.asyncio
-async def test_arg_validation_error(total: Union[int, None], index: Union[int, None], *,
-                                    slicer: SlicerPlugin, dispatcher: Dispatcher):
+async def test_arg_validation_error(total: Union[int, None], index: Union[int, None], error: str,
+                                    *, slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
         event = ArgParsedEvent(Namespace(slicer_total=total, slicer_index=index))
 
@@ -137,4 +138,5 @@ async def test_arg_validation_error(total: Union[int, None], index: Union[int, N
         await dispatcher.fire(event)
 
     with then:
-        assert exc_info.type is AssertionError
+        assert exc_info.type is ValueError
+        assert str(exc_info.value) == error

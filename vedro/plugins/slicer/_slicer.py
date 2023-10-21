@@ -25,12 +25,24 @@ class SlicerPlugin(Plugin):
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._total = event.args.slicer_total
         self._index = event.args.slicer_index
+
         if self._total is not None:
-            assert self._index is not None
-            assert self._total > 0
+            if self._index is None:
+                raise ValueError(
+                    "`--slicer-index` must be specified if `--slicer-total` is specified")
+            if self._total <= 0:
+                raise ValueError(
+                    f"`--slicer-total` must be greater than 0, {self._total} given")
+
         if self._index is not None:
-            assert self._total is not None
-            assert 0 <= self._index < self._total
+            if self._total is None:
+                raise ValueError(
+                    "`--slicer-total` must be specified if `--slicer-index` is specified")
+            if not (0 <= self._index < self._total):
+                raise ValueError(
+                    "`--slicer-index` must be greater than 0 and "
+                    f"less than `--slicer-total` ({self._total}), {self._index} given"
+                )
 
     async def on_startup(self, event: StartupEvent) -> None:
         if (self._total is None) or (self._index is None):
