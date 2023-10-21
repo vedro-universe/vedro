@@ -188,9 +188,8 @@ async def test_tags_type_validation(*, dispatcher: Dispatcher):
 
     with then:
         assert exc.type is TypeError
-        assert str(exc.value) == (
-            f"Scenario '{scenario.rel_path}' tags must be a list, tuple or set, got <class 'dict'>"
-        )
+        assert str(exc.value) == (f"Scenario '{scenario.unique_id}' tags must be a list, "
+                                  "tuple or set, got <class 'dict'>")
 
 
 @pytest.mark.asyncio
@@ -209,6 +208,27 @@ async def test_tags_value_validation(*, dispatcher: Dispatcher):
 
     with then:
         assert exc.type is ValueError
-        assert str(exc.value) == (
-            f"Scenario '{scenario.rel_path}' tag '-SMOKE' is not valid"
+        assert str(exc.value).startswith(
+            f"Scenario '{scenario.unique_id}' tag '-SMOKE' is not valid"
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(tagger.__name__)
+async def test_tags_tag_type_validation(*, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, tags="SMOKE")
+
+        scenario = make_vscenario(tags=[None])  # type: ignore
+        scheduler = Scheduler([scenario])
+
+        startup_event = StartupEvent(scheduler)
+
+    with when, raises(BaseException) as exc:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value).startswith(
+            f"Scenario '{scenario.unique_id}' tag 'None' is not valid"
         )

@@ -20,6 +20,7 @@ class SkipperPlugin(Plugin):
         self._subject: Union[str, None] = None
         self._selected: List[_CompositePath] = []
         self._deselected: List[_CompositePath] = []
+        self._forbid_only = config.forbid_only
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
@@ -63,6 +64,7 @@ class SkipperPlugin(Plugin):
         path = os.path.normpath(file_or_dir)
         if os.path.isabs(path):
             return path
+        # Joining "./scenarios" will be removed in v2
         if os.path.commonpath(["scenarios", path]) != "scenarios":
             path = os.path.join("scenarios", path)
         return os.path.abspath(path)
@@ -138,6 +140,9 @@ class SkipperPlugin(Plugin):
                 if self._is_scenario_skipped(scenario):
                     scenario.skip(reason=self._get_skip_reason(scenario))
                 if self._is_scenario_special(scenario):
+                    if self._forbid_only:
+                        raise ValueError(f"Scenario '{scenario.unique_id}' has @vedro.only, but "
+                                         "'forbid_only' option is enabled")
                     special_scenarios.add(scenario.unique_id)
 
         if len(special_scenarios) > 0:
@@ -150,3 +155,6 @@ class Skipper(PluginConfig):
     plugin = SkipperPlugin
     description = "Allows selective scenario skipping and selection " \
                   "based on file/directory or subject"
+
+    # Forbid execution of scenarios with '@vedro.only' decorator
+    forbid_only: bool = False
