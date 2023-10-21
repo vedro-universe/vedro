@@ -10,3 +10,4 @@ def test_tag_matcher():
 
     with then:
         assert exc.type is TypeError
+        assert str(exc.value).startswith("Can't instantiate abstract class")

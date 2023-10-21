@@ -28,11 +28,17 @@ def test_not_match():
 
 
 def test_invalid_expr():
+    with given:
+        matcher = LogicTagMatcher("P0 and")
+
     with when, raises(ValueError) as exc:
-        LogicTagMatcher("P0 and")
+        matcher.match(set())
 
     with then:
         assert exc.type is ValueError
+        assert str(exc.value) == ("Invalid tag expr 'P0 and'. "
+                                  "Error: Expected end of text, found 'and'  "
+                                  "(at char 3), (line:1, col:4)")
 
 
 @pytest.mark.parametrize("expr", [
@@ -43,8 +49,12 @@ def test_invalid_expr():
     "not",
 ])
 def test_invalid_tag(expr: str):
+    with given:
+        matcher = LogicTagMatcher(expr)
+
     with when, raises(ValueError) as exc:
-        LogicTagMatcher(expr)
+        matcher.match(set())
 
     with then:
         assert exc.type is ValueError
+        assert str(exc.value).startswith(f"Invalid tag expr {expr!r}. Error: ")
