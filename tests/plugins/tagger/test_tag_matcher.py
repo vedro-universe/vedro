@@ -10,3 +10,5 @@ def test_tag_matcher():
 
     with then:
         assert exc.type is TypeError
+        assert str(exc.value) == ("Can't instantiate abstract class TagMatcher with "
+                                  "abstract methods match, validate")

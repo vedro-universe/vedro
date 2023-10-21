@@ -209,7 +209,7 @@ async def test_tags_value_validation(*, dispatcher: Dispatcher):
 
     with then:
         assert exc.type is ValueError
-        assert str(exc.value) == (
+        assert str(exc.value).startswith(
             f"Scenario '{scenario.rel_path}' tag '-SMOKE' is not valid"
         )
 
@@ -229,8 +229,7 @@ async def test_tags_tag_type_validation(*, dispatcher: Dispatcher):
         await dispatcher.fire(startup_event)
 
     with then:
-        assert exc.type is TypeError
-        assert str(exc.value) == (
-            f"Scenario '{scenario.rel_path}' tag must be a str or Enum, "
-            "got None (<class 'NoneType'>)"
+        assert exc.type is ValueError
+        assert str(exc.value).startswith(
+            f"Scenario '{scenario.rel_path}' tag 'None' is not valid"
         )

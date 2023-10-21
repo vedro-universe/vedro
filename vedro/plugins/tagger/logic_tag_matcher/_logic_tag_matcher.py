@@ -1,5 +1,5 @@
 from re import fullmatch
-from typing import Set, cast
+from typing import Set, Union, cast
 
 from pyparsing import Literal
 from pyparsing import ParserElement as Parser
@@ -23,16 +23,22 @@ class LogicTagMatcher(TagMatcher):
             (Literal("and"), 2, opAssoc.LEFT, self._create_and),
             (Literal("or"), 2, opAssoc.LEFT, self._create_or),
         ])
-        self._grammar = self._parse(self._parser, expr)
+        self._grammar: Union[Expr, None] = None
 
     def match(self, tags: Set[str]) -> bool:
+        if self._grammar is None:
+            self._grammar = self._parse(self._parser, self._expr)
         return self._grammar(tags)
 
     def validate(self, tag: str) -> bool:
-        try:
-            return fullmatch(self.tag_pattern, tag) is not None
-        except TypeError:
-            return False
+        if not isinstance(tag, str):
+            raise TypeError(f"Tag must be a str, got {type(tag)}")
+
+        res = fullmatch(self.tag_pattern, tag)
+        if res is None:
+            raise ValueError(f"Tag must match regex {self.tag_pattern!r}")
+
+        return True
 
     def _create_tag(self, orig: str, location: int, tokens: ParseResults) -> Expr:
         tag = tokens[0]
