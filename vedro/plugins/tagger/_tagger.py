@@ -48,7 +48,7 @@ class TaggerPlugin(Plugin):
         return tags
 
     async def on_startup(self, event: StartupEvent) -> None:
-        self._matcher = self._matcher_factory(self._tags_expr)
+        self._matcher = self._matcher_factory(str(self._tags_expr))
 
         async for scenario in event.scheduler:
             tags = self._get_tags(scenario, self._matcher.validate)
