@@ -7,7 +7,7 @@ __all__ = ("CommandArgumentParser",)
 
 
 class CommandArgumentParser(ArgumentParser):
-    def parse_known_args(self, args: Optional[Sequence[str]] = None,
+    def parse_known_args(self, args: Optional[Sequence[str]] = None,  # type: ignore
                          namespace: Optional[Namespace] = None) -> Tuple[Namespace, List[str]]:
         if args is None:
             # $ prog command <...>
