@@ -33,7 +33,7 @@ class TaggerPlugin(Plugin):
     def _get_tags(self, scenario: VirtualScenario, validate: Callable[[str], bool]) -> Any:
         orig_tags = getattr(scenario._orig_scenario, "tags", ())
         if not isinstance(orig_tags, (list, tuple, set)):
-            raise TypeError(f"Scenario '{scenario.rel_path}' tags must be a list, tuple or set, "
+            raise TypeError(f"Scenario '{scenario.unique_id}' tags must be a list, tuple or set, "
                             f"got {type(orig_tags)}")
         tags = []
         for tag in orig_tags:
@@ -42,7 +42,7 @@ class TaggerPlugin(Plugin):
             try:
                 validate(tag)
             except Exception as e:
-                raise ValueError(f"Scenario '{scenario.rel_path}' tag '{tag}' is not valid ({e})")
+                raise ValueError(f"Scenario '{scenario.unique_id}' tag '{tag}' is not valid ({e})")
             else:
                 tags.append(tag)
         return tags
