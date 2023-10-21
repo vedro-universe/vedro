@@ -30,10 +30,10 @@ def make_vscenario(*, is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
         __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
 
-    vsenario = VirtualScenario(_Scenario, steps=[])
+    vscenario = VirtualScenario(_Scenario, steps=[])
     if is_skipped:
-        vsenario.skip()
-    return vsenario
+        vscenario.skip()
+    return vscenario
 
 
 def make_scenario_result(vscenario: Optional[VirtualScenario] = None) -> ScenarioResult:
