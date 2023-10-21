@@ -1,7 +1,6 @@
 from pathlib import Path
 from textwrap import dedent
 
-import pytest
 from baby_steps import given, then, when
 from dessert import AssertionRewritingHook
 from pytest import raises

@@ -1,7 +1,6 @@
 from pathlib import Path
 from unittest.mock import Mock
 
-import pytest
 from baby_steps import given, then, when
 from pytest import raises
 

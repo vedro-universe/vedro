@@ -1,7 +1,6 @@
 from typing import Type, cast
 from unittest.mock import Mock, call
 
-import pytest
 from baby_steps import given, then, when
 from pytest import raises
 

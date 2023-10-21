@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from baby_steps import given, then, when
 from niltype import Nil
 from pytest import raises

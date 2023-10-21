@@ -1,7 +1,6 @@
 from types import MethodType
 from unittest.mock import AsyncMock, Mock, call, sentinel
 
-import pytest
 from baby_steps import given, then, when
 
 from vedro.core import VirtualStep

@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import List
 
-import pytest
-
 from vedro.core._scenario_finder import ScenarioFileFinder
 from vedro.core._scenario_finder._file_filters import DunderFilter, HiddenFilter
 

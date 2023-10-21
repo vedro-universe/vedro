@@ -1,6 +1,5 @@
 from unittest.mock import Mock, call
 
-import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher

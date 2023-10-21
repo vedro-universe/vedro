@@ -1,6 +1,5 @@
 from unittest.mock import Mock
 
-import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher, ScenarioRunner

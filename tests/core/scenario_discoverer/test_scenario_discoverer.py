@@ -1,8 +1,6 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, call
 
-import pytest
-
 from vedro import Scenario
 from vedro.core import (
     MultiScenarioDiscoverer,
