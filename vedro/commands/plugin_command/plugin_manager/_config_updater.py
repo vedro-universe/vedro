@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 from typing import List, Union
 
@@ -18,8 +17,6 @@ class ConfigUpdater:
         self._default_config_path = Path("vedro.cfg.py")
 
     async def update(self, plugin_package: str, plugin_name: str, *, enabled: bool) -> None:
-        assert sys.version_info >= (3, 8), "Python 3.8+ required"
-
         config_path = self._get_config_path()
         config_source = await self._read_config(config_path)
         config_parser = ConfigParser()

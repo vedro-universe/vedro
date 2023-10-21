@@ -1,4 +1,3 @@
-import sys
 from typing import Type, cast
 from unittest.mock import Mock, call
 
@@ -41,7 +40,6 @@ async def test_run_no_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_:
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenario(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         report = Report()
@@ -69,7 +67,6 @@ async def test_run_scenario(*, runner: MonotonicScenarioRunner, dispatcher_: Moc
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         report = Report()
@@ -114,7 +111,6 @@ async def test_run_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mo
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_step_interrupted(*, runner: MonotonicScenarioRunner,
                                 interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:

@@ -1,13 +1,6 @@
-import sys
-
-if sys.version_info >= (3, 8):
-    from unittest.mock import AsyncMock
-else:
-    from asynctest.mock import CoroutineMock as AsyncMock
-
 from time import monotonic_ns
 from typing import Type, cast
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from baby_steps import given, then, when

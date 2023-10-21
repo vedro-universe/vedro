@@ -1,13 +1,6 @@
 import signal
-import sys
+from signal import raise_signal
 from unittest.mock import Mock
-
-if sys.version_info >= (3, 8):
-    from signal import raise_signal
-else:
-    def raise_signal(sig: int) -> None:
-        import os
-        os.kill(os.getpid(), sig)
 
 import pytest
 from baby_steps import given, then, when

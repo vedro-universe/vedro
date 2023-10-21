@@ -1,14 +1,5 @@
-import sys
-from typing import Dict
-
-if sys.version_info >= (3, 8):
-    from importlib.metadata import PackageNotFoundError, metadata
-else:
-    def metadata(name: str) -> Dict[str, str]:
-        raise PackageNotFoundError(name)
-    PackageNotFoundError = Exception
-
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, metadata
 from typing import Type
 
 import vedro

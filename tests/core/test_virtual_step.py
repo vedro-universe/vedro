@@ -1,15 +1,7 @@
-import sys
+from types import MethodType
+from unittest.mock import AsyncMock, Mock, call, sentinel
 
 import pytest
-
-if sys.version_info >= (3, 8):
-    from unittest.mock import AsyncMock
-else:
-    from asynctest.mock import CoroutineMock as AsyncMock
-
-from types import MethodType
-from unittest.mock import Mock, call, sentinel
-
 from baby_steps import given, then, when
 
 from vedro.core import VirtualStep
@@ -30,7 +22,7 @@ def test_virtual_step_name():
 
 def test_virtual_step_is_coro_sync():
     with given:
-        method_ = Mock(MethodType, __code__=Mock(co_flags=0))  # python 3.7 specific
+        method_ = Mock(MethodType)
         step = VirtualStep(method_)
 
     with when:

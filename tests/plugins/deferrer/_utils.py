@@ -1,18 +1,10 @@
-import sys
+from collections import deque
 from pathlib import Path
 from time import monotonic_ns
 
-from vedro import Scenario
-
-if sys.version_info >= (3, 8):
-    pass
-else:
-    pass
-
-from collections import deque
-
 import pytest
 
+from vedro import Scenario
 from vedro.core import Dispatcher, VirtualScenario
 from vedro.plugins.deferrer import Deferrer, DeferrerPlugin
 

@@ -1,4 +1,3 @@
-import sys
 from dataclasses import dataclass
 from typing import Callable, List, Type
 
@@ -61,9 +60,6 @@ class PluginCommand(Command):
         elif args.subparser == "list":
             await self._show_installed_plugins()
         elif args.subparser == "install":
-            if sys.version_info < (3, 8):
-                self._console.print("Python 3.8+ required for this command", style="red")
-                return
             await self._install_packages(args.packages, args.pip_args)
         elif args.subparser == "enable":
             await self._enable_plugin(args.plugin)

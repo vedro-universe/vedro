@@ -1,12 +1,4 @@
-import sys
 from typing import Callable, Optional
-
-if sys.version_info >= (3, 8):
-    pass
-else:
-    def raise_signal(sig: int) -> None:
-        import os
-        os.kill(os.getpid(), sig)
 
 import pytest
 from baby_steps import given, then, when

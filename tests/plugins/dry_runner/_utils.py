@@ -1,8 +1,8 @@
-import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
 from typing import Any, Callable, List, Optional, Type
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -20,12 +20,6 @@ from vedro.core import (
 )
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.dry_runner import DryRunner, DryRunnerImpl, DryRunnerPlugin
-
-if sys.version_info >= (3, 8):
-    from unittest.mock import AsyncMock
-else:
-    from asynctest.mock import CoroutineMock as AsyncMock
-
 
 __all__ = ("dispatcher_", "dispatcher", "dry_runner", "interrupt_exception",
            "make_vstep", "make_vscenario", "make_scenario_result", "make_aggregated_result",

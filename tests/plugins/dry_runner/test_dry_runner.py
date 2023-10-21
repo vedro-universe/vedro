@@ -1,4 +1,3 @@
-import sys
 from typing import Type
 from unittest.mock import Mock, call
 
@@ -122,7 +121,6 @@ async def test_run_no_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock)
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         vscenario = make_vscenario()
@@ -151,7 +149,6 @@ async def test_run_scenario(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
     with given:
         vscenario = make_vscenario()
@@ -197,7 +194,6 @@ async def test_run_scenarios(*, dry_runner: DryRunnerImpl, dispatcher_: Mock):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="call.args returns call")
 async def test_run_interrupted(*, dry_runner: DryRunnerImpl,
                                interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:
