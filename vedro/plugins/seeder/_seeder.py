@@ -26,7 +26,7 @@ class SeederPlugin(Plugin):
         self._random = random
 
         self._use_fixed_seed = config.use_fixed_seed
-        self._inital_seed: Union[str, None] = None
+        self._initial_seed: Union[str, None] = None
         self._discovered_seed: Union[int, None] = None
         self._scheduled_seed: Union[int, None] = None
         self._scheduled_state: Union[StateType, None] = None
@@ -51,12 +51,12 @@ class SeederPlugin(Plugin):
                                       default=self._use_fixed_seed, help=help_msg)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        self._inital_seed = event.args.seed if (event.args.seed is not None) else str(uuid.uuid4())
+        self._initial_seed = event.args.seed if event.args.seed is not None else str(uuid.uuid4())
         self._use_fixed_seed = event.args.fixed_seed
 
     def on_startup(self, event: StartupEvent) -> None:
-        assert self._inital_seed is not None
-        self._random.set_seed(self._inital_seed)
+        assert self._initial_seed is not None
+        self._random.set_seed(self._initial_seed)
 
         self._scheduled_seed = self._generate_seed()
         self._random.set_seed(self._scheduled_seed)
@@ -92,7 +92,7 @@ class SeederPlugin(Plugin):
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if (event.report.passed + event.report.failed) > 0:
-            event.report.add_summary(f"--seed {self._inital_seed}")
+            event.report.add_summary(f"--seed {self._initial_seed}")
 
 
 class Seeder(PluginConfig):
