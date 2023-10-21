@@ -6,7 +6,6 @@ from baby_steps import given, then, when
 from vedro.core import Config, ConfigFileLoader
 
 
-@pytest.mark.asyncio
 async def test_config_file_loader(*, tmp_path: Path):
     with given:
         config = Config
@@ -25,7 +24,6 @@ async def test_config_file_loader(*, tmp_path: Path):
         assert res != config
 
 
-@pytest.mark.asyncio
 async def test_config_file_loader_empty_file(*, tmp_path: Path):
     with given:
         config = Config
@@ -40,7 +38,6 @@ async def test_config_file_loader_empty_file(*, tmp_path: Path):
         assert res == config
 
 
-@pytest.mark.asyncio
 async def test_config_file_loader_not_exist(*, tmp_path: Path):
     with given:
         config = Config

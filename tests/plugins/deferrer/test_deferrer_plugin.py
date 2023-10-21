@@ -14,7 +14,6 @@ from ._utils import deferrer, dispatcher, make_vscenario, queue
 __all__ = ("dispatcher", "deferrer", "queue")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(deferrer.__name__)
 async def test_scenario_run_event(*, dispatcher: Dispatcher, queue: deque):
     with given:
@@ -30,7 +29,6 @@ async def test_scenario_run_event(*, dispatcher: Dispatcher, queue: deque):
         assert len(queue) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(deferrer.__name__)
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_scenario_end_event(event_class, *, dispatcher: Dispatcher, queue: deque):
@@ -60,7 +58,6 @@ async def test_scenario_end_event(event_class, *, dispatcher: Dispatcher, queue:
         assert len(queue) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(deferrer.__name__)
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_scenario_end_event_async(event_class, *, dispatcher: Dispatcher, queue: deque):
@@ -92,7 +89,6 @@ async def test_scenario_end_event_async(event_class, *, dispatcher: Dispatcher, 
         assert len(queue) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
 async def test_(event_class, *, dispatcher: Dispatcher):
     with given:

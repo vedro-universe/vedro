@@ -21,7 +21,6 @@ from ._utils import (
 __all__ = ("dispatcher", "skipper", "tmp_dir",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_defaults(*, dispatcher: Dispatcher):
     with given:
@@ -43,7 +42,6 @@ async def test_defaults(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_single_file(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -69,7 +67,6 @@ async def test_select_single_file(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_multiple_files(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -96,7 +93,6 @@ async def test_select_multiple_files(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_select_dir(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -122,7 +118,6 @@ async def test_select_dir(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 @pytest.mark.parametrize("dirname", ["dir1", "scenarios/dir1"])
 async def test_select_rel_dir(dirname: str, *, dispatcher: Dispatcher, tmp_dir: Path):
@@ -150,7 +145,6 @@ async def test_select_rel_dir(dirname: str, *, dispatcher: Dispatcher, tmp_dir: 
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_single_subject(*, dispatcher: Dispatcher):
     with given:
@@ -172,7 +166,6 @@ async def test_single_subject(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_multiple_subjects(*, dispatcher: Dispatcher):
     with given:
@@ -195,7 +188,6 @@ async def test_multiple_subjects(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_single_only(*, dispatcher: Dispatcher):
     with given:
@@ -216,7 +208,6 @@ async def test_single_only(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_multiple_only(*, dispatcher: Dispatcher):
     with given:
@@ -239,7 +230,6 @@ async def test_multiple_only(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_single_skip(*, dispatcher: Dispatcher):
     with given:
@@ -260,7 +250,6 @@ async def test_single_skip(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == [scenarios[0]]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_multiple_skip(*, dispatcher: Dispatcher):
     with given:

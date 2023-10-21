@@ -33,7 +33,6 @@ def create_scenario(filename):
     return Mock(Scenario, __file__=filename)
 
 
-@pytest.mark.asyncio
 async def test_scenario_discoverer():
     root = Path("/tmp")
     scenario1 = create_scenario(root / "scenario-1.py")

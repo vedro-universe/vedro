@@ -12,7 +12,6 @@ from vedro.plugins.director import (
 )
 
 
-@pytest.mark.asyncio
 async def test_subscribe():
     with given:
         dispatcher = Dispatcher()

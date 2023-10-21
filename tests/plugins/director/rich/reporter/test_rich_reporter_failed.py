@@ -22,7 +22,6 @@ from ._utils import (
 __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 @pytest.mark.parametrize("show_locals", [False, True])
 @pytest.mark.parametrize("show_internal_calls", [False, True])
@@ -68,7 +67,6 @@ async def test_scenario_failed(show_locals: bool, show_internal_calls: bool, *,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -112,7 +110,6 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -155,7 +152,6 @@ async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_failed_verbose_show_timings(dispatcher: Dispatcher,
                                                     rich_reporter: RichReporterPlugin,

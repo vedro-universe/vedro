@@ -21,7 +21,6 @@ from ._utils import (
 __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_passed(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -41,7 +40,6 @@ async def test_scenario_passed(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_passed_show_timings(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -62,7 +60,6 @@ async def test_scenario_passed_show_timings(*, dispatcher: Dispatcher, printer_:
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_passed_show_paths(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -86,7 +83,6 @@ async def test_scenario_passed_show_paths(*, dispatcher: Dispatcher, printer_: M
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_passed_show_steps(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -117,7 +113,6 @@ async def test_scenario_passed_show_steps(*, dispatcher: Dispatcher, printer_: M
         ]
 
 
-@pytest.mark.asyncio
 async def test_scenario_passed_show_spinner(*, dispatcher: Dispatcher,
                                             rich_reporter: RichReporterPlugin, printer_: Mock):
     with given:
@@ -141,7 +136,6 @@ async def test_scenario_passed_show_spinner(*, dispatcher: Dispatcher,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_passed_aggregated_result(*, dispatcher: Dispatcher, printer_: Mock):
     with given:

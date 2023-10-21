@@ -39,7 +39,6 @@ def test_dispatcher_listen(*, dispatcher: Dispatcher, event_type: Type[Event]):
         assert res == dispatcher
 
 
-@pytest.mark.asyncio
 async def test_dispatcher_fire_unknown_event(*, dispatcher: Dispatcher, event_type: Type[Event]):
     with given:
         event = event_type()
@@ -51,7 +50,6 @@ async def test_dispatcher_fire_unknown_event(*, dispatcher: Dispatcher, event_ty
         assert res is None
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("mock_factory", (Mock, AsyncMock))
 async def test_dispatcher_fire(mock_factory, *, dispatcher: Dispatcher, event_type: Type[Event]):
     with given:
@@ -67,7 +65,6 @@ async def test_dispatcher_fire(mock_factory, *, dispatcher: Dispatcher, event_ty
         assert subscribe_.mock_calls == [call(event)]
 
 
-@pytest.mark.asyncio
 async def test_dispatcher_fire_twice(*, dispatcher: Dispatcher, event_type: Type[Event]):
     with given:
         subscribe_ = Mock()
@@ -83,7 +80,6 @@ async def test_dispatcher_fire_twice(*, dispatcher: Dispatcher, event_type: Type
         assert subscribe_.mock_calls == [call(event), call(event)]
 
 
-@pytest.mark.asyncio
 async def test_dispatcher_fire_default_order(*, dispatcher: Dispatcher, event_type: Type[Event]):
     with given:
         manager_ = Mock()
@@ -103,7 +99,6 @@ async def test_dispatcher_fire_default_order(*, dispatcher: Dispatcher, event_ty
         assert manager_.mock_calls == [call.subscribe2_(event), call.subscribe1_(event)]
 
 
-@pytest.mark.asyncio
 async def test_dispatcher_fire_priority_order(*, dispatcher: Dispatcher, event_type: Type[Event]):
     with given:
         manager_ = Mock()
@@ -123,7 +118,6 @@ async def test_dispatcher_fire_priority_order(*, dispatcher: Dispatcher, event_t
         assert manager_.mock_calls == [call.subscribe1_(event), call.subscribe2_(event)]
 
 
-@pytest.mark.asyncio
 async def test_dispatcher_fire_listen_default_order(*, dispatcher: Dispatcher,
                                                     event_type: Type[Event]):
     with given:
@@ -154,7 +148,6 @@ async def test_dispatcher_fire_listen_default_order(*, dispatcher: Dispatcher,
         ]
 
 
-@pytest.mark.asyncio
 async def test_dispatcher_fire_listen_priority_order(*, dispatcher: Dispatcher,
                                                      event_type: Type[Event]):
     with given:

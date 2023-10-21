@@ -25,7 +25,6 @@ from ._utils import (
 __all__ = ("rerunner", "scheduler_", "dispatcher")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_rerun_validation(dispatcher: Dispatcher):
     with when, raises(BaseException) as exc_info:
@@ -36,7 +35,6 @@ async def test_rerun_validation(dispatcher: Dispatcher):
         assert str(exc_info.value) == "--reruns must be >= 0"
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("reruns", [0, 1, 3])
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_rerun_failed(reruns: int, *, dispatcher: Dispatcher, scheduler_: Mock):
@@ -54,7 +52,6 @@ async def test_rerun_failed(reruns: int, *, dispatcher: Dispatcher, scheduler_: 
         assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * reruns
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("reruns", [0, 1, 3])
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_dont_rerun_passed(reruns: int, *, dispatcher: Dispatcher, scheduler_: Mock):
@@ -72,7 +69,6 @@ async def test_dont_rerun_passed(reruns: int, *, dispatcher: Dispatcher, schedul
         assert scheduler_.mock_calls == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("repeats", [0, 1])
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
@@ -90,7 +86,6 @@ async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, sche
         assert scheduler_.mock_calls == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_dont_rerun_rerunned(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
@@ -107,7 +102,6 @@ async def test_dont_rerun_rerunned(dispatcher: Dispatcher, scheduler_: Mock):
         assert scheduler_.mock_calls == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
     with given:
@@ -126,7 +120,6 @@ async def test_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
         assert report.summary == [f"rerun 1 scenario, {reruns} times"]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_dont_add_summary(dispatcher: Dispatcher, scheduler_: Mock):
     with given:

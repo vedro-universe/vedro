@@ -21,7 +21,6 @@ from ._utils import (
 __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -41,7 +40,6 @@ async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped_with_reason(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -69,7 +67,6 @@ async def test_scenario_skipped_with_reason(*, dispatcher: Dispatcher, printer_:
         ]
 
 
-@pytest.mark.asyncio
 async def test_scenario_skipped_with_reason_disabled(*, dispatcher: Dispatcher,
                                                      rich_reporter: RichReporterPlugin,
                                                      printer_: Mock):
@@ -94,7 +91,6 @@ async def test_scenario_skipped_with_reason_disabled(*, dispatcher: Dispatcher,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped_show_paths(dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -118,7 +114,6 @@ async def test_scenario_skipped_show_paths(dispatcher: Dispatcher, printer_: Moc
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped_with_reason_and_paths(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -148,7 +143,6 @@ async def test_scenario_skipped_with_reason_and_paths(*, dispatcher: Dispatcher,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped_show_timings(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -169,7 +163,6 @@ async def test_scenario_skipped_show_timings(*, dispatcher: Dispatcher, printer_
         ]
 
 
-@pytest.mark.asyncio
 async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher,
                                          rich_reporter: RichReporterPlugin, printer_: Mock):
     with given:

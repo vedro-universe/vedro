@@ -34,7 +34,6 @@ def rich_reporter_legacy_verbosity(dispatcher: Dispatcher,
     return reporter
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter_legacy_verbosity.__name__)
 @pytest.mark.parametrize("show_paths", [False, True])
 async def test_scenario_failed_verbose0(show_paths: bool, *,
@@ -67,7 +66,6 @@ async def test_scenario_failed_verbose0(show_paths: bool, *,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter_legacy_verbosity.__name__)
 @pytest.mark.parametrize("show_locals", [False, True])
 @pytest.mark.parametrize("show_internal_calls", [False, True])
@@ -113,7 +111,6 @@ async def test_scenario_failed_verbose2(show_locals: bool, show_internal_calls: 
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter_legacy_verbosity.__name__)
 async def test_scenario_failed_verbose3_without_scope(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -151,7 +148,6 @@ async def test_scenario_failed_verbose3_without_scope(*, dispatcher: Dispatcher,
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter_legacy_verbosity.__name__)
 async def test_scenario_failed_verbose3_with_scope(*, dispatcher: Dispatcher, printer_: Mock):
     with given:

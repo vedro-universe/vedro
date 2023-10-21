@@ -35,7 +35,6 @@ from ._utils import (
 __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_subscribe(*, dispatcher: Dispatcher):
     with given:
         director_ = Mock(DirectorPlugin)
@@ -52,7 +51,6 @@ async def test_subscribe(*, dispatcher: Dispatcher):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_startup(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -70,7 +68,6 @@ async def test_startup(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_run(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -87,7 +84,6 @@ async def test_scenario_run(*, dispatcher: Dispatcher, printer_: Mock):
         assert len(printer_.mock_calls) == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_run_same_namespace(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -108,7 +104,6 @@ async def test_scenario_run_same_namespace(*, dispatcher: Dispatcher, printer_: 
         assert len(printer_.mock_calls) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_run_show_spinner(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -127,7 +122,6 @@ async def test_scenario_run_show_spinner(*, dispatcher: Dispatcher, printer_: Mo
         assert len(printer_.mock_calls) == 2
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_unknown_status(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -144,7 +138,6 @@ async def test_scenario_unknown_status(*, dispatcher: Dispatcher, printer_: Mock
         assert printer_.mock_calls == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -161,7 +154,6 @@ async def test_scenario_skipped(*, dispatcher: Dispatcher, printer_: Mock):
         assert len(printer_.mock_calls) == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped_same_namespace(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -182,7 +174,6 @@ async def test_scenario_skipped_same_namespace(*, dispatcher: Dispatcher, printe
         assert len(printer_.mock_calls) == 0
 
 
-@pytest.mark.asyncio
 async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher,
                                          rich_reporter: RichReporterPlugin, printer_: Mock):
     with given:
@@ -199,7 +190,6 @@ async def test_scenario_skipped_disabled(*, dispatcher: Dispatcher,
         assert len(printer_.mock_calls) == 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped_show_paths(*, dispatcher: Dispatcher):
     with given:
@@ -215,7 +205,6 @@ async def test_scenario_skipped_show_paths(*, dispatcher: Dispatcher):
         assert scenario_result.extra_details == [f"{scenario_result.scenario.path.name}"]
 
 
-@pytest.mark.asyncio
 async def test_scenario_skipped_show_reason(*, dispatcher: Dispatcher,
                                             rich_reporter: RichReporterPlugin):
     with given:
@@ -236,7 +225,6 @@ async def test_scenario_skipped_show_reason(*, dispatcher: Dispatcher,
         assert scenario_result.extra_details == [reason]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -261,7 +249,6 @@ async def test_cleanup(*, dispatcher: Dispatcher, printer_: Mock):
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
     with given:

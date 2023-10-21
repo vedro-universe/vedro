@@ -22,7 +22,6 @@ from ._utils import (
 __all__ = ("dispatcher", "skipper", "tmp_dir",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__, tmp_dir.__name__)
 async def test_template_default(*, dispatcher: Dispatcher):
     with given:
@@ -45,7 +44,6 @@ async def test_template_default(*, dispatcher: Dispatcher):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_template_path(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -70,7 +68,6 @@ async def test_template_path(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_template_path_name(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -96,7 +93,6 @@ async def test_template_path_name(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 async def test_template_path_not_name(*, dispatcher: Dispatcher, tmp_dir: Path):
     with given:
@@ -122,7 +118,6 @@ async def test_template_path_not_name(*, dispatcher: Dispatcher, tmp_dir: Path):
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 @pytest.mark.parametrize("index", [1, 2])
 async def test_template_path_name_index(index: int, *, dispatcher: Dispatcher, tmp_dir: Path):
@@ -149,7 +144,6 @@ async def test_template_path_name_index(index: int, *, dispatcher: Dispatcher, t
         assert get_skipped(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(skipper.__name__)
 @pytest.mark.parametrize("index", [0, 3])
 async def test_template_path_name_not_index(index: int, *, dispatcher: Dispatcher, tmp_dir: Path):

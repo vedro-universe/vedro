@@ -21,7 +21,6 @@ from ._utils import (
 __all__ = ("dispatcher", "last_failed",)  # fixtures
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures(last_failed.__name__)
 async def test_startup_without_last_failed_file(*, dispatcher: Dispatcher):
     with given:
@@ -41,7 +40,6 @@ async def test_startup_without_last_failed_file(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == []
 
 
-@pytest.mark.asyncio
 async def test_startup_with_last_failed_file_enabled(*, dispatcher: Dispatcher, tmp_path: Path):
     with given:
         plugin, local_storage = make_last_failed(dispatcher, tmp_path)
@@ -60,7 +58,6 @@ async def test_startup_with_last_failed_file_enabled(*, dispatcher: Dispatcher, 
         assert list(scheduler.scheduled) == [last_failed_scenario]
 
 
-@pytest.mark.asyncio
 async def test_startup_with_last_failed_file_disabled(*, dispatcher: Dispatcher, tmp_path: Path):
     with given:
         plugin, local_storage = make_last_failed(dispatcher, tmp_path)
@@ -79,7 +76,6 @@ async def test_startup_with_last_failed_file_disabled(*, dispatcher: Dispatcher,
         assert list(scheduler.scheduled) == [last_failed_scenario, another_scenario]
 
 
-@pytest.mark.asyncio
 async def test_cleanup_with_no_failed_scenarios_reported(*, dispatcher: Dispatcher,
                                                          tmp_path: Path):
     with given:
@@ -95,7 +91,6 @@ async def test_cleanup_with_no_failed_scenarios_reported(*, dispatcher: Dispatch
         assert await local_storage.get("last_failed") == []
 
 
-@pytest.mark.asyncio
 async def test_cleanup_with_one_failed_scenario_reported(*, dispatcher: Dispatcher,
                                                          tmp_path: Path):
     with given:
@@ -122,7 +117,6 @@ async def test_cleanup_with_one_failed_scenario_reported(*, dispatcher: Dispatch
         ]
 
 
-@pytest.mark.asyncio
 async def test_cleanup_with_multiple_failed_scenarios_reported(*, dispatcher: Dispatcher,
                                                                tmp_path: Path):
     with given:

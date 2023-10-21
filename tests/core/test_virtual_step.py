@@ -57,7 +57,6 @@ def test_virtual_step_call_sync():
         assert method_.mock_calls == [call()]
 
 
-@pytest.mark.asyncio
 async def test_virtual_step_call_async():
     with given:
         method_ = AsyncMock(MethodType, return_value=sentinel)

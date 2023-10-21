@@ -17,7 +17,6 @@ from ._utils import (
 __all__ = ("dispatcher", "dry_runner_plugin",)  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_dry_run(*, dry_runner_plugin: DryRunnerPlugin, dispatcher: Dispatcher):
     with given:
         scenario_runner_ = Mock(ScenarioRunner)
@@ -31,7 +30,6 @@ async def test_dry_run(*, dry_runner_plugin: DryRunnerPlugin, dispatcher: Dispat
         assert isinstance(config.Registry.ScenarioRunner(), DryRunnerImpl)
 
 
-@pytest.mark.asyncio
 async def test_no_dry_run(*, dry_runner_plugin: DryRunnerPlugin, dispatcher: Dispatcher):
     with given:
         scenario_runner_ = Mock(ScenarioRunner)

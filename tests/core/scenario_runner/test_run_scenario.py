@@ -23,7 +23,6 @@ from ._utils import dispatcher_, interrupt_exception, make_vscenario, make_vstep
 __all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_no_steps_passed(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         vscenario = make_vscenario(steps=[])
@@ -43,7 +42,6 @@ async def test_no_steps_passed(*, runner: MonotonicScenarioRunner, dispatcher_: 
         ]
 
 
-@pytest.mark.asyncio
 async def test_scenario_skipped(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         step_ = Mock()
@@ -67,7 +65,6 @@ async def test_scenario_skipped(*, runner: MonotonicScenarioRunner, dispatcher_:
         ]
 
 
-@pytest.mark.asyncio
 async def test_single_step_passed(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         vstep = make_vstep()
@@ -91,7 +88,6 @@ async def test_single_step_passed(*, runner: MonotonicScenarioRunner, dispatcher
         ]
 
 
-@pytest.mark.asyncio
 async def test_single_step_failed(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         exception = AssertionError()
@@ -119,7 +115,6 @@ async def test_single_step_failed(*, runner: MonotonicScenarioRunner, dispatcher
         ]
 
 
-@pytest.mark.asyncio
 async def test_multiple_steps_passed(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         step1_, step2_ = Mock(return_value=None), Mock(return_value=None)
@@ -153,7 +148,6 @@ async def test_multiple_steps_passed(*, runner: MonotonicScenarioRunner, dispatc
         ]
 
 
-@pytest.mark.asyncio
 async def test_multiple_steps_failed(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
     with given:
         exception = AssertionError()
@@ -186,7 +180,6 @@ async def test_multiple_steps_failed(*, runner: MonotonicScenarioRunner, dispatc
         ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("interrupt_exception", (KeyboardInterrupt, Interrupted))
 async def test_step_interruped(interrupt_exception: Type[BaseException], *, dispatcher_: Mock):
     with given:
@@ -230,7 +223,6 @@ async def test_step_interruped(interrupt_exception: Type[BaseException], *, disp
         ]
 
 
-@pytest.mark.asyncio
 async def test_scenario_interrupted(*, runner: MonotonicScenarioRunner,
                                     interrupt_exception: Type[BaseException], dispatcher_: Mock):
     with given:

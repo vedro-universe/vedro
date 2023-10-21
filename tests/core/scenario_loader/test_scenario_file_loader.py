@@ -7,7 +7,6 @@ from baby_steps import given, then, when
 from vedro.core._scenario_loader import ScenarioFileLoader
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("name", [
     "Scenario",  # default
     "TmpScenario",  # custom name
@@ -32,7 +31,6 @@ async def test_scenario_file_loader(name, *, tmp_path: Path):
         assert len(scenarios) == 1
 
 
-@pytest.mark.asyncio
 async def test_scenarios_file_loader(tmp_path: Path):
     with given:
         path = tmp_path / "scenario.py"
@@ -53,7 +51,6 @@ async def test_scenarios_file_loader(tmp_path: Path):
         assert len(scenarios) == 2
 
 
-@pytest.mark.asyncio
 async def test_template_scenario_file_loader(tmp_path: Path):
     with given:
         path = tmp_path / "scenario.py"

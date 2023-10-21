@@ -19,7 +19,6 @@ from ._utils import (
 __all__ = ("dispatcher", "terminator")  # fixtures
 
 
-@pytest.mark.asyncio
 async def test_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         report = Report()
@@ -34,7 +33,6 @@ async def test_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
         assert cast(SystemExit, exception.value).code == 0
 
 
-@pytest.mark.asyncio
 async def test_failed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         report = Report()
@@ -49,7 +47,6 @@ async def test_failed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
         assert cast(SystemExit, exception.value).code == 1
 
 
-@pytest.mark.asyncio
 async def test_no_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher):
     with given:
         report = Report()
@@ -62,7 +59,6 @@ async def test_no_passed(*, terminator: TerminatorPlugin, dispatcher: Dispatcher
         assert cast(SystemExit, exception.value).code == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("exception", [KeyboardInterrupt, SystemExit])
 async def test_interrupted(exception: Type[BaseException], *,
                            terminator: TerminatorPlugin, dispatcher: Dispatcher):
@@ -82,7 +78,6 @@ async def test_interrupted(exception: Type[BaseException], *,
         assert cast(SystemExit, exception.value).code == 130
 
 
-@pytest.mark.asyncio
 async def test_interrupted_sysexit_with_code(*, terminator: TerminatorPlugin,
                                              dispatcher: Dispatcher):
     with given:

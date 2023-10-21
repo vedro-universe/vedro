@@ -19,7 +19,6 @@ from ._utils import aenumerate, make_scenario_result, make_vscenario
     lambda: [],
     lambda: [make_vscenario(), make_vscenario()]
 ])
-@pytest.mark.asyncio
 async def test_iterator(get_scenarios: Callable[[], List[VirtualScenario]]):
     with given:
         scenarios = get_scenarios()
@@ -51,7 +50,6 @@ def test_get_discovered(get_scenarios: Callable[[], List[VirtualScenario]]):
         assert list(result) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_ignore_nonexisting():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -71,7 +69,6 @@ async def test_ignore_nonexisting():
         assert list(scheduler.discovered) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_ignore_scenario():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -90,7 +87,6 @@ async def test_ignore_scenario():
         assert list(scheduler.discovered) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_ignore_repeated_scenario():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -110,7 +106,6 @@ async def test_ignore_repeated_scenario():
         assert list(scheduler.discovered) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_ignore_repeated_scenario_while_iterating():
     with given:
         scenarios = [make_vscenario(), make_vscenario(), make_vscenario()]
@@ -129,7 +124,6 @@ async def test_ignore_repeated_scenario_while_iterating():
         assert list(scheduler.scheduled) == [scenarios[0], scenarios[1]]
 
 
-@pytest.mark.asyncio
 async def test_ignore_repeated_next_scenario_while_iterating():
     with given:
         scenarios = [make_vscenario(), make_vscenario(), make_vscenario()]
@@ -150,7 +144,6 @@ async def test_ignore_repeated_next_scenario_while_iterating():
         assert list(scheduler.scheduled) == [scenarios[1], scenarios[2]]
 
 
-@pytest.mark.asyncio
 async def test_ignore_scenario_while_iterating():
     with given:
         scenarios = [make_vscenario(), make_vscenario(), make_vscenario()]
@@ -168,7 +161,6 @@ async def test_ignore_scenario_while_iterating():
         assert list(scheduler.scheduled) == [scenarios[0], scenarios[2]]
 
 
-@pytest.mark.asyncio
 async def test_schedule_new():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -188,7 +180,6 @@ async def test_schedule_new():
         assert list(scheduler.scheduled) == [new_scenario] + scenarios
 
 
-@pytest.mark.asyncio
 async def test_schedule_new_while_iterating():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -208,7 +199,6 @@ async def test_schedule_new_while_iterating():
         assert list(scheduler.discovered) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_schedule_iterated_while_iterating():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -227,7 +217,6 @@ async def test_schedule_iterated_while_iterating():
         assert list(scheduler.discovered) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_schedule_not_iterated_while_iterating():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -246,7 +235,6 @@ async def test_schedule_not_iterated_while_iterating():
         assert list(scheduler.discovered) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_schedule_while_iterating_scheduled():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
@@ -265,7 +253,6 @@ async def test_schedule_while_iterating_scheduled():
         assert list(scheduler.discovered) == scenarios
 
 
-@pytest.mark.asyncio
 async def test_ignore_while_iterating_scheduled():
     with given:
         scenarios = [make_vscenario(), make_vscenario()]
