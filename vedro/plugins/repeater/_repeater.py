@@ -45,8 +45,9 @@ class RepeaterPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Repeater")
-        group.add_argument("-N", "--repeats", type=int, default=self._repeats,
-                           help="Number of times to repeat scenarios (default: 1)")
+        help_message = ("Number of times to repeat scenarios (default: 1). "
+                        "The resulting scenario status will be failed if any repeat fail")
+        group.add_argument("-N", "--repeats", type=int, default=self._repeats, help=help_message)
         group.add_argument("--repeats-delay", type=float, default=self._repeats_delay,
                            help="Delay in seconds between scenario repeats (default: 0.0s)")
 

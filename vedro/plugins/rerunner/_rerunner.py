@@ -46,8 +46,9 @@ class RerunnerPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Rerunner")
-        group.add_argument("--reruns", type=int, default=self._reruns,
-                           help="Number of times to rerun failed scenarios (default: 0)")
+        help_message = ("Number of times to rerun failed scenarios (default: 0). "
+                        "The resulting scenario status based on the majority status of reruns")
+        group.add_argument("--reruns", type=int, default=self._reruns, help=help_message)
         group.add_argument("--reruns-delay", type=float, default=self._reruns_delay,
                            help="Delay in seconds between reruns (default: 0.0s)")
 
