@@ -17,9 +17,11 @@ from ._scheduler import RepeaterScenarioScheduler
 __all__ = ("Repeater", "RepeaterPlugin",)
 
 
+SleepType = Callable[[float], Coroutine[Any, Any, None]]
+
+
 class RepeaterPlugin(Plugin):
-    def __init__(self, config: Type["Repeater"], *,
-                 sleep: Callable[[float], Coroutine[Any, Any, None]] = asyncio.sleep) -> None:
+    def __init__(self, config: Type["Repeater"], *, sleep: SleepType = asyncio.sleep) -> None:
         super().__init__(config)
         self._scheduler_factory = config.scheduler_factory
         self._sleep = sleep

@@ -26,6 +26,7 @@ from vedro.events import (
 )
 from vedro.plugins.repeater import Repeater, RepeaterPlugin
 from vedro.plugins.repeater import RepeaterScenarioScheduler as Scheduler
+from vedro.plugins.repeater._repeater import SleepType
 
 
 @pytest.fixture()
@@ -34,12 +35,12 @@ def dispatcher() -> Dispatcher:
 
 
 @pytest.fixture()
-def sleep_() -> AsyncMock:
+def sleep_() -> SleepType:
     return AsyncMock(spec=asyncio.sleep)
 
 
 @pytest.fixture()
-def repeater(dispatcher: Dispatcher, sleep_: AsyncMock) -> RepeaterPlugin:
+def repeater(dispatcher: Dispatcher, sleep_: SleepType) -> RepeaterPlugin:
     plugin = RepeaterPlugin(Repeater, sleep=sleep_)
     plugin.subscribe(dispatcher)
     return plugin

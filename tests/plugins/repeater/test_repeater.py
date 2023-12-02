@@ -114,7 +114,7 @@ async def test_dont_repeat_skipped(repeats: int, *,
 
 
 @pytest.mark.usefixtures(repeater.__name__)
-async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock):
+async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats=2)
         await fire_startup_event(dispatcher, scheduler_)
@@ -127,6 +127,7 @@ async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock):
 
     with then:
         assert scheduler_.mock_calls == []
+        assert sleep_.mock_calls == []
 
 
 @pytest.mark.parametrize(("repeats", "repeats_delay"), [
