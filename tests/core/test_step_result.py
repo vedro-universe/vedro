@@ -1,8 +1,10 @@
 from types import MethodType
+from typing import Callable
 from unittest.mock import Mock
 
 import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.core import ExcInfo, MemoryArtifact, StepResult, StepStatus, VirtualStep
 
@@ -49,6 +51,26 @@ def test_step_result_mark_passed(*, virtual_step: VirtualStep):
         assert step_result.is_passed() is True
 
 
+@pytest.mark.parametrize("change_status", [
+    lambda step_result: step_result.mark_passed(),
+    lambda step_result: step_result.mark_failed(),
+])
+def test_marked_step_result_mark_passed(change_status: Callable[[StepResult], StepResult], *,
+                                        virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+        change_status(step_result)
+
+    with when, raises(BaseException) as exc:
+        step_result.mark_passed()
+
+    with then:
+        assert exc.type is RuntimeError
+        assert str(exc.value) == (
+            "Cannot mark step as passed because its status has already been set"
+        )
+
+
 def test_step_result_mark_failed(*, virtual_step: VirtualStep):
     with given:
         step_result = StepResult(virtual_step)
@@ -59,6 +81,26 @@ def test_step_result_mark_failed(*, virtual_step: VirtualStep):
     with then:
         assert res == step_result
         assert step_result.is_failed() is True
+
+
+@pytest.mark.parametrize("change_status", [
+    lambda step_result: step_result.mark_passed(),
+    lambda step_result: step_result.mark_failed(),
+])
+def test_marked_step_result_mark_failed(change_status: Callable[[StepResult], StepResult], *,
+                                        virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+        change_status(step_result)
+
+    with when, raises(BaseException) as exc:
+        step_result.mark_failed()
+
+    with then:
+        assert exc.type is RuntimeError
+        assert str(exc.value) == (
+            "Cannot mark step as failed because its status has already been set"
+        )
 
 
 def test_step_result_set_started_at(*, virtual_step: VirtualStep):
@@ -153,6 +195,19 @@ def test_step_result_attach_artifact(*, virtual_step: VirtualStep):
 
     with then:
         assert res is None
+
+
+def test_step_result_attach_incorrect_artifact(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+        artifact = {}
+
+    with when, raises(BaseException) as exc:
+        step_result.attach(artifact)
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == "artifact must be an instance of Artifact"
 
 
 def test_step_result_get_artifacts(*, virtual_step: VirtualStep):
