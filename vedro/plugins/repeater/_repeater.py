@@ -30,6 +30,7 @@ class RepeaterPlugin(Plugin):
         self._global_config: Union[ConfigType, None] = None
         self._scheduler: Union[ScenarioScheduler, None] = None
         self._repeat_scenario_id: Union[str, None] = None
+        self._repeat_count: int = 0
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
@@ -77,24 +78,32 @@ class RepeaterPlugin(Plugin):
                               event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
         if self._repeats <= 1:
             return
-
         assert isinstance(self._scheduler, RepeaterScenarioScheduler)  # for type checking
 
-        if self._repeat_scenario_id == event.scenario_result.scenario.unique_id:
-            return
-
-        self._repeat_scenario_id = event.scenario_result.scenario.unique_id
-        for _ in range(self._repeats - 1):
-            if self._repeats_delay > 0.0:
-                await self._sleep(self._repeats_delay)
+        scenario_id = event.scenario_result.scenario.unique_id
+        if self._repeat_scenario_id != scenario_id:
+            self._repeat_scenario_id = scenario_id
+            self._repeat_count = 1
             self._scheduler.schedule(event.scenario_result.scenario)
+        else:
+            self._repeat_count += 1
+            if self._repeat_count < self._repeats:
+                self._scheduler.schedule(event.scenario_result.scenario)
+
+        if self._repeats_delay > 0.0 and self._repeat_count < self._repeats:
+            await self._sleep(self._repeats_delay)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        if self._repeats > 1:
-            message = f"repeated x{self._repeats}"
-            if self._repeats_delay > 0.0:
-                message += f" with delay {self._repeats_delay!r}s"
-            event.report.add_summary(message)
+        if self._repeats <= 1:
+            return
+        message = self._get_summary_message()
+        event.report.add_summary(message)
+
+    def _get_summary_message(self) -> str:
+        message = f"repeated x{self._repeats}"
+        if self._repeats_delay > 0.0:
+            message += f" with delay {self._repeats_delay!r}s"
+        return message
 
 
 class Repeater(PluginConfig):

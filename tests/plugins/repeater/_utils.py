@@ -2,6 +2,7 @@ import asyncio
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
+from typing import Optional
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -22,6 +23,7 @@ from vedro.events import (
     ArgParseEvent,
     ConfigLoadedEvent,
     ScenarioFailedEvent,
+    ScenarioPassedEvent,
     StartupEvent,
 )
 from vedro.plugins.repeater import Repeater, RepeaterPlugin
@@ -63,8 +65,10 @@ def make_vscenario() -> VirtualScenario:
     return VirtualScenario(_Scenario, steps=[])
 
 
-def make_scenario_result() -> ScenarioResult:
-    return ScenarioResult(make_vscenario())
+def make_scenario_result(scenario: Optional[VirtualScenario] = None) -> ScenarioResult:
+    if scenario is None:
+        scenario = make_vscenario()
+    return ScenarioResult(scenario)
 
 
 def make_config() -> ConfigType:
@@ -92,8 +96,15 @@ async def fire_startup_event(dispatcher: Dispatcher, scheduler: Scheduler) -> No
     await dispatcher.fire(startup_event)
 
 
-async def fire_failed_event(dispatcher: Dispatcher) -> ScenarioFailedEvent:
+async def fire_passed_event(dispatcher: Dispatcher) -> ScenarioResult:
+    scenario_result = make_scenario_result().mark_passed()
+    scenario_passed_event = ScenarioPassedEvent(scenario_result)
+    await dispatcher.fire(scenario_passed_event)
+    return scenario_result
+
+
+async def fire_failed_event(dispatcher: Dispatcher) -> ScenarioResult:
     scenario_result = make_scenario_result().mark_failed()
     scenario_failed_event = ScenarioFailedEvent(scenario_result)
     await dispatcher.fire(scenario_failed_event)
-    return scenario_failed_event
+    return scenario_result
