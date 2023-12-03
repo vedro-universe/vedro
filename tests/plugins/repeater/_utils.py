@@ -80,14 +80,20 @@ def make_config() -> ConfigType:
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
-                                repeats: int, repeats_delay: float = 0.0) -> None:
+                                repeats: int,
+                                repeats_delay: float = 0.0,
+                                fail_fast_on_repeat: bool = False) -> None:
     config_loaded_event = ConfigLoadedEvent(Path(), make_config())
     await dispatcher.fire(config_loaded_event)
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(repeats=repeats, repeats_delay=repeats_delay))
+    arg_parsed_event = ArgParsedEvent(Namespace(
+        repeats=repeats,
+        repeats_delay=repeats_delay,
+        fail_fast_on_repeat=fail_fast_on_repeat,
+    ))
     await dispatcher.fire(arg_parsed_event)
 
 
