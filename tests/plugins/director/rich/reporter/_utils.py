@@ -58,7 +58,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 show_scenario_spinner: bool = RichReporter_.show_scenario_spinner,
                                 hide_namespaces: bool = RichReporter_.hide_namespaces,
                                 tb_show_internal_calls: bool = RichReporter_.tb_show_internal_calls,  # noqa: E501
-                                tb_show_locals: bool = RichReporter_.tb_show_locals) -> None:
+                                tb_show_locals: bool = RichReporter_.tb_show_locals,
+                                ring_bell: bool = RichReporter_.ring_bell) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
@@ -71,7 +72,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                           show_scenario_spinner=show_scenario_spinner,
                           hide_namespaces=hide_namespaces,
                           tb_show_internal_calls=tb_show_internal_calls,
-                          tb_show_locals=tb_show_locals)
+                          tb_show_locals=tb_show_locals,
+                          ring_bell=ring_bell)
     arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)
 
