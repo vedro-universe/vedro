@@ -4,6 +4,7 @@ import inspect
 import os
 from importlib.abc import Loader
 from importlib.machinery import ModuleSpec
+from keyword import iskeyword
 from pathlib import Path
 from types import ModuleType
 from typing import List, Type, cast
@@ -16,7 +17,19 @@ __all__ = ("ScenarioFileLoader",)
 
 class ScenarioFileLoader(ScenarioLoader):
     def _path_to_module_name(self, path: Path) -> str:
-        return ".".join(path.with_suffix("").parts)
+        parts = path.with_suffix("").parts
+        for part in parts:
+            if not self._is_valid_identifier(part):
+                raise ValueError(
+                    f"The module name derived from the path '{path}' is invalid "
+                    f"due to the segment '{part}'. A valid module name should "
+                    "start with a letter or underscore, contain only letters, "
+                    "digits, or underscores, and not be a Python keyword."
+                )
+        return ".".join(parts)
+
+    def _is_valid_identifier(self, name: str) -> bool:
+        return name.isidentifier() and not iskeyword(name)
 
     def _spec_from_path(self, path: Path) -> ModuleSpec:
         module_name = self._path_to_module_name(path)
@@ -32,6 +45,7 @@ class ScenarioFileLoader(ScenarioLoader):
         loader.exec_module(module)
 
     async def load(self, path: Path) -> List[Type[Scenario]]:
+        print("path", path)
         spec = self._spec_from_path(path)
         module = self._module_from_spec(spec)
         self._exec_module(cast(Loader, spec.loader), module)
