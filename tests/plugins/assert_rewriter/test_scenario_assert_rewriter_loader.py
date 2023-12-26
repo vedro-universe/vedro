@@ -1,8 +1,8 @@
 import os
-from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 
+import pytest
 from baby_steps import given, then, when
 from dessert import AssertionRewritingHook
 from pytest import raises
@@ -10,19 +10,22 @@ from pytest import raises
 from vedro.plugins.assert_rewriter import ScenarioAssertRewriterLoader
 
 
-@contextmanager
-def changed_cwd(dest: Path):
+@pytest.fixture()
+def tmp_scn_dir(tmp_path: Path) -> Path:
     cwd = os.getcwd()
     try:
-        os.chdir(dest)
-        yield dest
+        os.chdir(tmp_path)
+
+        scn_dir = tmp_path / "scenarios/"
+        scn_dir.mkdir(exist_ok=True)
+        yield scn_dir.relative_to(tmp_path)
     finally:
         os.chdir(cwd)
 
 
-async def test_load(tmp_path: Path):
-    with given, changed_cwd(tmp_path) as cwd:
-        path = tmp_path / "scenario.py"
+async def test_load(tmp_scn_dir: Path):
+    with given:
+        path = tmp_scn_dir / "scenario.py"
         path.write_text(dedent('''
             import vedro
             class Scenario(vedro.Scenario):
@@ -31,7 +34,7 @@ async def test_load(tmp_path: Path):
         '''))
 
         loader = ScenarioAssertRewriterLoader(AssertionRewritingHook())
-        scenarios = await loader.load(path.relative_to(cwd))
+        scenarios = await loader.load(path)
         scenario = scenarios[0]()
 
     with when, raises(BaseException) as exception:
