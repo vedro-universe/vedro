@@ -86,9 +86,9 @@ class ScenarioFileLoader(ScenarioLoader):
 
         :param val: The value to check.
         :return: True if the value is a Vedro scenario class, False otherwise.
-        :raises TypeError: If the value has a name suggesting it's a scenario but 
+        :raises TypeError: If the value has a name suggesting it's a scenario but
             doesn't inherit from 'vedro.Scenario'.
-        :raises ValueError: If the value inherits from 'vedro.Scenario' but its 
+        :raises ValueError: If the value inherits from 'vedro.Scenario' but its
             name doesn't follow the naming convention.
         """
         # First, check if 'val' is a class. Non-class values are not scenarios
