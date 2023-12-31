@@ -1,19 +1,18 @@
 import json
-import os
 import warnings
 from os import linesep
 from traceback import format_exception
-from types import FrameType, TracebackType
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from rich.console import Console, RenderableType
 from rich.pretty import Pretty
 from rich.status import Status
 from rich.style import Style
-from rich.traceback import Trace, Traceback
+from rich.traceback import Traceback
 
-import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
+
+from .utils import filter_internals, filter_locals
 
 __all__ = ("RichPrinter",)
 
@@ -93,43 +92,15 @@ class RichPrinter:
         else:
             self._console.out(name, style=style)
 
-    def __filter_internals(self, traceback: TracebackType) -> TracebackType:
-        class _Traceback:
-            def __init__(self, tb_frame: FrameType, tb_lasti: int, tb_lineno: int,
-                         tb_next: Optional[TracebackType]) -> None:
-                self.tb_frame = tb_frame
-                self.tb_lasti = tb_lasti
-                self.tb_lineno = tb_lineno
-                self.tb_next = tb_next
-
-        tb = _Traceback(traceback.tb_frame, traceback.tb_lasti, traceback.tb_lineno,
-                        traceback.tb_next)
-
-        root = os.path.dirname(vedro.__file__)
-        while tb.tb_next is not None:
-            filename = os.path.abspath(tb.tb_frame.f_code.co_filename)
-            if os.path.commonpath([root, filename]) != root:
-                break
-            tb = tb.tb_next  # type: ignore
-
-        return cast(TracebackType, tb)
-
     def print_exception(self, exc_info: ExcInfo, *,
                         max_frames: int = 8, show_internal_calls: bool = False) -> None:
         if show_internal_calls:
             traceback = exc_info.traceback
         else:
-            traceback = self.__filter_internals(exc_info.traceback)
+            traceback = filter_internals(exc_info.traceback)
 
         formatted = format_exception(exc_info.type, exc_info.value, traceback, limit=max_frames)
         self._console.out("".join(formatted), style=Style(color="yellow"))
-
-    def __filter_locals(self, trace: Trace) -> None:
-        for stack in trace.stacks:
-            for frame in stack.frames:
-                if frame.locals is not None:
-                    frame.locals = {k: v for k, v in frame.locals.items()
-                                    if k != "self" and k.isidentifier()}
 
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
@@ -139,13 +110,13 @@ class RichPrinter:
         if show_internal_calls:
             traceback = exc_info.traceback
         else:
-            traceback = self.__filter_internals(exc_info.traceback)
+            traceback = filter_internals(exc_info.traceback)
 
         trace = Traceback.extract(exc_info.type, exc_info.value, traceback,
                                   show_locals=show_locals)
 
         if show_locals:
-            self.__filter_locals(trace)
+            filter_locals(trace)
 
         tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap)
         self._console.print(tb)
