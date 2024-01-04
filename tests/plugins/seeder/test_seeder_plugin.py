@@ -217,6 +217,23 @@ async def test_show_summary(get_scenario_results: Callable[[], List[ScenarioResu
         assert report.summary == [f"--seed {SEED_INITIAL}"]
 
 
+async def test_show_summary_quoted(*, seeder: SeederPlugin, dispatcher: Dispatcher):
+    with given:
+        quoted_seed = "initial seed"
+        await fire_arg_parsed_event(dispatcher, seed=quoted_seed)
+
+        report = Report()
+        report.add_result(make_scenario_result().mark_failed())
+
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert report.summary == [f"--seed '{quoted_seed}'"]
+
+
 @pytest.mark.parametrize("get_scenario_results", [
     lambda: [],
     lambda: [make_scenario_result()],
