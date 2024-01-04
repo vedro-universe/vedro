@@ -26,14 +26,14 @@ __all__ = ("dispatcher", "seeder")  # fixtures
 
 SEED_INITIAL = "17b81c91"
 RAND_DISCOVERED = [
-    [874137, 528851, 802441],
-    [222111, 980401, 407838],
-    [103865, 862327, 80546],
+    [18047, 912055, 192748],
+    [167430, 692919, 345483],
+    [429020, 174720, 28870],
 ]
 RAND_SCHEDULED = [
-    [562240, 722298, 301997],
-    [49819, 777801, 729439],
-    [952789, 38624, 91067],
+    [18047, 912055, 192748],
+    [167430, 692919, 345483],
+    [429020, 174720, 28870],
 ]
 
 
@@ -52,7 +52,9 @@ async def test_no_seed(*, dispatcher: Dispatcher):
         await dispatcher.fire(startup_event)
 
     with then:
-        assert random_.mock_calls[0] == call.set_seed(str(patched.return_value))
+        assert random_.mock_calls == [
+            call.set_seed(str(patched.return_value))
+        ]
 
 
 async def test_seed(*, dispatcher: Dispatcher):
@@ -69,15 +71,20 @@ async def test_seed(*, dispatcher: Dispatcher):
         await dispatcher.fire(startup_event)
 
     with then:
-        assert random_.mock_calls[0] == call.set_seed(SEED_INITIAL)
+        assert random_.mock_calls == [
+            call.set_seed(SEED_INITIAL)
+        ]
 
 
 async def test_run_discovered(*, seeder: SeederPlugin, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
 
-        scenarios = [make_vscenario(), make_vscenario()]
-        scheduler = Scheduler(scenarios)
+        scenarios = [
+            make_vscenario("scenario-1.py"),
+            make_vscenario("scenario-2.py"),
+        ]
+        scheduler = Scheduler(scenarios=scenarios)
         await fire_startup_event(dispatcher, scheduler)
 
     with when:
@@ -92,7 +99,10 @@ async def test_run_discovered_subset(index: int, *, seeder: SeederPlugin, dispat
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
 
-        scenarios = [make_vscenario(), make_vscenario()]
+        scenarios = [
+            make_vscenario("scenario-1.py"),
+            make_vscenario("scenario-2.py")
+        ]
         await fire_startup_event(dispatcher, Scheduler(scenarios))
         scheduler = Scheduler([scenarios[index]])
 
@@ -107,7 +117,10 @@ async def test_run_discovered_and_rescheduled(*, seeder: SeederPlugin, dispatche
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
 
-        scenarios = [make_vscenario(), make_vscenario()]
+        scenarios = [
+            make_vscenario("scenario-1.py"),
+            make_vscenario("scenario-2.py"),
+        ]
         scheduler = Scheduler(scenarios)
         await fire_startup_event(dispatcher, scheduler)
 
@@ -128,17 +141,17 @@ async def test_run_scheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
         scheduler = Scheduler(scenarios)
         await fire_startup_event(dispatcher, scheduler)
 
-        new_scenario1 = make_vscenario()
+        new_scenario1 = make_vscenario("scenario-1.py")
         scheduler.schedule(new_scenario1)
 
-        new_scenario2 = make_vscenario()
+        new_scenario2 = make_vscenario("scenario-2.py")
         scheduler.schedule(new_scenario2)
 
     with when:
         generated = await run_scenarios(dispatcher, scheduler)
 
     with then:
-        assert generated == [RAND_SCHEDULED[0][0], RAND_SCHEDULED[1][0]]
+        assert generated == [RAND_SCHEDULED[1][0], RAND_SCHEDULED[0][0]]
 
 
 async def test_run_rescheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
@@ -149,7 +162,7 @@ async def test_run_rescheduled(*, seeder: SeederPlugin, dispatcher: Dispatcher):
         scheduler = Scheduler(scenarios)
         await fire_startup_event(dispatcher, scheduler)
 
-        new_scenario = make_vscenario()
+        new_scenario = make_vscenario("scenario-1.py")
         scheduler.schedule(new_scenario)
         scheduler.schedule(new_scenario)
 
@@ -164,11 +177,11 @@ async def test_run_discovered_and_scheduled(*, seeder: SeederPlugin, dispatcher:
     with given:
         await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
 
-        scenario = make_vscenario()
+        scenario = make_vscenario("scenario-1.py")
         scheduler = Scheduler([scenario])
         await fire_startup_event(dispatcher, scheduler)
 
-        new_scenario = make_vscenario()
+        new_scenario = make_vscenario("scenario-2.py")
         scheduler.schedule(new_scenario)
 
         scheduler.schedule(scenario)
@@ -178,8 +191,32 @@ async def test_run_discovered_and_scheduled(*, seeder: SeederPlugin, dispatcher:
         generated = await run_scenarios(dispatcher, scheduler)
 
     with then:
-        assert generated == [RAND_SCHEDULED[0][0], RAND_SCHEDULED[0][1],
+        assert generated == [RAND_SCHEDULED[1][0], RAND_SCHEDULED[1][1],
                              RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][1]]
+
+
+async def test_run_discovered_and_scheduled_fixed_seed(*, seeder: SeederPlugin,
+                                                       dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL, fixed_seed=True)
+
+        scenario = make_vscenario("scenario-1.py")
+        scheduler = Scheduler([scenario])
+        await fire_startup_event(dispatcher, scheduler)
+
+        new_scenario = make_vscenario("scenario-2.py")
+        scheduler.schedule(new_scenario)
+
+        scheduler.schedule(scenario)
+        scheduler.schedule(new_scenario)
+
+    with when:
+        generated = await run_scenarios(dispatcher, scheduler)
+
+    with then:
+        print(generated)
+        assert generated == [RAND_SCHEDULED[1][0], RAND_SCHEDULED[1][0],
+                             RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][0]]
 
 
 @pytest.mark.parametrize("get_scenario_results", [
@@ -202,6 +239,23 @@ async def test_show_summary(get_scenario_results: Callable[[], List[ScenarioResu
 
     with then:
         assert report.summary == [f"--seed {SEED_INITIAL}"]
+
+
+async def test_show_summary_quoted(*, seeder: SeederPlugin, dispatcher: Dispatcher):
+    with given:
+        quoted_seed = "initial seed"
+        await fire_arg_parsed_event(dispatcher, seed=quoted_seed)
+
+        report = Report()
+        report.add_result(make_scenario_result().mark_failed())
+
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert report.summary == [f"--seed '{quoted_seed}'"]
 
 
 @pytest.mark.parametrize("get_scenario_results", [
