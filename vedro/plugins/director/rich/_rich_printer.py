@@ -8,11 +8,11 @@ from rich.console import Console, RenderableType
 from rich.pretty import Pretty
 from rich.status import Status
 from rich.style import Style
-from rich.traceback import Traceback
+from rich.traceback import Trace, Traceback
 
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 
-from .utils import filter_internals, filter_locals
+from .utils import filter_internals
 
 __all__ = ("RichPrinter",)
 
@@ -102,6 +102,13 @@ class RichPrinter:
         formatted = format_exception(exc_info.type, exc_info.value, traceback, limit=max_frames)
         self._console.out("".join(formatted), style=Style(color="yellow"))
 
+    def _filter_locals(self, trace: Trace) -> None:
+        for stack in trace.stacks:
+            for frame in stack.frames:
+                if frame.locals is not None:
+                    frame.locals = {k: v for k, v in frame.locals.items()
+                                    if k != "self" and k.isidentifier()}
+
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
                                show_locals: bool = False,
@@ -116,7 +123,7 @@ class RichPrinter:
                                   show_locals=show_locals)
 
         if show_locals:
-            filter_locals(trace)
+            self._filter_locals(trace)
 
         tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap)
         self._console.print(tb)
