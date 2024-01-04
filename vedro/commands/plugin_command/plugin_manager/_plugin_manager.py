@@ -19,12 +19,12 @@ class PluginManager:
         self._config_updater = ConfigUpdater(config_path)
 
     async def enable(self, plugin_name: str) -> List[Tuple[str, str]]:
-        return await self.toogle(plugin_name, enabled=True)
+        return await self.toggle(plugin_name, enabled=True)
 
     async def disable(self, plugin_name: str) -> List[Tuple[str, str]]:
-        return await self.toogle(plugin_name, enabled=False)
+        return await self.toggle(plugin_name, enabled=False)
 
-    async def toogle(self, plugin_name: str, *, enabled: bool) -> List[Tuple[str, str]]:
+    async def toggle(self, plugin_name: str, *, enabled: bool) -> List[Tuple[str, str]]:
         ext_package = plugin_name.replace("-", "_")
         plugins = self._get_plugins(ext_package)
         for plugin_package, plugin_name in plugins:
