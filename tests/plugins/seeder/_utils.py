@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from random import random
-from time import monotonic_ns
 from typing import List, Optional
 
 import pytest
@@ -26,9 +25,9 @@ def seeder(dispatcher: Dispatcher) -> SeederPlugin:
     return seeder
 
 
-def make_vscenario(*, is_skipped: bool = False) -> VirtualScenario:
+def make_vscenario(filename: str = "scenario.py", *, is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(filename).absolute()
 
     vscenario = VirtualScenario(_Scenario, steps=[])
     if is_skipped:

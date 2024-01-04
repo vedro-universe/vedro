@@ -1,3 +1,4 @@
+import string
 import sys
 import uuid
 from hashlib import blake2b
@@ -29,19 +30,18 @@ class SeederPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         event.arg_parser.add_argument("--seed", type=str, nargs="?", help="Set seed")
+
         help_msg = "Use the same seed when a scenario is run multiple times in the same execution"
-        event.arg_parser.add_argument("--fixed-seed", action="store_true",
-                                      default=self._use_fixed_seed, help=help_msg)
+        event.arg_parser.add_argument("--fixed-seed",
+                                      action="store_true",
+                                      default=self._use_fixed_seed,
+                                      help=help_msg)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        self._initial_seed = event.args.seed if event.args.seed is not None else str(uuid.uuid4())
+        self._initial_seed = event.args.seed or self._gen_initial_seed()
         self._use_fixed_seed = event.args.fixed_seed
 
         self._random.set_seed(self._initial_seed)
-
-    def _create_seed(self, initial_seed: str, scenario_id: str, index: int) -> str:
-        seed = f"{initial_seed}//{scenario_id}//{index}"
-        return blake2b(seed.encode()).hexdigest()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         assert self._initial_seed is not None  # for type checker
@@ -55,7 +55,22 @@ class SeederPlugin(Plugin):
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if (event.report.passed + event.report.failed) > 0:
-            event.report.add_summary(f"--seed {self._initial_seed}")
+            assert self._initial_seed is not None  # for type checker
+            event.report.add_summary("--seed " + self._get_seed_repr(self._initial_seed))
+
+    def _get_seed_repr(self, seed: str) -> str:
+        alphabet = set(string.ascii_letters + string.digits + "-_")
+        for char in seed:
+            if char not in alphabet:
+                return f"{seed!r}"
+        return f"{seed}"
+
+    def _gen_initial_seed(self) -> str:
+        return str(uuid.uuid4())
+
+    def _create_seed(self, initial_seed: str, scenario_id: str, index: int) -> str:
+        seed = f"{initial_seed}//{scenario_id}//{index}"
+        return blake2b(seed.encode()).hexdigest()
 
 
 class Seeder(PluginConfig):
