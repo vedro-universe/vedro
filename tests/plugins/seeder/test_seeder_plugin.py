@@ -195,6 +195,30 @@ async def test_run_discovered_and_scheduled(*, seeder: SeederPlugin, dispatcher:
                              RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][1]]
 
 
+async def test_run_discovered_and_scheduled_fixed_seed(*, seeder: SeederPlugin,
+                                                       dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL, fixed_seed=True)
+
+        scenario = make_vscenario("scenario-1.py")
+        scheduler = Scheduler([scenario])
+        await fire_startup_event(dispatcher, scheduler)
+
+        new_scenario = make_vscenario("scenario-2.py")
+        scheduler.schedule(new_scenario)
+
+        scheduler.schedule(scenario)
+        scheduler.schedule(new_scenario)
+
+    with when:
+        generated = await run_scenarios(dispatcher, scheduler)
+
+    with then:
+        print(generated)
+        assert generated == [RAND_SCHEDULED[1][0], RAND_SCHEDULED[1][0],
+                             RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][0]]
+
+
 @pytest.mark.parametrize("get_scenario_results", [
     lambda: [make_scenario_result().mark_passed()],
     lambda: [make_scenario_result().mark_failed()],

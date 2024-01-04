@@ -39,11 +39,13 @@ def make_scenario_result(vscenario: Optional[VirtualScenario] = None) -> Scenari
     return ScenarioResult(vscenario or make_vscenario())
 
 
-async def fire_arg_parsed_event(dispatcher: Dispatcher, *, seed: Optional[str] = None) -> None:
+async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
+                                seed: Optional[str] = None,
+                                fixed_seed: bool = False) -> None:
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(seed=seed, fixed_seed=False))
+    arg_parsed_event = ArgParsedEvent(Namespace(seed=seed, fixed_seed=fixed_seed))
     await dispatcher.fire(arg_parsed_event)
 
 
