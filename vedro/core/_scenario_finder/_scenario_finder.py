@@ -17,8 +17,7 @@ class ScenarioFinder(ABC):
     @abstractmethod
     async def find(self, root: Path) -> AsyncGenerator[Path, None]:
         """
-        Asynchronously finds and yields paths to scenario files starting from
-        the given root directory.
+        Finds and yields paths to scenario files starting from the given root directory.
 
         This is an abstract method that must be implemented by subclasses. It should define
         how scenario files are located and yielded from the specified root directory.

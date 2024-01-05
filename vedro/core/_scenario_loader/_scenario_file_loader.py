@@ -22,7 +22,7 @@ class ScenarioFileLoader(ScenarioLoader):
 
     async def load(self, path: Path) -> List[Type[Scenario]]:
         """
-        Asynchronously load Vedro scenarios from a module at the given path.
+        Load Vedro scenarios from a module at the given path.
 
         :param path: The file path of the module to load scenarios from.
         :return: A list of loaded Vedro scenario classes.

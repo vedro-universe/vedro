@@ -10,12 +10,32 @@ __all__ = ("ConfigFileLoader",)
 
 
 class ConfigFileLoader(ConfigLoader):
+    """
+    Configuration loader for loading configurations from files.
+
+    Extends the `ConfigLoader` abstract base class, providing an implementation for loading
+    configuration data from file paths.
+    """
+
     def __init__(self, default_config: ConfigType, *,
                  module_loader: Optional[ModuleLoader] = None) -> None:
+        """
+        Initialize the ConfigFileLoader with a default configuration and an optional module loader.
+
+        :param default_config: The default configuration to use if no specific configuration
+        is found.
+        :param module_loader: An optional module loader to use for loading configuration files.
+        """
         super().__init__(default_config)
         self._module_loader = module_loader or ModuleFileLoader()
 
     async def load(self, path: Path) -> ConfigType:
+        """
+        Load a configuration from a file at the given path.
+
+        :param path: The path to the configuration file.
+        :return: The loaded configuration, or the default configuration if the file does not exist.
+        """
         if not path.exists():
             return self._default_config
         config = await self._get_config_class(path)
@@ -28,6 +48,12 @@ class ConfigFileLoader(ConfigLoader):
         return cast(ConfigType, config)
 
     async def _get_config_class(self, path: Path) -> ConfigType:
+        """
+        Get the configuration class from a file at the given path.
+
+        :param path: The path to the file containing the configuration class.
+        :return: The configuration class, or the default configuration if no valid class is found.
+        """
         module = await self._module_loader.load(path)
 
         for name in module.__dict__:
@@ -40,12 +66,14 @@ class ConfigFileLoader(ConfigLoader):
         return self._default_config
 
     def _is_vedro_config(self, val: Any, path: Path) -> bool:
-        # Non-class values cannot be Vedro config
-        if not isclass(val):
-            return False
+        """
+        Check whether a given value is a valid Vedro configuration class.
 
-        # Exclude the foundational 'Config' class as it's not a user-defined config class
-        if val == Config:
+        :param val: The value to check.
+        :param path: The path to the file containing the value.
+        :return: True if the value is a valid Vedro configuration class, False otherwise.
+        """
+        if not isclass(val) or val == Config:
             return False
 
         is_config_subclass = issubclass(val, Config)

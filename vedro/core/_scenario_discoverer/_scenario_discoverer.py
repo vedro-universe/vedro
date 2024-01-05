@@ -42,8 +42,7 @@ class ScenarioDiscoverer(ABC):
         Discover scenarios from a given root path.
 
         Subclasses should implement this method to define how scenarios are discovered from the
-        given root path. The method should asynchronously return a list of
-        discovered VirtualScenarios.
+        given root path. The method should return a list of discovered VirtualScenarios.
 
         :param root: The root path to start discovering scenarios.
         :return: A list of discovered VirtualScenario instances.

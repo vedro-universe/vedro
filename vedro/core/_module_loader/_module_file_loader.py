@@ -21,7 +21,7 @@ class ModuleFileLoader(ModuleLoader):
 
     async def load(self, path: Path) -> ModuleType:
         """
-        Load a module asynchronously from a file path.
+        Load a module from a file path.
 
         :param path: The file path of the module to be loaded.
         :return: The loaded module.

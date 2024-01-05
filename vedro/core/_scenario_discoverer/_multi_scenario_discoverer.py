@@ -37,7 +37,7 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
 
     async def discover(self, root: Path) -> List[VirtualScenario]:
         """
-        Asynchronously discover and organize scenarios from a specified root path.
+        Discover and organize scenarios from a specified root path.
 
         This method iterates through paths found by '_finder', loads scenarios from each path
         using '_loader', and converts them into virtual scenarios with 'create_vscenario'.
