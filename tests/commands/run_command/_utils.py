@@ -1,13 +1,11 @@
-from argparse import Namespace
 from os import chdir, linesep
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
 from vedro.commands import CommandArgumentParser
 
-__all__ = ("tmp_dir", "create_scenario", "arg_parser_",)
+__all__ = ("tmp_dir", "create_scenario", "arg_parser",)
 
 
 @pytest.fixture()
@@ -26,6 +24,11 @@ def create_scenario(tmp_dir: Path, scenario_path: str) -> None:
     (tmp_dir / "scenarios" / scenario_path).write_text(scenario)
 
 
+class ArgumentParser(CommandArgumentParser):
+    def parse_known_args(self, *args, **kwargs):
+        return super().parse_known_args([], None)
+
+
 @pytest.fixture()
-def arg_parser_() -> Mock:
-    return Mock(CommandArgumentParser, parse_known_args=(Namespace(), []))
+def arg_parser() -> ArgumentParser:
+    return ArgumentParser()

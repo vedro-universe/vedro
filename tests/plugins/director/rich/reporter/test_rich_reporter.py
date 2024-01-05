@@ -275,3 +275,18 @@ async def test_cleanup_interrupted(*, dispatcher: Dispatcher, printer_: Mock):
                                     elapsed=report.elapsed,
                                     is_interrupted=True)
         ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_cleanup_ring_bell(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, ring_bell=True)
+
+        report = Report()
+        event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.console.mock_calls == [call.bell()]

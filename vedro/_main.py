@@ -23,13 +23,14 @@ async def main() -> None:
     config_loader = ConfigFileLoader(Config)
     config = cast(Type[Config], await config_loader.load(config_path))
 
-    commands = ["run", "version", "plugin"]
+    commands = {"run", "version", "plugin"}
     arg_parser.add_argument("command", nargs="?", help=f"Command to run {{{', '.join(commands)}}}")
     args, unknown_args = arg_parser.parse_known_args()
 
     # backward compatibility
     # vedro <args> -> vedro run <args>
     help_args = {"-h", "--help"}
+    commands |= {"plugins"}  # alias for "plugin"
     if (args.command not in commands) and (not help_args.intersection(set(unknown_args))):
         default_command = "run"
         sys.argv.insert(1, default_command)
@@ -46,7 +47,7 @@ async def main() -> None:
         parser = arg_parser_factory("vedro version")
         await VersionCommand(config, parser).run()
 
-    elif args.command == "plugin":
+    elif args.command in ("plugin", "plugins"):
         parser = arg_parser_factory("vedro plugin")
         await PluginCommand(config, parser).run()
 
