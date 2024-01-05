@@ -12,4 +12,4 @@ class ConfigLoader(ABC):
 
     @abstractmethod
     async def load(self, path: Path) -> ConfigType:
-        raise NotImplementedError()
+        pass

@@ -1,16 +1,15 @@
 import shutil
 import tempfile
-from os import getcwd
 from pathlib import Path
 from typing import Optional, Type, Union
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ConfigLoadedEvent
 
-__all__ = ("TempKeeper", "TempKeeperPlugin", "created_tmp_dir", "created_tmp_file",)
+__all__ = ("TempKeeper", "TempKeeperPlugin", "create_tmp_dir", "create_tmp_file",)
 
 
-def created_tmp_dir(*, suffix: Optional[str] = None, prefix: Optional[str] = None) -> Path:
+def create_tmp_dir(*, suffix: Optional[str] = None, prefix: Optional[str] = None) -> Path:
     """
     Create a temporary directory within a specified root directory.
 
@@ -27,7 +26,7 @@ def created_tmp_dir(*, suffix: Optional[str] = None, prefix: Optional[str] = Non
     return Path(tmp_dir)
 
 
-def created_tmp_file(*, suffix: Optional[str] = None, prefix: Optional[str] = None) -> Path:
+def create_tmp_file(*, suffix: Optional[str] = None, prefix: Optional[str] = None) -> Path:
     """
     Create a temporary file within a specified root directory.
 
@@ -46,7 +45,8 @@ def created_tmp_file(*, suffix: Optional[str] = None, prefix: Optional[str] = No
 
 
 def _get_tmp_root() -> Path:
-    return Path(getcwd()) / ".vedro" / "tmp/"
+    from vedro import Config
+    return Config.project_dir / ".vedro" / "tmp/"
 
 
 class TempKeeperPlugin(Plugin):
@@ -64,7 +64,7 @@ class TempKeeperPlugin(Plugin):
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         tmp_root = _get_tmp_root()
         if tmp_root.exists():
-            shutil.rmtree(tmp_root, ignore_errors=True)
+            shutil.rmtree(tmp_root)
 
 
 class TempKeeper(PluginConfig):
