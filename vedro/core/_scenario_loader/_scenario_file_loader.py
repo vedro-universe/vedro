@@ -20,9 +20,37 @@ class ScenarioFileLoader(ScenarioLoader):
     A class responsible for loading Vedro scenarios from a file.
     """
 
+    async def load(self, path: Path) -> List[Type[Scenario]]:
+        """
+        Asynchronously load Vedro scenarios from a module at the given path.
+
+        :param path: The file path of the module to load scenarios from.
+        :return: A list of loaded Vedro scenario classes.
+        :raises ValueError: If no valid Vedro scenarios are found in the module.
+        """
+        spec = self._spec_from_path(path)
+        module = self._module_from_spec(spec)
+        self._exec_module(cast(Loader, spec.loader), module)
+
+        loaded = []
+        # Iterate over the module's dictionary because it preserves the order of definitions,
+        # which is not guaranteed when using dir(module)
+        for name in module.__dict__:
+            val = getattr(module, name)
+            if self._is_vedro_scenario(val):
+                val.__file__ = os.path.abspath(module.__file__)  # type: ignore
+                loaded.append(val)
+
+        if len(loaded) == 0:
+            raise ValueError(
+                f"No valid Vedro scenarios found in the module at '{path}'. "
+                "Ensure the module contains at least one subclass of 'vedro.Scenario'"
+            )
+        return loaded
+
     def _path_to_module_name(self, path: Path) -> str:
         """
-        Converts a file path to a valid Python module name.
+        Convert a file path to a valid Python module name.
 
         :param path: The file path to convert.
         :return: A string representing the module name.
@@ -41,7 +69,7 @@ class ScenarioFileLoader(ScenarioLoader):
 
     def _is_valid_identifier(self, name: str) -> bool:
         """
-        Checks if a string is a valid Python identifier.
+        Check if a string is a valid Python identifier.
 
         :param name: The string to check.
         :return: True if the string is a valid identifier, False otherwise.
@@ -50,7 +78,7 @@ class ScenarioFileLoader(ScenarioLoader):
 
     def _spec_from_path(self, path: Path) -> ModuleSpec:
         """
-        Creates a module specification from a file path.
+        Create a module specification from a file path.
 
         :param path: The file path for which to create the module spec.
         :return: The ModuleSpec for the given path.
@@ -64,7 +92,7 @@ class ScenarioFileLoader(ScenarioLoader):
 
     def _module_from_spec(self, spec: ModuleSpec) -> ModuleType:
         """
-        Loads a module from a module specification.
+        Load a module from a module specification.
 
         :param spec: The module specification from which to load the module.
         :return: The loaded module.
@@ -73,7 +101,7 @@ class ScenarioFileLoader(ScenarioLoader):
 
     def _exec_module(self, loader: Loader, module: ModuleType) -> None:
         """
-        Executes a module that has been loaded.
+        Execute a module that has been loaded.
 
         :param loader: The loader to use for executing the module.
         :param module: The module to execute.
@@ -82,7 +110,7 @@ class ScenarioFileLoader(ScenarioLoader):
 
     def _is_vedro_scenario(self, val: Any) -> bool:
         """
-        Determines if a given value is a Vedro scenario class.
+        Determine if a given value is a Vedro scenario class.
 
         :param val: The value to check.
         :return: True if the value is a Vedro scenario class, False otherwise.
@@ -126,31 +154,3 @@ class ScenarioFileLoader(ScenarioLoader):
         # If neither criteria are met, it's not a scenario
         else:
             return False
-
-    async def load(self, path: Path) -> List[Type[Scenario]]:
-        """
-        Asynchronously loads Vedro scenarios from a module at the given path.
-
-        :param path: The file path of the module to load scenarios from.
-        :return: A list of loaded Vedro scenario classes.
-        :raises ValueError: If no valid Vedro scenarios are found in the module.
-        """
-        spec = self._spec_from_path(path)
-        module = self._module_from_spec(spec)
-        self._exec_module(cast(Loader, spec.loader), module)
-
-        loaded = []
-        # Iterate over the module's dictionary because it preserves the order of definitions,
-        # which is not guaranteed when using dir(module)
-        for name in module.__dict__:
-            val = getattr(module, name)
-            if self._is_vedro_scenario(val):
-                val.__file__ = os.path.abspath(module.__file__)  # type: ignore
-                loaded.append(val)
-
-        if len(loaded) == 0:
-            raise ValueError(
-                f"No valid Vedro scenarios found in the module at '{path}'. "
-                "Ensure the module contains at least one subclass of 'vedro.Scenario'"
-            )
-        return loaded
