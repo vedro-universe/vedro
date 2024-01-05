@@ -36,6 +36,8 @@ class ScenarioFileLoader(ScenarioLoader):
         # Iterate over the module's dictionary because it preserves the order of definitions,
         # which is not guaranteed when using dir(module)
         for name in module.__dict__:
+            if name.startswith("_"):
+                continue
             val = getattr(module, name)
             if self._is_vedro_scenario(val):
                 val.__file__ = os.path.abspath(module.__file__)  # type: ignore

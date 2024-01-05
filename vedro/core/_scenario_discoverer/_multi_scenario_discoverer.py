@@ -39,9 +39,9 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
         """
         Asynchronously discover and organize scenarios from a specified root path.
 
-        This method iterates through paths found by '_finder', loads scenarios from each path using '_loader',
-        and converts them into virtual scenarios with 'create_vscenario'. It then sorts the scenarios
-        using '_orderer'.
+        This method iterates through paths found by '_finder', loads scenarios from each path
+        using '_loader', and converts them into virtual scenarios with 'create_vscenario'.
+        It then sorts the scenarios using '_orderer'.
 
         :param root: The root path to start the discovery of scenarios.
         :return: A sorted list of virtual scenarios discovered from the root path.
