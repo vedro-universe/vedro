@@ -13,10 +13,11 @@ from ._scenario import Scenario
 from ._version import version
 from .plugins.deferrer import defer
 from .plugins.skipper import only, skip, skip_if
+from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
 
 __version__ = version
 __all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
-           "context", "defer", "Config", "catched",)
+           "context", "defer", "Config", "catched", "create_tmp_dir", "create_tmp_file",)
 
 
 def run(*, plugins: Any = None) -> None:

@@ -32,7 +32,7 @@ class ScenarioFileFinder(ScenarioFinder):
 
     async def find(self, root: Path) -> AsyncGenerator[Path, None]:
         """
-        Asynchronously finds and yields scenario file paths starting from the given root directory.
+        Finds and yields scenario file paths starting from the given root directory.
 
         This method traverses the directory tree starting from the specified root. It applies
         file and directory filters (if provided) to identify relevant scenario files.

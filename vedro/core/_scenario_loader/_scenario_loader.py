@@ -18,7 +18,7 @@ class ScenarioLoader(ABC):
     @abstractmethod
     async def load(self, path: Path) -> List[Type[Scenario]]:
         """
-        Asynchronously loads Vedro scenarios from a given path.
+        Loads Vedro scenarios from a given path.
 
         This is an abstract method that must be implemented by subclasses. It should
         define how scenarios are loaded from the specified path.
