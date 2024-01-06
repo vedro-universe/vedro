@@ -1,58 +1,25 @@
 import shutil
-import tempfile
-from pathlib import Path
-from typing import Optional, Type, Union
+from typing import Type, Union
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ConfigLoadedEvent
 
+from ._temp_file_manager import TempFileManager
+
 __all__ = ("TempKeeper", "TempKeeperPlugin", "create_tmp_dir", "create_tmp_file",)
 
 
-def create_tmp_dir(*, suffix: Optional[str] = None, prefix: Optional[str] = None) -> Path:
-    """
-    Create a temporary directory within a specified root directory.
-
-    The directory is created in the '.vedro/tmp' directory within the current working directory.
-    It has a unique name, which can be customized with an optional suffix and prefix.
-
-    :param suffix: An optional suffix to append to the temporary directory's name.
-    :param prefix: An optional prefix to prepend to the temporary directory's name.
-    :return: A Path object representing the path to the created temporary directory.
-    """
-    tmp_root = _get_tmp_root()
-    tmp_root.mkdir(parents=True, exist_ok=True)
-    tmp_dir = tempfile.mkdtemp(dir=str(tmp_root), suffix=suffix, prefix=prefix)
-    return Path(tmp_dir)
-
-
-def create_tmp_file(*, suffix: Optional[str] = None, prefix: Optional[str] = None) -> Path:
-    """
-    Create a temporary file within a specified root directory.
-
-    The file is created in the '.vedro/tmp' directory within the current working directory.
-    It has a unique name, which can be customized with an optional suffix and prefix.
-
-    :param suffix: An optional suffix to append to the temporary file's name.
-    :param prefix: An optional prefix to prepend to the temporary file's name.
-    :return: A Path object representing the path to the created temporary file.
-    """
-    tmp_root = _get_tmp_root()
-    tmp_root.mkdir(parents=True, exist_ok=True)
-    tmp_file = tempfile.NamedTemporaryFile(dir=str(tmp_root), suffix=suffix, prefix=prefix,
-                                           delete=False)
-    return Path(tmp_file.name)
-
-
-def _get_tmp_root() -> Path:
-    from vedro import Config
-    return Config.project_dir / ".vedro" / "tmp/"
+_tmp_file_manager = TempFileManager()
+create_tmp_dir = _tmp_file_manager.create_tmp_dir
+create_tmp_file = _tmp_file_manager.create_tmp_file
 
 
 class TempKeeperPlugin(Plugin):
-    def __init__(self, config: Type["TempKeeper"]) -> None:
+    def __init__(self, config: Type["TempKeeper"], *,
+                 tmp_file_manager: TempFileManager = _tmp_file_manager) -> None:
         super().__init__(config)
         self._global_config: Union[ConfigType, None] = None
+        self._tmp_file_manager = tmp_file_manager
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
@@ -60,9 +27,10 @@ class TempKeeperPlugin(Plugin):
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         self._global_config = event.config
+        assert self._tmp_file_manager.get_project_dir() == self._global_config.project_dir
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        tmp_root = _get_tmp_root()
+        tmp_root = self._tmp_file_manager.get_tmp_root()
         if tmp_root.exists():
             shutil.rmtree(tmp_root)
 
