@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from random import random
-from time import monotonic_ns
 from typing import List, Optional
 
 import pytest
@@ -26,25 +25,27 @@ def seeder(dispatcher: Dispatcher) -> SeederPlugin:
     return seeder
 
 
-def make_vscenario(*, is_skipped: bool = False) -> VirtualScenario:
+def make_vscenario(filename: str = "scenario.py", *, is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(filename).absolute()
 
-    vsenario = VirtualScenario(_Scenario, steps=[])
+    vscenario = VirtualScenario(_Scenario, steps=[])
     if is_skipped:
-        vsenario.skip()
-    return vsenario
+        vscenario.skip()
+    return vscenario
 
 
 def make_scenario_result(vscenario: Optional[VirtualScenario] = None) -> ScenarioResult:
     return ScenarioResult(vscenario or make_vscenario())
 
 
-async def fire_arg_parsed_event(dispatcher: Dispatcher, *, seed: Optional[str] = None) -> None:
+async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
+                                seed: Optional[str] = None,
+                                fixed_seed: bool = False) -> None:
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(seed=seed, fixed_seed=False))
+    arg_parsed_event = ArgParsedEvent(Namespace(seed=seed, fixed_seed=fixed_seed))
     await dispatcher.fire(arg_parsed_event)
 
 

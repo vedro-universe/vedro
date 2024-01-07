@@ -1,6 +1,8 @@
+import os
 from pathlib import Path
 from textwrap import dedent
 
+import pytest
 from baby_steps import given, then, when
 from dessert import AssertionRewritingHook
 from pytest import raises
@@ -8,9 +10,22 @@ from pytest import raises
 from vedro.plugins.assert_rewriter import ScenarioAssertRewriterLoader
 
 
-async def test_load(tmp_path: Path):
+@pytest.fixture()
+def tmp_scn_dir(tmp_path: Path) -> Path:
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+
+        scn_dir = tmp_path / "scenarios/"
+        scn_dir.mkdir(exist_ok=True)
+        yield scn_dir.relative_to(tmp_path)
+    finally:
+        os.chdir(cwd)
+
+
+async def test_load(tmp_scn_dir: Path):
     with given:
-        path = tmp_path / "scenario.py"
+        path = tmp_scn_dir / "scenario.py"
         path.write_text(dedent('''
             import vedro
             class Scenario(vedro.Scenario):

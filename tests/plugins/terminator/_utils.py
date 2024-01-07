@@ -1,4 +1,5 @@
 import sys
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
 from types import TracebackType
@@ -8,6 +9,7 @@ import pytest
 
 from vedro import Scenario
 from vedro.core import AggregatedResult, Dispatcher, ExcInfo, ScenarioResult, VirtualScenario
+from vedro.events import ArgParsedEvent, ArgParseEvent
 from vedro.plugins.terminator import Terminator, TerminatorPlugin
 
 
@@ -46,3 +48,12 @@ def make_exc_info(exc_val: BaseException) -> ExcInfo:
     except type(exc_val):
         *_, traceback = sys.exc_info()
     return ExcInfo(type(exc_val), exc_val, cast(TracebackType, traceback))
+
+
+async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
+                                no_scenarios_ok: Optional[bool] = False) -> None:
+    arg_parse_event = ArgParseEvent(ArgumentParser())
+    await dispatcher.fire(arg_parse_event)
+
+    arg_parsed_event = ArgParsedEvent(Namespace(no_scenarios_ok=no_scenarios_ok))
+    await dispatcher.fire(arg_parsed_event)

@@ -1,4 +1,5 @@
-from typing import Type, Union
+import asyncio
+from typing import Any, Callable, Coroutine, Type, Union
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, ScenarioScheduler
 from vedro.events import (
@@ -15,12 +16,16 @@ from ._scheduler import RerunnerScenarioScheduler
 
 __all__ = ("Rerunner", "RerunnerPlugin",)
 
+SleepType = Callable[[float], Coroutine[Any, Any, None]]
+
 
 class RerunnerPlugin(Plugin):
-    def __init__(self, config: Type["Rerunner"]) -> None:
+    def __init__(self, config: Type["Rerunner"], *, sleep: SleepType = asyncio.sleep) -> None:
         super().__init__(config)
         self._scheduler_factory = config.scheduler_factory
+        self._sleep = sleep
         self._reruns: int = 0
+        self._reruns_delay: float = 0.0
         self._global_config: Union[ConfigType, None] = None
         self._scheduler: Union[ScenarioScheduler, None] = None
         self._rerun_scenario_id: Union[str, None] = None
@@ -41,13 +46,24 @@ class RerunnerPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Rerunner")
-        group.add_argument("--reruns", type=int, default=0,
-                           help="Number of times to rerun failed scenarios (default: 0)")
+        help_message = ("Number of times to rerun failed scenarios (default: 0). "
+                        "The resulting scenario status based on the majority status of reruns")
+        group.add_argument("--reruns", type=int, default=self._reruns, help=help_message)
+        group.add_argument("--reruns-delay", type=float, default=self._reruns_delay,
+                           help="Delay in seconds between reruns (default: 0.0s)")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._reruns = event.args.reruns
+        self._reruns_delay = event.args.reruns_delay
+
         if self._reruns < 0:
             raise ValueError("--reruns must be >= 0")
+
+        if self._reruns_delay < 0.0:
+            raise ValueError("--reruns-delay must be >= 0.0")
+
+        if self._reruns_delay > 0.0 and self._reruns < 1:
+            raise ValueError("--reruns-delay must be used with --reruns > 0")
 
         if self._reruns == 0:
             return
@@ -58,7 +74,8 @@ class RerunnerPlugin(Plugin):
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
 
-    def on_scenario_end(self, event:  Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
+    async def on_scenario_end(self,
+                              event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
         if self._reruns == 0:
             return
 
@@ -71,6 +88,8 @@ class RerunnerPlugin(Plugin):
         if event.scenario_result.is_failed():
             self._reran += 1
             for _ in range(self._reruns):
+                if self._reruns_delay > 0.0:
+                    await self._sleep(self._reruns_delay)
                 self._scheduler.schedule(event.scenario_result.scenario)
                 self._times += 1
 
@@ -78,7 +97,10 @@ class RerunnerPlugin(Plugin):
         if self._reruns != 0:
             ss = "" if self._reran == 1 else "s"
             ts = "" if self._times == 1 else "s"
-            event.report.add_summary(f"rerun {self._reran} scenario{ss}, {self._times} time{ts}")
+            message = f"rerun {self._reran} scenario{ss}, {self._times} time{ts}"
+            if self._reruns_delay:
+                message += f", with delay {self._reruns_delay!r}s"
+            event.report.add_summary(message)
 
 
 class Rerunner(PluginConfig):

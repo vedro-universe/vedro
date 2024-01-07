@@ -1,4 +1,4 @@
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from baby_steps import given, then, when
@@ -20,9 +20,10 @@ from ._utils import (
     make_scenario_result,
     repeater,
     scheduler_,
+    sleep_,
 )
 
-__all__ = ("dispatcher", "repeater", "scheduler_",)  # fixtures
+__all__ = ("dispatcher", "repeater", "scheduler_", "sleep_")  # fixtures
 
 
 @pytest.mark.usefixtures(repeater.__name__)
@@ -35,11 +36,32 @@ async def test_repeat_validation(dispatcher: Dispatcher):
         assert str(exc_info.value) == "--repeats must be >= 1"
 
 
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_repeat_delay_validation(dispatcher: Dispatcher):
+    with when, raises(BaseException) as exc_info:
+        await fire_arg_parsed_event(dispatcher, repeats=2, repeats_delay=-0.001)
+
+    with then:
+        assert exc_info.type is ValueError
+        assert str(exc_info.value) == "--repeats-delay must be >= 0.0"
+
+
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_repeat_delay_without_repeats_validation(dispatcher: Dispatcher):
+    with when, raises(BaseException) as exc_info:
+        await fire_arg_parsed_event(dispatcher, repeats=1, repeats_delay=0.1)
+
+    with then:
+        assert exc_info.type is ValueError
+        assert str(exc_info.value) == "--repeats-delay must be used with --repeats > 1"
+
+
 @pytest.mark.parametrize("repeats", [1, 2, 3])
 @pytest.mark.usefixtures(repeater.__name__)
-async def test_repeat_passed(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
+async def test_repeat_passed(repeats: int, *,
+                             dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
     with given:
-        await fire_arg_parsed_event(dispatcher, repeats)
+        await fire_arg_parsed_event(dispatcher, repeats=repeats)
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_result = make_scenario_result().mark_passed()
@@ -50,13 +72,15 @@ async def test_repeat_passed(repeats: int, *, dispatcher: Dispatcher, scheduler_
 
     with then:
         assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * (repeats - 1)
+        assert sleep_.mock_calls == []
 
 
 @pytest.mark.parametrize("repeats", [1, 2, 3])
 @pytest.mark.usefixtures(repeater.__name__)
-async def test_repeat_failed(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
+async def test_repeat_failed(repeats: int, *,
+                             dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
     with given:
-        await fire_arg_parsed_event(dispatcher, repeats)
+        await fire_arg_parsed_event(dispatcher, repeats=repeats)
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_result = make_scenario_result().mark_failed()
@@ -67,13 +91,15 @@ async def test_repeat_failed(repeats: int, *, dispatcher: Dispatcher, scheduler_
 
     with then:
         assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * (repeats - 1)
+        assert sleep_.mock_calls == []
 
 
 @pytest.mark.parametrize("repeats", [1, 2])
 @pytest.mark.usefixtures(repeater.__name__)
-async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, scheduler_: Mock):
+async def test_dont_repeat_skipped(repeats: int, *,
+                                   dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
     with given:
-        await fire_arg_parsed_event(dispatcher, repeats)
+        await fire_arg_parsed_event(dispatcher, repeats=repeats)
         await fire_startup_event(dispatcher, scheduler_)
 
         scenario_result = make_scenario_result().mark_skipped()
@@ -84,10 +110,11 @@ async def test_dont_repeat_skipped(repeats: int, *, dispatcher: Dispatcher, sche
 
     with then:
         assert scheduler_.mock_calls == []
+        assert sleep_.mock_calls == []
 
 
 @pytest.mark.usefixtures(repeater.__name__)
-async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock):
+async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
     with given:
         await fire_arg_parsed_event(dispatcher, repeats=2)
         await fire_startup_event(dispatcher, scheduler_)
@@ -100,6 +127,29 @@ async def test_dont_repeat_repeated(dispatcher: Dispatcher, scheduler_: Mock):
 
     with then:
         assert scheduler_.mock_calls == []
+        assert sleep_.mock_calls == []
+
+
+@pytest.mark.parametrize(("repeats", "repeats_delay"), [
+    (2, 0.1),
+    (3, 1.0)
+])
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_repeat_with_delay(repeats: int, repeats_delay: float, *,
+                                 dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, repeats=repeats, repeats_delay=repeats_delay)
+        await fire_startup_event(dispatcher, scheduler_)
+
+        scenario_result = make_scenario_result().mark_passed()
+        scenario_passed_event = ScenarioPassedEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(scenario_passed_event)
+
+    with then:
+        assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * (repeats - 1)
+        assert sleep_.mock_calls == [call(repeats_delay)] * (repeats - 1)
 
 
 @pytest.mark.parametrize("repeats", [2, 3])
@@ -119,6 +169,29 @@ async def test_add_summary(repeats: int, *,  dispatcher: Dispatcher, scheduler_:
 
     with then:
         assert report.summary == [f"repeated x{repeats}"]
+
+
+@pytest.mark.parametrize(("repeats", "repeats_delay"), [
+    (2, 0.1),
+    (3, 1)
+])
+@pytest.mark.usefixtures(repeater.__name__)
+async def test_add_summary_with_delay(repeats: int, repeats_delay: int, *,
+                                      dispatcher: Dispatcher, scheduler_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, repeats=repeats, repeats_delay=repeats_delay)
+        await fire_startup_event(dispatcher, scheduler_)
+
+        await fire_failed_event(dispatcher)
+
+        report = Report()
+        cleanup_event = CleanupEvent(report)
+
+    with when:
+        await dispatcher.fire(cleanup_event)
+
+    with then:
+        assert report.summary == [f"repeated x{repeats} with delay {repeats_delay!r}s"]
 
 
 @pytest.mark.usefixtures(repeater.__name__)

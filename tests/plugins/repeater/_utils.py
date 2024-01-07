@@ -1,7 +1,8 @@
+import asyncio
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -25,6 +26,7 @@ from vedro.events import (
 )
 from vedro.plugins.repeater import Repeater, RepeaterPlugin
 from vedro.plugins.repeater import RepeaterScenarioScheduler as Scheduler
+from vedro.plugins.repeater._repeater import SleepType
 
 
 @pytest.fixture()
@@ -33,8 +35,13 @@ def dispatcher() -> Dispatcher:
 
 
 @pytest.fixture()
-def repeater(dispatcher: Dispatcher) -> RepeaterPlugin:
-    plugin = RepeaterPlugin(Repeater)
+def sleep_() -> SleepType:
+    return AsyncMock(spec=asyncio.sleep)
+
+
+@pytest.fixture()
+def repeater(dispatcher: Dispatcher, sleep_: SleepType) -> RepeaterPlugin:
+    plugin = RepeaterPlugin(Repeater, sleep=sleep_)
     plugin.subscribe(dispatcher)
     return plugin
 
@@ -68,14 +75,15 @@ def make_config() -> ConfigType:
     return TestConfig
 
 
-async def fire_arg_parsed_event(dispatcher: Dispatcher, repeats: int) -> None:
+async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
+                                repeats: int, repeats_delay: float = 0.0) -> None:
     config_loaded_event = ConfigLoadedEvent(Path(), make_config())
     await dispatcher.fire(config_loaded_event)
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(repeats=repeats))
+    arg_parsed_event = ArgParsedEvent(Namespace(repeats=repeats, repeats_delay=repeats_delay))
     await dispatcher.fire(arg_parsed_event)
 
 

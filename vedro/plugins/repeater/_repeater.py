@@ -1,4 +1,5 @@
-from typing import Type, Union
+import asyncio
+from typing import Any, Callable, Coroutine, Type, Union
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, ScenarioScheduler
 from vedro.events import (
@@ -16,11 +17,16 @@ from ._scheduler import RepeaterScenarioScheduler
 __all__ = ("Repeater", "RepeaterPlugin",)
 
 
+SleepType = Callable[[float], Coroutine[Any, Any, None]]
+
+
 class RepeaterPlugin(Plugin):
-    def __init__(self, config: Type["Repeater"]) -> None:
+    def __init__(self, config: Type["Repeater"], *, sleep: SleepType = asyncio.sleep) -> None:
         super().__init__(config)
         self._scheduler_factory = config.scheduler_factory
-        self._repeats: int = 0
+        self._sleep = sleep
+        self._repeats: int = 1
+        self._repeats_delay: float = 0.0
         self._global_config: Union[ConfigType, None] = None
         self._scheduler: Union[ScenarioScheduler, None] = None
         self._repeat_scenario_id: Union[str, None] = None
@@ -39,13 +45,24 @@ class RepeaterPlugin(Plugin):
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Repeater")
-        group.add_argument("-N", "--repeats", type=int, default=1,
-                           help="Number of times to repeat scenarios (default: 1)")
+        help_message = ("Number of times to repeat scenarios (default: 1). "
+                        "The resulting scenario status will be failed if any repeat fail")
+        group.add_argument("-N", "--repeats", type=int, default=self._repeats, help=help_message)
+        group.add_argument("--repeats-delay", type=float, default=self._repeats_delay,
+                           help="Delay in seconds between scenario repeats (default: 0.0s)")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._repeats = event.args.repeats
+        self._repeats_delay = event.args.repeats_delay
+
         if self._repeats < 1:
             raise ValueError("--repeats must be >= 1")
+
+        if self._repeats_delay < 0.0:
+            raise ValueError("--repeats-delay must be >= 0.0")
+
+        if self._repeats_delay > 0.0 and self._repeats <= 1:
+            raise ValueError("--repeats-delay must be used with --repeats > 1")
 
         if self._repeats <= 1:
             return
@@ -56,7 +73,8 @@ class RepeaterPlugin(Plugin):
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
 
-    def on_scenario_end(self, event:  Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
+    async def on_scenario_end(self,
+                              event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
         if self._repeats <= 1:
             return
 
@@ -67,11 +85,16 @@ class RepeaterPlugin(Plugin):
 
         self._repeat_scenario_id = event.scenario_result.scenario.unique_id
         for _ in range(self._repeats - 1):
+            if self._repeats_delay > 0.0:
+                await self._sleep(self._repeats_delay)
             self._scheduler.schedule(event.scenario_result.scenario)
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if self._repeats > 1:
-            event.report.add_summary(f"repeated x{self._repeats}")
+            message = f"repeated x{self._repeats}"
+            if self._repeats_delay > 0.0:
+                message += f" with delay {self._repeats_delay!r}s"
+            event.report.add_summary(message)
 
 
 class Repeater(PluginConfig):

@@ -6,3 +6,5 @@ coverage:
     patch:
       default:
         threshold: 100%
+
+github_checks: false
