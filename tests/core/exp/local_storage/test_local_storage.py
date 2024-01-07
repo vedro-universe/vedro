@@ -50,10 +50,10 @@ async def test_get_without_flush(plugin: Plugin, tmp_path: Path):
     with given:
         key, value = "<key>", "<value>"
 
-        local_storage1 = LocalStorage(plugin, tmp_path)
+        local_storage1 = LocalStorage(plugin, project_dir=tmp_path)
         await local_storage1.put(key, value)
 
-        local_storage2 = LocalStorage(plugin, tmp_path)
+        local_storage2 = LocalStorage(plugin, project_dir=tmp_path)
 
     with when:
         res = await local_storage2.get(key)
@@ -66,11 +66,11 @@ async def test_get_with_flush(plugin: Plugin, tmp_path: Path):
     with given:
         key, value = "<key>", "<value>"
 
-        local_storage1 = LocalStorage(plugin, tmp_path)
+        local_storage1 = LocalStorage(plugin, project_dir=tmp_path)
         await local_storage1.put(key, value)
         await local_storage1.flush()
 
-        local_storage2 = LocalStorage(plugin, tmp_path)
+        local_storage2 = LocalStorage(plugin, project_dir=tmp_path)
 
     with when:
         res = await local_storage2.get(key)

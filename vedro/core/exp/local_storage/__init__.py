@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Callable
 
 from ..._plugin import Plugin
@@ -9,15 +8,15 @@ LocalStorageFactory = Callable[[Plugin], LocalStorage]
 
 def create_local_storage(plugin: Plugin) -> LocalStorage:
     """
-    Create a new LocalStorage instance for the given plugin.
+    Create and return a new LocalStorage instance for a given plugin.
 
-    :param plugin: The Plugin instance for which to create a LocalStorage.
-    :return: The newly created LocalStorage instance.
-    :raises TypeError: If the input is not a Plugin instance.
+    :param plugin: The Plugin instance for which the LocalStorage is to be created.
+    :return: A LocalStorage instance associated with the given plugin.
+    :raises TypeError: If the provided plugin is not an instance of Plugin.
     """
     if not isinstance(plugin, Plugin):
         raise TypeError(f"Expected Plugin instance, but got {type(plugin)}")
-    return LocalStorage(plugin, Path(".vedro/local_storage"))
+    return LocalStorage(plugin)
 
 
 __all__ = ("create_local_storage", "LocalStorageFactory", "LocalStorage",)

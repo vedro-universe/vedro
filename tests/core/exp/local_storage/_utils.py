@@ -21,4 +21,4 @@ def plugin() -> Plugin:
 
 @pytest.fixture()
 def local_storage(plugin: Plugin, tmp_path: Path):
-    return LocalStorage(plugin, tmp_path)
+    return LocalStorage(plugin, project_dir=tmp_path)
