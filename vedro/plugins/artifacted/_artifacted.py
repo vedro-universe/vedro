@@ -53,6 +53,7 @@ class ArtifactedPlugin(Plugin):
         self._scenario_artifacts = scenario_artifacts
         self._step_artifacts = step_artifacts
         self._save_artifacts = config.save_artifacts
+        self._artifacts_dir = config.artifacts_dir
         self._global_config: Union[ConfigType, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -70,18 +71,31 @@ class ArtifactedPlugin(Plugin):
         self._global_config = event.config
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("--save-artifacts",
-                                      action="store_true",
-                                      default=self._save_artifacts,
-                                      help="Save artifacts to file system")
+        group = event.arg_parser.add_argument_group("Artifacted")
+
+        group.add_argument("--save-artifacts", action="store_true",
+                           default=self._save_artifacts,
+                           help="Save artifacts to the file system")
+        group.add_argument("--artifacts-dir", type=Path, default=self._artifacts_dir,
+                           help=("Specify the directory path for saving artifacts "
+                                 f"(default: '{self._artifacts_dir}')"))
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._save_artifacts = event.args.save_artifacts
+        if not self._save_artifacts and event.args.artifacts_dir != self._artifacts_dir:
+            raise ValueError(
+                "Artifacts directory cannot be specified when artifact saving is disabled")
+        self._artifacts_dir = event.args.artifacts_dir
 
-        if self._save_artifacts:
-            artifacts_path = self._get_artifacts_dir()
-            if artifacts_path.exists():
-                shutil.rmtree(artifacts_path)
+        project_dir = self._get_project_dir()
+        if self._artifacts_dir.is_absolute():
+            if not self._artifacts_dir.is_relative_to(project_dir):
+                raise ValueError(f"Artifacts directory '{self._artifacts_dir}' "
+                                 f"must be within the project directory '{project_dir}'")
+
+        artifacts_path = self._get_artifacts_dir()
+        if artifacts_path.exists():
+            shutil.rmtree(artifacts_path)
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         self._scenario_artifacts.clear()
@@ -116,7 +130,9 @@ class ArtifactedPlugin(Plugin):
         return self._global_config.project_dir
 
     def _get_artifacts_dir(self) -> Path:
-        return self._get_project_dir() / ".vedro" / "artifacts/"
+        if self._artifacts_dir.is_absolute():
+            return self._artifacts_dir
+        return self._get_project_dir() / self._artifacts_dir
 
     def _get_scenario_artifacts_dir(self, scenario_result: ScenarioResult) -> Path:
         scenario = scenario_result.scenario
@@ -149,5 +165,8 @@ class Artifacted(PluginConfig):
     plugin = ArtifactedPlugin
     description = "Manages artifacts for step and scenario results"
 
-    # Save artifacts to file system
+    # Save artifacts to the file system
     save_artifacts: bool = False
+
+    # Directory path for saving artifacts
+    artifacts_dir: Path = Path(".vedro/artifacts/")
