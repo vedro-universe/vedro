@@ -94,7 +94,7 @@ class ArtifactedPlugin(Plugin):
         project_dir = self._get_project_dir()
         if not self._artifacts_dir.is_absolute():
             self._artifacts_dir = (project_dir / self._artifacts_dir).resolve()
-        if not self._artifacts_dir.is_relative_to(project_dir):
+        if not self._is_relative_to(self._artifacts_dir, project_dir):
             raise ValueError(f"Artifacts directory '{self._artifacts_dir}' "
                              f"must be within the project directory '{project_dir}'")
 
@@ -132,6 +132,15 @@ class ArtifactedPlugin(Plugin):
             for artifact in scenario_result.artifacts:
                 artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
                 self._add_extra_details(scenario_result, artifact_path)
+
+    def _is_relative_to(self, path: Path, parent: Path) -> bool:
+        # Python 3.9: path.is_relative_to(parent)
+        try:
+            path.relative_to(parent)
+        except ValueError:
+            return False
+        else:
+            return True
 
     def _add_extra_details(self, result: Union[ScenarioResult, StepResult],
                            artifact_path: Path) -> None:
