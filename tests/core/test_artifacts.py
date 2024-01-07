@@ -40,7 +40,8 @@ def test_memory_artifact_binary_only():
         MemoryArtifact("log", "text/plain", "text")
 
     with then:
-        assert exc_info.type is AssertionError
+        assert exc_info.type is TypeError
+        assert str(exc_info.value) == "'data' must be of type bytes"
 
 
 def test_memory_artifact_eq():
@@ -108,7 +109,8 @@ def test_file_artifact_path_only():
         FileArtifact("log", "text/plain", "./log.txt")
 
     with then:
-        assert exc_info.type is AssertionError
+        assert exc_info.type is TypeError
+        assert str(exc_info.value) == "'path' must be an instance of pathlib.Path"
 
 
 def test_file_artifact_eq():
