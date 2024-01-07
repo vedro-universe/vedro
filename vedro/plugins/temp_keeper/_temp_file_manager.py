@@ -22,7 +22,7 @@ class TempFileManager:
         :param project_dir: The root directory of the project. Defaults to the current
         working directory.
         """
-        self._project_dir = project_dir
+        self._project_dir = project_dir.resolve()
 
     def get_project_dir(self) -> Path:
         """

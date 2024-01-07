@@ -269,7 +269,7 @@ class RichReporterPlugin(Reporter):
         aggregated_result = event.aggregated_result
         rescheduled = len(aggregated_result.scenario_results)
         if rescheduled == 1:
-            self._print_scenario_result(aggregated_result, prefix=" ")
+            self._print_scenario_result(aggregated_result.scenario_results[0], prefix=" ")
             return
 
         self._printer.print_scenario_subject(aggregated_result.scenario.subject,

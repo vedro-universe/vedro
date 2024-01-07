@@ -100,10 +100,10 @@ class Config(core.Config):
         class Deferrer(deferrer.Deferrer):
             enabled = True
 
-        class Artifacted(artifacted.Artifacted):
+        class Seeder(seeder.Seeder):
             enabled = True
 
-        class Seeder(seeder.Seeder):
+        class Artifacted(artifacted.Artifacted):
             enabled = True
 
         class Skipper(skipper.Skipper):

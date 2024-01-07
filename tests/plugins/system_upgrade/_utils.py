@@ -26,7 +26,7 @@ def make_system_upgrade(dispatcher: Dispatcher,
 
     def create_local_storage(plugin: Plugin):
         nonlocal local_storage
-        local_storage = LocalStorage(plugin, tmp_path)
+        local_storage = LocalStorage(plugin, project_dir=tmp_path)
         return local_storage
 
     plugin = SystemUpgradePlugin(SystemUpgrade, local_storage_factory=create_local_storage)
