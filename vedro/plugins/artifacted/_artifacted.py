@@ -134,13 +134,12 @@ class ArtifactedPlugin(Plugin):
                 self._add_extra_details(scenario_result, artifact_path)
 
     def _is_relative_to(self, path: Path, parent: Path) -> bool:
-        # Python 3.9: path.is_relative_to(parent)
         try:
             path.relative_to(parent)
         except ValueError:
             return False
         else:
-            return True
+            return path != parent
 
     def _add_extra_details(self, result: Union[ScenarioResult, StepResult],
                            artifact_path: Path) -> None:
@@ -182,7 +181,7 @@ class ArtifactedPlugin(Plugin):
         else:
             artifact_type = type(artifact).__name__
             rel_path = scenario_path.relative_to(self._get_project_dir())
-            raise TypeError(f"Can't save artifact to '{rel_path}:' unknown type '{artifact_type}'")
+            raise TypeError(f"Can't save artifact to '{rel_path}': unknown type '{artifact_type}'")
 
 
 class Artifacted(PluginConfig):
