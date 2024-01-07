@@ -16,6 +16,7 @@ from vedro.core import (
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
+    CleanupEvent,
     ConfigLoadedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
@@ -65,7 +66,8 @@ class ArtifactedPlugin(Plugin):
                   .listen(StepFailedEvent, self.on_step_end) \
                   .listen(ScenarioPassedEvent, self.on_scenario_end) \
                   .listen(ScenarioFailedEvent, self.on_scenario_end) \
-                  .listen(ScenarioReportedEvent, self.on_scenario_reported)
+                  .listen(ScenarioReportedEvent, self.on_scenario_reported) \
+                  .listen(CleanupEvent, self.on_cleanup)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         self._global_config = event.config
@@ -76,26 +78,29 @@ class ArtifactedPlugin(Plugin):
         group.add_argument("--save-artifacts", action="store_true",
                            default=self._save_artifacts,
                            help="Save artifacts to the file system")
-        group.add_argument("--artifacts-dir", type=Path, default=self._artifacts_dir,
+        group.add_argument("--artifacts-dir", type=Path, default=None,
                            help=("Specify the directory path for saving artifacts "
                                  f"(default: '{self._artifacts_dir}')"))
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._save_artifacts = event.args.save_artifacts
-        if not self._save_artifacts and event.args.artifacts_dir != self._artifacts_dir:
+        if not self._save_artifacts and event.args.artifacts_dir is not None:
             raise ValueError(
                 "Artifacts directory cannot be specified when artifact saving is disabled")
-        self._artifacts_dir = event.args.artifacts_dir
+        self._artifacts_dir = event.args.artifacts_dir or self._artifacts_dir
+
+        if not self._save_artifacts:
+            return
 
         project_dir = self._get_project_dir()
-        if self._artifacts_dir.is_absolute():
-            if not self._artifacts_dir.is_relative_to(project_dir):
-                raise ValueError(f"Artifacts directory '{self._artifacts_dir}' "
-                                 f"must be within the project directory '{project_dir}'")
+        if not self._artifacts_dir.is_absolute():
+            self._artifacts_dir = (project_dir / self._artifacts_dir).resolve()
+        if not self._artifacts_dir.is_relative_to(project_dir):
+            raise ValueError(f"Artifacts directory '{self._artifacts_dir}' "
+                             f"must be within the project directory '{project_dir}'")
 
-        artifacts_path = self._get_artifacts_dir()
-        if artifacts_path.exists():
-            shutil.rmtree(artifacts_path)
+        if self._artifacts_dir.exists():
+            shutil.rmtree(self._artifacts_dir)
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         self._scenario_artifacts.clear()
@@ -113,31 +118,37 @@ class ArtifactedPlugin(Plugin):
             event.scenario_result.attach(artifact)
 
     async def on_scenario_reported(self, event: ScenarioReportedEvent) -> None:
+        if not self._save_artifacts:
+            return
+
         aggregated_result = event.aggregated_result
         for scenario_result in aggregated_result.scenario_results:
-            scenario_artifacts_dir = self._get_scenario_artifacts_dir(scenario_result)
-            self._ensure_exists(scenario_artifacts_dir)
-
+            artifacts = []
             for step_result in scenario_result.step_results:
                 for artifact in step_result.artifacts:
+                    artifacts.append(artifact)
+            for artifact in scenario_result.artifacts:
+                artifacts.append(artifact)
+
+            if len(artifacts) > 0:
+                scenario_artifacts_dir = self._get_scenario_artifacts_dir(scenario_result)
+                self._ensure_exists(scenario_artifacts_dir)
+                for artifact in artifacts:
                     self._save_artifact(artifact, scenario_artifacts_dir)
 
-            for artifact in scenario_result.artifacts:
-                self._save_artifact(artifact, scenario_artifacts_dir)
+    def on_cleanup(self, event: CleanupEvent) -> None:
+        if not self._save_artifacts:
+            return
+        rel_path = self._artifacts_dir.relative_to(self._get_project_dir())
+        event.report.add_summary(f"Artifacts saved to directory: '{rel_path}'")
 
     def _get_project_dir(self) -> Path:
         assert self._global_config is not None
-        return self._global_config.project_dir
-
-    def _get_artifacts_dir(self) -> Path:
-        if self._artifacts_dir.is_absolute():
-            return self._artifacts_dir
-        return self._get_project_dir() / self._artifacts_dir
+        return self._global_config.project_dir.resolve()
 
     def _get_scenario_artifacts_dir(self, scenario_result: ScenarioResult) -> Path:
         scenario = scenario_result.scenario
-        scenario_path = self._get_artifacts_dir()
-        scenario_path /= scenario.rel_path.with_suffix('')
+        scenario_path = self._artifacts_dir / scenario.rel_path.with_suffix('')
 
         template_index = str(scenario.template_index or 0)
         started_at = str(scenario_result.started_at or 0).replace(".", "-")
@@ -150,11 +161,14 @@ class ArtifactedPlugin(Plugin):
 
     def _save_artifact(self, artifact: Artifact, scenario_path: Path) -> None:
         if isinstance(artifact, MemoryArtifact):
-            artifact_path = scenario_path / artifact.name
+            artifact_path = (scenario_path / artifact.name).resolve()
             artifact_path.write_bytes(artifact.data)
         elif isinstance(artifact, FileArtifact):
-            artifact_path = scenario_path / artifact.name
-            shutil.copy2(artifact.path, artifact_path)
+            artifact_dest_path = (scenario_path / artifact.name).resolve()
+            artifact_source_path = artifact.path
+            if not artifact_source_path.is_absolute():
+                artifact_source_path = (self._get_project_dir() / artifact_source_path).resolve()
+            shutil.copy2(artifact_source_path, artifact_dest_path)
         else:
             artifact_type = type(artifact).__name__
             rel_path = scenario_path.relative_to(self._get_project_dir())
