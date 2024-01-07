@@ -42,6 +42,7 @@ class RichReporterPlugin(Reporter):
         self._show_scenario_spinner = config.show_scenario_spinner
         self._show_interrupted_traceback = config.show_interrupted_traceback
         self._v2_verbosity = config.v2_verbosity
+        self._ring_bell = config.ring_bell
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -101,6 +102,11 @@ class RichReporterPlugin(Reporter):
                            action="store_true",
                            default=self._tb_show_locals,
                            help="Show local variables in the traceback output")
+        group.add_argument("-B", "--bell",
+                           action="store_true",
+                           default=self._ring_bell,
+                           dest="ring_bell",
+                           help="Trigger a 'bell' sound at the end of scenario execution")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
@@ -113,6 +119,7 @@ class RichReporterPlugin(Reporter):
         self._hide_namespaces = event.args.hide_namespaces
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
+        self._ring_bell = event.args.ring_bell
 
         if self._tb_max_frames < 4:
             raise ValueError("RichReporter: `tb_max_frames` must be >= 4")
@@ -262,7 +269,7 @@ class RichReporterPlugin(Reporter):
         aggregated_result = event.aggregated_result
         rescheduled = len(aggregated_result.scenario_results)
         if rescheduled == 1:
-            self._print_scenario_result(aggregated_result, prefix=" ")
+            self._print_scenario_result(aggregated_result.scenario_results[0], prefix=" ")
             return
 
         self._printer.print_scenario_subject(aggregated_result.scenario.subject,
@@ -289,6 +296,9 @@ class RichReporterPlugin(Reporter):
                                          skipped=event.report.skipped,
                                          elapsed=event.report.elapsed,
                                          is_interrupted=is_interrupted)
+
+        if self._ring_bell:
+            self._printer.console.bell()
 
 
 class RichReporter(PluginConfig):
@@ -348,3 +358,7 @@ class RichReporter(PluginConfig):
 
     # Enable new verbose levels
     v2_verbosity: bool = True
+
+    # Trigger a 'bell' sound at the end of scenario execution
+    # (if supported by the terminal)
+    ring_bell: bool = False

@@ -38,7 +38,7 @@ RegisteredItemType = EventHandler
 class Subscriber(ABC):
     @abstractmethod
     def subscribe(self, dispatcher: "Dispatcher") -> None:
-        raise NotImplementedError()
+        pass
 
 
 class Dispatcher:

@@ -16,6 +16,7 @@ import vedro.plugins.skipper as skipper
 import vedro.plugins.slicer as slicer
 import vedro.plugins.system_upgrade as system_upgrade
 import vedro.plugins.tagger as tagger
+import vedro.plugins.temp_keeper as temp_keeper
 import vedro.plugins.terminator as terminator
 from vedro.core import (
     Dispatcher,
@@ -87,6 +88,9 @@ class Config(core.Config):
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
 
+        class TempKeeper(temp_keeper.TempKeeper):
+            enabled = True
+
         class Orderer(orderer.Orderer):
             enabled = True
 
@@ -96,10 +100,10 @@ class Config(core.Config):
         class Deferrer(deferrer.Deferrer):
             enabled = True
 
-        class Artifacted(artifacted.Artifacted):
+        class Seeder(seeder.Seeder):
             enabled = True
 
-        class Seeder(seeder.Seeder):
+        class Artifacted(artifacted.Artifacted):
             enabled = True
 
         class Skipper(skipper.Skipper):

@@ -26,19 +26,20 @@ class LocalStorage:
     the 'flush' method explicitly.
     """
 
-    def __init__(self, plugin: Plugin, directory: Path, *,
+    def __init__(self, plugin: Plugin, *,
+                 project_dir: Path = Path.cwd(),
                  lock_factory: LockFactory = _lock_factory) -> None:
         """
         Initialize a new instance of LocalStorage.
 
         :param plugin: Plugin instance that provides namespace for the storage file.
-        :param directory: Path to the directory where the JSON file is located.
+        :param project_dir: The root directory of the project.
         :param lock_factory: Factory function to create a file lock.
         """
         namespace = f"{plugin.__class__.__name__}"
-        self._dir_path = directory
-        self._file_path = directory / f"{namespace}.json"
-        self._lock_path = directory / f"{namespace}.lock"
+        self._dir_path = (project_dir / ".vedro" / "local_storage/").resolve()
+        self._file_path = self._dir_path / f"{namespace}.json"
+        self._lock_path = self._dir_path / f"{namespace}.lock"
         self._lock_factory = lock_factory
         self._lock: Union[FileLock, None] = None
         self._storage: Union[Dict[str, Any], None] = None
