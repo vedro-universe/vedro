@@ -12,11 +12,11 @@ from vedro.core import (
     Plugin,
     PluginConfig,
     ScenarioResult,
+    StepResult,
 )
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
-    CleanupEvent,
     ConfigLoadedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
@@ -55,6 +55,7 @@ class ArtifactedPlugin(Plugin):
         self._step_artifacts = step_artifacts
         self._save_artifacts = config.save_artifacts
         self._artifacts_dir = config.artifacts_dir
+        self._add_artifact_details = config.add_artifact_details
         self._global_config: Union[ConfigType, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -66,8 +67,7 @@ class ArtifactedPlugin(Plugin):
                   .listen(StepFailedEvent, self.on_step_end) \
                   .listen(ScenarioPassedEvent, self.on_scenario_end) \
                   .listen(ScenarioFailedEvent, self.on_scenario_end) \
-                  .listen(ScenarioReportedEvent, self.on_scenario_reported) \
-                  .listen(CleanupEvent, self.on_cleanup)
+                  .listen(ScenarioReportedEvent, self.on_scenario_reported)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         self._global_config = event.config
@@ -84,13 +84,12 @@ class ArtifactedPlugin(Plugin):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._save_artifacts = event.args.save_artifacts
-        if not self._save_artifacts and event.args.artifacts_dir is not None:
-            raise ValueError(
-                "Artifacts directory cannot be specified when artifact saving is disabled")
-        self._artifacts_dir = event.args.artifacts_dir or self._artifacts_dir
-
         if not self._save_artifacts:
+            if event.args.artifacts_dir is not None:
+                raise ValueError(
+                    "Artifacts directory cannot be specified when artifact saving is disabled")
             return
+        self._artifacts_dir = event.args.artifacts_dir or self._artifacts_dir
 
         project_dir = self._get_project_dir()
         if not self._artifacts_dir.is_absolute():
@@ -123,24 +122,22 @@ class ArtifactedPlugin(Plugin):
 
         aggregated_result = event.aggregated_result
         for scenario_result in aggregated_result.scenario_results:
-            artifacts = []
+            scenario_artifacts_dir = self._get_scenario_artifacts_dir(scenario_result)
+
             for step_result in scenario_result.step_results:
                 for artifact in step_result.artifacts:
-                    artifacts.append(artifact)
+                    artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
+                    self._add_extra_details(step_result, artifact_path)
+
             for artifact in scenario_result.artifacts:
-                artifacts.append(artifact)
+                artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
+                self._add_extra_details(scenario_result, artifact_path)
 
-            if len(artifacts) > 0:
-                scenario_artifacts_dir = self._get_scenario_artifacts_dir(scenario_result)
-                self._ensure_exists(scenario_artifacts_dir)
-                for artifact in artifacts:
-                    self._save_artifact(artifact, scenario_artifacts_dir)
-
-    def on_cleanup(self, event: CleanupEvent) -> None:
-        if not self._save_artifacts:
-            return
-        rel_path = self._artifacts_dir.relative_to(self._get_project_dir())
-        event.report.add_summary(f"Artifacts saved to directory: '{rel_path}'")
+    def _add_extra_details(self, result: Union[ScenarioResult, StepResult],
+                           artifact_path: Path) -> None:
+        if self._add_artifact_details:
+            rel_path = artifact_path.relative_to(self._get_project_dir())
+            result.add_extra_details(f"artifact '{rel_path}'")
 
     def _get_project_dir(self) -> Path:
         assert self._global_config is not None
@@ -156,19 +153,23 @@ class ArtifactedPlugin(Plugin):
 
         return scenario_path
 
-    def _ensure_exists(self, path: Path) -> None:
-        path.mkdir(parents=True, exist_ok=True)
+    def _save_artifact(self, artifact: Artifact, scenario_path: Path) -> Path:
+        if not scenario_path.exists():
+            scenario_path.mkdir(parents=True, exist_ok=True)
 
-    def _save_artifact(self, artifact: Artifact, scenario_path: Path) -> None:
         if isinstance(artifact, MemoryArtifact):
-            artifact_path = (scenario_path / artifact.name).resolve()
-            artifact_path.write_bytes(artifact.data)
+            artifact_dest_path = (scenario_path / artifact.name).resolve()
+            artifact_dest_path.write_bytes(artifact.data)
+            return artifact_dest_path
+
         elif isinstance(artifact, FileArtifact):
             artifact_dest_path = (scenario_path / artifact.name).resolve()
             artifact_source_path = artifact.path
             if not artifact_source_path.is_absolute():
                 artifact_source_path = (self._get_project_dir() / artifact_source_path).resolve()
             shutil.copy2(artifact_source_path, artifact_dest_path)
+            return artifact_dest_path
+
         else:
             artifact_type = type(artifact).__name__
             rel_path = scenario_path.relative_to(self._get_project_dir())
@@ -183,4 +184,9 @@ class Artifacted(PluginConfig):
     save_artifacts: bool = False
 
     # Directory path for saving artifacts
+    # Available if `save_artifacts` is True
     artifacts_dir: Path = Path(".vedro/artifacts/")
+
+    # Add artifact details to scenario and steps extras
+    # Available if `save_artifacts` is True
+    add_artifact_details: bool = True
