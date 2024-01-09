@@ -181,7 +181,7 @@ async def test_multiple_steps_failed(*, runner: MonotonicScenarioRunner, dispatc
 
 
 @pytest.mark.parametrize("interrupt_exception", (KeyboardInterrupt, Interrupted))
-async def test_step_interruped(interrupt_exception: Type[BaseException], *, dispatcher_: Mock):
+async def test_step_interrupted(interrupt_exception: Type[BaseException], *, dispatcher_: Mock):
     with given:
         exception = interrupt_exception()
         step1_, step2_ = Mock(side_effect=exception), Mock(return_value=None)

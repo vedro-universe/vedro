@@ -17,10 +17,18 @@ from vedro.events import (
 
 from ._scheduler import RepeaterScenarioScheduler
 
-__all__ = ("Repeater", "RepeaterPlugin", "RepeaterPluginTriggered",)
+__all__ = ("Repeater", "RepeaterPlugin", "RepeaterExecutionInterrupted",)
 
 
-class RepeaterPluginTriggered(Interrupted):
+class RepeaterExecutionInterrupted(Interrupted):
+    """
+    Exception raised when the execution of scenario repetition is interrupted.
+
+    This exception is used within the RepeaterPlugin to signal an early termination
+    of the scenario repetition process. It is typically raised when the fail-fast
+    condition is met, i.e., if a scenario fails and the --fail-fast-on-repeat option
+    is enabled, indicating that further repetitions of the scenario should be stopped.
+    """
     pass
 
 
@@ -76,13 +84,13 @@ class RepeaterPlugin(Plugin):
         if self._repeats_delay < 0.0:
             raise ValueError("--repeats-delay must be >= 0.0")
 
-        if self._repeats_delay > 0.0 and self._repeats <= 1:
+        if (self._repeats_delay > 0.0) and (self._repeats <= 1):
             raise ValueError("--repeats-delay must be used with --repeats > 1")
 
-        if self._fail_fast and self._repeats <= 1:
+        if self._fail_fast and (self._repeats <= 1):
             raise ValueError("--fail-fast-on-repeat must be used with --repeats > 1")
 
-        if self._repeats <= 1:
+        if not self.is_repeating_enabled():
             return
 
         assert self._global_config is not None  # for type checking
@@ -92,15 +100,12 @@ class RepeaterPlugin(Plugin):
         self._scheduler = event.scheduler
 
     def on_scenario_execute(self, event: Union[ScenarioRunEvent, ScenarioSkippedEvent]) -> None:
-        if not self._fail_fast:
-            return
-
-        if self._fail_fast and self._failed_count >= 1:
-            raise RepeaterPluginTriggered("Stop repeating scenarios after the first failure")
+        if self._fail_fast and (self._failed_count >= 1):
+            raise RepeaterExecutionInterrupted("Stop repeating scenarios after the first failure")
 
     async def on_scenario_end(self,
                               event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        if self._repeats <= 1:
+        if not self.is_repeating_enabled():
             return
         assert isinstance(self._scheduler, RepeaterScenarioScheduler)  # for type checking
 
@@ -114,17 +119,21 @@ class RepeaterPlugin(Plugin):
             if self._repeat_count < self._repeats:
                 self._scheduler.schedule(scenario)
 
-        if self._repeats_delay > 0.0 and self._repeat_count < self._repeats:
+        if (self._repeats_delay > 0.0) and (self._repeat_count < self._repeats):
             await self._sleep(self._repeats_delay)
 
         if event.scenario_result.is_failed():
             self._failed_count = 1
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        if self._repeats <= 1:
+        if not self.is_repeating_enabled():
             return
-        message = self._get_summary_message()
-        event.report.add_summary(message)
+        if not self._fail_fast or (self._failed_count == 0):
+            message = self._get_summary_message()
+            event.report.add_summary(message)
+
+    def is_repeating_enabled(self) -> bool:
+        return self._repeats > 1
 
     def _get_summary_message(self) -> str:
         message = f"repeated x{self._repeats}"

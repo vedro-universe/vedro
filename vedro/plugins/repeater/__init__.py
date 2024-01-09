@@ -1,4 +1,5 @@
-from ._repeater import Repeater, RepeaterPlugin, RepeaterPluginTriggered
+from ._repeater import Repeater, RepeaterPlugin, RepeaterExecutionInterrupted
 from ._scheduler import RepeaterScenarioScheduler
 
-__all__ = ("Repeater", "RepeaterPlugin", "RepeaterScenarioScheduler", "RepeaterPluginTriggered",)
+__all__ = ("Repeater", "RepeaterPlugin", "RepeaterScenarioScheduler",
+           "RepeaterExecutionInterrupted",)
