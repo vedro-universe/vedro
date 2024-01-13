@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import List
 
-from vedro.core._scenario_finder import ScenarioFileFinder
-from vedro.core._scenario_finder._file_filters import DunderFilter, HiddenFilter
+from vedro.core import ScenarioFileFinder
+from vedro.core.scenario_finder.scenario_file_finder import DunderFilter, HiddenFilter
 
 
 def _create_file_tree(tree: List[Path]) -> List[Path]:

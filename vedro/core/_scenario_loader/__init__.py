@@ -1,4 +1,4 @@
-from ._scenario_file_loader import ScenarioFileLoader
-from ._scenario_loader import ScenarioLoader
+# this module is for backward compatibility
+from ..scenario_loader import ScenarioFileLoader, ScenarioLoader
 
 __all__ = ("ScenarioLoader", "ScenarioFileLoader",)

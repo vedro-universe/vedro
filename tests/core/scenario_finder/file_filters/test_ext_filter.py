@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pytest import raises
 
-from vedro.core._scenario_finder._file_filters import ExtFilter
+from vedro.core.scenario_finder.scenario_file_finder import ExtFilter
 
 
 @pytest.mark.parametrize(("value", "expected"), [

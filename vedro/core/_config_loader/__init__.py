@@ -1,6 +1,4 @@
-from ._config_file_loader import ConfigFileLoader
-from ._config_loader import ConfigLoader
-from ._config_type import Config, ConfigType, Section
+# this module is for backward compatibility
+from ..config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
 
-__all__ = ("Config", "Section", "ConfigType",
-           "ConfigLoader", "ConfigFileLoader",)
+__all__ = ("Config", "Section", "ConfigType", "ConfigLoader", "ConfigFileLoader",)

@@ -6,7 +6,7 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core._scenario_loader import ScenarioFileLoader
+from vedro.core import ScenarioFileLoader
 
 
 @pytest.fixture()

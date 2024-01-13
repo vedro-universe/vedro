@@ -2,7 +2,7 @@ from inspect import isclass
 from pathlib import Path
 from typing import Any, Optional, cast
 
-from .._module_loader import ModuleFileLoader, ModuleLoader
+from ..module_loader import ModuleFileLoader, ModuleLoader
 from ._config_loader import ConfigLoader
 from ._config_type import Config, ConfigType
 

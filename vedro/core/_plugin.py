@@ -1,7 +1,7 @@
 from typing import Type
 
-from ._config_loader import Section
 from ._dispatcher import Dispatcher, Subscriber
+from .config_loader import Section as ConfigSection
 
 __all__ = ("Plugin", "PluginConfig",)
 
@@ -23,7 +23,7 @@ class Plugin(Subscriber):
         return f"{self.__class__.__name__}({self._config.__name__})"
 
 
-class PluginConfig(Section):
+class PluginConfig(ConfigSection):
     plugin: Type[Plugin] = Plugin
     description: str = ""
     enabled: bool = True

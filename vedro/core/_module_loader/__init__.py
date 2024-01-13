@@ -1,4 +1,4 @@
-from ._module_file_loader import ModuleFileLoader
-from ._module_loader import ModuleLoader
+# this module is for backward compatibility
+from ..module_loader import ModuleFileLoader, ModuleLoader
 
 __all__ = ("ModuleLoader", "ModuleFileLoader",)
