@@ -9,6 +9,8 @@ from vedro.events import (
     ConfigLoadedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
+    ScenarioRunEvent,
+    ScenarioSkippedEvent,
     StartupEvent,
 )
 
@@ -37,6 +39,8 @@ class RerunnerPlugin(Plugin):
                   .listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed) \
                   .listen(StartupEvent, self.on_startup) \
+                  .listen(ScenarioRunEvent, self.on_scenario_execute) \
+                  .listen(ScenarioSkippedEvent, self.on_scenario_execute) \
                   .listen(ScenarioPassedEvent, self.on_scenario_end) \
                   .listen(ScenarioFailedEvent, self.on_scenario_end) \
                   .listen(CleanupEvent, self.on_cleanup)
@@ -62,45 +66,58 @@ class RerunnerPlugin(Plugin):
         if self._reruns_delay < 0.0:
             raise ValueError("--reruns-delay must be >= 0.0")
 
-        if self._reruns_delay > 0.0 and self._reruns < 1:
+        if (self._reruns_delay > 0.0) and (self._reruns < 1):
             raise ValueError("--reruns-delay must be used with --reruns > 0")
 
-        if self._reruns == 0:
-            return
-
-        assert self._global_config is not None  # for type checking
-        self._global_config.Registry.ScenarioScheduler.register(self._scheduler_factory, self)
+        if self._is_rerunning_enabled():
+            assert self._global_config is not None  # for type checking
+            self._global_config.Registry.ScenarioScheduler.register(self._scheduler_factory, self)
 
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
 
+    async def on_scenario_execute(self,
+                                  event: Union[ScenarioRunEvent, ScenarioSkippedEvent]) -> None:
+        if not self._is_rerunning_enabled():
+            return
+
+        scenario = event.scenario_result.scenario
+        if (self._rerun_scenario_id == scenario.unique_id) and (self._reruns_delay > 0.0):
+            await self._sleep(self._reruns_delay)
+
     async def on_scenario_end(self,
                               event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        if self._reruns == 0:
+        if not self._is_rerunning_enabled():
             return
-
         assert isinstance(self._scheduler, RerunnerScenarioScheduler)  # for type checking
 
-        if self._rerun_scenario_id == event.scenario_result.scenario.unique_id:
-            return
+        scenario = event.scenario_result.scenario
+        if scenario.unique_id != self._rerun_scenario_id:
+            self._rerun_scenario_id = scenario.unique_id
 
-        self._rerun_scenario_id = event.scenario_result.scenario.unique_id
-        if event.scenario_result.is_failed():
-            self._reran += 1
-            for _ in range(self._reruns):
-                if self._reruns_delay > 0.0:
-                    await self._sleep(self._reruns_delay)
-                self._scheduler.schedule(event.scenario_result.scenario)
-                self._times += 1
+            if event.scenario_result.is_failed():
+                self._reran += 1
+                for _ in range(self._reruns):
+                    self._scheduler.schedule(scenario)
+                    self._times += 1
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        if self._reruns != 0:
-            ss = "" if self._reran == 1 else "s"
-            ts = "" if self._times == 1 else "s"
-            message = f"rerun {self._reran} scenario{ss}, {self._times} time{ts}"
-            if self._reruns_delay:
-                message += f", with delay {self._reruns_delay!r}s"
-            event.report.add_summary(message)
+        if not self._is_rerunning_enabled():
+            return
+
+        message = self._get_summary_message()
+        event.report.add_summary(message)
+
+    def _is_rerunning_enabled(self) -> bool:
+        return self._reruns > 0
+
+    def _get_summary_message(self) -> str:
+        ss = "" if self._reran == 1 else "s"
+        ts = "" if self._times == 1 else "s"
+        message = f"rerun {self._reran} scenario{ss}, {self._times} time{ts}"
+        if self._reruns_delay:
+            message += f", with delay {self._reruns_delay!r}s"
+        return message
 
 
 class Rerunner(PluginConfig):

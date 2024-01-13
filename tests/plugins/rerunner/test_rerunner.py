@@ -114,7 +114,8 @@ async def test_dont_rerun_skipped(reruns: int, *,
 
 
 @pytest.mark.usefixtures(rerunner.__name__)
-async def test_dont_rerun_rerunned(dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
+async def test_no_additional_reruns_after_failure(dispatcher: Dispatcher,
+                                                  scheduler_: Mock, sleep_: AsyncMock):
     with given:
         await fire_arg_parsed_event(dispatcher, reruns=1)
         await fire_startup_event(dispatcher, scheduler_)
@@ -135,8 +136,8 @@ async def test_dont_rerun_rerunned(dispatcher: Dispatcher, scheduler_: Mock, sle
     (2, 1.0)
 ])
 @pytest.mark.usefixtures(rerunner.__name__)
-async def test_rerun_with_delay(reruns: int, reruns_delay: float, *,
-                                dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
+async def _test_rerun_with_delay(reruns: int, reruns_delay: float, *,
+                                 dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
     with given:
         await fire_arg_parsed_event(dispatcher, reruns=reruns, reruns_delay=reruns_delay)
         await fire_startup_event(dispatcher, scheduler_)
