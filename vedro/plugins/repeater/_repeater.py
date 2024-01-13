@@ -46,7 +46,6 @@ class RepeaterPlugin(Plugin):
         self._global_config: Union[ConfigType, None] = None
         self._scheduler: Union[ScenarioScheduler, None] = None
         self._repeat_scenario_id: Union[str, None] = None
-        self._repeat_count: int = 0
         self._failed_count: int = 0
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -90,49 +89,50 @@ class RepeaterPlugin(Plugin):
         if self._fail_fast and (self._repeats <= 1):
             raise ValueError("--fail-fast-on-repeat must be used with --repeats > 1")
 
-        if not self.is_repeating_enabled():
-            return
-
-        assert self._global_config is not None  # for type checking
-        self._global_config.Registry.ScenarioScheduler.register(self._scheduler_factory, self)
+        if self._is_repeating_enabled():
+            assert self._global_config is not None  # for type checking
+            self._global_config.Registry.ScenarioScheduler.register(self._scheduler_factory, self)
 
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
 
-    def on_scenario_execute(self, event: Union[ScenarioRunEvent, ScenarioSkippedEvent]) -> None:
-        if self._fail_fast and (self._failed_count >= 1):
+    async def on_scenario_execute(self,
+                                  event: Union[ScenarioRunEvent, ScenarioSkippedEvent]) -> None:
+        if not self._is_repeating_enabled():
+            return
+
+        if self._fail_fast and (self._failed_count > 0):
             raise RepeaterExecutionInterrupted("Stop repeating scenarios after the first failure")
+
+        scenario = event.scenario_result.scenario
+        if (self._repeat_scenario_id == scenario.unique_id) and (self._repeats_delay > 0.0):
+            await self._sleep(self._repeats_delay)
 
     async def on_scenario_end(self,
                               event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        if not self.is_repeating_enabled():
+        if not self._is_repeating_enabled():
             return
         assert isinstance(self._scheduler, RepeaterScenarioScheduler)  # for type checking
 
         scenario = event.scenario_result.scenario
-        if self._repeat_scenario_id != scenario.unique_id:
+        if scenario.unique_id != self._repeat_scenario_id:
             self._repeat_scenario_id = scenario.unique_id
-            self._repeat_count = 1
-            self._scheduler.schedule(scenario)
-        else:
-            self._repeat_count += 1
-            if self._repeat_count < self._repeats:
+            self._failed_count = 1 if event.scenario_result.is_failed() else 0
+            for _ in range(self._repeats - 1):
                 self._scheduler.schedule(scenario)
-
-        if (self._repeats_delay > 0.0) and (self._repeat_count < self._repeats):
-            await self._sleep(self._repeats_delay)
-
-        if event.scenario_result.is_failed():
-            self._failed_count = 1
+        else:
+            if event.scenario_result.is_failed():
+                self._failed_count += 1
 
     def on_cleanup(self, event: CleanupEvent) -> None:
-        if not self.is_repeating_enabled():
+        if not self._is_repeating_enabled():
             return
-        if not self._fail_fast or (self._failed_count == 0):
+
+        if not event.report.interrupted:
             message = self._get_summary_message()
             event.report.add_summary(message)
 
-    def is_repeating_enabled(self) -> bool:
+    def _is_repeating_enabled(self) -> bool:
         return self._repeats > 1
 
     def _get_summary_message(self) -> str:
