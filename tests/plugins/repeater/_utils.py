@@ -1,8 +1,10 @@
 import asyncio
+import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
-from typing import Optional
+from types import TracebackType
+from typing import Optional, cast
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -12,6 +14,7 @@ from vedro.core import (
     Config,
     ConfigType,
     Dispatcher,
+    ExcInfo,
     Factory,
     MonotonicScenarioScheduler,
     ScenarioResult,
@@ -114,3 +117,11 @@ async def fire_failed_event(dispatcher: Dispatcher) -> ScenarioResult:
     scenario_failed_event = ScenarioFailedEvent(scenario_result)
     await dispatcher.fire(scenario_failed_event)
     return scenario_result
+
+
+def make_exc_info(exc_val: BaseException) -> ExcInfo:
+    try:
+        raise exc_val
+    except type(exc_val):
+        *_, traceback = sys.exc_info()
+    return ExcInfo(type(exc_val), exc_val, cast(TracebackType, traceback))
