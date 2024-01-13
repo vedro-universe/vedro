@@ -43,10 +43,16 @@ class StepResult:
         return self._status == StepStatus.FAILED
 
     def mark_failed(self) -> "StepResult":
+        if self._status != StepStatus.PENDING:
+            raise RuntimeError(
+                "Cannot mark step as failed because its status has already been set")
         self._status = StepStatus.FAILED
         return self
 
     def mark_passed(self) -> "StepResult":
+        if self._status != StepStatus.PENDING:
+            raise RuntimeError(
+                "Cannot mark step as passed because its status has already been set")
         self._status = StepStatus.PASSED
         return self
 
@@ -81,7 +87,8 @@ class StepResult:
         return self
 
     def attach(self, artifact: Artifact) -> None:
-        assert isinstance(artifact, Artifact)
+        if not isinstance(artifact, Artifact):
+            raise TypeError("artifact must be an instance of Artifact")
         self._artifacts.append(artifact)
 
     @property

@@ -115,6 +115,44 @@ def test_from_existing_started_ended(get_scenario_result: Callable[[], ScenarioR
         assert aggregated_result.extra_details == scenario_result.extra_details
 
 
+def test_from_existing_started_at_min():
+    with given:
+        scenario_result1 = make_scenario_result().set_started_at(1.0)
+        scenario_result2 = make_scenario_result().set_started_at(2.0)
+
+    with when:
+        aggregated_result = AggregatedResult.from_existing(scenario_result2,
+                                                           [scenario_result1, scenario_result2])
+
+    with then:
+        assert aggregated_result.status == scenario_result2.status
+        assert aggregated_result.started_at == scenario_result1.started_at  # min
+        assert aggregated_result.ended_at == scenario_result2.ended_at
+        assert aggregated_result.scope == scenario_result2.scope
+        assert aggregated_result.artifacts == scenario_result2.artifacts
+        assert aggregated_result.step_results == scenario_result2.step_results
+        assert aggregated_result.extra_details == scenario_result2.extra_details
+
+
+def test_from_existing_ended_at_max():
+    with given:
+        scenario_result1 = make_scenario_result().set_ended_at(1.0)
+        scenario_result2 = make_scenario_result().set_ended_at(5.0)
+
+    with when:
+        aggregated_result = AggregatedResult.from_existing(scenario_result1,
+                                                           [scenario_result1, scenario_result2])
+
+    with then:
+        assert aggregated_result.status == scenario_result1.status
+        assert aggregated_result.started_at == scenario_result1.started_at
+        assert aggregated_result.ended_at == scenario_result2.ended_at  # max
+        assert aggregated_result.scope == scenario_result1.scope
+        assert aggregated_result.artifacts == scenario_result1.artifacts
+        assert aggregated_result.step_results == scenario_result1.step_results
+        assert aggregated_result.extra_details == scenario_result1.extra_details
+
+
 def test_from_existing_artifacts():
     with given:
         scenario_result = make_scenario_result()

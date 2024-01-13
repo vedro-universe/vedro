@@ -1,3 +1,4 @@
+from typing import Type, Union
 from unittest.mock import AsyncMock, Mock, call
 
 import pytest
@@ -9,6 +10,7 @@ from vedro.events import (
     CleanupEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
+    ScenarioRunEvent,
     ScenarioSkippedEvent,
 )
 
@@ -27,7 +29,7 @@ __all__ = ("rerunner", "scheduler_", "dispatcher", "sleep_")  # fixtures
 
 
 @pytest.mark.usefixtures(rerunner.__name__)
-async def test_rerun_validation(dispatcher: Dispatcher):
+async def test_reruns_validation(dispatcher: Dispatcher):
     with when, raises(BaseException) as exc_info:
         await fire_arg_parsed_event(dispatcher, reruns=-1)
 
@@ -37,9 +39,9 @@ async def test_rerun_validation(dispatcher: Dispatcher):
 
 
 @pytest.mark.usefixtures(rerunner.__name__)
-async def test_rerun_delay_validation(dispatcher: Dispatcher):
+async def test_reruns_delay_validation(dispatcher: Dispatcher):
     with when, raises(BaseException) as exc_info:
-        await fire_arg_parsed_event(dispatcher, reruns=1, reruns_delay=-0.001)
+        await fire_arg_parsed_event(dispatcher, reruns=1, reruns_delay=-0.1)
 
     with then:
         assert exc_info.type is ValueError
@@ -47,7 +49,7 @@ async def test_rerun_delay_validation(dispatcher: Dispatcher):
 
 
 @pytest.mark.usefixtures(rerunner.__name__)
-async def test_rerun_delay_without_reruns_validation(dispatcher: Dispatcher):
+async def test_reruns_delay_without_reruns_validation(dispatcher: Dispatcher):
     with when, raises(BaseException) as exc_info:
         await fire_arg_parsed_event(dispatcher, reruns=0, reruns_delay=0.1)
 
@@ -114,7 +116,8 @@ async def test_dont_rerun_skipped(reruns: int, *,
 
 
 @pytest.mark.usefixtures(rerunner.__name__)
-async def test_dont_rerun_rerunned(dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
+async def test_no_additional_reruns_after_failure(dispatcher: Dispatcher,
+                                                  scheduler_: Mock, sleep_: AsyncMock):
     with given:
         await fire_arg_parsed_event(dispatcher, reruns=1)
         await fire_startup_event(dispatcher, scheduler_)
@@ -130,26 +133,47 @@ async def test_dont_rerun_rerunned(dispatcher: Dispatcher, scheduler_: Mock, sle
         assert sleep_.mock_calls == []
 
 
-@pytest.mark.parametrize(("reruns", "reruns_delay"), [
-    (1, 0.1),
-    (2, 1.0)
+@pytest.mark.parametrize(("event_cls", "reruns_delay"), [
+    (ScenarioRunEvent, 0.1),
+    (ScenarioSkippedEvent, 1.0)
 ])
 @pytest.mark.usefixtures(rerunner.__name__)
-async def test_rerun_with_delay(reruns: int, reruns_delay: float, *,
-                                dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
+async def test_reruns_delay(event_cls: Union[Type[ScenarioRunEvent], Type[ScenarioSkippedEvent]],
+                            reruns_delay: float, *, dispatcher: Dispatcher, scheduler_: Mock,
+                            sleep_: AsyncMock):
     with given:
-        await fire_arg_parsed_event(dispatcher, reruns=reruns, reruns_delay=reruns_delay)
+        await fire_arg_parsed_event(dispatcher, reruns=2, reruns_delay=reruns_delay)
         await fire_startup_event(dispatcher, scheduler_)
+        scenario_failed_event = await fire_failed_event(dispatcher)
+        scheduler_.reset_mock()
 
-        scenario_result = make_scenario_result().mark_failed()
-        scenario_failed_event = ScenarioFailedEvent(scenario_result)
+        event = event_cls(scenario_failed_event.scenario_result)
 
     with when:
-        await dispatcher.fire(scenario_failed_event)
+        await dispatcher.fire(event)
 
     with then:
-        assert scheduler_.mock_calls == [call.schedule(scenario_result.scenario)] * reruns
-        assert sleep_.mock_calls == [call(reruns_delay)] * reruns
+        assert scheduler_.mock_calls == []
+        assert sleep_.mock_calls == [call(reruns_delay)]
+
+
+@pytest.mark.usefixtures(rerunner.__name__)
+async def test_no_reruns_delay(*, dispatcher: Dispatcher, scheduler_: Mock, sleep_: AsyncMock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, reruns=2, reruns_delay=0.1)
+        await fire_startup_event(dispatcher, scheduler_)
+        await fire_failed_event(dispatcher)
+        scheduler_.reset_mock()
+
+        scenario_result = make_scenario_result()
+        event = ScenarioRunEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert scheduler_.mock_calls == []
+        assert sleep_.mock_calls == []
 
 
 @pytest.mark.usefixtures(rerunner.__name__)

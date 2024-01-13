@@ -321,7 +321,7 @@ class RichReporter(PluginConfig):
     # Show the elapsed time of each scenario
     show_timings: bool = False
 
-    # Show the relative path of each passed scenario
+    # Show the relative path of each executed scenario (passed, failed, or skipped)
     # Available if `show_scenario_extras` is True
     show_paths: bool = False
 

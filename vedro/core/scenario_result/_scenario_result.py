@@ -31,6 +31,9 @@ class ScenarioResult:
         return self._status
 
     def mark_passed(self) -> "ScenarioResult":
+        if self.status != ScenarioStatus.PENDING:
+            raise RuntimeError(
+                "Cannot mark scenario as passed because its status has already been set")
         self._status = ScenarioStatus.PASSED
         return self
 
@@ -38,6 +41,9 @@ class ScenarioResult:
         return self._status == ScenarioStatus.PASSED
 
     def mark_failed(self) -> "ScenarioResult":
+        if self.status != ScenarioStatus.PENDING:
+            raise RuntimeError(
+                "Cannot mark scenario as failed because its status has already been set")
         self._status = ScenarioStatus.FAILED
         return self
 
@@ -45,6 +51,9 @@ class ScenarioResult:
         return self._status == ScenarioStatus.FAILED
 
     def mark_skipped(self) -> "ScenarioResult":
+        if self.status != ScenarioStatus.PENDING:
+            raise RuntimeError(
+                "Cannot mark scenario as skipped because its status has already been set")
         self._status = ScenarioStatus.SKIPPED
         return self
 
@@ -90,7 +99,8 @@ class ScenarioResult:
         return self._scope
 
     def attach(self, artifact: Artifact) -> None:
-        assert isinstance(artifact, Artifact)
+        if not isinstance(artifact, Artifact):
+            raise TypeError("artifact must be an instance of Artifact")
         self._artifacts.append(artifact)
 
     @property

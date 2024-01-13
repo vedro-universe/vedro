@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
 from types import MethodType
-from typing import Type
+from typing import Callable, Type
 from unittest.mock import Mock
 
 import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro import Scenario
 from vedro.core import (
@@ -33,6 +34,9 @@ def scenario_():
 def virtual_scenario(scenario_: Type[scenario_]):
     virtual_scenario = VirtualScenario(scenario_, [])
     return virtual_scenario
+
+
+ChangeStatusType = Callable[[ScenarioResult], ScenarioResult]
 
 
 def test_scenario_result():
@@ -72,6 +76,27 @@ def test_scenario_result_mark_passed(*, virtual_scenario: VirtualScenario):
         assert scenario_result.is_passed() is True
 
 
+@pytest.mark.parametrize("change_status", [
+    lambda scn_result: scn_result.mark_passed(),
+    lambda scn_result: scn_result.mark_failed(),
+    lambda scn_result: scn_result.mark_skipped(),
+])
+def test_marked_scenario_result_mark_passed(change_status: ChangeStatusType, *,
+                                            virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        change_status(scenario_result)
+
+    with when, raises(BaseException) as exc:
+        scenario_result.mark_passed()
+
+    with then:
+        assert exc.type is RuntimeError
+        assert str(exc.value) == (
+            "Cannot mark scenario as passed because its status has already been set"
+        )
+
+
 def test_scenario_result_mark_failed(*, virtual_scenario: VirtualScenario):
     with given:
         scenario_result = ScenarioResult(virtual_scenario)
@@ -84,6 +109,27 @@ def test_scenario_result_mark_failed(*, virtual_scenario: VirtualScenario):
         assert scenario_result.is_failed() is True
 
 
+@pytest.mark.parametrize("change_status", [
+    lambda scn_result: scn_result.mark_passed(),
+    lambda scn_result: scn_result.mark_failed(),
+    lambda scn_result: scn_result.mark_skipped(),
+])
+def test_marked_scenario_result_mark_failed(change_status: ChangeStatusType, *,
+                                            virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        change_status(scenario_result)
+
+    with when, raises(BaseException) as exc:
+        scenario_result.mark_failed()
+
+    with then:
+        assert exc.type is RuntimeError
+        assert str(exc.value) == (
+            "Cannot mark scenario as failed because its status has already been set"
+        )
+
+
 def test_scenario_result_mark_skipped(*, virtual_scenario: VirtualScenario):
     with given:
         scenario_result = ScenarioResult(virtual_scenario)
@@ -94,6 +140,27 @@ def test_scenario_result_mark_skipped(*, virtual_scenario: VirtualScenario):
     with then:
         assert res == scenario_result
         assert scenario_result.is_skipped() is True
+
+
+@pytest.mark.parametrize("change_status", [
+    lambda scn_result: scn_result.mark_passed(),
+    lambda scn_result: scn_result.mark_failed(),
+    lambda scn_result: scn_result.mark_skipped(),
+])
+def test_marked_scenario_result_mark_skipped(change_status: ChangeStatusType, *,
+                                             virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        change_status(scenario_result)
+
+    with when, raises(BaseException) as exc:
+        scenario_result.mark_skipped()
+
+    with then:
+        assert exc.type is RuntimeError
+        assert str(exc.value) == (
+            "Cannot mark scenario as skipped because its status has already been set"
+        )
 
 
 def test_scenario_result_set_started_at(*, virtual_scenario: VirtualScenario):
@@ -235,6 +302,19 @@ def test_scenario_result_attach_artifact(*, virtual_scenario: VirtualScenario):
 
     with then:
         assert res is None
+
+
+def test_scenario_result_attach_incorrect_artifact(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        artifact = {}
+
+    with when, raises(BaseException) as exc:
+        scenario_result.attach(artifact)
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == "artifact must be an instance of Artifact"
 
 
 def test_scenario_result_get_artifacts(*, virtual_scenario: VirtualScenario):

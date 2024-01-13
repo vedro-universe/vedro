@@ -1,7 +1,10 @@
 import asyncio
+import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
+from types import TracebackType
+from typing import Optional, cast
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -11,6 +14,7 @@ from vedro.core import (
     Config,
     ConfigType,
     Dispatcher,
+    ExcInfo,
     Factory,
     MonotonicScenarioScheduler,
     ScenarioResult,
@@ -22,6 +26,7 @@ from vedro.events import (
     ArgParseEvent,
     ConfigLoadedEvent,
     ScenarioFailedEvent,
+    ScenarioPassedEvent,
     StartupEvent,
 )
 from vedro.plugins.repeater import Repeater, RepeaterPlugin
@@ -63,8 +68,10 @@ def make_vscenario() -> VirtualScenario:
     return VirtualScenario(_Scenario, steps=[])
 
 
-def make_scenario_result() -> ScenarioResult:
-    return ScenarioResult(make_vscenario())
+def make_scenario_result(scenario: Optional[VirtualScenario] = None) -> ScenarioResult:
+    if scenario is None:
+        scenario = make_vscenario()
+    return ScenarioResult(scenario)
 
 
 def make_config() -> ConfigType:
@@ -76,14 +83,20 @@ def make_config() -> ConfigType:
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
-                                repeats: int, repeats_delay: float = 0.0) -> None:
+                                repeats: int,
+                                repeats_delay: float = 0.0,
+                                fail_fast_on_repeat: bool = False) -> None:
     config_loaded_event = ConfigLoadedEvent(Path(), make_config())
     await dispatcher.fire(config_loaded_event)
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(repeats=repeats, repeats_delay=repeats_delay))
+    arg_parsed_event = ArgParsedEvent(Namespace(
+        repeats=repeats,
+        repeats_delay=repeats_delay,
+        fail_fast_on_repeat=fail_fast_on_repeat,
+    ))
     await dispatcher.fire(arg_parsed_event)
 
 
@@ -92,8 +105,23 @@ async def fire_startup_event(dispatcher: Dispatcher, scheduler: Scheduler) -> No
     await dispatcher.fire(startup_event)
 
 
-async def fire_failed_event(dispatcher: Dispatcher) -> ScenarioFailedEvent:
+async def fire_passed_event(dispatcher: Dispatcher) -> ScenarioResult:
+    scenario_result = make_scenario_result().mark_passed()
+    scenario_passed_event = ScenarioPassedEvent(scenario_result)
+    await dispatcher.fire(scenario_passed_event)
+    return scenario_result
+
+
+async def fire_failed_event(dispatcher: Dispatcher) -> ScenarioResult:
     scenario_result = make_scenario_result().mark_failed()
     scenario_failed_event = ScenarioFailedEvent(scenario_result)
     await dispatcher.fire(scenario_failed_event)
-    return scenario_failed_event
+    return scenario_result
+
+
+def make_exc_info(exc_val: BaseException) -> ExcInfo:
+    try:
+        raise exc_val
+    except type(exc_val):
+        *_, traceback = sys.exc_info()
+    return ExcInfo(type(exc_val), exc_val, cast(TracebackType, traceback))
