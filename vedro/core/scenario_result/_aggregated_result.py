@@ -31,11 +31,6 @@ class AggregatedResult(ScenarioResult):
         elif main_scenario_result.is_skipped():
             result.mark_skipped()
 
-        if main_scenario_result.started_at is not None:
-            result.set_started_at(main_scenario_result.started_at)
-        if main_scenario_result.ended_at is not None:
-            result.set_ended_at(main_scenario_result.ended_at)
-
         result.set_scope(main_scenario_result.scope)
 
         for step_result in main_scenario_result.step_results:
@@ -49,6 +44,13 @@ class AggregatedResult(ScenarioResult):
 
         assert len(scenario_results) > 0
         for scenario_result in scenario_results:
+            if scenario_result.started_at is not None:
+                if (result.started_at is None) or (scenario_result.started_at < result.started_at):
+                    result.set_started_at(scenario_result.started_at)
+            if scenario_result.ended_at is not None:
+                if (result.ended_at is None) or (scenario_result.ended_at > result.ended_at):
+                    result.set_ended_at(scenario_result.ended_at)
+
             result.add_scenario_result(scenario_result)
 
         return result
