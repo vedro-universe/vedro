@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 from typing import AsyncGenerator, Optional
 
-from ._file_filters import FileFilter
-from ._scenario_finder import ScenarioFinder
+from .._scenario_finder import ScenarioFinder
+from ._file_filter import FileFilter
 
 __all__ = ("ScenarioFileFinder",)
 

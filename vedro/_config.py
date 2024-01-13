@@ -34,7 +34,7 @@ from vedro.core import (
     ScenarioScheduler,
     Singleton,
 )
-from vedro.core._scenario_finder._file_filters import (
+from vedro.core.scenario_finder.scenario_file_finder import (
     AnyFilter,
     DunderFilter,
     ExtFilter,

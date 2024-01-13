@@ -1,6 +1,6 @@
 from pytest import raises
 
-from vedro.core._scenario_finder._file_filters import FileFilter
+from vedro.core.scenario_finder.scenario_file_finder import FileFilter
 
 
 def test_file_filter():

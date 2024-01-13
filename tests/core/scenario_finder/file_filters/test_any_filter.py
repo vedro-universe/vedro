@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from vedro.core._scenario_finder._file_filters import AnyFilter, FileFilter
+from vedro.core.scenario_finder.scenario_file_finder import AnyFilter, FileFilter
 
 
 def true_filter():

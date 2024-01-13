@@ -1,4 +1,4 @@
-from ._scenario_file_finder import ScenarioFileFinder
-from ._scenario_finder import ScenarioFinder
+# this module is for backward compatibility
+from ..scenario_finder import ScenarioFileFinder, ScenarioFinder
 
 __all__ = ("ScenarioFinder", "ScenarioFileFinder",)
