@@ -7,12 +7,12 @@ from ._exc_info import ExcInfo
 from ._module_loader import ModuleFileLoader, ModuleLoader
 from ._plugin import Plugin, PluginConfig
 from ._report import Report
-from ._scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from ._scenario_finder import ScenarioFileFinder, ScenarioFinder
 from ._scenario_loader import ScenarioFileLoader, ScenarioLoader
 from ._step_result import StepResult, StepStatus
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
+from .scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from .scenario_orderer import ScenarioOrderer
 from .scenario_result import AggregatedResult, ScenarioResult, ScenarioStatus
 from .scenario_runner import MonotonicScenarioRunner, ScenarioRunner
