@@ -104,7 +104,6 @@ class RerunnerPlugin(Plugin):
     def on_cleanup(self, event: CleanupEvent) -> None:
         if not self._is_rerunning_enabled():
             return
-
         message = self._get_summary_message()
         event.report.add_summary(message)
 
