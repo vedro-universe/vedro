@@ -3,15 +3,6 @@ import os
 import sys
 from typing import Any
 
-from vedro.plugins.artifacted import (
-    Artifact,
-    FileArtifact,
-    MemoryArtifact,
-    attach_artifact,
-    attach_scenario_artifact,
-    attach_step_artifact,
-)
-
 from ._catched import catched
 from ._config import Config
 from ._context import context
@@ -20,6 +11,14 @@ from ._main import main
 from ._params import params
 from ._scenario import Scenario
 from ._version import version
+from .plugins.artifacted import (
+    Artifact,
+    FileArtifact,
+    MemoryArtifact,
+    attach_artifact,
+    attach_scenario_artifact,
+    attach_step_artifact,
+)
 from .plugins.deferrer import defer
 from .plugins.skipper import only, skip, skip_if
 from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
