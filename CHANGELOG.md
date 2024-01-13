@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.11
+
+### v1.11.0 (2024-01-13)
+
+- [Skipper] Add `forbid_only` param [#66](https://github.com/vedro-universe/vedro/pull/66)
+- [Seeder] Add `--fixed-seed` arg [#63](https://github.com/vedro-universe/vedro/pull/63)
+- [Repeater] Add `--repeats-delay` arg [#71](https://github.com/vedro-universe/vedro/pull/71)
+- [Repeater] Add `--fail-fast-on-repeat` arg [#72](https://github.com/vedro-universe/vedro/pull/72)
+- [RichReporter] Add `--bell` arg [#73](https://github.com/vedro-universe/vedro/pull/73)
+- [Terminator] Add `--no-scenarios-ok` arg [#75](https://github.com/vedro-universe/vedro/pull/75)
+- [Artifacted] Add `--save-artifacts` arg [#70](https://github.com/vedro-universe/vedro/pull/70)
+- [TempKeeper] New plugin that manages temporary directories and files [#69](https://github.com/vedro-universe/vedro/pull/69)
+- [Tagger] Add tag validation [#64](https://github.com/vedro-universe/vedro/pull/64)
+- [Core] Improve dynamic modules validation [#74](https://github.com/vedro-universe/vedro/pull/74)
+- Drop Python 3.7 support [#67](https://github.com/vedro-universe/vedro/pull/67)
+
 ## v1.10
 
 ### v1.10.0 (2023-08-01)
