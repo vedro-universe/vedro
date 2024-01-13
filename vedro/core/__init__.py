@@ -1,5 +1,4 @@
 from ._artifacts import Artifact, FileArtifact, MemoryArtifact
-from ._config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
 from ._container import Container, Factory, FactoryType, Singleton
 from ._dispatcher import Dispatcher, Subscriber
 from ._event import Event
@@ -11,6 +10,7 @@ from ._scenario_loader import ScenarioFileLoader, ScenarioLoader
 from ._step_result import StepResult, StepStatus
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
+from .config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
 from .module_loader import ModuleFileLoader, ModuleLoader
 from .scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from .scenario_orderer import ScenarioOrderer

@@ -1,7 +1,7 @@
 from typing import Type
 
-from ._config_loader import Section
 from ._dispatcher import Dispatcher, Subscriber
+from .config_loader import Section
 
 __all__ = ("Plugin", "PluginConfig",)
 
