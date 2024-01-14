@@ -45,7 +45,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
         file_or_dir = ["."]
     if ignore is None:
         ignore = []
-    namespace = Namespace(subject=subject, file_or_dir=file_or_dir, ignore=ignore)
+    namespace = Namespace(subject=subject, file_or_dir=file_or_dir, ignore=ignore,
+                          exp_selective_discoverer=False)
 
     arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)

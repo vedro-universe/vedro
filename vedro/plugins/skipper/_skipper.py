@@ -1,8 +1,11 @@
 import os
-from typing import Any, List, Optional, Type, Union, cast
+from pathlib import Path
+from typing import Any, List, Optional, Set, Type, Union, cast
 
-from vedro.core import Dispatcher, Plugin, PluginConfig, VirtualScenario
-from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
+from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, VirtualScenario
+from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent, StartupEvent
+
+from ._discoverer import SelectiveScenarioDiscoverer as ScenarioDiscoverer
 
 __all__ = ("Skipper", "SkipperPlugin",)
 
@@ -17,15 +20,20 @@ class _CompositePath:
 class SkipperPlugin(Plugin):
     def __init__(self, config: Type["Skipper"]) -> None:
         super().__init__(config)
+        self._global_config: Union[ConfigType, None] = None
         self._subject: Union[str, None] = None
         self._selected: List[_CompositePath] = []
         self._deselected: List[_CompositePath] = []
         self._forbid_only = config.forbid_only
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
+        dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
+                  .listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed) \
                   .listen(StartupEvent, self.on_startup)
+
+    def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
+        self._global_config = event.config
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         event.arg_parser.add_argument("file_or_dir", nargs="*", default=["."],
@@ -33,6 +41,16 @@ class SkipperPlugin(Plugin):
         event.arg_parser.add_argument("-i", "--ignore", nargs="+", default=[],
                                       help="Skip scenarios in a given file or directory")
         event.arg_parser.add_argument("--subject", help="Select scenarios with a given subject")
+
+        help_message = (
+            "Enables the experimental selective discoverer feature, "
+            "which optimizes startup speed by loading scenarios only from specified files. "
+            "This is particularly beneficial for very large test suites "
+            "where Python's import mechanism can be slow, "
+            "thus reducing the initial load time and improving overall test execution efficiency."
+        )
+        event.arg_parser.add_argument("--exp-selective-discoverer", action="store_true",
+                                      help=help_message)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._subject = event.args.subject
@@ -48,6 +66,25 @@ class SkipperPlugin(Plugin):
             path = composite_path.file_path
             assert os.path.isdir(path) or os.path.isfile(path), f"{path!r} does not exist"
             self._deselected.append(composite_path)
+
+        exp_selective_discoverer = event.args.exp_selective_discoverer
+        if exp_selective_discoverer and len(self._deselected) == 0 and self._subject is None:
+            assert self._global_config is not None  # for type checking
+            self._global_config.Registry.ScenarioDiscoverer.register(lambda: ScenarioDiscoverer(
+                finder=self._global_config.Registry.ScenarioFinder(),
+                loader=self._global_config.Registry.ScenarioLoader(),
+                orderer=self._global_config.Registry.ScenarioOrderer(),
+                selected_paths=self.__get_selected_paths(),
+            ), self)
+
+    def __get_selected_paths(self) -> Set[Path]:
+        selected_paths = set()
+        default_path = Path(self._normalize_path("."))
+        for path in self._selected:
+            file_path = Path(path.file_path)
+            if file_path != default_path:
+                selected_paths.add(file_path)
+        return selected_paths
 
     def _get_composite_path(self, file_or_dir: str) -> _CompositePath:
         head, tail = os.path.split(file_or_dir)
