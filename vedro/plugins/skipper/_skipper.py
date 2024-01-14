@@ -79,9 +79,10 @@ class SkipperPlugin(Plugin):
 
     def __get_selected_paths(self) -> Set[Path]:
         selected_paths = set()
-        for path in self._selected:  # selected contains ./scenarios by default
+        default_path = Path(self._normalize_path("."))
+        for path in self._selected:
             file_path = Path(path.file_path)
-            if file_path.suffix == ".py":
+            if file_path != default_path:
                 selected_paths.add(file_path)
         return selected_paths
 
