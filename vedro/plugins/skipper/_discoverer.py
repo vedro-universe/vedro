@@ -28,5 +28,12 @@ class SelectiveScenarioDiscoverer(ScenarioDiscoverer):
         if self._selected_paths is None or len(self._selected_paths) == 0:
             return True
         abs_path = path.absolute()
-        return any(abs_path == selected_path or abs_path.is_relative_to(selected_path)
-                   for selected_path in self._selected_paths)
+        return any(self._is_relative_to(abs_path, selected) for selected in self._selected_paths)
+
+    def _is_relative_to(self, path: Path, parent: Path) -> bool:
+        try:
+            path.relative_to(parent)
+        except ValueError:
+            return False
+        else:
+            return True
