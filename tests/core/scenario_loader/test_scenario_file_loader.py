@@ -97,6 +97,7 @@ async def test_scenario_file_loader_with_invalid_module_name(tmp_scn_dir: Path):
                 pass
         '''))
         loader = ScenarioFileLoader()
+        loader._validate_module_names = True
 
     with when, raises(BaseException) as exc:
         await loader.load(path)

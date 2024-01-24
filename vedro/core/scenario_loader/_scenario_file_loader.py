@@ -20,6 +20,14 @@ class ScenarioFileLoader(ScenarioLoader):
     A class responsible for loading Vedro scenarios from a file.
     """
 
+    def __init__(self) -> None:
+        """
+        Initialize the ScenarioFileLoader.
+
+        The loader is responsible for loading Vedro scenarios from a file.
+        """
+        self._validate_module_names: bool = False
+
     async def load(self, path: Path) -> List[Type[Scenario]]:
         """
         Load Vedro scenarios from a module at the given path.
@@ -59,14 +67,15 @@ class ScenarioFileLoader(ScenarioLoader):
         :raises ValueError: If any part of the path is not a valid Python identifier.
         """
         parts = path.with_suffix("").parts
-        for part in parts:
-            if not self._is_valid_identifier(part):
-                raise ValueError(
-                    f"The module name derived from the path '{path}' is invalid "
-                    f"due to the segment '{part}'. A valid module name should "
-                    "start with a letter or underscore, contain only letters, "
-                    "digits, or underscores, and not be a Python keyword."
-                )
+        if self._validate_module_names:
+            for part in parts:
+                if not self._is_valid_identifier(part):
+                    raise ValueError(
+                        f"The module name derived from the path '{path}' is invalid "
+                        f"due to the segment '{part}'. A valid module name should "
+                        "start with a letter or underscore, contain only letters, "
+                        "digits, or underscores, and not be a Python keyword."
+                    )
         return ".".join(parts)
 
     def _is_valid_identifier(self, name: str) -> bool:
