@@ -36,13 +36,12 @@ class ConfigFileLoader(ConfigLoader):
         :param path: The path to the configuration file.
         :return: The loaded configuration, or the default configuration if the file does not exist.
         """
-        if not path.exists():
-            return self._default_config
-        config = await self._get_config_class(path)
+        config = await self._get_config_class(path) if path.exists() else self._default_config
 
         # backward compatibility
         config.__frozen__ = False
-        config.path = path
+        config.project_dir = path.parent.absolute()
+        config.path = config.path.absolute() if config is self._default_config else path.absolute()
         config.__frozen__ = True
 
         return cast(ConfigType, config)

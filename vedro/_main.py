@@ -1,3 +1,4 @@
+import os
 import sys
 from argparse import ArgumentParser, HelpFormatter
 from functools import partial
@@ -19,6 +20,16 @@ async def main() -> None:
     arg_parser = ArgumentParser("vedro", formatter_class=formatter,
                                 add_help=False, allow_abbrev=False,
                                 description="documentation: vedro.io/docs")
+
+    shadow_parser = ArgumentParser(add_help=False, allow_abbrev=False)
+    shadow_parser.add_argument("--project-dir", type=Path, default=Path.cwd())
+    shadow_args, _ = shadow_parser.parse_known_args()
+
+    project_dir = shadow_args.project_dir.absolute()
+    if (not project_dir.exists()) or (not project_dir.is_dir()):
+        raise FileNotFoundError(
+            f"Specified project directory '{project_dir}' does not exist or is not a directory")
+    os.chdir(project_dir)
 
     config_loader = ConfigFileLoader(Config)
     config = cast(Type[Config], await config_loader.load(config_path))
