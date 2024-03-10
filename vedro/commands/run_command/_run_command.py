@@ -88,6 +88,14 @@ class RunCommand(Command):
 
         :param dispatcher: The dispatcher to fire events
         """
+
+        # avoid unrecognized arguments error
+        help_message = ("Specify the root directory of the project, used as a reference point for "
+                        "relative paths and file operations. "
+                        "Defaults to the directory from which the command is executed.")
+        self._arg_parser.add_argument("--project-dir", type=Path, default=self._config.project_dir,
+                                      help=help_message)
+
         # https://github.com/python/cpython/issues/95073
         self._arg_parser.remove_help_action()
         await dispatcher.fire(ArgParseEvent(self._arg_parser))

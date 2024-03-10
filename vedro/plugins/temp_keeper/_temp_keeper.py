@@ -27,7 +27,7 @@ class TempKeeperPlugin(Plugin):
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         self._global_config = event.config
-        assert self._tmp_file_manager.get_project_dir() == self._global_config.project_dir
+        self._tmp_file_manager.set_project_dir(self._global_config.project_dir)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         tmp_root = self._tmp_file_manager.get_tmp_root()
