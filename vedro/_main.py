@@ -30,6 +30,8 @@ async def main() -> None:
         raise FileNotFoundError(
             f"Specified project directory '{project_dir}' does not exist or is not a directory")
     os.chdir(project_dir)
+    if str(project_dir) not in sys.path:
+        sys.path.insert(0, str(project_dir))
 
     config_loader = ConfigFileLoader(Config)
     config = cast(Type[Config], await config_loader.load(config_path))
