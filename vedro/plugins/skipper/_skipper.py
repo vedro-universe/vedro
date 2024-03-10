@@ -43,8 +43,8 @@ class SkipperPlugin(Plugin):
         event.arg_parser.add_argument("--subject", help="Select scenarios with a given subject")
 
         help_message = (
-            "Enables the experimental selective discoverer feature, "
-            "which optimizes startup speed by loading scenarios only from specified files. "
+            "Enable the experimental selective discoverer feature to optimize startup speed "
+            "by loading scenarios only from specified files. "
             "This is particularly beneficial for very large test suites "
             "where Python's import mechanism can be slow, "
             "thus reducing the initial load time and improving overall test execution efficiency."
