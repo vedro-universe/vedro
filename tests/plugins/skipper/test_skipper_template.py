@@ -1,5 +1,5 @@
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 
 import pytest
 from baby_steps import given, then, when
@@ -77,7 +77,7 @@ async def test_template_path_name(*, dispatcher: Dispatcher, tmp_dir: Path):
             pass
 
         path = touch(tmp_dir / "scenarios/scn1.py")
-        name = f"Scenario_{monotonic_ns()}"
+        name = f"Scenario_{perf_counter_ns()}"
         _, scenarios = make_template_vscenario(__init__, path=path, name=name)
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[f"{path}::{name}"])
@@ -102,7 +102,7 @@ async def test_template_path_not_name(*, dispatcher: Dispatcher, tmp_dir: Path):
             pass
 
         path = touch(tmp_dir / "scenarios/scn1.py")
-        name = f"Scenario_{monotonic_ns()}"
+        name = f"Scenario_{perf_counter_ns()}"
         _, scenarios = make_template_vscenario(__init__, path=path, name=name)
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[f"{path}::Scenario"])
@@ -128,7 +128,7 @@ async def test_template_path_name_index(index: int, *, dispatcher: Dispatcher, t
             pass
 
         path = touch(tmp_dir / "scenarios/scn1.py")
-        name = f"Scenario_{monotonic_ns()}"
+        name = f"Scenario_{perf_counter_ns()}"
         _, scenarios = make_template_vscenario(__init__, path=path, name=name)
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[f"{path}::{name}#{index}"])
@@ -154,7 +154,7 @@ async def test_template_path_name_not_index(index: int, *, dispatcher: Dispatche
             pass
 
         path = touch(tmp_dir / "scenarios/scn1.py")
-        name = f"Scenario_{monotonic_ns()}"
+        name = f"Scenario_{perf_counter_ns()}"
         _, scenarios = make_template_vscenario(__init__, path=path, name=name)
 
         await fire_arg_parsed_event(dispatcher, file_or_dir=[f"{path}::{name}#{index}"])

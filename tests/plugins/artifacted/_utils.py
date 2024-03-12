@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from collections import deque
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import Optional
 
 import pytest
@@ -56,12 +56,12 @@ def make_vstep() -> VirtualStep:
 
 
 def create_memory_artifact(content: str = "text") -> MemoryArtifact:
-    return MemoryArtifact(f"test-{monotonic_ns()}.txt", "text/plain", content.encode())
+    return MemoryArtifact(f"test-{perf_counter_ns()}.txt", "text/plain", content.encode())
 
 
 def create_file_artifact(path: Path, content: str = "text") -> FileArtifact:
     path.write_text(content)
-    return FileArtifact(f"test-{monotonic_ns()}.txt", "text/plain", path)
+    return FileArtifact(f"test-{perf_counter_ns()}.txt", "text/plain", path)
 
 
 async def fire_config_loaded_event(dispatcher: Dispatcher, project_dir_: Path) -> None:
