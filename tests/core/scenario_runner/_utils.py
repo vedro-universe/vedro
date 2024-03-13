@@ -1,5 +1,5 @@
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import Any, Callable, List, Optional, Type
 from unittest.mock import AsyncMock
 
@@ -42,14 +42,14 @@ def make_vstep(callable: Callable[..., Any] = None, *, name: Optional[str] = Non
     def step(self):
         if callable:
             callable(self)
-    step.__name__ = name or f"step_{monotonic_ns()}"
+    step.__name__ = name or f"step_{perf_counter_ns()}"
     return VirtualStep(step)
 
 
 def make_vscenario(steps: Optional[List[VirtualStep]] = None, *,
                    is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(f"scenario_{perf_counter_ns()}.py").absolute()
 
     vsenario = VirtualScenario(_Scenario, steps=steps or [])
     if is_skipped:

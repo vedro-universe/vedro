@@ -1,4 +1,5 @@
 from collections import deque
+from os import sep
 from pathlib import Path
 
 import pytest
@@ -241,8 +242,9 @@ async def test_scenario_reported_event_incorrect_artifact(*, dispatcher: Dispatc
     with then:
         assert exc.type is TypeError
         assert str(exc.value) == (
-            "Can't save artifact to '.vedro/artifacts/scenarios/scenario/0-Scenario-0': "
-            "unknown type 'NewArtifact'"
+            "Can't save artifact to '"
+            f".vedro{sep}artifacts{sep}scenarios{sep}scenario{sep}0-Scenario-0"
+            "': unknown type 'NewArtifact'"
         )
 
 

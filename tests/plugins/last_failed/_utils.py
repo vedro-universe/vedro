@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import Optional, Tuple, Union, cast
 
 import pytest
@@ -39,7 +39,7 @@ def last_failed(dispatcher: Dispatcher, tmp_path: Path) -> LastFailedPlugin:
 
 def make_vscenario() -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(f"scenario_{perf_counter_ns()}.py").absolute()
 
     return VirtualScenario(_Scenario, steps=[])
 

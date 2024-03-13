@@ -1,6 +1,6 @@
 from collections import deque
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 
 import pytest
 
@@ -28,6 +28,6 @@ def deferrer(dispatcher: Dispatcher, queue: deque) -> DeferrerPlugin:
 
 def make_vscenario() -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(f"scenario_{perf_counter_ns()}.py").absolute()
 
     return VirtualScenario(_Scenario, steps=[])

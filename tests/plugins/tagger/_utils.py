@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import List, Optional
 
 import pytest
@@ -28,7 +28,7 @@ def tagger(dispatcher: Dispatcher) -> TaggerPlugin:
 def make_vscenario(*, tags: Optional[List[str]] = None,
                    is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(f"scenario_{perf_counter_ns()}.py").absolute()
 
     if tags is not None:
         _Scenario.tags = tags

@@ -1,4 +1,5 @@
 import os
+from os import sep
 from pathlib import Path
 from textwrap import dedent
 
@@ -105,7 +106,7 @@ async def test_scenario_file_loader_with_invalid_module_name(tmp_scn_dir: Path):
     with then:
         assert exc.type is ValueError
         assert str(exc.value) == (
-            "The module name derived from the path 'scenarios/scenario with space.py' "
+            f"The module name derived from the path 'scenarios{sep}scenario with space.py' "
             "is invalid due to the segment 'scenario with space'. "
             "A valid module name should start with a letter or underscore, contain "
             "only letters, digits, or underscores, and not be a Python keyword."
@@ -161,7 +162,7 @@ async def test_scenario_file_loader_without_scenarios(tmp_scn_dir: Path):
     with then:
         assert exc.type is ValueError
         assert str(exc.value) == (
-            "No valid Vedro scenarios found in the module at 'scenarios/scenario.py'. "
+            f"No valid Vedro scenarios found in the module at 'scenarios{sep}scenario.py'. "
             "Ensure the module contains at least one subclass of 'vedro.Scenario'"
         )
 

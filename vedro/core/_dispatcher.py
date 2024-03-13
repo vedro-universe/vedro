@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from asyncio import iscoroutinefunction
 from heapq import heappop, heappush
-from time import monotonic_ns
 from typing import Any, Callable, Dict, List, Type
 
 from ._event import Event
@@ -44,6 +43,7 @@ class Subscriber(ABC):
 class Dispatcher:
     def __init__(self) -> None:
         self._events: Dict[str, List[EventHandler]] = {}
+        self._monotonic_id: int = 0
 
     def register(self, subscriber: "Subscriber") -> None:
         subscriber.subscribe(self)
@@ -52,7 +52,8 @@ class Dispatcher:
         assert issubclass(event, Event), "Event must be a subclass of 'vedro.events.Event'"
         if event.__name__ not in self._events:
             self._events[event.__name__] = []
-        heappush(self._events[event.__name__], EventHandler(priority, monotonic_ns(), handler))
+        self._monotonic_id += 1
+        heappush(self._events[event.__name__], EventHandler(priority, self._monotonic_id, handler))
         return self
 
     async def fire(self, event: Event) -> None:

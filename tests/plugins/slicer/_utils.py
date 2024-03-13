@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import Union
 
 import pytest
@@ -25,7 +25,7 @@ def slicer(dispatcher: Dispatcher) -> SlicerPlugin:
 
 def make_vscenario(*, is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(f"scenario_{perf_counter_ns()}.py").absolute()
 
     vsenario = VirtualScenario(_Scenario, steps=[])
     if is_skipped:

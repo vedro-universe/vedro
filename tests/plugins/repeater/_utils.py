@@ -2,7 +2,7 @@ import asyncio
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from types import TracebackType
 from typing import Optional, cast
 from unittest.mock import AsyncMock, Mock
@@ -63,7 +63,7 @@ def scheduler_() -> Scheduler:
 
 def make_vscenario() -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(f"scenario_{perf_counter_ns()}.py").absolute()
 
     return VirtualScenario(_Scenario, steps=[])
 

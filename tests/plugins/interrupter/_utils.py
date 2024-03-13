@@ -1,7 +1,7 @@
 import signal
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import Optional, Tuple
 from unittest.mock import Mock
 
@@ -50,7 +50,7 @@ def sig_handler_():
 
 def make_vscenario() -> VirtualScenario:
     class _Scenario(Scenario):
-        __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+        __file__ = Path(f"scenario_{perf_counter_ns()}.py").absolute()
 
     return VirtualScenario(_Scenario, steps=[])
 

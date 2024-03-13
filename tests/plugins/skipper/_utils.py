@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from os import chdir
 from pathlib import Path
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
 
 import pytest
@@ -59,7 +59,7 @@ def _make_vscenario(path: Optional[Path] = None, *,
                     skip: bool = False,
                     init: Optional[Callable[..., None]] = None) -> Scenario:
     if path is None:
-        path = Path(f"scenarios/scenario_{monotonic_ns()}.py").absolute()
+        path = Path(f"scenarios/scenario_{perf_counter_ns()}.py").absolute()
     ns = {"__file__": path}
     if subject is not None:
         ns["subject"] = subject
@@ -90,7 +90,7 @@ def make_template_vscenario(init: Callable[..., None], *,
                             name: Optional[str] = None,
                             only: bool = False,
                             skip: bool = False) -> Tuple[Scenario, List[VirtualScenario]]:
-    name = name if name is not None else f"Scenario_{monotonic_ns()}"
+    name = name if name is not None else f"Scenario_{perf_counter_ns()}"
     new_scn = _make_vscenario(path, name=name, only=only, skip=skip, init=init)
 
     vscenarios = []

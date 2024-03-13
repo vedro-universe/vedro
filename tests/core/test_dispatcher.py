@@ -1,4 +1,4 @@
-from time import monotonic_ns
+from time import perf_counter_ns
 from typing import Type, cast
 from unittest.mock import AsyncMock, Mock, call
 
@@ -15,7 +15,7 @@ def dispatcher():
 
 @pytest.fixture()
 def event_type() -> Type[Event]:
-    name = "CustomEvent_{}".format(monotonic_ns())
+    name = "CustomEvent_{}".format(perf_counter_ns())
     return cast(Type[Event], type(name, (Event,), {}))
 
 
