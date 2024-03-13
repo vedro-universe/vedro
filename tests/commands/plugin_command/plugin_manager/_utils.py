@@ -11,7 +11,8 @@ def create_config(tmp_path: Path, config: Optional[List[str]] = None) -> Path:
     now = int(time() * 1000)
     config_file = Path(f"vedro-cfg-{now}.py")
     if config is not None:
-        config_file.write_text(linesep.join(config), newline="")
+        with open(config_file, "w", newline="") as f:
+            f.write(linesep.join(config))
     return config_file
 
 
