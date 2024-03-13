@@ -1,3 +1,4 @@
+from os import linesep
 from traceback import format_exception
 from typing import Dict, Union
 from unittest.mock import Mock, call
@@ -281,7 +282,7 @@ def test_print_scope_key_with_line_break(*, printer: RichPrinter, console_: Mock
 
     with then:
         assert console_.mock_calls == [
-            call.out(f"{key}: ", end="\n", style=Style(color="blue"))
+            call.out(f"{key}: ", end=linesep, style=Style(color="blue"))
         ]
 
 
@@ -438,7 +439,7 @@ def test_print_report_summary(*, printer: RichPrinter, console_: Mock):
 
     with then:
         assert console_.mock_calls == [
-            call.out("# line1\n# line2", style=Style(color="grey70"))
+            call.out(f"# line1{linesep}# line2", style=Style(color="grey70"))
         ]
 
 
@@ -520,7 +521,7 @@ def test_print_report_stats_interrupted(printer: RichPrinter, console_: Mock):
 def test_print_interrupted(printer: RichPrinter, console_: Mock):
     with given:
         exc_info = ExcInfo(KeyboardInterrupt, KeyboardInterrupt("msg"), None)
-        message = "\n".join([
+        message = linesep.join([
             "!!!                                           !!!",
             "!!! Interrupted by “KeyboardInterrupt('msg')“ !!!",
             "!!!                                           !!!",
@@ -537,7 +538,7 @@ def test_print_interrupted(printer: RichPrinter, console_: Mock):
 
 def test_print_interrupted_with_traceback(printer: RichPrinter, exc_info: ExcInfo, console_: Mock):
     with given:
-        message = "\n".join([
+        message = linesep.join([
             "!!!                             !!!",
             "!!! Interrupted by “KeyError()“ !!!",
             "!!!                             !!!",
@@ -570,7 +571,7 @@ def test_print(*, printer: RichPrinter, console_: Mock):
         printer.print(value)
 
     with then:
-        assert console_.mock_calls == [call.out(value, end="\n")]
+        assert console_.mock_calls == [call.out(value, end=linesep)]
 
 
 def test_print_end(*, printer: RichPrinter, console_: Mock):

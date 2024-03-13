@@ -127,11 +127,11 @@ class ConfigUpdater:
 
     async def _read_config(self, config_path: Path) -> str:
         try:
-            with open(config_path, "r") as f:
+            with open(config_path, "r", newline="") as f:
                 return f.read()
         except FileNotFoundError:
             return ""
 
     async def _save_config(self, config_path: Path, config_source: str) -> None:
-        with open(config_path, "w") as f:
+        with open(config_path, "w", newline="") as f:
             f.write(config_source)

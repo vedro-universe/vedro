@@ -11,9 +11,10 @@ def create_config(tmp_path: Path, config: Optional[List[str]] = None) -> Path:
     now = int(time() * 1000)
     config_file = Path(f"vedro-cfg-{now}.py")
     if config is not None:
-        config_file.write_text(linesep.join(config))
+        config_file.write_text(linesep.join(config), newline="")
     return config_file
 
 
 def read_config(config_path: Path) -> str:
-    return config_path.read_text()
+    with open(config_path, "r", newline="") as f:
+        return f.read()

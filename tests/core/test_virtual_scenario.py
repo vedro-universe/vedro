@@ -1,4 +1,4 @@
-import os
+from os import getcwd, sep
 from pathlib import Path
 from types import MethodType
 from typing import Type
@@ -16,7 +16,7 @@ from vedro.core._virtual_scenario import ScenarioInitError
 @pytest.fixture()
 def scenario_():
     scenario = Mock(Scenario)
-    scenario.__file__ = os.getcwd() + "/scenarios/scenario.py"
+    scenario.__file__ = getcwd() + "/scenarios/scenario.py"
     scenario.__module__ = "scenarios.scenario"
     scenario.__name__ = "Scenario"
     return scenario
@@ -25,7 +25,7 @@ def scenario_():
 @pytest.fixture()
 def template_():
     scenario = Mock(Scenario)
-    scenario.__file__ = os.getcwd() + "/scenarios/scenario.py"
+    scenario.__file__ = getcwd() + "/scenarios/scenario.py"
     scenario.__module__ = "scenarios.scenario"
     scenario.__name__ = "Scenario_0_VedroScenario"
     scenario.__vedro__template_index__ = 0
@@ -201,7 +201,7 @@ def test_virtual_scenario_init(*, scenario_: Type[Scenario]):
     with then:
         assert exc_info.type is ScenarioInitError
         assert str(exc_info.value) == ('Can\'t initialize scenario "scenario" '
-                                       f'at "scenarios/scenario.py" ({exception!r})')
+                                       f'at "scenarios{sep}scenario.py" ({exception!r})')
 
 
 def test_virtual_scenario_repr(*, scenario_: Type[Scenario], method_: MethodType):
