@@ -1,6 +1,7 @@
 import json
 import os
 import warnings
+from atexit import register as on_exit
 from os import linesep
 from traceback import format_exception
 from types import FrameType, TracebackType
@@ -256,6 +257,7 @@ class RichPrinter:
             self.hide_spinner()
         self._scenario_spinner = self._console.status(status)
         self._scenario_spinner.start()
+        on_exit(self.hide_spinner)
 
     def hide_spinner(self) -> None:
         if self._scenario_spinner:
