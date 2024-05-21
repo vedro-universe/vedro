@@ -135,7 +135,8 @@ class RichPrinter:
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
                                show_locals: bool = False,
                                show_internal_calls: bool = False,
-                               word_wrap: bool = False) -> None:
+                               word_wrap: bool = False,
+                               width: Optional[int] = None) -> None:
         if show_internal_calls:
             traceback = exc_info.traceback
         else:
@@ -147,7 +148,11 @@ class RichPrinter:
         if show_locals:
             self._filter_locals(trace)
 
-        tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap)
+        if width is None:
+            width = self._console.size.width
+
+        tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap,
+                                     width=width)
         self._console.print(tb)
         self.print_empty_line()
 
