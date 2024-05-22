@@ -43,6 +43,7 @@ class RichReporterPlugin(Reporter):
         self._show_scenario_spinner = config.show_scenario_spinner
         self._show_discovering_spinner = False
         self._show_interrupted_traceback = config.show_interrupted_traceback
+        self._show_scope = config.show_scope
         self._v2_verbosity = config.v2_verbosity
         self._ring_bell = config.ring_bell
         self._namespace: Union[str, None] = None
@@ -76,6 +77,11 @@ class RichReporterPlugin(Reporter):
                            action="count",
                            default=self._verbosity,
                            help=help_message)
+        group.add_argument("--show-scope",
+                           action="store_true",
+                           default=self._show_scope,
+                           help="Show a snapshot of crucial variables (Scope) "
+                                "when a scenario fails")
         group.add_argument("--show-timings",
                            action="store_true",
                            default=self._show_timings,
@@ -112,8 +118,14 @@ class RichReporterPlugin(Reporter):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
+        self._show_scope = event.args.show_scope
+
         if self._v2_verbosity:
             self._verbosity = self._verbosity + 2
+
+        if self._show_scope:
+            self._verbosity = 3
+
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
         self._show_steps = event.args.show_steps
@@ -368,6 +380,9 @@ class RichReporter(PluginConfig):
 
     # Show traceback if the execution is interrupted
     show_interrupted_traceback: bool = False
+
+    # Show a snapshot of crucial variables (Scope) when a test scenario fails
+    show_scope: bool = False
 
     # Enable new verbose levels
     v2_verbosity: bool = True
