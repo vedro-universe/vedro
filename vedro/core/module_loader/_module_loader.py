@@ -7,16 +7,20 @@ __all__ = ("ModuleLoader",)
 
 class ModuleLoader(ABC):
     """
-    Abstract base class for a module loader.
+    Represents an abstract base class for module loading.
 
-    This class defines an interface for loading Python modules.
+    This class defines the interface for loading a module from a given file path.
+    Subclasses must implement the `load` method to provide the specific module loading
+    functionality.
     """
 
     @abstractmethod
     async def load(self, path: Path) -> ModuleType:
         """
-        Load a module from a given path.
+        Load a module from the specified file path.
 
-        :param path: The file path of the module to be loaded.
+        :param path: The file path to load the module from.
+        :return: The loaded module.
+        :raises NotImplementedError: If the method is not implemented by a subclass.
         """
         pass
