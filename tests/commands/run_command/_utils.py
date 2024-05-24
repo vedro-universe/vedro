@@ -1,4 +1,5 @@
-from os import chdir, linesep
+import os
+from os import linesep
 from pathlib import Path
 
 import pytest
@@ -10,9 +11,14 @@ __all__ = ("tmp_dir", "create_scenario", "arg_parser",)
 
 @pytest.fixture()
 def tmp_dir(tmp_path: Path) -> Path:
-    chdir(tmp_path)
-    Path("./scenarios").mkdir(exist_ok=True)
-    yield tmp_path
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+
+        Path("./scenarios").mkdir(exist_ok=True)
+        yield tmp_path
+    finally:
+        os.chdir(cwd)
 
 
 def create_scenario(tmp_dir: Path, scenario_path: str) -> None:

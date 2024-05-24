@@ -55,6 +55,11 @@ class ModuleFileLoader(ModuleLoader):
                             validation is enabled.
         """
         parts = path.with_suffix("").parts
+
+        # Handle absolute paths by ignoring the root part (e.g., '/' or 'C:\')
+        if path.is_absolute():
+            parts = parts[1:]
+
         if self._validate_module_names:
             for part in parts:
                 if not self._is_valid_identifier(part):
