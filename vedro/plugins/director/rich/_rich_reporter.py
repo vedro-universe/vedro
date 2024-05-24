@@ -31,6 +31,7 @@ class RichReporterPlugin(Reporter):
         self._tb_show_locals = config.tb_show_locals
         self._scope_width = config.scope_width
         self._tb_max_frames = config.tb_max_frames
+        self._tb_width = config.tb_width
         self._show_scenario_extras = config.show_scenario_extras
         self._show_step_extras = config.show_step_extras
         self._show_skipped = config.show_skipped
@@ -40,7 +41,9 @@ class RichReporterPlugin(Reporter):
         self._show_steps = config.show_steps
         self._hide_namespaces = config.hide_namespaces
         self._show_scenario_spinner = config.show_scenario_spinner
+        self._show_discovering_spinner = False
         self._show_interrupted_traceback = config.show_interrupted_traceback
+        self._show_scope = config.show_scope
         self._v2_verbosity = config.v2_verbosity
         self._ring_bell = config.ring_bell
         self._namespace: Union[str, None] = None
@@ -74,6 +77,11 @@ class RichReporterPlugin(Reporter):
                            action="count",
                            default=self._verbosity,
                            help=help_message)
+        group.add_argument("--show-scope",
+                           action="store_true",
+                           default=self._show_scope,
+                           help="Show a snapshot of crucial variables (Scope) "
+                                "when a scenario fails")
         group.add_argument("--show-timings",
                            action="store_true",
                            default=self._show_timings,
@@ -110,8 +118,14 @@ class RichReporterPlugin(Reporter):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
+        self._show_scope = event.args.show_scope
+
         if self._v2_verbosity:
             self._verbosity = self._verbosity + 2
+
+        if self._show_scope:
+            self._verbosity = 3
+
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
         self._show_steps = event.args.show_steps
@@ -135,7 +149,12 @@ class RichReporterPlugin(Reporter):
             raise ValueError(
                 "RichReporter: to enable `show_skip_reason` set `show_scenario_extras` to `True`")
 
+        if self._show_discovering_spinner:
+            self._printer.show_spinner("Discovering scenarios...")
+
     def on_startup(self, event: StartupEvent) -> None:
+        if self._show_discovering_spinner:
+            self._printer.hide_spinner()
         self._printer.print_header()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
@@ -164,6 +183,7 @@ class RichReporterPlugin(Reporter):
     def _print_exception(self, exc_info: ExcInfo) -> None:
         if self._tb_pretty:
             self._printer.print_pretty_exception(exc_info,
+                                                 width=self._tb_width,
                                                  max_frames=self._tb_max_frames,
                                                  show_locals=self._tb_show_locals,
                                                  show_internal_calls=self._tb_show_internal_calls)
@@ -344,17 +364,25 @@ class RichReporter(PluginConfig):
     # Available if `tb_pretty` is True
     tb_show_locals: bool = False
 
+    # Set the width of the traceback output
+    # If None, terminal width will be used
+    # Available if `tb_pretty` is True
+    tb_width: Union[int, None] = 100
+
+    # Max stack trace entries to show (min=4)
+    tb_max_frames: int = 8
+
     # Truncate lines in Scope based on scope_width value.
     # If scope_width is None, lines are truncated to the terminal's width.
     # If scope_width is -1, lines aren't truncated.
     # Otherwise, lines are truncated to the given length.
     scope_width: Union[int, None] = -1
 
-    # Max stack trace entries to show (min=4)
-    tb_max_frames: int = 8
-
     # Show traceback if the execution is interrupted
     show_interrupted_traceback: bool = False
+
+    # Show a snapshot of crucial variables (Scope) when a test scenario fails
+    show_scope: bool = False
 
     # Enable new verbose levels
     v2_verbosity: bool = True
