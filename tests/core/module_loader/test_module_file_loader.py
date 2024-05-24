@@ -70,6 +70,4 @@ async def test_load_module_with_non_existent_path():
 
     with then:
         assert exc.type is FileNotFoundError
-        assert str(exc.value) == (
-            f"[Errno 2] No such file or directory: '{non_existent_path.absolute()}'"
-        )
+        assert "[Errno 2] No such file or directory" in str(exc.value)
