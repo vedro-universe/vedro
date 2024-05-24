@@ -4,10 +4,9 @@ from textwrap import dedent
 
 import pytest
 from baby_steps import given, then, when
-from dessert import AssertionRewritingHook
 from pytest import raises
 
-from vedro.plugins.assert_rewriter import ScenarioAssertRewriterLoader
+from vedro.plugins.assert_rewriter import AssertRewriterModuleLoader
 
 
 @pytest.fixture()
@@ -33,9 +32,9 @@ async def test_load(tmp_scn_dir: Path):
                     assert 1 == 2
         '''))
 
-        loader = ScenarioAssertRewriterLoader(AssertionRewritingHook())
-        scenarios = await loader.load(path)
-        scenario = scenarios[0]()
+        loader = AssertRewriterModuleLoader()
+        module = await loader.load(path)
+        scenario = module.Scenario()
 
     with when, raises(BaseException) as exception:
         scenario.then()

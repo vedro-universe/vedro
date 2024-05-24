@@ -3,7 +3,7 @@ from typing import Type
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ConfigLoadedEvent
 
-from ._scenario_assert_rewriter_loader import ScenarioAssertRewriterLoader
+from ._assert_rewriter_module_loader import AssertRewriterModuleLoader
 
 __all__ = ("AssertRewriter", "AssertRewriterPlugin",)
 
@@ -20,14 +20,7 @@ class AssertRewriterPlugin(Plugin):
         self._global_config: ConfigType = event.config
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        try:
-            from dessert import AssertionRewritingHook  # type: ignore
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError(
-                "Package 'dessert' is not found, install it via 'pip install dessert'")
-
-        self._global_config.Registry.ScenarioLoader.register(
-            lambda: ScenarioAssertRewriterLoader(AssertionRewritingHook()), self)
+        self._global_config.Registry.ModuleLoader.register(AssertRewriterModuleLoader, self)
 
 
 class AssertRewriter(PluginConfig):

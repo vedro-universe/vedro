@@ -1,4 +1,4 @@
 from ._assert_rewriter import AssertRewriter, AssertRewriterPlugin
-from ._scenario_assert_rewriter_loader import ScenarioAssertRewriterLoader
+from ._assert_rewriter_module_loader import AssertRewriterModuleLoader
 
-__all__ = ("AssertRewriter", "AssertRewriterPlugin", "ScenarioAssertRewriterLoader",)
+__all__ = ("AssertRewriter", "AssertRewriterPlugin", "AssertRewriterModuleLoader",)
