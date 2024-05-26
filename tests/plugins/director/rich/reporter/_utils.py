@@ -52,6 +52,7 @@ def rich_reporter(dispatcher: Dispatcher,
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 verbose: int = 0,
+                                show_scope: bool = RichReporter_.show_scope,
                                 show_timings: bool = RichReporter_.show_timings,
                                 show_paths: bool = RichReporter_.show_paths,
                                 show_steps: bool = RichReporter_.show_steps,
@@ -66,6 +67,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
     await dispatcher.fire(arg_parse_event)
 
     namespace = Namespace(verbose=verbose,
+                          show_scope=show_scope,
                           show_timings=show_timings,
                           show_paths=show_paths,
                           show_steps=show_steps,

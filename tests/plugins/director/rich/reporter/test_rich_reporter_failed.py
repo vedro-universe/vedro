@@ -61,6 +61,7 @@ async def test_scenario_failed(show_locals: bool, show_internal_calls: bool, *,
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=show_locals,
                                         show_internal_calls=show_internal_calls)
@@ -104,6 +105,7 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=False,
                                         show_internal_calls=False)
@@ -144,6 +146,7 @@ async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=False,
                                         show_internal_calls=False),
@@ -188,6 +191,7 @@ async def test_scenario_failed_verbose_show_timings(dispatcher: Dispatcher,
                                  StepStatus.FAILED, elapsed=3.0, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=False,
                                         show_internal_calls=False),
