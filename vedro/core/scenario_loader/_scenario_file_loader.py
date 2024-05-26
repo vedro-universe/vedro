@@ -12,11 +12,34 @@ __all__ = ("ScenarioFileLoader",)
 
 
 class ScenarioFileLoader(ScenarioLoader):
+    """
+    Loads scenarios from a file path using a specified module loader.
+
+    This class implements the `ScenarioLoader` interface and provides
+    functionality to load scenarios from a given module file path. It uses
+    a module loader to load the module and then collects scenarios defined
+    within that module.
+    """
+
     def __init__(self, module_loader: Optional[ModuleLoader] = None) -> None:
+        """
+        Initialize the ScenarioFileLoader with an optional module loader.
+
+        :param module_loader: An optional module loader. If not provided,
+                              a default `ModuleFileLoader` is used.
+        """
         self._module_loader = module_loader or ModuleFileLoader()  # backward compatibility
         self._enforce_scenario_presence: bool = True
 
     async def load(self, path: Path) -> List[Type[Scenario]]:
+        """
+        Load scenarios from the specified path.
+
+        :param path: The path from which to load scenarios.
+        :return: A list of loaded scenarios.
+        :raises ValueError: If no scenarios are found in the module and
+                            `_enforce_scenario_presence` is True.
+        """
         module = await self._module_loader.load(path)
         loaded = self._collect_scenarios(module)
         if self._enforce_scenario_presence and len(loaded) == 0:
@@ -27,6 +50,12 @@ class ScenarioFileLoader(ScenarioLoader):
         return loaded
 
     def _collect_scenarios(self, module: ModuleType) -> List[Type[Scenario]]:
+        """
+        Collect scenarios from the given module.
+
+        :param module: The module from which to collect scenarios.
+        :return: A list of collected scenarios.
+        """
         loaded = []
 
         # Iterate over the module's dictionary because it preserves the order of definitions,
@@ -42,6 +71,15 @@ class ScenarioFileLoader(ScenarioLoader):
         return loaded
 
     def _is_vedro_scenario(self, val: Any) -> bool:
+        """
+        Check if the given value is a Vedro scenario.
+
+        :param val: The value to check.
+        :return: True if the value is a Vedro scenario, False otherwise.
+        :raises TypeError: If a class name suggests it's a scenario, but
+                           it doesn't inherit from `vedro.Scenario`.
+        """
+
         # First, check if 'val' is a class. Non-class values are not scenarios
         if not isclass(val):
             return False
