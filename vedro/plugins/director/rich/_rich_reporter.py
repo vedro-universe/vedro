@@ -46,6 +46,7 @@ class RichReporterPlugin(Reporter):
         self._show_scope = config.show_scope
         self._v2_verbosity = config.v2_verbosity
         self._ring_bell = config.ring_bell
+        self._exp_pretty_diff = False
         self._namespace: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -116,6 +117,11 @@ class RichReporterPlugin(Reporter):
                            dest="ring_bell",
                            help="Trigger a 'bell' sound at the end of scenario execution")
 
+        group.add_argument("--exp-pretty-diff",
+                           action="store_true",
+                           default=self._exp_pretty_diff,
+                           help="")
+
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
         self._show_scope = event.args.show_scope
@@ -134,6 +140,7 @@ class RichReporterPlugin(Reporter):
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
         self._ring_bell = event.args.ring_bell
+        self._exp_pretty_diff = event.args.exp_pretty_diff
 
         if self._tb_max_frames < 4:
             raise ValueError("RichReporter: `tb_max_frames` must be >= 4")

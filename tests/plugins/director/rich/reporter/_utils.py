@@ -75,7 +75,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                           hide_namespaces=hide_namespaces,
                           tb_show_internal_calls=tb_show_internal_calls,
                           tb_show_locals=tb_show_locals,
-                          ring_bell=ring_bell)
+                          ring_bell=ring_bell,
+                          exp_pretty_diff=False)
     arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)
 

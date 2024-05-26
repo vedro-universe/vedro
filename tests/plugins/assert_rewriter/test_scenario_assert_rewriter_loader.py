@@ -6,7 +6,7 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.plugins.assert_rewriter import AssertRewriterModuleLoader
+from vedro.plugins.assert_rewriter import LegacyAssertRewriter
 
 
 @pytest.fixture()
@@ -32,7 +32,7 @@ async def test_load(tmp_scn_dir: Path):
                     assert 1 == 2
         '''))
 
-        loader = AssertRewriterModuleLoader()
+        loader = LegacyAssertRewriter()
         module = await loader.load(path)
         scenario = module.Scenario()
 
