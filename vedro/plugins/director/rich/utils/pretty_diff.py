@@ -4,7 +4,7 @@ import re
 from typing import Any, Generator, Iterable, List, Optional, Tuple
 
 from rich.console import Group
-from rich.panel import Panel
+from rich.padding import Padding
 from rich.text import Text
 
 
@@ -60,8 +60,8 @@ def _compare(actual: Any, expected: Any) -> Generator[str, None, None]:
     yield from differ.compare(_format(actual), _format(expected))
 
 
-def pretty_diff(actual: Any, expected: Any) -> Panel:
-    diff = _compare(actual, expected)
+def pretty_diff(actual: Any, expected: Any) -> Padding:
+    diff = _compare(expected, actual)
     colored_diff = _color_diff(diff)
     renderable = Group(*colored_diff)
-    return Panel(renderable, title="Diff", padding=(1, 1), expand=True)
+    return Padding(renderable, (0, 2))

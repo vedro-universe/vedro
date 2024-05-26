@@ -11,10 +11,13 @@ from rich.console import Console, RenderableType
 from rich.pretty import Pretty
 from rich.status import Status
 from rich.style import Style
+from rich.text import Text
 from rich.traceback import Trace, Traceback
 
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
+
+from .utils.pretty_diff import pretty_diff
 
 __all__ = ("RichPrinter",)
 
@@ -132,6 +135,20 @@ class RichPrinter:
                     frame.locals = {k: v for k, v in frame.locals.items()
                                     if k != "self" and k.isidentifier()}
 
+    def __trim_traceback(self, tb: TracebackType) -> TracebackType:
+        # Traverse the traceback to exclude the last frame
+        frames = []
+        while tb is not None:
+            frames.append(tb)
+            tb = tb.tb_next  # type: ignore
+        trimmed_frames = frames[:-1]  # Exclude the last frame
+
+        # Construct a new traceback object from the trimmed frames
+        new_tb = None
+        for frame in reversed(trimmed_frames):
+            new_tb = TracebackType(new_tb, frame.tb_frame, frame.tb_lasti, frame.tb_lineno)
+        return new_tb
+
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
                                show_locals: bool = False,
@@ -143,6 +160,9 @@ class RichPrinter:
         else:
             traceback = self.__filter_internals(exc_info.traceback)
 
+        if hasattr(exc_info.value, "__vedro_assert_left__"):
+            traceback = self.__trim_traceback(traceback)
+
         trace = Traceback.extract(exc_info.type, exc_info.value, traceback,
                                   show_locals=show_locals)
 
@@ -153,9 +173,22 @@ class RichPrinter:
             width = self._console.size.width
 
         tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap,
-                                     width=width)
+                                     width=width, indent_guides=False)
         self._console.print(tb)
         self.print_empty_line()
+
+        if hasattr(exc_info.value, "__vedro_assert_left__"):
+            left = getattr(exc_info.value, "__vedro_assert_left__")
+            right = getattr(exc_info.value, "__vedro_assert_right__")
+
+            self.pretty_print(
+                Text(">>> assert ", style="bold") +
+                Text("actual ", style="bold red") +
+                Text("== ", style="bold") +
+                Text("expected", style="bold green")
+            )
+            self.pretty_print(pretty_diff(left, right))
+            self.print_empty_line()
 
     def pretty_format(self, value: Any) -> Any:
         warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)
