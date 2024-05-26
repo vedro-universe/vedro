@@ -1,6 +1,7 @@
 import os
 from inspect import isclass
 from pathlib import Path
+from types import ModuleType
 from typing import Any, List, Optional, Type
 
 from ..._scenario import Scenario
@@ -13,11 +14,21 @@ __all__ = ("ScenarioFileLoader",)
 class ScenarioFileLoader(ScenarioLoader):
     def __init__(self, module_loader: Optional[ModuleLoader] = None) -> None:
         self._module_loader = module_loader or ModuleFileLoader()  # backward compatibility
+        self._enforce_scenario_presence: bool = True
 
     async def load(self, path: Path) -> List[Type[Scenario]]:
         module = await self._module_loader.load(path)
+        loaded = self._collect_scenarios(module)
+        if self._enforce_scenario_presence and len(loaded) == 0:
+            raise ValueError(
+                f"No Vedro scenarios found in the module at '{path}'. "
+                "Ensure the module contains at least one subclass of 'vedro.Scenario'"
+            )
+        return loaded
 
+    def _collect_scenarios(self, module: ModuleType) -> List[Type[Scenario]]:
         loaded = []
+
         # Iterate over the module's dictionary because it preserves the order of definitions,
         # which is not guaranteed when using dir(module)
         for name in module.__dict__:
@@ -28,11 +39,6 @@ class ScenarioFileLoader(ScenarioLoader):
                 val.__file__ = os.path.abspath(module.__file__)  # type: ignore
                 loaded.append(val)
 
-        if len(loaded) == 0:
-            raise ValueError(
-                f"No valid Vedro scenarios found in the module at '{path}'. "
-                "Ensure the module contains at least one subclass of 'vedro.Scenario'"
-            )
         return loaded
 
     def _is_vedro_scenario(self, val: Any) -> bool:

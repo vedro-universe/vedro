@@ -117,7 +117,7 @@ async def test_scenario_file_loader_without_scenarios(tmp_scn_dir: Path):
     with then:
         assert exc.type is ValueError
         assert str(exc.value) == (
-            "No valid Vedro scenarios found in the module at 'scenarios/scenario.py'. "
+            "No Vedro scenarios found in the module at 'scenarios/scenario.py'. "
             "Ensure the module contains at least one subclass of 'vedro.Scenario'"
         )
 
