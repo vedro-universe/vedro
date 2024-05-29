@@ -1,3 +1,3 @@
-from ._filter_traceback import filter_traceback
+from ._filter_traceback import TracebackFilter
 
-__all__ = ("filter_traceback",)
+__all__ = ("TracebackFilter",)

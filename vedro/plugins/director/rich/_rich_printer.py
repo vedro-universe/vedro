@@ -1,10 +1,8 @@
 import json
-import os
 import warnings
 from atexit import register as on_exit
 from os import linesep
 from traceback import format_exception
-from types import TracebackType
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from rich.console import Console, RenderableType
@@ -17,7 +15,7 @@ from rich.traceback import Trace, Traceback
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 
-from .utils import filter_traceback
+from .utils import TracebackFilter
 from .utils.pretty_diff import pretty_diff
 
 __all__ = ("RichPrinter",)
@@ -35,6 +33,8 @@ class RichPrinter:
         self._traceback_factory = traceback_factory
         self._pretty_factory = pretty_factory
         self._scenario_spinner: Union[Status, None] = None
+
+        self._traceback_filter = TracebackFilter(modules=[vedro])
 
     @property
     def console(self) -> Console:
@@ -98,14 +98,11 @@ class RichPrinter:
         else:
             self._console.out(name, style=style)
 
-    def __filter_internals(self, traceback: TracebackType) -> TracebackType:
-        return filter_traceback(traceback, modules=[os.path.dirname(vedro.__file__)])
-
     def print_exception(self, exc_info: ExcInfo, *,
                         max_frames: int = 8, show_internal_calls: bool = False) -> None:
         traceback = exc_info.traceback
         if not show_internal_calls:
-            traceback = self.__filter_internals(traceback)
+            traceback = self._traceback_filter.filter_tb(traceback)
 
         formatted = format_exception(exc_info.type, exc_info.value, traceback, limit=max_frames)
         self._console.out("".join(formatted), style=Style(color="yellow"))
@@ -117,20 +114,6 @@ class RichPrinter:
                     frame.locals = {k: v for k, v in frame.locals.items()
                                     if k != "self" and k.isidentifier()}
 
-    def __trim_traceback(self, tb: TracebackType) -> TracebackType:
-        # Traverse the traceback to exclude the last frame
-        frames = []
-        while tb is not None:
-            frames.append(tb)
-            tb = tb.tb_next  # type: ignore
-        trimmed_frames = frames[:-1]  # Exclude the last frame
-
-        # Construct a new traceback object from the trimmed frames
-        new_tb = None
-        for frame in reversed(trimmed_frames):
-            new_tb = TracebackType(new_tb, frame.tb_frame, frame.tb_lasti, frame.tb_lineno)
-        return new_tb
-
     def print_pretty_exception(self, exc_info: ExcInfo, *,
                                max_frames: int = 8,  # min=4 (see rich.traceback.Traceback impl)
                                show_locals: bool = False,
@@ -139,10 +122,7 @@ class RichPrinter:
                                width: Optional[int] = None) -> None:
         traceback = exc_info.traceback
         if not show_internal_calls:
-            traceback = self.__filter_internals(traceback)
-
-        if hasattr(exc_info.value, "__vedro_assert_left__"):
-            traceback = self.__trim_traceback(traceback)
+            traceback = self._traceback_filter.filter_tb(traceback)
 
         trace = Traceback.extract(exc_info.type, exc_info.value, traceback,
                                   show_locals=show_locals)

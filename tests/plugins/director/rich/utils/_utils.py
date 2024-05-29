@@ -9,7 +9,8 @@ from typing import List, Tuple, Type
 
 import pytest
 
-__all__ = ("create_call_stack", "run_module_function", "import_module", "get_frames_info",)
+__all__ = ("create_call_stack", "run_module_function", "import_module", "get_frames_info",
+           "tmp_dir",)
 
 
 FrameInfo = Tuple[str, str]  # (file_path, function_name)
