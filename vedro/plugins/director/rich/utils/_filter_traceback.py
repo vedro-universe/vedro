@@ -1,6 +1,6 @@
 from pathlib import Path
 from types import ModuleType, TracebackType
-from typing import List, Union
+from typing import List, Sequence, Union
 
 __all__ = ("TracebackFilter",)
 
@@ -14,13 +14,13 @@ class TracebackFilter:
     parts of the traceback.
     """
 
-    def __init__(self, modules: List[Union[str, ModuleType]]) -> None:
+    def __init__(self, modules: Sequence[Union[str, ModuleType]]) -> None:
         """
         Initialize the TracebackFilter with a list of modules to filter out.
 
         :param modules: List of modules or module paths to be filtered out from tracebacks.
         """
-        self._module_paths = [self._resolve_module_path(m) for m in modules]
+        self._module_paths = [self.resolve_module_path(m) for m in modules]
 
     def filter_tb(self, tb: TracebackType) -> TracebackType:
         """
@@ -55,7 +55,7 @@ class TracebackFilter:
 
         return filtered_tb
 
-    def _resolve_module_path(self, module: Union[str, ModuleType]) -> Path:
+    def resolve_module_path(self, module: Union[str, ModuleType]) -> Path:
         """
         Resolve the module path from a module or string.
 

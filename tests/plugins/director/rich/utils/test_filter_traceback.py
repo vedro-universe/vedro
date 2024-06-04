@@ -9,6 +9,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.plugins.director.rich.utils import TracebackFilter
+
 from ._utils import create_call_stack, get_frames_info, run_module_function, tmp_dir
 
 __all__ = ("tmp_dir",)  # pytest fixtures
@@ -136,7 +137,7 @@ def test_resolve_path_from_string(module: str, resolved: Path):
         traceback_filter = TracebackFilter(modules=[])
 
     with when:
-        result = traceback_filter._resolve_module_path(module)
+        result = traceback_filter.resolve_module_path(module)
 
     with then:
         assert result == resolved
@@ -147,7 +148,7 @@ def test_resolve_path_from_module():
         traceback_filter = TracebackFilter(modules=[])
 
     with when:
-        result = traceback_filter._resolve_module_path(json)
+        result = traceback_filter.resolve_module_path(json)
 
     with then:
         assert result == Path(json.__file__).parent
@@ -158,7 +159,7 @@ def test_resolve_path_missing_file_attr():
         traceback_filter = TracebackFilter(modules=[])
 
     with when, raises(Exception) as exc:
-        traceback_filter._resolve_module_path(sys)
+        traceback_filter.resolve_module_path(sys)
 
     with then:
         assert exc.type is AttributeError
@@ -170,7 +171,7 @@ def test_resolve_path_invalid_type():
         traceback_filter = TracebackFilter(modules=[])
 
     with when, raises(Exception) as exc:
-        traceback_filter._resolve_module_path(None)  # type: ignore
+        traceback_filter.resolve_module_path(None)  # type: ignore
 
     with then:
         assert exc.type is TypeError
