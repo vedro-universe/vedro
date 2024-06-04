@@ -33,7 +33,6 @@ class RichPrinter:
         self._traceback_factory = traceback_factory
         self._pretty_factory = pretty_factory
         self._scenario_spinner: Union[Status, None] = None
-
         self._traceback_filter = TracebackFilter(modules=[vedro])
 
     @property
@@ -102,6 +101,8 @@ class RichPrinter:
                         max_frames: int = 8, show_internal_calls: bool = False) -> None:
         traceback = exc_info.traceback
         if not show_internal_calls:
+            warnings.warn("Deprecated: show_internal_calls param will be removed in v2.0",
+                          DeprecationWarning)
             traceback = self._traceback_filter.filter_tb(traceback)
 
         formatted = format_exception(exc_info.type, exc_info.value, traceback, limit=max_frames)
@@ -122,6 +123,8 @@ class RichPrinter:
                                width: Optional[int] = None) -> None:
         traceback = exc_info.traceback
         if not show_internal_calls:
+            warnings.warn("Deprecated: show_internal_calls param will be removed in v2.0",
+                          DeprecationWarning)
             traceback = self._traceback_filter.filter_tb(traceback)
 
         trace = Traceback.extract(exc_info.type, exc_info.value, traceback,

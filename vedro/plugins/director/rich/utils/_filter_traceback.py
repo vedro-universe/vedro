@@ -1,6 +1,6 @@
 from pathlib import Path
 from types import ModuleType, TracebackType
-from typing import List, Sequence, Union
+from typing import Sequence, Union
 
 __all__ = ("TracebackFilter",)
 

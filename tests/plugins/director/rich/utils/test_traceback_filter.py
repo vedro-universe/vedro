@@ -1,5 +1,4 @@
 import json
-import sys
 from inspect import getfile
 from os.path import abspath
 from pathlib import Path
