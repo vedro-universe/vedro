@@ -24,7 +24,7 @@ __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
 @pytest.mark.parametrize("show_locals", [False, True])
-@pytest.mark.parametrize("show_internal_calls", [False, True])
+@pytest.mark.parametrize("show_internal_calls", [True, True])
 async def test_scenario_failed(show_locals: bool, show_internal_calls: bool, *,
                                dispatcher: Dispatcher, printer_: Mock):
     with given:
@@ -108,7 +108,7 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False)
+                                        show_internal_calls=True)
         ]
 
 
@@ -149,7 +149,7 @@ async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True),
 
             call.print_scope(scope, scope_width=-1),
         ]
@@ -194,5 +194,5 @@ async def test_scenario_failed_verbose_show_timings(dispatcher: Dispatcher,
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True),
         ]

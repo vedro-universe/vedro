@@ -58,7 +58,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 show_steps: bool = RichReporter_.show_steps,
                                 show_scenario_spinner: bool = RichReporter_.show_scenario_spinner,
                                 hide_namespaces: bool = RichReporter_.hide_namespaces,
-                                tb_show_internal_calls: bool = RichReporter_.tb_show_internal_calls,  # noqa: E501
+                                tb_show_internal_calls: bool = True,
                                 tb_show_locals: bool = RichReporter_.tb_show_locals,
                                 ring_bell: bool = RichReporter_.ring_bell) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
