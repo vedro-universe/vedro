@@ -16,36 +16,36 @@ __all__ = ("create_call_stack", "run_module_function", "import_module", "get_fra
 FrameInfo = Tuple[str, str]  # (file_path, function_name)
 
 
-def create_call_stack(root_dir: Path, frames: List[FrameInfo]) -> None:
+def create_call_stack(root_dir: Path, frames: List[FrameInfo], *,
+                      import_statement: str = "",
+                      call_statement: str = "1 / 0") -> None:
     """
     Create a call stack of Python functions based on provided frame information.
 
     :param root_dir: The root directory where the files should be created.
     :param frames: A list of tuples, each containing a file path and function name.
+    :param import_statement: The import statement to include in the last frame file.
+    :param call_statement: The call statement to include in the last frame file.
     """
     for index, frame in enumerate(frames):
         file_path, function_name = frame
         file_path = (root_dir / file_path).resolve()
 
-        function_declaration = f"def {function_name}():"
+        func_declaration = f"def {function_name}():"
         if index == len(frames) - 1:
-            import_statement = ""
-            call_statement = "  1 / 0"
+            import_stmt = import_statement
+            call_stmt = f"  {call_statement}"
         else:
             next_file_path, next_function_name = frames[index + 1]
             module_name = path_to_module(Path(next_file_path))
-            import_statement = f"from {module_name} import {next_function_name}"
-            call_statement = f"  {next_function_name}()"
+            import_stmt = f"from {module_name} import {next_function_name}"
+            call_stmt = f"  {next_function_name}()"
 
         if not file_path.parent.exists():
             file_path.parent.mkdir(parents=True)
             (file_path.parent / "__init__.py").touch()
 
-        file_path.write_text(linesep.join([
-            import_statement,
-            function_declaration,
-            call_statement
-        ]))
+        file_path.write_text(linesep.join([import_stmt, func_declaration, call_stmt]))
 
 
 def path_to_module(path: Path) -> str:

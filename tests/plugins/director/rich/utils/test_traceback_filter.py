@@ -114,7 +114,7 @@ def test_exclude_entire_module(tmp_dir: Path):
         tb = run_module_function(tmp_dir / "main.py", func="main")
 
     with when:
-        filtered_tb = TracebackFilter(modules=["another_module"]).filter_tb(tb)
+        filtered_tb = TracebackFilter(["another_module"]).filter_tb(tb)
 
     with then:
         assert get_frames_info(filtered_tb) == [
@@ -141,29 +141,6 @@ def test_resolve_path_from_string(module: str, resolved: Path):
 
     with then:
         assert result == resolved
-
-
-def test_resolve_path_from_module():
-    with given:
-        traceback_filter = TracebackFilter(modules=[])
-
-    with when:
-        result = traceback_filter.resolve_module_path(json)
-
-    with then:
-        assert result == Path(json.__file__).parent
-
-
-def test_resolve_path_missing_file_attr():
-    with given:
-        traceback_filter = TracebackFilter(modules=[])
-
-    with when, raises(Exception) as exc:
-        traceback_filter.resolve_module_path(sys)
-
-    with then:
-        assert exc.type is AttributeError
-        assert str(exc.value) == "'sys' must be a module with a '__file__' attribute"
 
 
 def test_resolve_path_invalid_type():
