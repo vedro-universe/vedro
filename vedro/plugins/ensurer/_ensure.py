@@ -1,31 +1,33 @@
 import asyncio
 import time
-from functools import partial, wraps
+from functools import wraps
 from typing import Any, Callable, Coroutine, Optional, Tuple, Type, TypeVar, Union, cast, overload
 
-__all__ = ("ensure",)
+__all__ = ("Ensure", "AttemptType", "DelayValueType", "DelayCallableType", "DelayType",
+           "ExceptionType", "SwallowExceptionType", "LoggerType",)
 
 F = TypeVar("F", bound=Callable[..., Any])
 AF = TypeVar("AF", bound=Callable[..., Coroutine[Any, Any, Any]])
 
-Attempt = int
-DelayValue = Union[float, int]
-DelayCallable = Callable[[Attempt], DelayValue]
+AttemptType = int
+DelayValueType = Union[float, int]
+DelayCallableType = Callable[[AttemptType], DelayValueType]
+DelayType = Union[DelayValueType, DelayCallableType]
 
 ExceptionType = Type[BaseException]
-SwallowException = Union[Tuple[ExceptionType, ...], ExceptionType]
+SwallowExceptionType = Union[Tuple[ExceptionType, ...], ExceptionType]
 
-Logger = Callable[[Any, Attempt, Union[BaseException, None]], Any]
+LoggerType = Callable[[Any, AttemptType, Union[BaseException, None]], Any]
 
 
 class Ensure:
-    def __init__(self, *, attempts: Optional[Attempt] = None,
-                 delay: Optional[Union[DelayValue, DelayCallable]] = None,
-                 swallow: Optional[SwallowException] = None,
-                 logger: Optional[Logger] = None) -> None:
-        self._attempts = attempts or 3
-        self._delay = delay or 0.0
-        self._swallow = (BaseException,) if (swallow is None) else swallow
+    def __init__(self, *, attempts: AttemptType = 3,
+                 delay: DelayType = 0.0,
+                 swallow: SwallowExceptionType = BaseException,
+                 logger: Optional[LoggerType] = None) -> None:
+        self._attempts = attempts
+        self._delay = delay
+        self._swallow = swallow
         self._logger = logger
 
     @overload
@@ -87,9 +89,3 @@ class Ensure:
     def __repr__(self) -> str:
         return (f"{self.__class__.__name__}"
                 f"(attempts={self._attempts}, delay={self._delay!r}, swallow={self._swallow!r})")
-
-
-ensure = partial(Ensure,
-                 logger=lambda _, attempt, exc=None:
-                 print(f"-> attempt {attempt} failed with {exc!r}")
-                 if exc else print(f"-> attempt {attempt} succeeded"))

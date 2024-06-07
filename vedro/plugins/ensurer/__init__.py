@@ -1,4 +1,4 @@
-from ._ensure import ensure
-from ._ensurer import Ensurer, EnsurerPlugin
+from ._ensure import Ensure
+from ._ensurer import Ensurer, EnsurerPlugin, ensure
 
-__all__ = ("Ensurer", "EnsurerPlugin", "ensure",)
+__all__ = ("Ensurer", "EnsurerPlugin", "ensure", "Ensure",)
