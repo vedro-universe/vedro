@@ -20,9 +20,9 @@ from .plugins.artifacted import (
     attach_step_artifact,
 )
 from .plugins.deferrer import defer
+from .plugins.ensurer import ensure
 from .plugins.skipper import only, skip, skip_if
 from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
-from .plugins.ensurer import ensure
 
 __version__ = version
 __all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params", "ensure",
