@@ -54,7 +54,7 @@ class Ensure:
         :param fn: The synchronous function to be decorated.
         :return: The decorated function.
         """
-        ...
+        ...  # pragma: no cover
 
     @overload
     def __call__(self, fn: AF) -> AF:
@@ -64,7 +64,7 @@ class Ensure:
         :param fn: The asynchronous function to be decorated.
         :return: The decorated coroutine function.
         """
-        ...
+        ...  # pragma: no cover
 
     def __call__(self, fn: Any) -> Any:
         """
@@ -100,7 +100,7 @@ class Ensure:
                     if self._logger and self._attempts > 1:
                         self._logger(fn, attempt, e)
                     time.sleep(delay)
-            if exception:
+            if exception:  # pragma: no branch
                 raise exception
 
         return cast(F, sync_wrapper)
@@ -127,7 +127,7 @@ class Ensure:
                     if self._logger and self._attempts > 1:
                         self._logger(fn, attempt, e)
                     await asyncio.sleep(delay)
-            if exception:
+            if exception:  # pragma: no branch
                 raise exception
 
         return cast(AF, async_wrapper)
