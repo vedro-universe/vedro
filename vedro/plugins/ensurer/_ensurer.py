@@ -122,10 +122,10 @@ class Ensurer(PluginConfig):
     show_attempts = True
 
     # Default number of retry attempts
-    default_attempts = 3
+    default_attempts: AttemptType = 3
 
     # Default delay between retry attempts
-    default_delay = 0.0
+    default_delay: DelayType = 0.0
 
     # Default exceptions to swallow during retries
-    default_swallow = BaseException
+    default_swallow: SwallowExceptionType = BaseException
