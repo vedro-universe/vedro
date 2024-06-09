@@ -1,7 +1,9 @@
+from inspect import unwrap
 from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import StepFailedEvent, StepPassedEvent, StepRunEvent
+
 from ._ensure import AttemptType, DelayType, Ensure, SwallowExceptionType
 from ._runtime_config import RuntimeConfig
 from ._runtime_config import runtime_config as _runtime_config
@@ -53,11 +55,13 @@ class EnsurerPlugin(Plugin):
         self._runtime_config.set_attempts(config.default_attempts)
         self._runtime_config.set_delay(config.default_delay)
         self._runtime_config.set_swallow(config.default_swallow)
-        self._runtime_config.set_logger(None)
 
         self._show_attempts = config.show_attempts
         if self._show_attempts:
             self._runtime_config.set_logger(self._logger)
+        else:
+            self._runtime_config.set_logger(None)
+
         self._attempt_log: List[
             Tuple[Callable[..., Any], AttemptType, Union[BaseException, None]]
         ] = []
@@ -89,18 +93,11 @@ class EnsurerPlugin(Plugin):
         if not self._show_attempts:
             return
 
-        if not self._attempt_log:
-            return
-
         for fn, attempt, exc in self._attempt_log:
-            orig_step = event.step_result.step._orig_step
-            if fn != getattr(orig_step, "__wrapped__", orig_step):
-                continue
-
-            if exc:
-                event.step_result.add_extra_details(f"[{attempt}] attempt failed with {exc!r}")
-            else:
-                event.step_result.add_extra_details(f"[{attempt}] attempt succeeded")
+            if unwrap(fn) == unwrap(event.step_result.step._orig_step):
+                extra_details = (f"[{attempt}] attempt failed with {exc!r}" if exc else
+                                 f"[{attempt}] attempt succeeded")
+                event.step_result.add_extra_details(extra_details)
 
     def _logger(self, fn: Callable[..., Any],
                 attempt: AttemptType,
@@ -121,6 +118,7 @@ class Ensurer(PluginConfig):
                    "delay and exceptions to swallow")
 
     # Whether to show attempt details in the step results
+    # If you are using rich reporter, `--show-steps` must be provided
     show_attempts = True
 
     # Default number of retry attempts
