@@ -97,7 +97,7 @@ class NodeAssertRewriter(ast.NodeTransformer):
         if method is not Nil:
             return self._create_assert_call(method, args, keywords)
         else:
-            warnings.warn(f"AssertRewriter: Unsupported operator '{operator}'")
+            warnings.warn(f"NodeAssertRewriter: Unsupported operator '{operator}'")
             raise ValueError(f"Unsupported operator: '{operator}'")
 
     def _create_assert_call(self, method: str,
