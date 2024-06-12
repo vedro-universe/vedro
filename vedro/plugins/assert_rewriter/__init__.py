@@ -1,7 +1,9 @@
-from ._assert_rewriter import AssertRewriter, AssertRewriterPlugin
-from ._assert_rewriter_module_loader import AssertRewriterModuleLoader
+from ._assert_rewriter_loader import AssertRewriterLoader
+from ._assert_rewriter_plugin import AssertRewriter, AssertRewriterPlugin
 from ._assertion_tool import AssertionTool, CompareOperator, assert_
-from ._legacy_assert_rewriter import LegacyAssertRewriter
+from ._legacy_assert_rewriter_loader import LegacyAssertRewriterLoader
+from ._node_assert_rewriter import NodeAssertRewriter
 
-__all__ = ("AssertRewriter", "AssertRewriterPlugin", "AssertRewriterModuleLoader",
-           "LegacyAssertRewriter", "assert_", "AssertionTool", "CompareOperator",)
+__all__ = ("AssertRewriter", "AssertRewriterPlugin", "AssertRewriterLoader",
+           "AssertionTool", "assert_", "CompareOperator",
+           "LegacyAssertRewriterLoader", "NodeAssertRewriter",)

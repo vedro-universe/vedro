@@ -3,8 +3,8 @@ from typing import Type
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 
-from ._assert_rewriter_module_loader import AssertRewriterModuleLoader
-from ._legacy_assert_rewriter import LegacyAssertRewriter
+from ._assert_rewriter_loader import AssertRewriterLoader
+from ._legacy_assert_rewriter_loader import LegacyAssertRewriterLoader
 
 __all__ = ("AssertRewriter", "AssertRewriterPlugin",)
 
@@ -27,7 +27,7 @@ class AssertRewriterPlugin(Plugin):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         exp_pretty_diff = event.args.exp_pretty_diff
-        module_loader = AssertRewriterModuleLoader if exp_pretty_diff else LegacyAssertRewriter
+        module_loader = AssertRewriterLoader if exp_pretty_diff else LegacyAssertRewriterLoader
         self._global_config.Registry.ModuleLoader.register(module_loader, self)
 
 

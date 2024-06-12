@@ -4,10 +4,10 @@ from typing import Any
 
 from vedro.core import ModuleFileLoader
 
-__all__ = ("LegacyAssertRewriter",)
+__all__ = ("LegacyAssertRewriterLoader",)
 
 
-class LegacyAssertRewriter(ModuleFileLoader):
+class LegacyAssertRewriterLoader(ModuleFileLoader):
     """
     Handles legacy assertion rewriting.
 
