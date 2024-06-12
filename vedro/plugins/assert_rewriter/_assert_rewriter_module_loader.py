@@ -1,63 +1,203 @@
 import ast
 import inspect
+import warnings
 from importlib.abc import Loader
 from types import ModuleType
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Union, cast
+
+from niltype import Nil
 
 from vedro.core import ModuleFileLoader
 
 __all__ = ("AssertRewriterModuleLoader",)
 
 
-def assert_eq(left: Any, right: Any, message: Optional[str] = None) -> bool:
-    if left != right:
-        exc = AssertionError(message)
-        exc.__vedro_assert_left__ = left  # type: ignore
-        exc.__vedro_assert_right__ = right  # type: ignore
-        exc.__vedro_assert_message__ = message  # type: ignore
-        raise exc
-
-    return True
-
-
 class AssertRewriter(ast.NodeTransformer):
+    """
+    Transforms assert statements into calls to custom assertion methods.
+
+    This class rewrites assert statements in the abstract syntax tree (AST)
+    to use a specified assertion tool with custom assertion methods.
+    """
+
+    def __init__(self, assert_tool: str, assert_methods: Dict[Any, str]) -> None:
+        """
+        Initialize the AssertRewriter with the specified assertion tool and methods.
+
+        :param assert_tool: The tool used for assertions.
+        :param assert_methods: A dictionary mapping AST comparison operators to assertion methods.
+        """
+        super().__init__()
+        self._assert_tool = assert_tool
+        self._assert_methods = assert_methods
+
     def visit_Assert(self, node: ast.Assert) -> ast.Assert:
-        if not isinstance(node.test, ast.Compare):
-            return node
+        """
+        Visit assert nodes and rewrite them using the custom assertion methods.
 
-        if not len(node.test.ops) == 1:
+        :param node: The assert node in the AST.
+        :return: The rewritten assert node or the original if rewriting fails.
+        """
+        try:
+            new_node = self._rewrite_expr(node.test, node.msg)
+        except:  # noqa
             return node
+        else:
+            ast.copy_location(new_node, node)
+            ast.fix_missing_locations(new_node)
+            return new_node
 
-        if not isinstance(node.test.ops[0], ast.Eq):
-            return node
+    def _rewrite_expr(self, node: ast.expr, msg: Union[ast.AST, None] = None) -> ast.Assert:
+        """
+        Rewrite the expression of an assert node.
 
-        msg = node.msg if node.msg else ast.Constant(value="", kind=None)
-        new_node = ast.Assert(
-            test=ast.Call(
-                func=ast.Name(id='assert_eq', ctx=ast.Load()),
-                args=[node.test.left, node.test.comparators[0], msg],
-                keywords=[],
+        :param node: The expression node in the assert statement.
+        :param msg: The message node in the assert statement, if any.
+        :return: A new assert node with the rewritten expression.
+        """
+        if isinstance(node, ast.Compare):
+            return self._rewrite_compare(node, msg)
+        return ast.Assert(test=self._create_assert(node, msg=msg))
+
+    def _rewrite_compare(self, node: ast.Compare, msg: Optional[ast.AST] = None) -> ast.Assert:
+        """
+        Rewrite a comparison expression in an assert statement.
+
+        :param node: The comparison node in the assert statement.
+        :param msg: The message node in the assert statement, if any.
+        :return: A new assert node with the rewritten comparison expression.
+        """
+        assertions = []
+
+        left = node.left
+        for op, right in zip(node.ops, node.comparators):
+            assert_expr = self._create_assert(left, right, op, msg)
+            assertions.append(assert_expr)
+            left = right
+
+        and_expr = assertions[0]
+        for assert_expr in assertions[1:]:
+            and_expr = ast.BoolOp(op=ast.And(), values=[and_expr, assert_expr])  # type: ignore
+
+        return ast.Assert(test=and_expr)
+
+    def _create_assert(self, left: ast.AST,
+                       right: Optional[ast.AST] = None,
+                       operator: Optional[ast.AST] = None,
+                       msg: Optional[ast.AST] = None) -> ast.Call:
+        """
+        Create an assertion call.
+
+        :param left: The left operand of the assertion.
+        :param right: The right operand of the assertion, if any.
+        :param operator: The comparison operator, if any.
+        :param msg: The message for the assertion, if any.
+        :return: An AST node representing the assertion call.
+        :raises ValueError: If the operator is unsupported.
+        """
+        args = [left, right] if (right is not None) else [left]
+        keywords = [ast.keyword(arg="message", value=msg)] if (msg is not None) else []
+
+        method = self._assert_methods.get(type(operator), Nil)
+        if method is not Nil:
+            return self._create_assert_call(method, args, keywords)
+        else:
+            warnings.warn(f"AssertRewriter: Unsupported operator '{operator}'")
+            raise ValueError(f"Unsupported operator: '{operator}'")
+
+    def _create_assert_call(self, method: str,
+                            args: List[ast.AST],
+                            kwargs: List[ast.keyword]) -> ast.Call:
+        """
+        Create an AST node for an assertion call.
+
+        :param method: The method name of the assertion.
+        :param args: The arguments for the assertion.
+        :param kwargs: The keyword arguments for the assertion.
+        :return: An AST call node for the assertion.
+        """
+        return ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=self._assert_tool, ctx=ast.Load()),
+                attr=method,
+                ctx=ast.Load()
             ),
+            args=args,
+            keywords=kwargs
         )
-
-        ast.copy_location(new_node, node)
-        ast.fix_missing_locations(new_node)
-
-        return new_node
 
 
 class AssertRewriterModuleLoader(ModuleFileLoader):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._assert_rewriter = AssertRewriter()
+    """
+    Loads and rewrites Python modules to use custom assertion methods.
 
-        __builtins__["assert_eq"] = assert_eq
+    This class extends ModuleFileLoader to rewrite assert statements in Python
+    modules to use a specified assertion tool with custom assertion methods.
+    """
+
+    assert_module = "vedro.plugins.assert_rewriter"
+    assert_tool = "assert_"
+    assert_methods = {
+        ast.Eq: "assert_equal",
+        ast.NotEq: "assert_not_equal",
+
+        ast.Lt: "assert_less",
+        ast.LtE: "assert_less_equal",
+        ast.Gt: "assert_greater",
+        ast.GtE: "assert_greater_equal",
+
+        ast.Is: "assert_is",
+        ast.IsNot: "assert_is_not",
+
+        ast.In: "assert_in",
+        ast.NotIn: "assert_not_in",
+
+        type(None): "assert_truthy",
+    }
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Initialize the AssertRewriterModuleLoader.
+
+        :param args: Positional arguments for the base class.
+        :param kwargs: Keyword arguments for the base class.
+        """
+        super().__init__(*args, **kwargs)
+        self._assert_rewriter = AssertRewriter(
+            assert_tool=self.assert_tool,
+            assert_methods=self.assert_methods
+        )
 
     def _exec_module(self, loader: Loader, module: ModuleType) -> None:
+        """
+        Execute the module after rewriting its assert statements.
+
+        :param loader: The loader used to load the module.
+        :param module: The module to execute.
+        """
         source_code = inspect.getsource(module)
 
         tree = ast.parse(source_code)
-        tree = self._assert_rewriter.visit(tree)
+        rewritten_tree = self._rewrite_tree(tree)
 
-        transformed = compile(tree, module.__file__, "exec")  # type: ignore
+        transformed = compile(rewritten_tree, module.__file__, "exec")  # type: ignore
         exec(transformed, module.__dict__)
+
+    def _rewrite_tree(self, tree: ast.Module) -> ast.Module:
+        """
+        Rewrite the AST of the module to replace assert statements.
+
+        :param tree: The AST of the module.
+        :return: The rewritten AST of the module.
+        """
+        rewritten_tree = self._assert_rewriter.visit(tree)
+
+        import_stmt = ast.ImportFrom(
+            module=self.assert_module,
+            names=[ast.alias(name=self.assert_tool, asname=None)],
+            level=0
+        )
+        ast.fix_missing_locations(import_stmt)
+        rewritten_tree.body.insert(0, import_stmt)
+
+        return cast(ast.Module, rewritten_tree)
