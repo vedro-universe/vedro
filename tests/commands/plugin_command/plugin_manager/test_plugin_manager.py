@@ -1,3 +1,4 @@
+import os
 from os import linesep
 from pathlib import Path
 
@@ -7,6 +8,16 @@ from baby_steps import given, then, when
 from vedro.commands.plugin_command.plugin_manager import PluginManager
 
 from ._utils import create_config, read_config
+
+
+@pytest.fixture()
+def tmp_path(tmp_path: Path) -> Path:
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        yield tmp_path
+    finally:
+        os.chdir(cwd)
 
 
 async def test_plugin_manager_no_file(tmp_path: Path):

@@ -221,7 +221,8 @@ def test_print_exception(*, printer: RichPrinter, exc_info: ExcInfo, console_: M
 def test_print_pretty_exception(*, printer: RichPrinter, exc_info: ExcInfo, console_: Mock):
     with given:
         trace = Traceback.extract(exc_info.type, exc_info.value, exc_info.traceback)
-        tb = TestTraceback(trace, max_frames=8, word_wrap=False, width=console_.size.width)
+        tb = TestTraceback(trace, max_frames=8, word_wrap=False, width=console_.size.width,
+                           indent_guides=False)
 
     with when:
         printer.print_pretty_exception(exc_info)

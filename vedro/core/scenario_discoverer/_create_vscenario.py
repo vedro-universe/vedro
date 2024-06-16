@@ -28,3 +28,6 @@ def create_vscenario(scenario: Type[Scenario]) -> VirtualScenario:
             continue
         steps.append(VirtualStep(method))
     return VirtualScenario(scenario, steps)
+
+# TODO: Move the create_vscenario method to the ScenarioLoader class in v2.
+#       This will allow the ScenarioLoader to be responsible for creating VirtualScenario objects.

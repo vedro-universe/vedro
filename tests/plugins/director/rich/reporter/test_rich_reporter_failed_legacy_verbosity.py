@@ -68,13 +68,11 @@ async def test_scenario_failed_verbose0(show_paths: bool, *,
 
 @pytest.mark.usefixtures(rich_reporter_legacy_verbosity.__name__)
 @pytest.mark.parametrize("show_locals", [False, True])
-@pytest.mark.parametrize("show_internal_calls", [False, True])
-async def test_scenario_failed_verbose2(show_locals: bool, show_internal_calls: bool, *,
+async def test_scenario_failed_verbose2(show_locals: bool, *,
                                         dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, verbose=2,
-                                    tb_show_locals=show_locals,
-                                    tb_show_internal_calls=show_internal_calls)
+                                    tb_show_locals=show_locals)
 
         scenario_result = make_scenario_result()
 
@@ -108,7 +106,7 @@ async def test_scenario_failed_verbose2(show_locals: bool, show_internal_calls: 
                                         width=100,
                                         max_frames=8,
                                         show_locals=show_locals,
-                                        show_internal_calls=show_internal_calls)
+                                        show_internal_calls=True)
         ]
 
 
@@ -145,7 +143,7 @@ async def test_scenario_failed_verbose3_without_scope(*, dispatcher: Dispatcher,
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info, width=100, max_frames=8, show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True),
         ]
 
 
@@ -183,7 +181,7 @@ async def test_scenario_failed_verbose3_with_scope(*, dispatcher: Dispatcher, pr
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info, width=100, max_frames=8, show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True),
 
             call.print_scope(scope, scope_width=-1)
         ]

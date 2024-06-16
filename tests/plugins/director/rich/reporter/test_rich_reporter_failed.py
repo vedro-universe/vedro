@@ -24,13 +24,11 @@ __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
 @pytest.mark.parametrize("show_locals", [False, True])
-@pytest.mark.parametrize("show_internal_calls", [False, True])
-async def test_scenario_failed(show_locals: bool, show_internal_calls: bool, *,
-                               dispatcher: Dispatcher, printer_: Mock):
+async def test_scenario_failed(show_locals: bool, dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher,
                                     tb_show_locals=show_locals,
-                                    tb_show_internal_calls=show_internal_calls)
+                                    tb_show_internal_calls=True)
 
         scenario_result = make_scenario_result().mark_failed()
 
@@ -64,7 +62,7 @@ async def test_scenario_failed(show_locals: bool, show_internal_calls: bool, *,
                                         width=100,
                                         max_frames=8,
                                         show_locals=show_locals,
-                                        show_internal_calls=show_internal_calls)
+                                        show_internal_calls=True)
         ]
 
 
@@ -108,7 +106,7 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False)
+                                        show_internal_calls=True)
         ]
 
 
@@ -149,7 +147,7 @@ async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True),
 
             call.print_scope(scope, scope_width=-1),
         ]
@@ -194,5 +192,5 @@ async def test_scenario_failed_verbose_show_timings(dispatcher: Dispatcher,
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True),
         ]

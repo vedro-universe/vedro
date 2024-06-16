@@ -214,7 +214,6 @@ async def test_run_discovered_and_scheduled_fixed_seed(*, seeder: SeederPlugin,
         generated = await run_scenarios(dispatcher, scheduler)
 
     with then:
-        print(generated)
         assert generated == [RAND_SCHEDULED[1][0], RAND_SCHEDULED[1][0],
                              RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][0]]
 

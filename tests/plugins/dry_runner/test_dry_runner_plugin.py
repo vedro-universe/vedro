@@ -1,9 +1,10 @@
 from unittest.mock import Mock
 
+import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher, ScenarioRunner
-from vedro.plugins.dry_runner import DryRunnerImpl, DryRunnerPlugin
+from vedro.plugins.dry_runner import DryRunnerImpl
 
 from ._utils import (
     dispatcher,
@@ -16,7 +17,8 @@ from ._utils import (
 __all__ = ("dispatcher", "dry_runner_plugin",)  # fixtures
 
 
-async def test_dry_run(*, dry_runner_plugin: DryRunnerPlugin, dispatcher: Dispatcher):
+@pytest.mark.usefixtures(dry_runner_plugin.__name__)
+async def test_dry_run(*, dispatcher: Dispatcher):
     with given:
         scenario_runner_ = Mock(ScenarioRunner)
         config = make_config(dispatcher, scenario_runner_)
@@ -29,7 +31,8 @@ async def test_dry_run(*, dry_runner_plugin: DryRunnerPlugin, dispatcher: Dispat
         assert isinstance(config.Registry.ScenarioRunner(), DryRunnerImpl)
 
 
-async def test_no_dry_run(*, dry_runner_plugin: DryRunnerPlugin, dispatcher: Dispatcher):
+@pytest.mark.usefixtures(dry_runner_plugin.__name__)
+async def test_no_dry_run(*, dispatcher: Dispatcher):
     with given:
         scenario_runner_ = Mock(ScenarioRunner)
         config = make_config(dispatcher, scenario_runner_)

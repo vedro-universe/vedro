@@ -21,6 +21,8 @@ import vedro.plugins.terminator as terminator
 from vedro.core import (
     Dispatcher,
     Factory,
+    ModuleFileLoader,
+    ModuleLoader,
     MonotonicScenarioRunner,
     MonotonicScenarioScheduler,
     MultiScenarioDiscoverer,
@@ -53,12 +55,16 @@ class Config(core.Config):
     class Registry(core.Config.Registry):
         Dispatcher = Singleton[Dispatcher](Dispatcher)
 
+        ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
+
         ScenarioFinder = Factory[ScenarioFinder](lambda: ScenarioFileFinder(
             file_filter=AnyFilter([HiddenFilter(), DunderFilter(), ExtFilter(only=["py"])]),
             dir_filter=AnyFilter([HiddenFilter(), DunderFilter()])
         ))
 
-        ScenarioLoader = Factory[ScenarioLoader](ScenarioFileLoader)
+        ScenarioLoader = Factory[ScenarioLoader](lambda: ScenarioFileLoader(
+            module_loader=Config.Registry.ModuleLoader(),
+        ))
 
         ScenarioOrderer = Factory[ScenarioOrderer](StableScenarioOrderer)
 
