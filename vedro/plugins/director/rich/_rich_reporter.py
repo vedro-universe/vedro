@@ -82,7 +82,7 @@ class RichReporterPlugin(Reporter):
                            action="count",
                            default=self._verbosity,
                            help=help_message)
-        group.add_argument("--show-scope",
+        group.add_argument("-S", "--show-scope",
                            action="store_true",
                            default=self._show_scope,
                            help="Show a snapshot of crucial variables (Scope) "

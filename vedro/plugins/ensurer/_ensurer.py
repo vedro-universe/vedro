@@ -102,6 +102,13 @@ class EnsurerPlugin(Plugin):
     def _logger(self, fn: Callable[..., Any],
                 attempt: AttemptType,
                 exc: Union[BaseException, None]) -> None:
+        """
+        Log the attempt details including the function, attempt number, and exception.
+
+        :param fn: The function being attempted.
+        :param attempt: The attempt number.
+        :param exc: The exception raised during the attempt, if any.
+        """
         self._attempt_log.append((fn, attempt, exc))
 
 
