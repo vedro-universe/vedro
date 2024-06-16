@@ -4,6 +4,7 @@ from niltype import Nil
 from pytest import raises
 
 from vedro.plugins.assert_rewriter import AssertionTool
+from vedro.plugins.assert_rewriter import CompareOperator
 from vedro.plugins.assert_rewriter import CompareOperator as Op
 
 
@@ -140,3 +141,12 @@ def test_compare_fail_with_message(method, actual, expected, operator, *, assert
         assert assert_.get_right(exc.value) == expected
         assert assert_.get_operator(exc.value) == operator
         assert assert_.get_message(exc.value) == message
+
+
+@pytest.mark.parametrize("op", CompareOperator)
+def test_compare_operator(op):
+    with when:
+        res = str(op)
+
+    with then:
+        assert res == op.value

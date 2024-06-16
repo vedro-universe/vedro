@@ -29,7 +29,7 @@ class LegacyAssertRewriterLoader(ModuleFileLoader):
 
         try:
             from dessert import AssertionRewritingHook  # type: ignore
-        except ModuleNotFoundError:
+        except ModuleNotFoundError:  # pragma: no cover
             raise ModuleNotFoundError(
                 "Package 'dessert' is not found, install it via 'pip install dessert'")
         else:
