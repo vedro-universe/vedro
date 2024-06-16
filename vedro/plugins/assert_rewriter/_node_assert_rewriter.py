@@ -52,7 +52,7 @@ class NodeAssertRewriter(ast.NodeTransformer):
         """
         if isinstance(node, ast.Compare):
             return self._rewrite_compare(node, msg)
-        return ast.Assert(test=self._create_assert(node, msg=msg))
+        return ast.Assert(test=self._create_assert(node, msg=msg), msg=None)
 
     def _rewrite_compare(self, node: ast.Compare, msg: Optional[ast.AST] = None) -> ast.Assert:
         """
@@ -74,7 +74,7 @@ class NodeAssertRewriter(ast.NodeTransformer):
         for assert_expr in assertions[1:]:
             and_expr = ast.BoolOp(op=ast.And(), values=[and_expr, assert_expr])  # type: ignore
 
-        return ast.Assert(test=and_expr)
+        return ast.Assert(test=and_expr, msg=None)
 
     def _create_assert(self, left: ast.AST,
                        right: Optional[ast.AST] = None,

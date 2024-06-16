@@ -79,4 +79,4 @@ def test_rewrite_assert_unsupported_operator():
 
         warning_message = str(record.list[0].message)
         assert "NodeAssertRewriter: Unsupported operator" in warning_message
-        assert "<ast.Is object" in warning_message
+        assert "ast.Is object" in warning_message

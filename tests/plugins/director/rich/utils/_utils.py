@@ -3,6 +3,7 @@ import os
 import sys
 import traceback
 from os import linesep
+from os.path import abspath
 from pathlib import Path
 from types import ModuleType, TracebackType
 from typing import List, Tuple, Type
@@ -104,7 +105,13 @@ def get_frames_info(tb: TracebackType) -> List[FrameInfo]:
     :param tb: The traceback object.
     :return: A list of tuples containing file paths and function names from the traceback.
     """
-    return [(frame.filename, frame.name) for frame in traceback.extract_tb(tb)]
+    frames_info = []
+    for frame in traceback.extract_tb(tb):
+        filename = frame.filename
+        if sys.version_info < (3, 10):
+            filename = abspath(filename)
+        frames_info.append((filename, frame.name))
+    return frames_info
 
 
 @pytest.fixture()
