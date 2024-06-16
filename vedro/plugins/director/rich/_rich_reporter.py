@@ -1,5 +1,5 @@
 from types import ModuleType
-from typing import Callable, Tuple, Type, Union
+from typing import Callable, Tuple, Type, Union, final
 
 import vedro
 from vedro.core import Dispatcher, ExcInfo, PluginConfig, ScenarioResult, StepResult
@@ -23,6 +23,7 @@ from .utils import TracebackFilter
 __all__ = ("RichReporterPlugin", "RichReporter",)
 
 
+@final
 class RichReporterPlugin(Reporter):
     def __init__(self, config: Type["RichReporter"], *,
                  printer_factory: Callable[[], RichPrinter] = RichPrinter) -> None:

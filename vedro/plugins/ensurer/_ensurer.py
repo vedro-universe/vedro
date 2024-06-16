@@ -1,5 +1,5 @@
 from inspect import unwrap
-from typing import Any, Callable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, List, Optional, Tuple, Type, Union, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import StepFailedEvent, StepPassedEvent, StepRunEvent
@@ -33,6 +33,7 @@ def ensure(*, attempts: Optional[AttemptType] = None,
                   logger=_runtime_config.get_logger())
 
 
+@final
 class EnsurerPlugin(Plugin):
     """
     A plugin to integrate the Ensure functionality with the Vedro testing framework.

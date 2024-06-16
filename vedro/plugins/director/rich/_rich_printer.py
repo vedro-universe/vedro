@@ -5,18 +5,18 @@ from os import linesep
 from traceback import format_exception
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from niltype import Nil
 from rich.console import Console, RenderableType
 from rich.pretty import Pretty
 from rich.status import Status
 from rich.style import Style
-from rich.text import Text
 from rich.traceback import Trace, Traceback
 
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 
+from ._pretty_assertion import PrettyAssertion
 from .utils import TracebackFilter
-from .utils.pretty_diff import pretty_diff
 
 __all__ = ("RichPrinter",)
 
@@ -139,20 +139,15 @@ class RichPrinter:
         tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap,
                                      width=width, indent_guides=False)
         self._console.print(tb)
+        self.__print_pretty_assertion(exc_info)
         self.print_empty_line()
 
-        if hasattr(exc_info.value, "__vedro_assert_left__"):
-            left = getattr(exc_info.value, "__vedro_assert_left__")
-            right = getattr(exc_info.value, "__vedro_assert_right__")
-
-            self.pretty_print(
-                Text(">>> assert ", style="bold") +
-                Text("actual ", style="bold red") +
-                Text("== ", style="bold") +
-                Text("expected", style="bold green")
-            )
-            self.pretty_print(pretty_diff(left, right))
-            self.print_empty_line()
+    def __print_pretty_assertion(self, exc_info: ExcInfo) -> None:
+        left = getattr(exc_info.value, "__vedro_assert_left__", Nil)
+        if left is not Nil:
+            right = getattr(exc_info.value, "__vedro_assert_right__", Nil)
+            operator = getattr(exc_info.value, "__vedro_assert_operator__", Nil)
+            self.pretty_print(PrettyAssertion(left, right, operator))
 
     def pretty_format(self, value: Any) -> Any:
         warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)
@@ -160,7 +155,7 @@ class RichPrinter:
             return value
         try:
             return json.dumps(value, ensure_ascii=False, indent=4)
-        except BaseException:
+        except:  # noqa
             return repr(value)
 
     def pretty_print(self, smth: Any, *, width: int = -1) -> None:
