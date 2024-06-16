@@ -1,6 +1,4 @@
 import asyncio
-import os
-import sys
 from typing import Any
 
 from ._catched import catched
@@ -35,9 +33,5 @@ def run(*, plugins: Any = None) -> None:
     if plugins is not None:
         raise DeprecationWarning("Argument 'plugins' is deprecated, "
                                  "declare plugins in config (vedro.cfg.py)")
-
-    cwd = os.getcwd()
-    if cwd not in sys.path:
-        sys.path.insert(0, cwd)
 
     asyncio.run(main())
