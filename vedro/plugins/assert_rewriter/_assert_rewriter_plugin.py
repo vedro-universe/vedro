@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, final
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
@@ -9,6 +9,7 @@ from ._legacy_assert_rewriter_loader import LegacyAssertRewriterLoader
 __all__ = ("AssertRewriter", "AssertRewriterPlugin",)
 
 
+@final
 class AssertRewriterPlugin(Plugin):
     """
     Manages the assertion rewriting mechanism for enhanced error messages.

@@ -1,12 +1,13 @@
 from importlib.abc import Loader
 from types import ModuleType
-from typing import Any
+from typing import Any, final
 
 from vedro.core import ModuleFileLoader
 
 __all__ = ("LegacyAssertRewriterLoader",)
 
 
+@final
 class LegacyAssertRewriterLoader(ModuleFileLoader):
     """
     Handles legacy assertion rewriting.

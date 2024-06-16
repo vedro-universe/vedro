@@ -2,15 +2,17 @@ import ast
 import inspect
 from importlib.abc import Loader
 from types import ModuleType
-from typing import Any, cast
+from typing import Any, cast, final
 
 from vedro.core import ModuleFileLoader
 
 from ._node_assert_rewriter import NodeAssertRewriter
+from ._typing import override
 
 __all__ = ("AssertRewriterLoader",)
 
 
+@final
 class AssertRewriterLoader(ModuleFileLoader):
     """
     Loads and rewrites Python modules to use custom assertion methods.
@@ -52,6 +54,7 @@ class AssertRewriterLoader(ModuleFileLoader):
             assert_methods=self.assert_methods
         )
 
+    @override
     def _exec_module(self, loader: Loader, module: ModuleType) -> None:
         """
         Execute the module after rewriting its assert statements.
