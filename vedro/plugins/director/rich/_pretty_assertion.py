@@ -1,4 +1,3 @@
-import json
 import re
 from difflib import Differ
 from typing import Any, Generator, Iterable, List, Optional, Tuple
@@ -35,6 +34,8 @@ class PrettyAssertion:
         self._right = right
         self._operator = operator
 
+        self._differ = Differ()
+
         self._color_red = "red"
         self._color_green = "green"
         self._color_grey = "grey50"
@@ -63,17 +64,16 @@ class PrettyAssertion:
         return Text(pretty_repr(self._right), style=Style(color=self._color_green))
 
     def _get_diff(self) -> ConsoleRenderable:
-        diff = self._compare(self._right, self._left)
+        diff = self._compare(self._left, self._right)
         colored_diff = self._color_diff(diff)
         return Group(*colored_diff)
 
     def _format(self, val: Any) -> List[str]:
-        return json.dumps(val, indent=2, ensure_ascii=False, sort_keys=True,
-                          default=repr).splitlines()
+        formatted = pretty_repr(val, indent_size=4, expand_all=True)
+        return formatted.splitlines()
 
-    def _compare(self, actual: Any, expected: Any) -> Generator[str, None, None]:
-        differ = Differ()
-        yield from differ.compare(self._format(actual), self._format(expected))
+    def _compare(self, left: Any, right: Any) -> Generator[str, None, None]:
+        yield from self._differ.compare(self._format(right), self._format(left))
 
     def _color_diff(self, diff: Iterable[str]) -> List[Text]:
         colored_diff = []
