@@ -1,5 +1,4 @@
 import re
-from difflib import Differ
 from typing import Any, Generator, Iterable, List, Optional, Tuple
 
 from niltype import Nil, Nilable
@@ -9,32 +8,19 @@ from rich.pretty import pretty_repr
 from rich.style import Style
 from rich.text import Text
 
+from ._differ import AdvancedDiffer
+
 __all__ = ("PrettyAssertion",)
 
 
 class PrettyAssertion:
-    operator_mapping = {
-        "==": ("actual", "expected"),
-        "!=": ("actual", "expected"),
-
-        "<": ("left", "right"),
-        "<=": ("left", "right"),
-        ">": ("left", "right"),
-        ">=": ("left", "right"),
-
-        "is": ("actual", "expected"),
-        "is not": ("actual", "expected"),
-
-        "in": ("member", "container"),
-        "not in": ("member", "container")
-    }
 
     def __init__(self, left: Any, right: Nilable[Any] = Nil, operator: Nilable[str] = Nil) -> None:
         self._left = left
         self._right = right
         self._operator = operator
 
-        self._differ = Differ()
+        self._differ = AdvancedDiffer()
 
         self._color_red = "red"
         self._color_green = "green"
@@ -49,13 +35,21 @@ class PrettyAssertion:
                 Text("actual", style=Style(color=self._color_red, bold=True))
             )
 
-        left, right = self.operator_mapping.get(self._operator, ("left", "right"))
+        left, right = self._get_comparison_labels(self._operator)
         return (
             Text(">>> assert ", style=Style(bold=True)) +
             Text(f"{left}", style=Style(color=self._color_red, bold=True)) +
             Text(f" {self._operator} ", style=Style(bold=True)) +
             Text(f"{right}", style=Style(color=self._color_green, bold=True))
         )
+
+    def _get_comparison_labels(self, operator: str) -> Tuple[str, str]:
+        if operator in {"<", "<=", ">", ">="}:
+            return "left", "right"
+        elif operator in {"in", "not in"}:
+            return "member", "container"
+        else:
+            return "actual", "expected"
 
     def _get_left(self) -> ConsoleRenderable:
         return Text(pretty_repr(self._left), style=Style(color=self._color_red))
@@ -64,7 +58,7 @@ class PrettyAssertion:
         return Text(pretty_repr(self._right), style=Style(color=self._color_green))
 
     def _get_diff(self) -> ConsoleRenderable:
-        diff = self._compare(self._left, self._right)
+        diff = list(self._compare(self._left, self._right, context_lines=1))
         colored_diff = self._color_diff(diff)
         return Group(*colored_diff)
 
@@ -72,8 +66,13 @@ class PrettyAssertion:
         formatted = pretty_repr(val, indent_size=4, expand_all=True)
         return formatted.splitlines()
 
-    def _compare(self, left: Any, right: Any) -> Generator[str, None, None]:
-        yield from self._differ.compare(self._format(right), self._format(left))
+    def _compare(self, left: Any, right: Any,
+                 context_lines: Optional[int] = None) -> Generator[str, None, None]:
+        if context_lines is not None:
+            yield from self._differ.compare_unified(self._format(left), self._format(right),
+                                                    context_lines)
+        else:
+            yield from self._differ.compare(self._format(left), self._format(right))
 
     def _color_diff(self, diff: Iterable[str]) -> List[Text]:
         colored_diff = []
