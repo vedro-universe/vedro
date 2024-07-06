@@ -106,7 +106,8 @@ async def test_scenario_failed_verbose2(show_locals: bool, *,
                                         width=100,
                                         max_frames=8,
                                         show_locals=show_locals,
-                                        show_internal_calls=True)
+                                        show_internal_calls=True,
+                                        show_full_diff=False)
         ]
 
 
@@ -142,8 +143,10 @@ async def test_scenario_failed_verbose3_without_scope(*, dispatcher: Dispatcher,
             call.print_step_name(step_result_failed.step_name,
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
-            call.print_pretty_exception(exc_info, width=100, max_frames=8, show_locals=False,
-                                        show_internal_calls=True),
+            call.print_pretty_exception(exc_info, width=100, max_frames=8,
+                                        show_locals=False,
+                                        show_internal_calls=True,
+                                        show_full_diff=False),
         ]
 
 
@@ -180,8 +183,10 @@ async def test_scenario_failed_verbose3_with_scope(*, dispatcher: Dispatcher, pr
             call.print_step_name(step_result_failed.step_name,
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
-            call.print_pretty_exception(exc_info, width=100, max_frames=8, show_locals=False,
-                                        show_internal_calls=True),
+            call.print_pretty_exception(exc_info, width=100, max_frames=8,
+                                        show_locals=False,
+                                        show_internal_calls=True,
+                                        show_full_diff=False),
 
             call.print_scope(scope, scope_width=-1)
         ]

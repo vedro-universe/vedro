@@ -49,6 +49,7 @@ class RichReporterPlugin(Reporter):
         self._show_discovering_spinner = False
         self._show_interrupted_traceback = config.show_interrupted_traceback
         self._show_scope = config.show_scope
+        self._show_full_diff = config.show_full_diff
         self._v2_verbosity = config.v2_verbosity
         self._ring_bell = config.ring_bell
         self._namespace: Union[str, None] = None
@@ -88,6 +89,10 @@ class RichReporterPlugin(Reporter):
                            default=self._show_scope,
                            help="Show a snapshot of crucial variables (Scope) "
                                 "when a scenario fails")
+        group.add_argument("--show-full-diff",
+                           action="store_true",
+                           default=self._show_full_diff,
+                           help="Show full diff in assertion errors")
         group.add_argument("--show-timings",
                            action="store_true",
                            default=self._show_timings,
@@ -132,6 +137,7 @@ class RichReporterPlugin(Reporter):
         if self._show_scope:
             self._verbosity = 3
 
+        self._show_full_diff = event.args.show_full_diff
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
         self._show_steps = event.args.show_steps
@@ -206,7 +212,8 @@ class RichReporterPlugin(Reporter):
                                                  width=self._tb_width,
                                                  max_frames=self._tb_max_frames,
                                                  show_locals=self._tb_show_locals,
-                                                 show_internal_calls=True)
+                                                 show_internal_calls=True,
+                                                 show_full_diff=self._show_full_diff)
         else:
             self._printer.print_exception(exc_info,
                                           max_frames=self._tb_max_frames,
@@ -406,6 +413,10 @@ class RichReporter(PluginConfig):
 
     # Show a snapshot of crucial variables (Scope) when a test scenario fails
     show_scope: bool = False
+
+    # Show full diff in assertion errors
+    # Available if `tb_pretty` is True
+    show_full_diff: bool = False
 
     # Enable new verbose levels
     v2_verbosity: bool = True

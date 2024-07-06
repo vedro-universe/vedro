@@ -120,7 +120,8 @@ class RichPrinter:
                                show_locals: bool = False,
                                show_internal_calls: bool = False,
                                word_wrap: bool = False,
-                               width: Optional[int] = None) -> None:
+                               width: Optional[int] = None,
+                               show_full_diff: bool = False) -> None:
         traceback = exc_info.traceback
         if not show_internal_calls:
             warnings.warn("Deprecated: show_internal_calls param will be removed in v2.0",
@@ -139,15 +140,16 @@ class RichPrinter:
         tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap,
                                      width=width, indent_guides=False)
         self._console.print(tb)
-        self.__print_pretty_assertion(exc_info)
+        self.__print_pretty_assertion(exc_info, show_full_diff)
         self.print_empty_line()
 
-    def __print_pretty_assertion(self, exc_info: ExcInfo) -> None:
+    def __print_pretty_assertion(self, exc_info: ExcInfo, show_full_diff: bool) -> None:
         left = getattr(exc_info.value, "__vedro_assert_left__", Nil)
         if left is not Nil:
             right = getattr(exc_info.value, "__vedro_assert_right__", Nil)
             operator = getattr(exc_info.value, "__vedro_assert_operator__", Nil)
-            self.pretty_print(PrettyAssertion(left, right, operator))
+            context_lines = None if show_full_diff else 1
+            self.pretty_print(PrettyAssertion(left, right, operator, context_lines))
 
     def pretty_format(self, value: Any) -> Any:
         warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)

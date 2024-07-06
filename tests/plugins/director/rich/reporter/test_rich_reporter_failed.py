@@ -62,7 +62,8 @@ async def test_scenario_failed(show_locals: bool, dispatcher: Dispatcher, printe
                                         width=100,
                                         max_frames=8,
                                         show_locals=show_locals,
-                                        show_internal_calls=True)
+                                        show_internal_calls=True,
+                                        show_full_diff=False)
         ]
 
 
@@ -106,7 +107,8 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=True)
+                                        show_internal_calls=True,
+                                        show_full_diff=False)
         ]
 
 
@@ -147,7 +149,8 @@ async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=True),
+                                        show_internal_calls=True,
+                                        show_full_diff=False),
 
             call.print_scope(scope, scope_width=-1),
         ]
@@ -192,5 +195,6 @@ async def test_scenario_failed_verbose_show_timings(dispatcher: Dispatcher,
                                         width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=True),
+                                        show_internal_calls=True,
+                                        show_full_diff=False),
         ]

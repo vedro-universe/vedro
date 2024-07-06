@@ -15,10 +15,12 @@ __all__ = ("PrettyAssertion",)
 
 class PrettyAssertion:
 
-    def __init__(self, left: Any, right: Nilable[Any] = Nil, operator: Nilable[str] = Nil) -> None:
+    def __init__(self, left: Any, right: Nilable[Any] = Nil, operator: Nilable[str] = Nil,
+                 context_lines: Optional[int] = None) -> None:
         self._left = left
         self._right = right
         self._operator = operator
+        self._context_lines = context_lines
 
         self._differ = AdvancedDiffer()
 
@@ -58,7 +60,7 @@ class PrettyAssertion:
         return Text(pretty_repr(self._right), style=Style(color=self._color_green))
 
     def _get_diff(self) -> ConsoleRenderable:
-        diff = list(self._compare(self._left, self._right, context_lines=1))
+        diff = list(self._compare(self._left, self._right, self._context_lines))
         colored_diff = self._color_diff(diff)
         return Group(*colored_diff)
 
