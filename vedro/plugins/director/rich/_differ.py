@@ -23,7 +23,7 @@ class AdvancedDiffer(Differ):
                     g = self._dump("-", a, i1, i2)
                 elif tag == "insert":
                     g = self._dump("+", b, j1, j2)
-                else:
+                else:  # pragma: no cover
                     raise ValueError(f"unknown tag {tag!r}")
                 yield from g
 
