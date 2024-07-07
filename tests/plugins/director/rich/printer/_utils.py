@@ -18,7 +18,8 @@ def console_() -> Mock:
 def printer(console_: Mock) -> RichPrinter:
     return RichPrinter(lambda: console_,
                        traceback_factory=TestTraceback,
-                       pretty_factory=TestPretty)
+                       pretty_factory=TestPretty,
+                       pretty_diff_factory=TestPrettyDiff)
 
 
 @pytest.fixture()
@@ -30,7 +31,7 @@ def exc_info() -> ExcInfo:
     return ExcInfo(type(value), value, traceback)
 
 
-class TestTraceback:
+class _TestBase:
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._args = args
         self._kwargs = kwargs
@@ -44,15 +45,13 @@ class TestTraceback:
         return f"{self.__class__.__name__}({self._args!r}, {self._kwargs!r})"
 
 
-class TestPretty:
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._args = args
-        self._kwargs = kwargs
+class TestTraceback(_TestBase):
+    pass
 
-    def __eq__(self, other: Any) -> bool:
-        if self.__class__ != other.__class__:
-            return False
-        return (self._args == other._args) and (self._kwargs == other._kwargs)
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._args!r}, {self._kwargs!r})"
+class TestPretty(_TestBase):
+    pass
+
+
+class TestPrettyDiff(_TestBase):
+    pass

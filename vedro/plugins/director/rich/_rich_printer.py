@@ -1,12 +1,11 @@
 import json
-import os
 import warnings
 from atexit import register as on_exit
 from os import linesep
 from traceback import format_exception
-from types import FrameType, TracebackType
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Union
 
+from niltype import Nil
 from rich.console import Console, RenderableType
 from rich.pretty import Pretty
 from rich.status import Status
@@ -15,6 +14,9 @@ from rich.traceback import Trace, Traceback
 
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
+
+from ._pretty_diff import PrettyDiff
+from .utils import TracebackFilter
 
 __all__ = ("RichPrinter",)
 
@@ -26,11 +28,14 @@ def make_console() -> Console:
 class RichPrinter:
     def __init__(self, console_factory: Callable[[], Console] = make_console, *,
                  traceback_factory: Callable[..., Traceback] = Traceback,
-                 pretty_factory: Callable[..., Pretty] = Pretty) -> None:
+                 pretty_factory: Callable[..., Pretty] = Pretty,
+                 pretty_diff_factory: Callable[..., PrettyDiff] = PrettyDiff) -> None:
         self._console = console_factory()
         self._traceback_factory = traceback_factory
         self._pretty_factory = pretty_factory
+        self._pretty_diff_factory = pretty_diff_factory
         self._scenario_spinner: Union[Status, None] = None
+        self._traceback_filter = TracebackFilter(modules=[vedro])
 
     @property
     def console(self) -> Console:
@@ -94,33 +99,13 @@ class RichPrinter:
         else:
             self._console.out(name, style=style)
 
-    def __filter_internals(self, traceback: TracebackType) -> TracebackType:
-        class _Traceback:
-            def __init__(self, tb_frame: FrameType, tb_lasti: int, tb_lineno: int,
-                         tb_next: Optional[TracebackType]) -> None:
-                self.tb_frame = tb_frame
-                self.tb_lasti = tb_lasti
-                self.tb_lineno = tb_lineno
-                self.tb_next = tb_next
-
-        tb = _Traceback(traceback.tb_frame, traceback.tb_lasti, traceback.tb_lineno,
-                        traceback.tb_next)
-
-        root = os.path.dirname(vedro.__file__)
-        while tb.tb_next is not None:
-            filename = os.path.abspath(tb.tb_frame.f_code.co_filename)
-            if os.path.commonpath([root, filename]) != root:
-                break
-            tb = tb.tb_next  # type: ignore
-
-        return cast(TracebackType, tb)
-
     def print_exception(self, exc_info: ExcInfo, *,
                         max_frames: int = 8, show_internal_calls: bool = False) -> None:
-        if show_internal_calls:
-            traceback = exc_info.traceback
-        else:
-            traceback = self.__filter_internals(exc_info.traceback)
+        traceback = exc_info.traceback
+        if not show_internal_calls:
+            warnings.warn("Deprecated: show_internal_calls param will be removed in v2.0",
+                          DeprecationWarning)
+            traceback = self._traceback_filter.filter_tb(traceback)
 
         formatted = format_exception(exc_info.type, exc_info.value, traceback, limit=max_frames)
         self._console.out("".join(formatted), style=Style(color="yellow"))
@@ -137,11 +122,13 @@ class RichPrinter:
                                show_locals: bool = False,
                                show_internal_calls: bool = False,
                                word_wrap: bool = False,
-                               width: Optional[int] = None) -> None:
-        if show_internal_calls:
-            traceback = exc_info.traceback
-        else:
-            traceback = self.__filter_internals(exc_info.traceback)
+                               width: Optional[int] = None,
+                               show_full_diff: bool = False) -> None:
+        traceback = exc_info.traceback
+        if not show_internal_calls:
+            warnings.warn("Deprecated: show_internal_calls param will be removed in v2.0",
+                          DeprecationWarning)
+            traceback = self._traceback_filter.filter_tb(traceback)
 
         trace = Traceback.extract(exc_info.type, exc_info.value, traceback,
                                   show_locals=show_locals)
@@ -153,9 +140,27 @@ class RichPrinter:
             width = self._console.size.width
 
         tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap,
-                                     width=width)
+                                     width=width, indent_guides=False)
         self._console.print(tb)
+        self.__print_assertion_diff(exc_info, show_full_diff=show_full_diff)
         self.print_empty_line()
+
+    def __print_assertion_diff(self, exc_info: ExcInfo, *, show_full_diff: bool) -> None:
+        left = getattr(exc_info.value, "__vedro_assert_left__", Nil)
+        if left is not Nil:
+            right = getattr(exc_info.value, "__vedro_assert_right__", Nil)
+            operator = getattr(exc_info.value, "__vedro_assert_operator__", Nil)
+
+            if show_full_diff:
+                pretty_diff = self._pretty_diff_factory(left, right, operator)
+                self._console.print(pretty_diff, crop=False, soft_wrap=False)
+            else:
+                pretty_diff = self._pretty_diff_factory(left, right, operator,
+                                                        max_context_lines=1,
+                                                        max_nested_level=5,
+                                                        max_container_length=10,
+                                                        expand_containers=False)
+                self._console.print(pretty_diff, crop=True, soft_wrap=True)
 
     def pretty_format(self, value: Any) -> Any:
         warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)
@@ -163,7 +168,7 @@ class RichPrinter:
             return value
         try:
             return json.dumps(value, ensure_ascii=False, indent=4)
-        except BaseException:
+        except:  # noqa
             return repr(value)
 
     def pretty_print(self, smth: Any, *, width: int = -1) -> None:
