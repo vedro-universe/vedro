@@ -10,11 +10,10 @@ from rich.text import Text
 
 from ._differ import AdvancedDiffer
 
-__all__ = ("PrettyAssertion",)
+__all__ = ("PrettyDiff",)
 
 
-class PrettyAssertion:
-
+class PrettyDiff:
     def __init__(self, left: Any, right: Nilable[Any] = Nil, operator: Nilable[str] = Nil,
                  context_lines: Optional[int] = None) -> None:
         self._left = left

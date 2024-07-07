@@ -24,11 +24,14 @@ __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
 @pytest.mark.parametrize("show_locals", [False, True])
-async def test_scenario_failed(show_locals: bool, dispatcher: Dispatcher, printer_: Mock):
+@pytest.mark.parametrize("show_full_diff", [False, True])
+async def test_scenario_failed(show_locals: bool, show_full_diff: bool, *,
+                               dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher,
                                     tb_show_locals=show_locals,
-                                    tb_show_internal_calls=True)
+                                    tb_show_internal_calls=True,
+                                    show_full_diff=show_full_diff)
 
         scenario_result = make_scenario_result().mark_failed()
 
@@ -63,7 +66,7 @@ async def test_scenario_failed(show_locals: bool, dispatcher: Dispatcher, printe
                                         max_frames=8,
                                         show_locals=show_locals,
                                         show_internal_calls=True,
-                                        show_full_diff=False)
+                                        show_full_diff=show_full_diff)
         ]
 
 

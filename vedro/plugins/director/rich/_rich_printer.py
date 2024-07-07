@@ -15,7 +15,7 @@ from rich.traceback import Trace, Traceback
 import vedro
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 
-from ._pretty_assertion import PrettyAssertion
+from ._pretty_diff import PrettyDiff
 from .utils import TracebackFilter
 
 __all__ = ("RichPrinter",)
@@ -28,10 +28,12 @@ def make_console() -> Console:
 class RichPrinter:
     def __init__(self, console_factory: Callable[[], Console] = make_console, *,
                  traceback_factory: Callable[..., Traceback] = Traceback,
-                 pretty_factory: Callable[..., Pretty] = Pretty) -> None:
+                 pretty_factory: Callable[..., Pretty] = Pretty,
+                 pretty_diff_factory: Callable[..., PrettyDiff] = PrettyDiff) -> None:
         self._console = console_factory()
         self._traceback_factory = traceback_factory
         self._pretty_factory = pretty_factory
+        self._pretty_diff_factory = pretty_diff_factory
         self._scenario_spinner: Union[Status, None] = None
         self._traceback_filter = TracebackFilter(modules=[vedro])
 
@@ -140,16 +142,18 @@ class RichPrinter:
         tb = self._traceback_factory(trace, max_frames=max_frames, word_wrap=word_wrap,
                                      width=width, indent_guides=False)
         self._console.print(tb)
-        self.__print_pretty_assertion(exc_info, show_full_diff)
+        self.__print_assertion_diff(exc_info, show_full_diff=show_full_diff)
         self.print_empty_line()
 
-    def __print_pretty_assertion(self, exc_info: ExcInfo, show_full_diff: bool) -> None:
+    def __print_assertion_diff(self, exc_info: ExcInfo, *, show_full_diff: bool) -> None:
         left = getattr(exc_info.value, "__vedro_assert_left__", Nil)
         if left is not Nil:
             right = getattr(exc_info.value, "__vedro_assert_right__", Nil)
             operator = getattr(exc_info.value, "__vedro_assert_operator__", Nil)
             context_lines = None if show_full_diff else 1
-            self.pretty_print(PrettyAssertion(left, right, operator, context_lines))
+
+            pretty_diff = self._pretty_diff_factory(left, right, operator, context_lines)
+            self.pretty_print(pretty_diff)
 
     def pretty_format(self, value: Any) -> Any:
         warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)
