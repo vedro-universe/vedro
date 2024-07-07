@@ -150,10 +150,17 @@ class RichPrinter:
         if left is not Nil:
             right = getattr(exc_info.value, "__vedro_assert_right__", Nil)
             operator = getattr(exc_info.value, "__vedro_assert_operator__", Nil)
-            context_lines = None if show_full_diff else 1
 
-            pretty_diff = self._pretty_diff_factory(left, right, operator, context_lines)
-            self.pretty_print(pretty_diff)
+            if show_full_diff:
+                pretty_diff = self._pretty_diff_factory(left, right, operator)
+                self._console.print(pretty_diff, crop=False, soft_wrap=False)
+            else:
+                pretty_diff = self._pretty_diff_factory(left, right, operator,
+                                                        max_context_lines=1,
+                                                        max_nested_level=5,
+                                                        max_container_length=10,
+                                                        expand_containers=False)
+                self._console.print(pretty_diff, crop=True, soft_wrap=True)
 
     def pretty_format(self, value: Any) -> Any:
         warnings.warn("Deprecated: method will be removed in v2.0", DeprecationWarning)

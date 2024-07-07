@@ -14,12 +14,18 @@ __all__ = ("PrettyDiff",)
 
 
 class PrettyDiff:
-    def __init__(self, left: Any, right: Nilable[Any] = Nil, operator: Nilable[str] = Nil,
-                 context_lines: Optional[int] = None) -> None:
+    def __init__(self, left: Any, right: Nilable[Any] = Nil, operator: Nilable[str] = Nil, *,
+                 max_context_lines: Optional[int] = None,
+                 max_nested_level: Optional[int] = None,
+                 max_container_length: Optional[int] = None,
+                 expand_containers: bool = False) -> None:
         self._left = left
         self._right = right
         self._operator = operator
-        self._context_lines = context_lines
+        self._max_context_lines = max_context_lines
+        self._max_nested_level = max_nested_level
+        self._max_container_length = max_container_length
+        self._expand_containers = expand_containers
 
         self._differ = AdvancedDiffer()
 
@@ -27,6 +33,7 @@ class PrettyDiff:
         self._color_green = "green"
         self._color_grey = "grey50"
 
+        self._indent_size = 4
         self._padding = (0, 4)
 
     def _get_header(self) -> ConsoleRenderable:
@@ -52,28 +59,34 @@ class PrettyDiff:
         else:
             return "actual", "expected"
 
+    def _pretty_repr(self, value: Any) -> str:
+        return pretty_repr(value,
+                           indent_size=self._indent_size,
+                           max_length=self._max_container_length,
+                           max_depth=self._max_nested_level,
+                           expand_all=self._expand_containers)
+
     def _get_left(self) -> ConsoleRenderable:
-        return Text(pretty_repr(self._left), style=Style(color=self._color_red))
+        return Text(self._pretty_repr(self._left), style=Style(color=self._color_red))
 
     def _get_right(self) -> ConsoleRenderable:
-        return Text(pretty_repr(self._right), style=Style(color=self._color_green))
+        return Text(self._pretty_repr(self._right), style=Style(color=self._color_green))
 
     def _get_diff(self) -> ConsoleRenderable:
-        diff = list(self._compare(self._left, self._right, self._context_lines))
+        diff = list(self._compare(self._left, self._right))
         colored_diff = self._color_diff(diff)
         return Group(*colored_diff)
 
-    def _format(self, val: Any) -> List[str]:
-        formatted = pretty_repr(val, indent_size=4, expand_all=True)
-        return formatted.splitlines()
-
-    def _compare(self, left: Any, right: Any,
-                 context_lines: Optional[int] = None) -> Generator[str, None, None]:
-        if context_lines is not None:
+    def _compare(self, left: Any, right: Any) -> Generator[str, None, None]:
+        if self._max_context_lines is not None:
             yield from self._differ.compare_unified(self._format(left), self._format(right),
-                                                    context_lines)
+                                                    self._max_context_lines)
         else:
             yield from self._differ.compare(self._format(left), self._format(right))
+
+    def _format(self, val: Any) -> List[str]:
+        formatted = pretty_repr(val, indent_size=self._indent_size, expand_all=True)
+        return formatted.splitlines()
 
     def _color_diff(self, diff: Iterable[str]) -> List[Text]:
         colored_diff = []
@@ -107,7 +120,10 @@ class PrettyDiff:
         for m in re.finditer(r'\S+', s):
             yield m.start(), m.end()
 
-    def _enumerate_next(self, iterable: Iterable[str]) -> Generator[Tuple[str, Optional[str]], None, None]:  # noqa
+    def _enumerate_next(
+        self,
+        iterable: Iterable[str]
+    ) -> Generator[Tuple[str, Optional[str]], None, None]:
         iterator = iter(iterable)
         current_line = next(iterator, "")
         for next_line in iterator:
