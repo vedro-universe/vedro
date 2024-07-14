@@ -26,8 +26,7 @@ class LocalStorage:
     the 'flush' method explicitly.
     """
 
-    def __init__(self, plugin: Plugin, *,
-                 project_dir: Path = Path.cwd(),
+    def __init__(self, plugin: Plugin, project_dir: Path, *,
                  lock_factory: LockFactory = _lock_factory) -> None:
         """
         Initialize a new instance of LocalStorage.
