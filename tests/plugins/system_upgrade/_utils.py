@@ -19,9 +19,9 @@ def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
-async def make_system_upgrade(dispatcher: Dispatcher,
-                              tmp_path: Path
-                              ) -> Tuple[SystemUpgradePlugin, Callable[[], LocalStorage]]:
+@pytest.fixture()
+async def system_upgrade_storage(dispatcher: Dispatcher,
+                                 tmp_path: Path) -> Tuple[SystemUpgradePlugin, LocalStorage]:
     local_storage = None
 
     def _create_local_storage(*args, **kwargs) -> LocalStorage:
@@ -29,21 +29,18 @@ async def make_system_upgrade(dispatcher: Dispatcher,
         local_storage = create_local_storage(*args, **kwargs)
         return local_storage
 
-    def _get_local_storage() -> LocalStorage:
-        nonlocal local_storage
-        return cast(LocalStorage, local_storage)
-
     plugin = SystemUpgradePlugin(SystemUpgrade, local_storage_factory=_create_local_storage)
     plugin.subscribe(dispatcher)
 
     await fire_config_loaded_event(dispatcher, tmp_path)
 
-    return plugin, _get_local_storage
+    return plugin, cast(LocalStorage, local_storage)
 
 
 @pytest.fixture()
-async def system_upgrade(dispatcher: Dispatcher, tmp_path: Path) -> SystemUpgradePlugin:
-    plugin, *_ = await make_system_upgrade(dispatcher, tmp_path)
+def system_upgrade(system_upgrade_storage: Tuple[SystemUpgradePlugin, LocalStorage]
+                   ) -> SystemUpgradePlugin:
+    plugin, *_ = system_upgrade_storage
     return plugin
 
 
