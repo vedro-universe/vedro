@@ -52,12 +52,14 @@ def rich_reporter(dispatcher: Dispatcher,
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 verbose: int = 0,
+                                show_scope: bool = RichReporter_.show_scope,
+                                show_full_diff: bool = RichReporter_.show_full_diff,
                                 show_timings: bool = RichReporter_.show_timings,
                                 show_paths: bool = RichReporter_.show_paths,
                                 show_steps: bool = RichReporter_.show_steps,
                                 show_scenario_spinner: bool = RichReporter_.show_scenario_spinner,
                                 hide_namespaces: bool = RichReporter_.hide_namespaces,
-                                tb_show_internal_calls: bool = RichReporter_.tb_show_internal_calls,  # noqa: E501
+                                tb_show_internal_calls: bool = True,
                                 tb_show_locals: bool = RichReporter_.tb_show_locals,
                                 ring_bell: bool = RichReporter_.ring_bell) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
@@ -66,6 +68,8 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
     await dispatcher.fire(arg_parse_event)
 
     namespace = Namespace(verbose=verbose,
+                          show_scope=show_scope,
+                          show_full_diff=show_full_diff,
                           show_timings=show_timings,
                           show_paths=show_paths,
                           show_steps=show_steps,

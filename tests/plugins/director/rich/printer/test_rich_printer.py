@@ -4,13 +4,14 @@ from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
+from niltype import Nil
 from rich.style import Style
 from rich.traceback import Traceback
 
 from vedro.core import ExcInfo, ScenarioStatus, StepStatus
 from vedro.plugins.director.rich import RichPrinter
 
-from ._utils import TestPretty, TestTraceback, console_, exc_info, printer
+from ._utils import TestPretty, TestPrettyDiff, TestTraceback, console_, exc_info, printer
 
 __all__ = ("printer", "exc_info", "console_")  # fixtures
 
@@ -221,7 +222,8 @@ def test_print_exception(*, printer: RichPrinter, exc_info: ExcInfo, console_: M
 def test_print_pretty_exception(*, printer: RichPrinter, exc_info: ExcInfo, console_: Mock):
     with given:
         trace = Traceback.extract(exc_info.type, exc_info.value, exc_info.traceback)
-        tb = TestTraceback(trace, max_frames=8, word_wrap=False)
+        tb = TestTraceback(trace, max_frames=8, word_wrap=False, width=console_.size.width,
+                           indent_guides=False)
 
     with when:
         printer.print_pretty_exception(exc_info)
@@ -229,6 +231,110 @@ def test_print_pretty_exception(*, printer: RichPrinter, exc_info: ExcInfo, cons
     with then:
         assert console_.mock_calls == [
             call.print(tb),
+            call.out(" "),
+        ]
+
+
+def test_print_pretty_exception_diff_left(*, printer: RichPrinter,
+                                          exc_info: ExcInfo, console_: Mock):
+    with given:
+        left = Mock()
+        setattr(exc_info.value, "__vedro_assert_left__", left)
+
+        trace = Traceback.extract(exc_info.type, exc_info.value, exc_info.traceback)
+        tb = TestTraceback(trace, max_frames=8, word_wrap=False, width=console_.size.width,
+                           indent_guides=False)
+
+        pretty = TestPrettyDiff(left, Nil, Nil,
+                                max_context_lines=1,
+                                max_nested_level=5,
+                                max_container_length=10,
+                                expand_containers=False)
+
+    with when:
+        printer.print_pretty_exception(exc_info)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(tb),
+            call.print(pretty, crop=True, soft_wrap=True),
+            call.out(" "),
+        ]
+
+
+def test_print_pretty_exception_diff_left_full(*, printer: RichPrinter,
+                                               exc_info: ExcInfo, console_: Mock):
+    with given:
+        left = Mock()
+        setattr(exc_info.value, "__vedro_assert_left__", left)
+
+        trace = Traceback.extract(exc_info.type, exc_info.value, exc_info.traceback)
+        tb = TestTraceback(trace, max_frames=8, word_wrap=False, width=console_.size.width,
+                           indent_guides=False)
+
+        pretty = TestPrettyDiff(left, Nil, Nil)
+
+    with when:
+        printer.print_pretty_exception(exc_info, show_full_diff=True)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(tb),
+            call.print(pretty, crop=False, soft_wrap=False),
+            call.out(" "),
+        ]
+
+
+def test_print_pretty_exception_diff_left_right(*, printer: RichPrinter,
+                                                exc_info: ExcInfo, console_: Mock):
+    with given:
+        left, right, operator = Mock(), Mock(), "=="
+        setattr(exc_info.value, "__vedro_assert_left__", left)
+        setattr(exc_info.value, "__vedro_assert_right__", right)
+        setattr(exc_info.value, "__vedro_assert_operator__", operator)
+
+        trace = Traceback.extract(exc_info.type, exc_info.value, exc_info.traceback)
+        tb = TestTraceback(trace, max_frames=8, word_wrap=False, width=console_.size.width,
+                           indent_guides=False)
+
+        pretty = TestPrettyDiff(left, right, operator,
+                                max_context_lines=1,
+                                max_nested_level=5,
+                                max_container_length=10,
+                                expand_containers=False)
+
+    with when:
+        printer.print_pretty_exception(exc_info)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(tb),
+            call.print(pretty, crop=True, soft_wrap=True),
+            call.out(" "),
+        ]
+
+
+def test_print_pretty_exception_diff_left_right_full(*, printer: RichPrinter,
+                                                     exc_info: ExcInfo, console_: Mock):
+    with given:
+        left, right, operator = Mock(), Mock(), "=="
+        setattr(exc_info.value, "__vedro_assert_left__", left)
+        setattr(exc_info.value, "__vedro_assert_right__", right)
+        setattr(exc_info.value, "__vedro_assert_operator__", operator)
+
+        trace = Traceback.extract(exc_info.type, exc_info.value, exc_info.traceback)
+        tb = TestTraceback(trace, max_frames=8, word_wrap=False, width=console_.size.width,
+                           indent_guides=False)
+
+        pretty = TestPrettyDiff(left, right, operator)
+
+    with when:
+        printer.print_pretty_exception(exc_info, show_full_diff=True)
+
+    with then:
+        assert console_.mock_calls == [
+            call.print(tb),
+            call.print(pretty, crop=False, soft_wrap=False),
             call.out(" "),
         ]
 
