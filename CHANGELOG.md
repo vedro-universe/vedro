@@ -1,14 +1,23 @@
 # Changelog
 
+## v1.12
+
+### v1.12.0 (2024-07-14)
+
+- [Core] New assertions [#85](https://github.com/vedro-universe/vedro/pull/85)
+- [Core] Add `--project-dir` arg [#79](https://github.com/vedro-universe/vedro/pull/79)
+- [RichReporter] Add `tb_width` param  [#84](https://github.com/vedro-universe/vedro/pull/84)
+- [Seeder] Add `--show-seeds` arg [#87](https://github.com/vedro-universe/vedro/pull/87)
+
 ## v1.11
 
 ### v1.11.2 (2024-01-24)
 
-- Add `validate_module_names` param [#0977cba](https://github.com/vedro-universe/vedro/commit/0977cba4e1f1fd4963dc0150abfb08f5d1b43dc9)
+- [Core] Add `validate_module_names` param [#0977cba](https://github.com/vedro-universe/vedro/commit/0977cba4e1f1fd4963dc0150abfb08f5d1b43dc9)
 
 ### v1.11.1 (2024-01-14)
 
-- Add experimental selective discoverer [#78](https://github.com/vedro-universe/vedro/pull/78)
+- [Skipper] Add experimental selective discoverer [#78](https://github.com/vedro-universe/vedro/pull/78)
 
 ### v1.11.0 (2024-01-13)
 
