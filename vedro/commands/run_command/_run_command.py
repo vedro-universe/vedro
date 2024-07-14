@@ -89,7 +89,7 @@ class RunCommand(Command):
         :param dispatcher: The dispatcher to fire events
         """
 
-        # avoid unrecognized arguments error
+        # Avoid unrecognized arguments error
         help_message = ("Specify the root directory of the project, used as a reference point for "
                         "relative paths and file operations. "
                         "Defaults to the directory from which the command is executed.")
