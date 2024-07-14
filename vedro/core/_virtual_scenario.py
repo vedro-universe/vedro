@@ -15,9 +15,13 @@ class ScenarioInitError(Exception):
 
 
 class VirtualScenario:
-    def __init__(self, orig_scenario: Type[Scenario], steps: List[VirtualStep]) -> None:
+    # project_path will be required in v2.0
+    def __init__(self, orig_scenario: Type[Scenario], steps: List[VirtualStep], *,
+                 project_dir: Path = Path(".")) -> None:
         self._orig_scenario = orig_scenario
         self._steps = steps
+        self._project_dir = project_dir.resolve()
+        # TODO: Move path to constructor in v2.0
         self._path = Path(getattr(orig_scenario, "__file__", "."))
         self._is_skipped = False
         self._skip_reason: Union[str, None] = None
@@ -58,7 +62,7 @@ class VirtualScenario:
 
     @property
     def rel_path(self) -> Path:
-        return self._path.relative_to(Path.cwd())
+        return self._path.relative_to(self._project_dir)
 
     @property
     def name(self) -> str:

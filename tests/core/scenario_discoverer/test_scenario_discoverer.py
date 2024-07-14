@@ -1,5 +1,8 @@
+import os
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, call
+
+import pytest
 
 from vedro import Scenario
 from vedro.core import (
@@ -31,8 +34,20 @@ def create_scenario(filename):
     return Mock(Scenario, __file__=filename)
 
 
-async def test_scenario_discoverer():
-    root = Path("/tmp")
+@pytest.fixture()
+def tmp_dir(tmp_path: Path) -> Path:
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+
+        Path("./scenarios").mkdir(exist_ok=True)
+        yield tmp_path
+    finally:
+        os.chdir(cwd)
+
+
+async def test_scenario_discoverer(tmp_dir: Path):
+    root = tmp_dir / "scenarios"
     scenario1 = create_scenario(root / "scenario-1.py")
     scenario3 = create_scenario(root / "folder" / "scenario-2.py")
     scenario4 = create_scenario(root / "folder" / "scenario-10.py")
@@ -48,9 +63,9 @@ async def test_scenario_discoverer():
 
     scenarios = await discoverer.discover(root)
     assert scenarios == [
-        VirtualScenario(scenario1, []),
-        VirtualScenario(scenario3, []),
-        VirtualScenario(scenario4, []),
+        VirtualScenario(scenario1, [], project_dir=tmp_dir),
+        VirtualScenario(scenario3, [], project_dir=tmp_dir),
+        VirtualScenario(scenario4, [], project_dir=tmp_dir),
     ]
     assert finder_.mock_calls == [call.find(root)]
     assert loader_.mock_calls == [call.load(f) for f in tree.keys()]
