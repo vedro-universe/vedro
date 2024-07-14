@@ -19,6 +19,7 @@ class SeederPlugin(Plugin):
         super().__init__(config)
         self._random = random
         self._use_fixed_seed = config.use_fixed_seed
+        self._show_seeds = config.show_seeds
         self._initial_seed: Union[str, None] = None
         self._history: Dict[str, int] = {}
 
@@ -37,9 +38,16 @@ class SeederPlugin(Plugin):
                                       default=self._use_fixed_seed,
                                       help=help_msg)
 
+        help_msg = "Show concrete seeds for each scenario run"
+        event.arg_parser.add_argument("--show-seeds",
+                                      action="store_true",
+                                      default=self._show_seeds,
+                                      help=help_msg)
+
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._initial_seed = event.args.seed or self._gen_initial_seed()
         self._use_fixed_seed = event.args.fixed_seed
+        self._show_seeds = event.args.show_seeds
 
         self._random.set_seed(self._initial_seed)
 
@@ -52,6 +60,10 @@ class SeederPlugin(Plugin):
         index = 1 if self._use_fixed_seed else self._history[unique_id]
         seed = self._create_seed(self._initial_seed, unique_id, index)
         self._random.set_seed(seed)
+
+        if self._show_seeds:
+            seed_repr = self._get_seed_repr(seed)
+            event.scenario_result.add_extra_details(f"seed: {seed_repr[:8]}..{seed_repr[-8:]}")
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         if (event.report.passed + event.report.failed) > 0:
@@ -79,3 +91,6 @@ class Seeder(PluginConfig):
 
     # Use the same seed when a scenario is run multiple times in the same execution
     use_fixed_seed: bool = False
+
+    # Show concrete seeds for each scenario run
+    show_seeds: bool = False
