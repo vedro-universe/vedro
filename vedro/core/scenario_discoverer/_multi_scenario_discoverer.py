@@ -46,9 +46,11 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
         :param root: The root path to start the discovery of scenarios.
         :return: A sorted list of virtual scenarios discovered from the root path.
         """
+        project_dir = root.parent
+
         scenarios = []
         async for path in self._finder.find(root):
             loaded = await self._loader.load(path)
             for scn in loaded:
-                scenarios.append(create_vscenario(scn))
+                scenarios.append(create_vscenario(scn, project_dir=project_dir))
         return await self._orderer.sort(scenarios)

@@ -2,6 +2,14 @@
 
 ## v1.11
 
+### v1.11.2 (2024-01-24)
+
+- Add `validate_module_names` param [#0977cba](https://github.com/vedro-universe/vedro/commit/0977cba4e1f1fd4963dc0150abfb08f5d1b43dc9)
+
+### v1.11.1 (2024-01-14)
+
+- Add experimental selective discoverer [#78](https://github.com/vedro-universe/vedro/pull/78)
+
 ### v1.11.0 (2024-01-13)
 
 - [Skipper] Add `forbid_only` param [#66](https://github.com/vedro-universe/vedro/pull/66)

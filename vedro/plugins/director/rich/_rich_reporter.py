@@ -104,7 +104,7 @@ class RichReporterPlugin(Reporter):
         group.add_argument("--show-paths",
                            action="store_true",
                            default=self._show_paths,
-                           help="Show the relative path of each passed scenario")
+                           help="Show the relative path of each passed/failed scenario")
         group.add_argument("--show-scenario-spinner",
                            action="store_true",
                            default=self._show_scenario_spinner,

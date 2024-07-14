@@ -23,6 +23,7 @@ class TempFileManager:
         working directory.
         """
         self._project_dir = project_dir.resolve()
+        # default project_dir will be removed in v2.0
 
     def get_project_dir(self) -> Path:
         """
@@ -31,6 +32,14 @@ class TempFileManager:
         :return: A Path object representing the project directory.
         """
         return self._project_dir
+
+    def set_project_dir(self, project_dir: Path) -> None:
+        """
+        Set the project directory associated with this manager.
+
+        :param project_dir: The root directory of the project.
+        """
+        self._project_dir = project_dir
 
     def get_tmp_root(self) -> Path:
         """

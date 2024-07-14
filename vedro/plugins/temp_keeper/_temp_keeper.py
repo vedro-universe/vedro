@@ -1,7 +1,7 @@
 import shutil
-from typing import Type, Union
+from typing import Type
 
-from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
+from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ConfigLoadedEvent
 
 from ._temp_file_manager import TempFileManager
@@ -18,7 +18,6 @@ class TempKeeperPlugin(Plugin):
     def __init__(self, config: Type["TempKeeper"], *,
                  tmp_file_manager: TempFileManager = _tmp_file_manager) -> None:
         super().__init__(config)
-        self._global_config: Union[ConfigType, None] = None
         self._tmp_file_manager = tmp_file_manager
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -26,8 +25,7 @@ class TempKeeperPlugin(Plugin):
                   .listen(ArgParsedEvent, self.on_arg_parsed)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
-        self._global_config = event.config
-        assert self._tmp_file_manager.get_project_dir() == self._global_config.project_dir
+        self._tmp_file_manager.set_project_dir(event.config.project_dir)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         tmp_root = self._tmp_file_manager.get_tmp_root()

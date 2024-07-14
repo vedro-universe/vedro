@@ -10,7 +10,7 @@ from niltype import Nil
 import vedro
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.core.exp.local_storage import LocalStorageFactory, create_local_storage
-from vedro.events import CleanupEvent, StartupEvent
+from vedro.events import CleanupEvent, ConfigLoadedEvent, StartupEvent
 
 __all__ = ("SystemUpgrade", "SystemUpgradePlugin",)
 
@@ -21,7 +21,7 @@ class SystemUpgradePlugin(Plugin):
         super().__init__(config)
         self._api_url = config.api_url
         self._request_timeout = config.api_request_timeout
-        self._local_storage = local_storage_factory(self)
+        self._local_storage_factory = local_storage_factory
         self._thread: Union[Thread, None] = None
         self._latest_version: Union[str, None] = None
         self._last_request_ts: Union[int, None] = None
@@ -30,8 +30,12 @@ class SystemUpgradePlugin(Plugin):
         self._check_interval = config.update_check_interval
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(StartupEvent, self.on_startup) \
+        dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
+                  .listen(StartupEvent, self.on_startup) \
                   .listen(CleanupEvent, self.on_cleanup)
+
+    def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
+        self._local_storage = self._local_storage_factory(self, event.config.project_dir)
 
     async def on_startup(self, event: StartupEvent) -> None:
         last_request = await self._local_storage.get("last_request_ts")

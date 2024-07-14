@@ -17,10 +17,10 @@ class Config(cabina.Config, Section):
     # typically pointing to 'vedro.cfg.py' located in the project directory.
     path: Path = Path(__file__)
 
-    # 'project_dir' is designated as the root directory of the project.
-    # It is initially set to the directory from which the application is executed,
-    # which is typically the top-level directory of the project.
-    # This directory acts as a reference point for rel paths and project-related file operations.
+    # The `project_dir` property is designated as the root directory of the project,
+    # serving as a reference point for relative paths and project-related file operations.
+    # Although it defaults to the directory from which the application is executed,
+    # this setting can be overridden via the `--project-dir` argument.
     project_dir: Path = Path.cwd()
 
     class Registry(Section):

@@ -5,10 +5,10 @@ from typing import Optional, Tuple, Union, cast
 
 import pytest
 
-from vedro import Scenario
-from vedro.core import AggregatedResult, Dispatcher, Plugin, ScenarioResult, VirtualScenario
-from vedro.core.exp.local_storage import LocalStorage
-from vedro.events import ArgParsedEvent, ArgParseEvent, ScenarioReportedEvent
+from vedro import Config, Scenario
+from vedro.core import AggregatedResult, Dispatcher, ScenarioResult, VirtualScenario
+from vedro.core.exp.local_storage import LocalStorage, create_local_storage
+from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent, ScenarioReportedEvent
 from vedro.plugins.last_failed import LastFailed, LastFailedPlugin
 
 
@@ -17,23 +17,27 @@ def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
-def make_last_failed(dispatcher: Dispatcher,
-                     tmp_path: Path) -> Tuple[LastFailedPlugin, LocalStorage]:
+@pytest.fixture()
+async def last_failed_storage(dispatcher: Dispatcher,
+                              tmp_path: Path) -> Tuple[LastFailedPlugin, LocalStorage]:
     local_storage = None
 
-    def create_local_storage(plugin: Plugin):
+    def _create_local_storage(*args, **kwargs) -> LocalStorage:
         nonlocal local_storage
-        local_storage = LocalStorage(plugin, project_dir=tmp_path)
+        local_storage = create_local_storage(*args, **kwargs)
         return local_storage
 
-    plugin = LastFailedPlugin(LastFailed, local_storage_factory=create_local_storage)
+    plugin = LastFailedPlugin(LastFailed, local_storage_factory=_create_local_storage)
     plugin.subscribe(dispatcher)
+
+    await fire_config_loaded_event(dispatcher, tmp_path)
+
     return plugin, cast(LocalStorage, local_storage)
 
 
 @pytest.fixture()
-def last_failed(dispatcher: Dispatcher, tmp_path: Path) -> LastFailedPlugin:
-    plugin, *_ = make_last_failed(dispatcher, tmp_path)
+def last_failed(last_failed_storage: Tuple[LastFailedPlugin, LocalStorage]) -> LastFailedPlugin:
+    plugin, *_ = last_failed_storage
     return plugin
 
 
@@ -52,6 +56,14 @@ def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> 
     if scenario_result is None:
         scenario_result = make_scenario_result()
     return AggregatedResult.from_existing(scenario_result, [scenario_result])
+
+
+async def fire_config_loaded_event(dispatcher: Dispatcher, tmp_path: Path) -> None:
+    class _Config(Config):
+        project_dir = tmp_path
+
+    config_loaded_event = ConfigLoadedEvent(_Config.project_dir, _Config)
+    await dispatcher.fire(config_loaded_event)
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,

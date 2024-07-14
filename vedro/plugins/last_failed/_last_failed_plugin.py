@@ -8,6 +8,7 @@ from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
+    ConfigLoadedEvent,
     ScenarioReportedEvent,
     StartupEvent,
 )
@@ -19,16 +20,20 @@ class LastFailedPlugin(Plugin):
     def __init__(self, config: Type["LastFailed"], *,
                  local_storage_factory: LocalStorageFactory = create_local_storage) -> None:
         super().__init__(config)
-        self._local_storage = local_storage_factory(self)
+        self._local_storage_factory = local_storage_factory
         self._last_failed = False
         self._failed_scenarios: Set[str] = set()
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
-        dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
-            .listen(ArgParsedEvent, self.on_arg_parsed) \
-            .listen(StartupEvent, self.on_startup) \
-            .listen(ScenarioReportedEvent, self.on_scenario_reported) \
-            .listen(CleanupEvent, self.on_cleanup)
+        dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
+                  .listen(ArgParseEvent, self.on_arg_parse) \
+                  .listen(ArgParsedEvent, self.on_arg_parsed) \
+                  .listen(StartupEvent, self.on_startup) \
+                  .listen(ScenarioReportedEvent, self.on_scenario_reported) \
+                  .listen(CleanupEvent, self.on_cleanup)
+
+    def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
+        self._local_storage = self._local_storage_factory(self, event.config.project_dir)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Last Failed")

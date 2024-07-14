@@ -23,7 +23,8 @@ class ScenarioDiscoverer(ABC):
     :param orderer: An instance of ScenarioOrderer for ordering the loaded scenarios.
     """
 
-    def __init__(self, finder: ScenarioFinder, loader: ScenarioLoader,
+    def __init__(self, finder: ScenarioFinder,
+                 loader: ScenarioLoader,
                  orderer: ScenarioOrderer) -> None:
         """
         Initialize the ScenarioDiscoverer with necessary components.

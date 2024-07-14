@@ -76,6 +76,9 @@ class Config(core.Config):
 
         ScenarioScheduler = Factory[ScenarioScheduler](MonotonicScenarioScheduler)
 
+        # Note: The `ScenarioRunner` factory definition here should not be overridden
+        # with a custom runner implementation because, starting from version 2.0,
+        # custom runners will be deprecated and removed.
         ScenarioRunner = Factory[ScenarioRunner](lambda: MonotonicScenarioRunner(
             dispatcher=Config.Registry.Dispatcher(),
             interrupt_exceptions=(KeyboardInterrupt, SystemExit, CancelledError),

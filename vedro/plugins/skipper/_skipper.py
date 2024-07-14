@@ -21,6 +21,7 @@ class SkipperPlugin(Plugin):
     def __init__(self, config: Type["Skipper"]) -> None:
         super().__init__(config)
         self._global_config: Union[ConfigType, None] = None
+        self._project_dir: Union[Path, None] = None
         self._subject: Union[str, None] = None
         self._selected: List[_CompositePath] = []
         self._deselected: List[_CompositePath] = []
@@ -34,6 +35,7 @@ class SkipperPlugin(Plugin):
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         self._global_config = event.config
+        self._project_dir = self._global_config.project_dir
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         event.arg_parser.add_argument("file_or_dir", nargs="*", default=["."],
@@ -43,8 +45,8 @@ class SkipperPlugin(Plugin):
         event.arg_parser.add_argument("--subject", help="Select scenarios with a given subject")
 
         help_message = (
-            "Enables the experimental selective discoverer feature, "
-            "which optimizes startup speed by loading scenarios only from specified files. "
+            "Enable the experimental selective discoverer feature to optimize startup speed "
+            "by loading scenarios only from specified files. "
             "This is particularly beneficial for very large test suites "
             "where Python's import mechanism can be slow, "
             "thus reducing the initial load time and improving overall test execution efficiency."
@@ -78,8 +80,10 @@ class SkipperPlugin(Plugin):
             ), self)
 
     def __get_selected_paths(self) -> Set[Path]:
+        assert self._project_dir is not None  # for type checking
+        default_path = self._project_dir / "scenarios"
+
         selected_paths = set()
-        default_path = Path(self._normalize_path("."))
         for path in self._selected:
             file_path = Path(path.file_path)
             if file_path != default_path:

@@ -12,7 +12,7 @@ from ._utils import local_storage, plugin
 __all__ = ("plugin", "local_storage",)  # fixtures
 
 
-async def test_put(local_storage: LocalStorage):
+async def test_put(*, local_storage: LocalStorage):
     with given:
         key, value = "<key>", "<value>"
 
@@ -23,7 +23,7 @@ async def test_put(local_storage: LocalStorage):
         assert res is None
 
 
-async def test_get(local_storage: LocalStorage):
+async def test_get(*, local_storage: LocalStorage):
     with given:
         key, value = "<key>", "<value>"
         await local_storage.put(key, value)
@@ -35,7 +35,7 @@ async def test_get(local_storage: LocalStorage):
         assert res == value
 
 
-async def test_get_nonexisting_key(local_storage: LocalStorage):
+async def test_get_nonexisting_key(*, local_storage: LocalStorage):
     with given:
         key = "<key>"
 
@@ -46,7 +46,7 @@ async def test_get_nonexisting_key(local_storage: LocalStorage):
         assert res is Nil
 
 
-async def test_get_without_flush(plugin: Plugin, tmp_path: Path):
+async def test_get_without_flush(*, plugin: Plugin, tmp_path: Path):
     with given:
         key, value = "<key>", "<value>"
 
@@ -62,7 +62,7 @@ async def test_get_without_flush(plugin: Plugin, tmp_path: Path):
         assert res is Nil
 
 
-async def test_get_with_flush(plugin: Plugin, tmp_path: Path):
+async def test_get_with_flush(*, plugin: Plugin, tmp_path: Path):
     with given:
         key, value = "<key>", "<value>"
 
@@ -79,7 +79,7 @@ async def test_get_with_flush(plugin: Plugin, tmp_path: Path):
         assert res == value
 
 
-async def test_flush_empty_storage(local_storage: LocalStorage):
+async def test_flush_empty_storage(*, local_storage: LocalStorage):
     with when:
         res = await local_storage.flush()
 
@@ -87,7 +87,7 @@ async def test_flush_empty_storage(local_storage: LocalStorage):
         assert res is None
 
 
-async def test_flush(local_storage: LocalStorage):
+async def test_flush(*, local_storage: LocalStorage):
     with given:
         key, value = "<key>", "<value>"
         await local_storage.put(key, value)
@@ -99,17 +99,17 @@ async def test_flush(local_storage: LocalStorage):
         assert res is None
 
 
-def test_create_local_storage(plugin: Plugin):
+def test_create_local_storage(*, plugin: Plugin, tmp_path: Path):
     with when:
-        res = create_local_storage(plugin)
+        res = create_local_storage(plugin, project_dir=tmp_path)
 
     with then:
         assert isinstance(res, LocalStorage)
 
 
-def test_create_local_storage_incorrect_type():
+def test_create_local_storage_incorrect_type(*, tmp_path: Path):
     with when, raises(BaseException) as exc:
-        create_local_storage(None)  # type: ignore
+        create_local_storage(None, project_dir=tmp_path)  # type: ignore
 
     with then:
         assert isinstance(exc.value, TypeError)
