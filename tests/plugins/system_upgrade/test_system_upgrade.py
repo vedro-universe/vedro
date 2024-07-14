@@ -49,8 +49,9 @@ async def test_update_available_no_last_request(*, dispatcher: Dispatcher):
 
 async def test_update_available_expired_last_request(*, dispatcher: Dispatcher, tmp_path: Path):
     with given:
-        system_upgrade, local_storage = make_system_upgrade(dispatcher, tmp_path)
-        await local_storage.put("last_request_ts", now() - SystemUpgrade.update_check_interval)
+        system_upgrade, get_local_storage = await make_system_upgrade(dispatcher, tmp_path)
+        await get_local_storage().put("last_request_ts",
+                                      now() - SystemUpgrade.update_check_interval)
 
         cur_version = get_cur_version()
         new_version = gen_next_version(cur_version)
@@ -72,8 +73,8 @@ async def test_update_available_expired_last_request(*, dispatcher: Dispatcher, 
 
 async def test_update_available_fresh_last_request(*, dispatcher: Dispatcher, tmp_path: Path):
     with given:
-        system_upgrade, local_storage = make_system_upgrade(dispatcher, tmp_path)
-        await local_storage.put("last_request_ts", now())
+        system_upgrade, get_local_storage = await make_system_upgrade(dispatcher, tmp_path)
+        await get_local_storage().put("last_request_ts", now())
 
         new_version = gen_next_version(get_cur_version())
         with mocked_response(new_version=new_version) as patched:
