@@ -1,3 +1,4 @@
+import os
 import sys
 from time import time
 from typing import List, Tuple, Type
@@ -77,6 +78,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
             await self._dispatcher.fire(ScenarioSkippedEvent(scenario_result))
             return scenario_result
 
+        os.chdir(scenario._project_dir)  # TODO: do not use private attribute
         await self._dispatcher.fire(ScenarioRunEvent(scenario_result))
         scenario_result.set_started_at(time())
 
