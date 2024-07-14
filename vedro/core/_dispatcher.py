@@ -20,7 +20,7 @@ class EventHandler:
     execution of the handler function.
     """
 
-    _counter = 0
+    _monotonic_id = 0  # Class-level counter to maintain the order of handler registration
 
     def __init__(self, priority: int, registered_at: int, handler: HandlerType) -> None:
         """
@@ -32,8 +32,8 @@ class EventHandler:
         """
         self._priority = priority
         self._handler = handler
-        EventHandler._counter += 1
-        self._registered_at = EventHandler._counter
+        EventHandler._monotonic_id += 1
+        self._registered_at = EventHandler._monotonic_id
 
     async def __call__(self, event: Event) -> None:
         """
