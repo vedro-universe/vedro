@@ -36,7 +36,7 @@ class RichReporterPlugin(Reporter):
         self._scope_width = config.scope_width
         self._tb_max_frames = config.tb_max_frames
         self._tb_width = config.tb_width
-        self._tb_supress_modules = config.tb_supress_modules
+        self._tb_suppress_modules = config.tb_suppress_modules
         self._show_scenario_extras = config.show_scenario_extras
         self._show_step_extras = config.show_step_extras
         self._show_skipped = config.show_skipped
@@ -165,13 +165,13 @@ class RichReporterPlugin(Reporter):
             self._printer.show_spinner("Discovering scenarios...")
 
         if not self._tb_show_internal_calls:
-            self._tb_supress_modules = tuple(self._tb_supress_modules) + (vedro,)
+            self._tb_suppress_modules = tuple(self._tb_suppress_modules) + (vedro,)
         else:
-            self._tb_supress_modules = tuple(self._tb_supress_modules)
+            self._tb_suppress_modules = tuple(self._tb_suppress_modules)
         try:
-            self._tb_filter = TracebackFilter(self._tb_supress_modules)
+            self._tb_filter = TracebackFilter(self._tb_suppress_modules)
         except (AttributeError, TypeError):
-            raise ValueError("RichReporter: `tb_supress_modules` must be a tuple of modules")
+            raise ValueError("RichReporter: `tb_suppress_modules` must be a tuple of modules")
 
     def on_startup(self, event: StartupEvent) -> None:
         if self._show_discovering_spinner:
@@ -202,7 +202,7 @@ class RichReporterPlugin(Reporter):
         self._print_namespace(event.scenario_result.scenario.namespace)
 
     def _print_exception(self, exc_info: ExcInfo) -> None:
-        if self._tb_supress_modules:
+        if self._tb_suppress_modules:
             assert self._tb_filter
             traceback = self._tb_filter.filter_tb(exc_info.traceback)
             exc_info = ExcInfo(exc_info.type, exc_info.value, traceback)
@@ -400,7 +400,7 @@ class RichReporter(PluginConfig):
     tb_max_frames: int = 8
 
     # Suppress modules in the traceback output
-    tb_supress_modules: Tuple[Union[str, ModuleType], ...] = ()
+    tb_suppress_modules: Tuple[Union[str, ModuleType], ...] = ()
 
     # Truncate lines in Scope based on scope_width value.
     # If scope_width is None, lines are truncated to the terminal's width.
