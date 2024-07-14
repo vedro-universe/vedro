@@ -4,8 +4,10 @@ from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.core import Dispatcher, Event, Subscriber
+from vedro.core._dispatcher import EventHandler
 
 
 @pytest.fixture()
@@ -176,3 +178,40 @@ async def test_dispatcher_fire_listen_priority_order(*, dispatcher: Dispatcher,
             call.subscribe3_(event),
             call.subscribe1_(event),
         ]
+
+
+def test_dispatcher_listen_invalid_event_type(*, dispatcher: Dispatcher):
+    with given:
+        class CustomEvent:
+            pass
+
+    with when, raises(TypeError) as exc_info:
+        dispatcher.listen(CustomEvent, lambda e: None)
+
+    with then:
+        assert type(exc_info.value) is TypeError
+        assert str(exc_info.value) == "Event must be a subclass of 'vedro.events.Event'"
+
+
+def test_event_handler_comparison():
+    with given:
+        handler1 = EventHandler(priority=0, registered_at=-1, handler=lambda e: None)
+        handler2 = EventHandler(priority=1, registered_at=-1, handler=lambda e: None)
+
+    with when:
+        result = handler1 < handler2
+
+    with then:
+        assert result is True
+
+
+def test_event_handler_comparison_invalid_type():
+    with given:
+        handler = EventHandler(priority=0, registered_at=-1, handler=lambda e: None)
+
+    with when, raises(TypeError) as exc_info:
+        handler < 5
+
+    with then:
+        assert type(exc_info.value) is TypeError
+        assert str(exc_info.value) == "Other must be an instance of EventHandler"
