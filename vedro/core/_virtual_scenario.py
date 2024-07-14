@@ -1,4 +1,3 @@
-import os
 from hashlib import blake2b
 from inspect import BoundArguments
 from pathlib import Path
@@ -161,9 +160,8 @@ class VirtualScenario:
 
         :return: A string representing the namespace of the scenario.
         """
-        module = self._orig_scenario.__module__
-        rel_path = os.path.relpath(self._path, module.split(".")[0])
-        return os.path.dirname(rel_path)
+        parts = self.rel_path.parts[1:-1]
+        return str(Path(*parts)) if parts else ""
 
     def skip(self, reason: Optional[str] = None) -> None:
         """
