@@ -15,7 +15,7 @@ class TempFileManager:
     and cleanup of temporary resources created during the project's lifecycle.
     """
 
-    def __init__(self, project_dir: Path = Path(".")) -> None:
+    def __init__(self, project_dir: Path = Path.cwd()) -> None:
         """
         Initialize the TempFileManager with a specific project directory.
 

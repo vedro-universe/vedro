@@ -26,7 +26,7 @@ class VirtualScenario:
     """
 
     def __init__(self, orig_scenario: Type[Scenario], steps: List[VirtualStep], *,
-                 project_dir: Path = Path(".")) -> None:
+                 project_dir: Path = Path.cwd()) -> None:
         """
         Initialize the VirtualScenario instance with the original scenario and steps.
 

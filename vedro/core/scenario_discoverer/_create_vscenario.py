@@ -10,7 +10,7 @@ __all__ = ("create_vscenario",)
 
 
 def create_vscenario(scenario: Type[Scenario], *,
-                     project_dir: Path = Path(".")) -> VirtualScenario:
+                     project_dir: Path = Path.cwd()) -> VirtualScenario:
     """
     Create a VirtualScenario from a given Scenario class.
 
