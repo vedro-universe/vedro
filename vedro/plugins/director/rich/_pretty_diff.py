@@ -79,10 +79,10 @@ class PrettyDiff:
 
     def _compare(self, left: Any, right: Any) -> Generator[str, None, None]:
         if self._max_context_lines is not None:
-            yield from self._differ.compare_unified(self._format(left), self._format(right),
+            yield from self._differ.compare_unified(self._format(right), self._format(left),
                                                     self._max_context_lines)
         else:
-            yield from self._differ.compare(self._format(left), self._format(right))
+            yield from self._differ.compare(self._format(right), self._format(left))
 
     def _format(self, val: Any) -> List[str]:
         formatted = pretty_repr(val, indent_size=self._indent_size, expand_all=True)
