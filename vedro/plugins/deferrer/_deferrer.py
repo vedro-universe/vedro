@@ -4,6 +4,7 @@ from typing import Any, Callable, Deque, Dict, Tuple, Type, Union
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ScenarioFailedEvent, ScenarioPassedEvent, ScenarioRunEvent
+from vedro.plugins.plugin_enforcer import require_plugin
 
 __all__ = ("Deferrer", "DeferrerPlugin", "defer", "Deferrable",)
 
@@ -11,10 +12,6 @@ __all__ = ("Deferrer", "DeferrerPlugin", "defer", "Deferrable",)
 Deferrable = Tuple[Callable[..., Any], Tuple[Any, ...], Dict[str, Any]]
 
 _queue: Deque[Deferrable] = deque()
-
-
-def defer(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
-    _queue.append((fn, args, kwargs))
 
 
 class DeferrerPlugin(Plugin):
@@ -43,3 +40,8 @@ class DeferrerPlugin(Plugin):
 class Deferrer(PluginConfig):
     plugin = DeferrerPlugin
     description = "Executes deferred functions at the end of each scenario"
+
+
+@require_plugin(Deferrer)
+def defer(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+    _queue.append((fn, args, kwargs))

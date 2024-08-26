@@ -9,6 +9,7 @@ import vedro.plugins.dry_runner as dry_runner
 import vedro.plugins.interrupter as interrupter
 import vedro.plugins.last_failed as last_failed
 import vedro.plugins.orderer as orderer
+import vedro.plugins.plugin_enforcer as plugin_enforcer
 import vedro.plugins.repeater as repeater
 import vedro.plugins.rerunner as rerunner
 import vedro.plugins.seeder as seeder
@@ -137,6 +138,9 @@ class Config(core.Config):
             enabled = True
 
         class Interrupter(interrupter.Interrupter):
+            enabled = True
+
+        class PluginEnforcer(plugin_enforcer.PluginEnforcer):
             enabled = True
 
         class SystemUpgrade(system_upgrade.SystemUpgrade):
