@@ -64,18 +64,19 @@ class ScenarioFileLoader(ScenarioLoader):
             if name.startswith("_"):
                 continue
             val = getattr(module, name)
-            if self._is_vedro_scenario(val):
+            if self._is_vedro_scenario(val, module):
                 val.__file__ = os.path.abspath(module.__file__)  # type: ignore
                 loaded.append(val)
 
         return loaded
 
-    def _is_vedro_scenario(self, val: Any) -> bool:
+    def _is_vedro_scenario(self, val: Any, module: ModuleType) -> bool:
         """
-        Check if the given value is a Vedro scenario.
+        Check if the given value is a Vedro scenario and declared in the given module.
 
         :param val: The value to check.
-        :return: True if the value is a Vedro scenario, False otherwise.
+        :param module: The module in which to check the scenario declaration.
+        :return: True if the value is a Vedro scenario declared in the module, False otherwise.
         :raises TypeError: If a class name suggests it's a scenario, but
                            it doesn't inherit from `vedro.Scenario`.
         """
@@ -89,6 +90,10 @@ class ScenarioFileLoader(ScenarioLoader):
         # Exclude the foundational 'Scenario' class and 'VedroTemplate',
         # as these are not user-defined scenario classes
         if (val == Scenario) or (cls_name == "VedroTemplate"):
+            return False
+
+        # Ensure the class is declared within the module
+        if val.__module__ != module.__name__:
             return False
 
         # Check if 'val' is a subclass of Vedro's Scenario class
