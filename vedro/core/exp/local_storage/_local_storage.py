@@ -3,6 +3,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Dict, Union, cast
 
+from filelock import BaseFileLock as FileLockType
 from filelock import FileLock
 from niltype import Nil
 
@@ -11,7 +12,7 @@ from vedro.core import Plugin
 __all__ = ("LocalStorage",)
 
 
-LockFactory = Callable[[Path], FileLock]
+LockFactory = Callable[[Path], FileLockType]
 _lock_factory: LockFactory = partial(FileLock, timeout=0.1)
 
 
@@ -40,7 +41,7 @@ class LocalStorage:
         self._file_path = self._dir_path / f"{namespace}.json"
         self._lock_path = self._dir_path / f"{namespace}.lock"
         self._lock_factory = lock_factory
-        self._lock: Union[FileLock, None] = None
+        self._lock: Union[FileLockType, None] = None
         self._storage: Union[Dict[str, Any], None] = None
 
     async def get(self, key: str) -> Any:
@@ -74,7 +75,7 @@ class LocalStorage:
         await self._ensure_storage_loaded()
         await self._save_storage()
 
-    def _acquire_lock(self) -> FileLock:
+    def _acquire_lock(self) -> FileLockType:
         """
         Acquire a file lock to prevent concurrent access to the storage file.
 
