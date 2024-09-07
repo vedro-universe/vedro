@@ -11,24 +11,55 @@ SlicingStrategyType = Type[BaseSlicingStrategy]
 
 
 class SlicerPlugin(Plugin):
+    """
+    Plugin to distribute scenarios among multiple workers.
+
+    The `SlicerPlugin` allows for the division of scenarios into slices to be executed
+    by different workers, based on a defined slicing strategy. This is useful for parallelizing
+    test runs across multiple machines or processes.
+    """
+
     def __init__(self, config: Type["Slicer"], *,
                  slicing_strategy: SlicingStrategyType = SkipAdjustedSlicingStrategy) -> None:
+        """
+        Initialize the SlicerPlugin with the provided configuration.
+
+        :param config: The Slicer configuration class.
+        :param slicing_strategy: The slicing strategy to be used for scenario distribution.
+            Defaults to `SkipAdjustedSlicingStrategy`.
+        """
         super().__init__(config)
         self._slicing_strategy = slicing_strategy
         self._total: Union[int, None] = None
         self._index: Union[int, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
+        """
+        Subscribe to Vedro events to handle argument parsing and test startup.
+
+        :param dispatcher: The dispatcher to listen to events.
+        """
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed) \
                   .listen(StartupEvent, self.on_startup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
+        """
+        Add command-line arguments for scenario slicing.
+
+        :param event: The ArgParseEvent instance used to add arguments.
+        """
         group = event.arg_parser.add_argument_group("Slicer")
         group.add_argument("--slicer-total", type=int, help="Set total workers")
         group.add_argument("--slicer-index", type=int, help="Set current worker")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
+        """
+        Handle parsed arguments and validate slicing options.
+
+        :param event: The ArgParsedEvent instance containing parsed arguments.
+        :raises ValueError: If slicing arguments are missing or invalid.
+        """
         self._total = event.args.slicer_total
         self._index = event.args.slicer_index
 
@@ -51,6 +82,14 @@ class SlicerPlugin(Plugin):
                 )
 
     async def on_startup(self, event: StartupEvent) -> None:
+        """
+        Handle the startup event to apply the slicing strategy.
+
+        The plugin uses the specified slicing strategy to determine which scenarios
+        should be executed by the current worker.
+
+        :param event: The StartupEvent instance containing the test scheduler.
+        """
         if (self._total is None) or (self._index is None):
             return
 
@@ -64,7 +103,15 @@ class SlicerPlugin(Plugin):
 
 
 class Slicer(PluginConfig):
+    """
+    Configuration class for the SlicerPlugin.
+
+    Provides settings to configure the scenario slicing strategy for distributing
+    scenarios among multiple workers.
+    """
+
     plugin = SlicerPlugin
     description = "Provides a way to distribute scenarios among multiple workers"
 
+    # The slicing strategy used to distribute scenarios
     slicing_strategy: SlicingStrategyType = SkipAdjustedSlicingStrategy
