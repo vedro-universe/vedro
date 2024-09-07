@@ -1,7 +1,7 @@
 import shutil
 from collections import deque
 from pathlib import Path
-from typing import Deque, Type, Union
+from typing import Deque, Type, Union, final
 
 from vedro.core import (
     Artifact,
@@ -46,6 +46,7 @@ def attach_artifact(artifact: Artifact) -> None:
     attach_step_artifact(artifact)
 
 
+@final
 class ArtifactedPlugin(Plugin):
     def __init__(self, config: Type["Artifacted"], *,
                  scenario_artifacts: Deque[Artifact] = _scenario_artifacts,
@@ -75,7 +76,7 @@ class ArtifactedPlugin(Plugin):
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Artifacted")
 
-        group.add_argument("--save-artifacts", action="store_true",
+        group.add_argument("-a", "--save-artifacts", action="store_true",
                            default=self._save_artifacts,
                            help="Save artifacts to the file system")
         group.add_argument("--artifacts-dir", type=Path, default=None,
