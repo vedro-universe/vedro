@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Type, Union, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
@@ -10,6 +10,7 @@ __all__ = ("Slicer", "SlicerPlugin",)
 SlicingStrategyType = Type[BaseSlicingStrategy]
 
 
+@final
 class SlicerPlugin(Plugin):
     """
     Plugin to distribute scenarios among multiple workers.
