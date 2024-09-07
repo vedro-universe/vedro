@@ -3,12 +3,18 @@ from typing import Type, Union
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 
+from ._slicing_strategy import BaseSlicingStrategy, SkipAdjustedSlicingStrategy
+
 __all__ = ("Slicer", "SlicerPlugin",)
+
+SlicingStrategyType = Type[BaseSlicingStrategy]
 
 
 class SlicerPlugin(Plugin):
-    def __init__(self, config: Type["Slicer"]) -> None:
+    def __init__(self, config: Type["Slicer"], *,
+                 slicing_strategy: SlicingStrategyType = SkipAdjustedSlicingStrategy) -> None:
         super().__init__(config)
+        self._slicing_strategy = slicing_strategy
         self._total: Union[int, None] = None
         self._index: Union[int, None] = None
 
@@ -47,19 +53,18 @@ class SlicerPlugin(Plugin):
     async def on_startup(self, event: StartupEvent) -> None:
         if (self._total is None) or (self._index is None):
             return
+
+        slicing_strategy = self._slicing_strategy(self._total, self._index)
+
         index = 0
-        skipped_index = 0
         async for scenario in event.scheduler:
-            if scenario.is_skipped():
-                if (skipped_index % self._total) != (self._total - self._index - 1):
-                    event.scheduler.ignore(scenario)
-                skipped_index += 1
-            else:
-                if (index % self._total) != self._index:
-                    event.scheduler.ignore(scenario)
-                index += 1
+            if not slicing_strategy.should_run(scenario, index):
+                event.scheduler.ignore(scenario)
+            index += 1
 
 
 class Slicer(PluginConfig):
     plugin = SlicerPlugin
     description = "Provides a way to distribute scenarios among multiple workers"
+
+    slicing_strategy: SlicingStrategyType = SkipAdjustedSlicingStrategy
