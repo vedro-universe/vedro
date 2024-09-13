@@ -24,8 +24,9 @@ class TaggerPlugin(Plugin):
             .listen(StartupEvent, self.on_startup)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("-t", "--tags",
-                                      help="Specify tags to selectively run scenarios")
+        help_message = ("Specify tags to selectively run scenarios. "
+                        "More info: vedro.io/docs/features/tags")
+        event.arg_parser.add_argument("-t", "--tags", help=help_message)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._tags_expr = event.args.tags

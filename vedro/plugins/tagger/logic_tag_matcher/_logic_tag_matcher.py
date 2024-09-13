@@ -1,7 +1,8 @@
+import re
 from re import fullmatch
 from typing import Set, Union, cast
 
-from pyparsing import Literal
+from pyparsing import CaselessKeyword
 from pyparsing import ParserElement as Parser
 from pyparsing import ParseResults, Regex, infixNotation, opAssoc
 from pyparsing.exceptions import ParseException
@@ -17,11 +18,11 @@ class LogicTagMatcher(TagMatcher):
 
     def __init__(self, expr: str) -> None:
         super().__init__(expr)
-        operand = Regex(self.tag_pattern).setParseAction(self._create_tag)
+        operand = Regex(self.tag_pattern, re.IGNORECASE).setParseAction(self._create_tag)
         self._parser = infixNotation(operand, [
-            (Literal("not"), 1, opAssoc.RIGHT, self._create_not),
-            (Literal("and"), 2, opAssoc.LEFT, self._create_and),
-            (Literal("or"), 2, opAssoc.LEFT, self._create_or),
+            (CaselessKeyword("not"), 1, opAssoc.RIGHT, self._create_not),
+            (CaselessKeyword("and"), 2, opAssoc.LEFT, self._create_and),
+            (CaselessKeyword("or"), 2, opAssoc.LEFT, self._create_or),
         ])
         self._grammar: Union[Expr, None] = None
 
@@ -34,9 +35,11 @@ class LogicTagMatcher(TagMatcher):
         if not isinstance(tag, str):
             raise TypeError(f"Tag must be a str, got {type(tag)}")
 
-        res = fullmatch(self.tag_pattern, tag)
+        res = fullmatch(self.tag_pattern, tag, re.IGNORECASE)
         if res is None:
-            raise ValueError(f"Tag must match regex {self.tag_pattern!r}")
+            raise ValueError("Tags must start with a letter or underscore, "
+                             "followed by letters, digits, or underscores. "
+                             "Reserved keywords 'and', 'or', and 'not' are not allowed.")
 
         return True
 

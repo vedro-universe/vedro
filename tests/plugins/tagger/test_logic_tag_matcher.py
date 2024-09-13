@@ -47,6 +47,9 @@ def test_invalid_expr():
     "and",
     "or",
     "not",
+    "AND",
+    "OR",
+    "NOT",
 ])
 def test_invalid_tag(expr: str):
     with given:
