@@ -30,6 +30,8 @@ class TaggerPlugin(Plugin):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._tags_expr = event.args.tags
+        if isinstance(self._tags_expr, str) and self._tags_expr.strip() == "":
+            raise ValueError("Tags cannot be an empty string. Please specify valid tags.")
 
     def _get_tags(self, scenario: VirtualScenario, validate: Callable[[str], bool]) -> Any:
         orig_tags = getattr(scenario._orig_scenario, "tags", ())
