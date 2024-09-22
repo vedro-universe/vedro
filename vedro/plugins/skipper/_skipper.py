@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, List, Optional, Set, Type, Union, cast
+from typing import Any, List, Optional, Set, Type, Union, cast, final
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent, StartupEvent
@@ -17,6 +17,7 @@ class _CompositePath:
         self.tmpl_idx = tmpl_idx
 
 
+@final
 class SkipperPlugin(Plugin):
     def __init__(self, config: Type["Skipper"]) -> None:
         super().__init__(config)

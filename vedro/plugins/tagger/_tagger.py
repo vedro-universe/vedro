@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Callable, Type, Union
+from typing import Any, Callable, Type, Union, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
@@ -10,6 +10,7 @@ from .logic_tag_matcher import LogicTagMatcher
 __all__ = ("Tagger", "TaggerPlugin",)
 
 
+@final
 class TaggerPlugin(Plugin):
     """
     Implements a plugin that allows selective scenario execution based on tags.

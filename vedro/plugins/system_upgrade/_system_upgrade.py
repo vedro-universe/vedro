@@ -3,7 +3,7 @@ import platform
 import time
 import urllib.request
 from threading import Thread
-from typing import Any, Dict, Tuple, Type, Union
+from typing import Any, Dict, Tuple, Type, Union, final
 
 from niltype import Nil
 
@@ -15,9 +15,28 @@ from vedro.events import CleanupEvent, ConfigLoadedEvent, StartupEvent
 __all__ = ("SystemUpgrade", "SystemUpgradePlugin",)
 
 
+@final
 class SystemUpgradePlugin(Plugin):
+    """
+    Checks for updates to Vedro and notifies users when a newer version is available.
+
+    This plugin periodically checks for the latest available version of Vedro by
+    sending a request to a predefined API endpoint. It compares the current version
+    with the latest version and generates a notification if an update is available.
+    """
+
     def __init__(self, config: Type["SystemUpgrade"], *,
                  local_storage_factory: LocalStorageFactory = create_local_storage) -> None:
+        """
+        Initialize the SystemUpgradePlugin with the given configuration.
+
+        This constructor initializes the plugin with the API URL, request timeout,
+        local storage for persisting last request timestamps, and the current version
+        of Vedro. It also sets the update check interval.
+
+        :param config: The configuration class for the SystemUpgrade plugin.
+        :param local_storage_factory: Factory to create local storage for persisting data.
+        """
         super().__init__(config)
         self._api_url = config.api_url
         self._request_timeout = config.api_request_timeout
@@ -30,14 +49,38 @@ class SystemUpgradePlugin(Plugin):
         self._check_interval = config.update_check_interval
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
+        """
+        Subscribe to Vedro events to manage update checks and notifications.
+
+        This method registers event listeners for configuration loading, startup,
+        and cleanup events to trigger the update check process at appropriate times.
+
+        :param dispatcher: The event dispatcher to register listeners on.
+        """
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
                   .listen(StartupEvent, self.on_startup) \
                   .listen(CleanupEvent, self.on_cleanup)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
+        """
+        Handle the configuration loaded event, initializing local storage.
+
+        This method initializes the local storage where the last request timestamp
+        is stored, using the provided project directory.
+
+        :param event: The ConfigLoadedEvent containing the loaded configuration.
+        """
         self._local_storage = self._local_storage_factory(self, event.config.project_dir)
 
     async def on_startup(self, event: StartupEvent) -> None:
+        """
+        Handle the startup event, initiating a background update check if required.
+
+        This method checks the last request timestamp to determine if an update check
+        is needed, and if so, starts a background thread to fetch the latest version.
+
+        :param event: The StartupEvent signaling that the system has started.
+        """
         last_request = await self._local_storage.get("last_request_ts")
         if (last_request is not Nil) and (last_request + self._check_interval > self._now()):
             return
@@ -46,11 +89,30 @@ class SystemUpgradePlugin(Plugin):
         self._thread.start()
 
     def _is_up_to_date(self, cur_version: str, new_version: str) -> bool:
+        """
+        Compare the current version with the latest available version.
+
+        This method checks if the current version is up-to-date or newer than
+        the latest version available.
+
+        :param cur_version: The current version of Vedro.
+        :param new_version: The latest version available from the API.
+        :return: True if the current version is up-to-date, False otherwise.
+        """
         def parse_version(version: str) -> Tuple[str, ...]:
             return tuple(x.zfill(8) for x in version.split("."))
         return bool(parse_version(cur_version) >= parse_version(new_version))
 
     async def on_cleanup(self, event: CleanupEvent) -> None:
+        """
+        Handle the cleanup event, finalizing the update check and persisting data.
+
+        This method ensures that any running background thread for version checking
+        is joined and that the last request timestamp and error (if any) are saved.
+        It also adds a notification to the test report if an update is available.
+
+        :param event: The CleanupEvent signaling that the system is shutting down.
+        """
         if self._thread:
             self._thread.join(0.0)
             self._thread = None
@@ -70,16 +132,41 @@ class SystemUpgradePlugin(Plugin):
                 )
 
     def _send_request(self, url: str, *, headers: Dict[str, str], timeout: float) -> Any:
+        """
+        Send a request to the provided URL and return the JSON response.
+
+        This method sends a GET request to the specified URL with the given headers
+        and timeout, and parses the JSON response.
+
+        :param url: The URL to send the request to.
+        :param headers: The headers to include in the request.
+        :param timeout: The timeout for the request in seconds.
+        :return: The parsed JSON response as a Python dictionary.
+        """
         request = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(request, timeout=timeout) as response:
             return json.loads(response.read())
 
     def _get_user_agent(self) -> str:
+        """
+        Construct the User-Agent string for the HTTP request.
+
+        This method generates a User-Agent string including the current Vedro version,
+        Python version, and platform information.
+
+        :return: The User-Agent string.
+        """
         python_version = platform.python_version()
         platform_info = platform.platform(terse=True)
         return f"Vedro/{self._cur_version} (Python/{python_version}; {platform_info})"
 
     def _get_latest_version(self) -> None:
+        """
+        Fetch the latest available version of Vedro from the API.
+
+        This method sends a request to the API endpoint to fetch the latest version
+        of Vedro. If successful, the version is stored, otherwise an error is recorded.
+        """
         url = f"{self._api_url}/v1/latest-version"
         headers = {"User-Agent": self._get_user_agent()}
         try:
@@ -93,10 +180,23 @@ class SystemUpgradePlugin(Plugin):
             self._last_request_ts = self._now()
 
     def _now(self) -> int:
+        """
+        Get the current time in seconds since the epoch.
+
+        :return: The current Unix timestamp as an integer.
+        """
         return int(time.time())
 
 
 class SystemUpgrade(PluginConfig):
+    """
+    Configuration class for the SystemUpgradePlugin.
+
+    This class provides configuration options for the SystemUpgradePlugin,
+    including the API URL, request timeout, and the interval for checking
+    for updates.
+    """
+
     plugin = SystemUpgradePlugin
     description = "Checks for Vedro updates and notifies when a newer version is available"
 

@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict, Type, final
 
 from vedro.core import Dispatcher, PluginConfig, ScenarioResult
 from vedro.events import (
@@ -18,6 +18,7 @@ from ..rich import RichPrinter
 __all__ = ("PyCharmReporter", "PyCharmReporterPlugin",)
 
 
+@final
 class PyCharmReporterPlugin(Reporter):
     def __init__(self, config: Type["PyCharmReporter"], *,
                  printer_factory: Callable[[], RichPrinter] = RichPrinter) -> None:

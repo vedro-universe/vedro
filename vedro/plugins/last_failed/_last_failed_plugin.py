@@ -1,4 +1,4 @@
-from typing import Set, Type
+from typing import Set, Type, final
 
 from niltype import Nil
 
@@ -16,6 +16,7 @@ from vedro.events import (
 __all__ = ("LastFailed", "LastFailedPlugin",)
 
 
+@final
 class LastFailedPlugin(Plugin):
     """
     Plugin that allows rerunning only the previously failed scenarios.
