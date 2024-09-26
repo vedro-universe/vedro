@@ -78,3 +78,16 @@ async def test_load_empty_scenario_file(tmp_scn_dir: Path):
 
     with then:
         assert module is not None
+
+
+async def test_load_non_existent_scenario_file(tmp_scn_dir: Path):
+    with given:
+        path = tmp_scn_dir / "scenario.py"
+
+        loader = AssertRewriterLoader()
+
+    with when, raises(Exception) as exc:
+        await loader.load(path)
+
+    with then:
+        assert exc.type is FileNotFoundError
