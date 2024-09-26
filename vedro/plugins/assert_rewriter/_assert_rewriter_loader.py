@@ -62,7 +62,29 @@ class AssertRewriterLoader(ModuleFileLoader):
         :param loader: The loader used to load the module.
         :param module: The module to execute.
         """
-        source_code = inspect.getsource(module)
+        try:
+            # Attempt to retrieve the source code of the module using inspect.getsource.
+            # This is the standard method to retrieve the source of a module.
+            source_code = inspect.getsource(module)
+        except OSError as e:
+            # Handling a known bug in Python's inspect module where it fails to retrieve
+            # the source code of a module if the module file is empty.
+            # This issue is tracked in Python's issue tracker: https://bugs.python.org/issue27578.
+            # Specifically, the problem arises in the findsource method when the lines list is
+            # empty, causing an OSError to be raised with the message "could not get source code".
+            # To work around this, we manually open the source file and read its contents
+            # when inspect.getsource raises this specific OSError.
+            if (type(e) is OSError) and (str(e) == "could not get source code"):
+                # Get the source file of the module
+                file = inspect.getsourcefile(module)
+                if file is None:
+                    raise
+                # Manually open the file and read its contents
+                with open(file, "r") as f:
+                    source_code = f.read()
+            else:
+                # Re-raise the exception if it's not the specific "could not get source code" error
+                raise
 
         tree = ast.parse(source_code)
         rewritten_tree = self._rewrite_tree(tree)

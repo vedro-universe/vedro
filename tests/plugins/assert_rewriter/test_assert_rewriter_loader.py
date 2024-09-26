@@ -64,3 +64,17 @@ async def test_load_assertion_failure_with_message(tmp_scn_dir: Path):
         assert assert_.get_right(exc.value) == 2
         assert assert_.get_operator(exc.value) == CompareOperator.EQUAL
         assert assert_.get_message(exc.value) == "assertion failed"
+
+
+async def test_load_empty_scenario_file(tmp_scn_dir: Path):
+    with given:
+        path = tmp_scn_dir / "scenario.py"
+        path.write_text("")
+
+        loader = AssertRewriterLoader()
+
+    with when:
+        module = await loader.load(path)
+
+    with then:
+        assert module is not None
