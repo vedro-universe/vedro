@@ -62,6 +62,22 @@ class AssertRewriterLoader(ModuleFileLoader):
         :param loader: The loader used to load the module.
         :param module: The module to execute.
         """
+        source_code = self._get_source_code(module)
+        tree = ast.parse(source_code)
+        rewritten_tree = self._rewrite_tree(tree)
+
+        transformed = compile(rewritten_tree, module.__file__, "exec")  # type: ignore
+        exec(transformed, module.__dict__)
+
+    def _get_source_code(self, module: ModuleType) -> str:
+        """
+        Retrieve the source code of the given module.
+
+        :param module: The module whose source code needs to be retrieved.
+        :return: The source code as a string.
+        :raises OSError: If the source code cannot be retrieved due to an issue
+                         with the file system or the module.
+        """
         try:
             # Attempt to retrieve the source code of the module using inspect.getsource.
             # This is the standard method to retrieve the source of a module.
@@ -85,12 +101,7 @@ class AssertRewriterLoader(ModuleFileLoader):
             else:
                 # Re-raise the exception if it's not the specific "could not get source code" error
                 raise
-
-        tree = ast.parse(source_code)
-        rewritten_tree = self._rewrite_tree(tree)
-
-        transformed = compile(rewritten_tree, module.__file__, "exec")  # type: ignore
-        exec(transformed, module.__dict__)
+        return source_code
 
     def _rewrite_tree(self, tree: ast.Module) -> ast.Module:
         """
