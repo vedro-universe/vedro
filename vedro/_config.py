@@ -6,6 +6,7 @@ import vedro.plugins.assert_rewriter as assert_rewriter
 import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.dry_runner as dry_runner
+import vedro.plugins.ensurer as ensurer
 import vedro.plugins.interrupter as interrupter
 import vedro.plugins.last_failed as last_failed
 import vedro.plugins.orderer as orderer
@@ -134,6 +135,9 @@ class Config(core.Config):
             enabled = True
 
         class DryRunner(dry_runner.DryRunner):
+            enabled = True
+
+        class Ensurer(ensurer.Ensurer):
             enabled = True
 
         class Interrupter(interrupter.Interrupter):
