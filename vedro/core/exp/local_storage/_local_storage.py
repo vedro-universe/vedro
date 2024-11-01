@@ -1,6 +1,8 @@
 import json
+import os
 from functools import partial
 from pathlib import Path
+from tempfile import NamedTemporaryFile as TemporaryFile
 from typing import Any, Callable, Dict, Union, cast
 
 from filelock import FileLock
@@ -106,11 +108,19 @@ class LocalStorage:
                     return cast(Dict[str, Any], json.load(f))
             except FileNotFoundError:
                 return {}
+            except json.JSONDecodeError:
+                print(f"Failed to load local storage from {self._file_path}")
+                return {}
 
     async def _save_storage(self) -> None:
         """
         Save the current state of the storage to the file.
         """
         with self._acquire_lock():
-            with open(self._file_path, "w") as f:
+            with TemporaryFile("w", dir=str(self._dir_path), suffix=".tmp", delete=False) as f:
+                tmp_file_name = f.name
                 json.dump(self._storage, f, indent=4, ensure_ascii=False)
+            try:
+                os.replace(tmp_file_name, self._file_path)
+            except Exception:
+                os.unlink(tmp_file_name)
