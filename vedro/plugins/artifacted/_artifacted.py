@@ -27,11 +27,12 @@ from vedro.events import (
 )
 
 __all__ = ("Artifacted", "ArtifactedPlugin",
-           "attach_artifact", "attach_step_artifact", "attach_scenario_artifact",)
+           "attach_artifact", "attach_step_artifact", "attach_scenario_artifact", "attach_global_artifact")
 
 
 _scenario_artifacts: Deque[Artifact] = deque()
 _step_artifacts: Deque[Artifact] = deque()
+_global_artifacts: Deque[Artifact] = deque()
 
 
 def attach_scenario_artifact(artifact: Artifact) -> None:
@@ -61,6 +62,15 @@ def attach_artifact(artifact: Artifact) -> None:
     attach_step_artifact(artifact)
 
 
+def attach_global_artifact(artifact: Artifact) -> None:
+    """
+    Attach an artifact to the entire test run.
+
+    :param artifact: The artifact to be attached globally.
+    """
+    _global_artifacts.append(artifact)
+
+
 @final
 class ArtifactedPlugin(Plugin):
     """
@@ -72,17 +82,20 @@ class ArtifactedPlugin(Plugin):
 
     def __init__(self, config: Type["Artifacted"], *,
                  scenario_artifacts: Deque[Artifact] = _scenario_artifacts,
-                 step_artifacts: Deque[Artifact] = _step_artifacts) -> None:
+                 step_artifacts: Deque[Artifact] = _step_artifacts,
+                 global_artifacts: Deque[Artifact] = _global_artifacts) -> None:
         """
         Initialize the ArtifactedPlugin with the provided configuration.
 
         :param config: The Artifacted configuration class.
         :param scenario_artifacts: The deque holding scenario artifacts.
         :param step_artifacts: The deque holding step artifacts.
+        :param global_artifacts: The deque holding global artifacts.
         """
         super().__init__(config)
         self._scenario_artifacts = scenario_artifacts
         self._step_artifacts = step_artifacts
+        self._global_artifacts = global_artifacts
         self._save_artifacts = config.save_artifacts
         self._artifacts_dir = config.artifacts_dir
         self._add_artifact_details = config.add_artifact_details
@@ -160,6 +173,7 @@ class ArtifactedPlugin(Plugin):
         """
         self._scenario_artifacts.clear()
         self._step_artifacts.clear()
+        self._global_artifacts.clear()
 
     async def on_step_end(self, event: Union[StepPassedEvent, StepFailedEvent]) -> None:
         """
@@ -203,6 +217,11 @@ class ArtifactedPlugin(Plugin):
             for artifact in scenario_result.artifacts:
                 artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
                 self._add_extra_details(scenario_result, artifact_path)
+
+        global_artifacts_dir = self._artifacts_dir / "global"
+        for artifact in self._global_artifacts:
+            artifact_path = self._save_artifact(artifact, global_artifacts_dir)
+            self._add_extra_details(aggregated_result, artifact_path)
 
     def _is_relative_to(self, path: Path, parent: Path) -> bool:
         """
