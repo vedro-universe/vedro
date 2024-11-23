@@ -102,6 +102,7 @@ class ArtifactedPlugin(Plugin):
         self._save_artifacts = config.save_artifacts
         self._artifacts_dir = config.artifacts_dir
         self._add_artifact_details = config.add_artifact_details
+        self._cleanup_artifacts_dir = config.cleanup_artifacts_dir
         self._global_config: Union[ConfigType, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -189,7 +190,7 @@ class ArtifactedPlugin(Plugin):
             raise ValueError(f"Artifacts directory '{self._artifacts_dir}' "
                              f"must be within the project directory '{project_dir}'")
 
-        if self._artifacts_dir.exists():
+        if self._cleanup_artifacts_dir and self._artifacts_dir.exists():
             shutil.rmtree(self._artifacts_dir)
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
@@ -334,7 +335,7 @@ class Artifacted(PluginConfig):
 
     # Enable or disable saving artifacts to the file system.
     # If False, artifacts will not be saved, and `artifacts_dir` cannot be specified.
-    save_artifacts: bool = False
+    save_artifacts: bool = True
 
     # Directory path where artifacts will be saved.
     # This option is only applicable if `save_artifacts` is set to True.
@@ -345,3 +346,7 @@ class Artifacted(PluginConfig):
     # This option is only applicable if `save_artifacts` is set to True.
     # If `save_artifacts` is False and this is True, a ValueError will be raised.
     add_artifact_details: bool = True
+
+    # Enable or disable cleanup of the artifacts directory before starting the test run.
+    # If True, the artifacts directory will be removed at the start of the test run.
+    cleanup_artifacts_dir: bool = True
