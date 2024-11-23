@@ -23,7 +23,6 @@ from vedro.events import (
     ScenarioPassedEvent,
     ScenarioReportedEvent,
     ScenarioRunEvent,
-    StartupEvent,
     StepFailedEvent,
     StepPassedEvent,
 )
@@ -114,7 +113,6 @@ class ArtifactedPlugin(Plugin):
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
                   .listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed) \
-                  .listen(StartupEvent, self.on_startup) \
                   .listen(ScenarioRunEvent, self.on_scenario_run) \
                   .listen(StepPassedEvent, self.on_step_end) \
                   .listen(StepFailedEvent, self.on_step_end) \
@@ -153,6 +151,15 @@ class ArtifactedPlugin(Plugin):
                            help=("Specify the directory path for saving artifacts "
                                  f"(default: '{self._artifacts_dir}')"))
 
+        add_details_group = group.add_mutually_exclusive_group()
+        add_details_group.add_argument("--add-artifact-details", action="store_true",
+                                       default=self._add_artifact_details,
+                                       help="Add artifact details to scenario and step extras")
+        add_details_group.add_argument("--no-add-artifact-details", action="store_false",
+                                       dest="add_artifact_details",
+                                       help=("Disable adding artifact details to scenario and "
+                                             "step extras"))
+
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         """
         Handle the event after arguments have been parsed, processing artifact options.
@@ -160,12 +167,19 @@ class ArtifactedPlugin(Plugin):
         :param event: The ArgParsedEvent instance containing parsed arguments.
         :raises ValueError: If artifacts directory is specified but saving is disabled.
         """
+        self._global_artifacts.clear()
+
+        self._add_artifact_details = event.args.add_artifact_details
         self._save_artifacts = event.args.save_artifacts
         if not self._save_artifacts:
             if event.args.artifacts_dir is not None:
                 raise ValueError(
                     "Artifacts directory cannot be specified when artifact saving is disabled")
+            if self._add_artifact_details:
+                raise ValueError(
+                    "Adding artifact details requires artifact saving to be enabled")
             return
+
         self._artifacts_dir = event.args.artifacts_dir or self._artifacts_dir
 
         project_dir = self._get_project_dir()
@@ -177,9 +191,6 @@ class ArtifactedPlugin(Plugin):
 
         if self._artifacts_dir.exists():
             shutil.rmtree(self._artifacts_dir)
-
-    def on_startup(self, event: StartupEvent) -> None:
-        self._global_artifacts.clear()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         """
@@ -321,13 +332,16 @@ class Artifacted(PluginConfig):
     plugin = ArtifactedPlugin
     description = "Manages artifacts for step and scenario results"
 
-    # Save artifacts to the file system
-    save_artifacts: bool = True
+    # Enable or disable saving artifacts to the file system.
+    # If False, artifacts will not be saved, and `artifacts_dir` cannot be specified.
+    save_artifacts: bool = False
 
-    # Directory path for saving artifacts
-    # Available if `save_artifacts` is True
+    # Directory path where artifacts will be saved.
+    # This option is only applicable if `save_artifacts` is set to True.
+    # If unspecified, the default directory is ".vedro/artifacts/".
     artifacts_dir: Path = Path(".vedro/artifacts/")
 
-    # Add artifact details to scenario and steps extras
-    # Available if `save_artifacts` is True
+    # Enable or disable adding artifact details to scenario and step extras.
+    # This option is only applicable if `save_artifacts` is set to True.
+    # If `save_artifacts` is False and this is True, a ValueError will be raised.
     add_artifact_details: bool = True

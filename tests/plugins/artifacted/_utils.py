@@ -80,9 +80,14 @@ async def fire_config_loaded_event(dispatcher: Dispatcher, project_dir_: Path) -
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
-                                save_artifacts: bool = False,
+                                save_artifacts: bool = Artifacted.save_artifacts,
+                                add_artifact_details: bool = Artifacted.add_artifact_details,
                                 artifacts_dir: Optional[Path] = None) -> None:
     await dispatcher.fire(ArgParseEvent(ArgumentParser()))
 
-    namespace = Namespace(save_artifacts=save_artifacts, artifacts_dir=artifacts_dir)
+    namespace = Namespace(
+        save_artifacts=save_artifacts,
+        add_artifact_details=add_artifact_details,
+        artifacts_dir=artifacts_dir,
+    )
     await dispatcher.fire(ArgParsedEvent(namespace))
