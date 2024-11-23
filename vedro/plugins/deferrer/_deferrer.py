@@ -3,7 +3,13 @@ from collections import deque
 from typing import Any, Callable, Deque, Dict, Tuple, Type, Union, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
-from vedro.events import ScenarioFailedEvent, ScenarioPassedEvent, ScenarioRunEvent, CleanupEvent
+from vedro.events import (
+    CleanupEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
+    ScenarioRunEvent,
+    StartupEvent,
+)
 
 __all__ = ("Deferrer", "DeferrerPlugin", "defer", "defer_global", "Deferrable",)
 
@@ -47,7 +53,8 @@ def defer_global(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
 @final
 class DeferrerPlugin(Plugin):
     """
-    A plugin that defers the execution of functions until the end of a scenario or the entire test session.
+    A plugin that defers the execution of functions until the end of a scenario or
+    the entire test session.
 
     This plugin listens to scenario events and ensures that deferred functions are executed
     after the scenario has either passed or failed. The deferred functions can be regular
@@ -63,7 +70,8 @@ class DeferrerPlugin(Plugin):
 
         :param config: The Deferrer configuration class.
         :param queue: The queue holding deferred functions.
-        :param global_queue: The global queue holding deferred functions for the entire test session.
+        :param global_queue: The global queue holding deferred functions for the entire
+                             test session.
         """
         super().__init__(config)
         self._queue = queue
@@ -75,10 +83,19 @@ class DeferrerPlugin(Plugin):
 
         :param dispatcher: The dispatcher to listen to events.
         """
-        dispatcher.listen(ScenarioRunEvent, self.on_scenario_run) \
+        dispatcher.listen(StartupEvent, self.on_startup) \
+                  .listen(ScenarioRunEvent, self.on_scenario_run) \
                   .listen(ScenarioPassedEvent, self.on_scenario_end) \
                   .listen(ScenarioFailedEvent, self.on_scenario_end) \
                   .listen(CleanupEvent, self.on_cleanup)
+
+    def on_startup(self, event: StartupEvent) -> None:
+        """
+        Handle the event when the test session starts, clearing the global deferred function queue.
+
+        :param event: The StartupEvent instance.
+        """
+        self._global_queue.clear()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         """
@@ -127,8 +144,8 @@ class Deferrer(PluginConfig):
     Configuration class for the DeferrerPlugin.
 
     This class defines the default behavior for deferring functions during scenario execution.
-    It ensures that functions are executed at the end of each scenario and supports global deferral.
+    It ensures that functions are executed at the end of each scenario.
     """
 
     plugin = DeferrerPlugin
-    description = "Executes deferred functions at the end of each scenario and globally at the end of the test session"
+    description = "Executes deferred functions at the end of each scenario"

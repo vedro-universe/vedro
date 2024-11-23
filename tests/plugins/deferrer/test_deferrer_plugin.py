@@ -4,14 +4,35 @@ from unittest.mock import AsyncMock, Mock, call
 import pytest
 from baby_steps import given, then, when
 
-from vedro import defer, defer_global
-from vedro.core import Dispatcher, ScenarioResult
-from vedro.events import ScenarioFailedEvent, ScenarioPassedEvent, ScenarioRunEvent, CleanupEvent
+from vedro import defer
+from vedro.core import Dispatcher, Report, ScenarioResult
+from vedro.core.scenario_scheduler import MonotonicScenarioScheduler as ScenarioScheduler
+from vedro.events import (
+    CleanupEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
+    ScenarioRunEvent,
+    StartupEvent,
+)
 from vedro.plugins.deferrer import Deferrer, DeferrerPlugin
 
-from ._utils import deferrer, dispatcher, make_vscenario, queue
+from ._utils import deferrer, dispatcher, global_queue, make_vscenario, queue
 
-__all__ = ("dispatcher", "deferrer", "queue")  # fixtures
+__all__ = ("dispatcher", "deferrer", "queue", "global_queue",)  # fixtures
+
+
+@pytest.mark.usefixtures(deferrer.__name__)
+async def test_scenario_startup_event(*, dispatcher: Dispatcher, global_queue: deque):
+    with given:
+        global_queue.append((Mock(), (), {}))
+
+        event = StartupEvent(ScenarioScheduler(scenarios=[]))
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert len(global_queue) == 0
 
 
 @pytest.mark.usefixtures(deferrer.__name__)
@@ -90,7 +111,7 @@ async def test_scenario_end_event_async(event_class, *, dispatcher: Dispatcher, 
 
 
 @pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
-async def test_(event_class, *, dispatcher: Dispatcher):
+async def test_scenario_end_event_sync_async(event_class, *, dispatcher: Dispatcher):
     with given:
         deferrer = DeferrerPlugin(Deferrer)
         deferrer.subscribe(dispatcher)
@@ -121,21 +142,7 @@ async def test_(event_class, *, dispatcher: Dispatcher):
 
 
 @pytest.mark.usefixtures(deferrer.__name__)
-async def test_cleanup_event(*, dispatcher: Dispatcher, queue: deque):
-    with given:
-        queue.append((Mock(), (), {}))
-
-        event = CleanupEvent(Mock())
-
-    with when:
-        await dispatcher.fire(event)
-
-    with then:
-        assert len(queue) == 0
-
-
-@pytest.mark.usefixtures(deferrer.__name__)
-async def test_global_deferral(*, dispatcher: Dispatcher, queue: deque):
+async def test_global_deferral(*, dispatcher: Dispatcher, global_queue: deque):
     with given:
         manager = Mock()
         deferred1 = Mock()
@@ -144,11 +151,11 @@ async def test_global_deferral(*, dispatcher: Dispatcher, queue: deque):
         manager.attach_mock(deferred2, "deferred2")
 
         args1, kwargs1 = ("arg1", "arg2"), {"key1": "val1"}
-        defer_global(deferred1, *args1, **kwargs1)
+        global_queue.append((deferred1, args1, kwargs1))
         args2, kwargs2 = ("arg3", "arg4"), {"key2": "val2"}
-        defer_global(deferred2, *args2, **kwargs2)
+        global_queue.append((deferred2, args2, kwargs2))
 
-        event = CleanupEvent(Mock())
+        event = CleanupEvent(Report())
 
     with when:
         await dispatcher.fire(event)
@@ -158,11 +165,11 @@ async def test_global_deferral(*, dispatcher: Dispatcher, queue: deque):
             call.deferred2(*args2, **kwargs2),
             call.deferred1(*args1, **kwargs1),
         ]
-        assert len(queue) == 0
+        assert len(global_queue) == 0
 
 
 @pytest.mark.usefixtures(deferrer.__name__)
-async def test_global_deferral_async(*, dispatcher: Dispatcher, queue: deque):
+async def test_global_deferral_async(*, dispatcher: Dispatcher, global_queue: deque):
     with given:
         manager = Mock()
         deferred1 = AsyncMock()
@@ -171,11 +178,11 @@ async def test_global_deferral_async(*, dispatcher: Dispatcher, queue: deque):
         manager.attach_mock(deferred2, "deferred2")
 
         args1, kwargs1 = ("arg1", "arg2"), {"key1": "val1"}
-        defer_global(deferred1, *args1, **kwargs1)
+        global_queue.append((deferred1, args1, kwargs1))
         args2, kwargs2 = ("arg3", "arg4"), {"key2": "val2"}
-        defer_global(deferred2, *args2, **kwargs2)
+        global_queue.append((deferred2, args2, kwargs2))
 
-        event = CleanupEvent(Mock())
+        event = CleanupEvent(Report())
 
     with when:
         await dispatcher.fire(event)
@@ -187,4 +194,4 @@ async def test_global_deferral_async(*, dispatcher: Dispatcher, queue: deque):
         ]
         deferred1.assert_awaited_once()
         deferred2.assert_awaited_once()
-        assert len(queue) == 0
+        assert len(global_queue) == 0
