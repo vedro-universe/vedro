@@ -247,6 +247,11 @@ class ArtifactedPlugin(Plugin):
                 self._add_extra_details(scenario_result, artifact_path)
 
     async def on_cleanup(self, event: CleanupEvent) -> None:
+        """
+        Handle cleanup after test execution, saving global artifacts if configured.
+
+        :param event: The CleanupEvent instance signaling the end of test execution.
+        """
         if not self._save_artifacts:
             return
 
@@ -258,7 +263,8 @@ class ArtifactedPlugin(Plugin):
             artifacts.append(artifact_path.relative_to(self._get_project_dir()))
 
         if self._add_artifact_details and len(artifacts) > 0:
-            summary = "global artifacts:\n#   - " + "\n#   - ".join(str(x) for x in artifacts)
+            sep = f"{linesep}#   - "
+            summary = f"global artifacts:{sep}" + f"{sep}".join(str(x) for x in artifacts)
             event.report.add_summary(summary)
 
     def _add_extra_details(self, result: Union[ScenarioResult, StepResult],
