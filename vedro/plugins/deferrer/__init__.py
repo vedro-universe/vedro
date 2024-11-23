@@ -1,3 +1,3 @@
-from ._deferrer import Deferrer, DeferrerPlugin, defer
+from ._deferrer import Deferrer, DeferrerPlugin, defer, defer_global
 
-__all__ = ("Deferrer", "DeferrerPlugin", "defer",)
+__all__ = ("Deferrer", "DeferrerPlugin", "defer", "defer_global",)
