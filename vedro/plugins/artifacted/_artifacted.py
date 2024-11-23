@@ -139,8 +139,16 @@ class ArtifactedPlugin(Plugin):
         """
         group = event.arg_parser.add_argument_group("Artifacted")
 
-        group.add_argument("--save-artifacts", action="store_true", default=self._save_artifacts,
-                           help="Save artifacts to the file system")
+        save_artifacts_group = group.add_mutually_exclusive_group()
+        save_artifacts_group.add_argument("--save-artifacts",
+                                          action="store_true",
+                                          default=self._save_artifacts,
+                                          help="Save artifacts to the file system")
+        save_artifacts_group.add_argument("--no-save-artifacts",
+                                          dest="save_artifacts",
+                                          action="store_false",
+                                          help="Disable saving artifacts to the file system")
+
         group.add_argument("--artifacts-dir", type=Path, default=None,
                            help=("Specify the directory path for saving artifacts "
                                  f"(default: '{self._artifacts_dir}')"))
