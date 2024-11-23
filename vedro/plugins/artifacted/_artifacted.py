@@ -249,10 +249,16 @@ class ArtifactedPlugin(Plugin):
         if not self._save_artifacts:
             return
 
+        artifacts = []
+
         global_artifacts_dir = self._artifacts_dir / "global"
         for artifact in self._global_artifacts:
             artifact_path = self._save_artifact(artifact, global_artifacts_dir)
-            print("artifact_path", artifact_path)
+            artifacts.append(artifact_path.relative_to(self._get_project_dir()))
+
+        if self._add_artifact_details and len(artifacts) > 0:
+            summary = "global artifacts:\n#   - " + "\n#   - ".join(str(x) for x in artifacts)
+            event.report.add_summary(summary)
 
     def _add_extra_details(self, result: Union[ScenarioResult, StepResult],
                            artifact_path: Path) -> None:
