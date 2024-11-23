@@ -20,6 +20,11 @@ def dispatcher() -> Dispatcher:
 
 
 @pytest.fixture()
+def global_artifacts() -> deque:
+    return deque()
+
+
+@pytest.fixture()
 def scenario_artifacts() -> deque:
     return deque()
 
@@ -35,9 +40,12 @@ def project_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def artifacted(dispatcher: Dispatcher, scenario_artifacts: deque,
+def artifacted(dispatcher: Dispatcher,
+               global_artifacts: deque,
+               scenario_artifacts: deque,
                step_artifacts: deque) -> ArtifactedPlugin:
     artifacted = ArtifactedPlugin(Artifacted,
+                                  global_artifacts=global_artifacts,
                                   scenario_artifacts=scenario_artifacts,
                                   step_artifacts=step_artifacts)
     artifacted.subscribe(dispatcher)

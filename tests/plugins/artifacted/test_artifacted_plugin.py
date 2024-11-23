@@ -21,7 +21,6 @@ from vedro.plugins.artifacted import (
     attach_artifact,
     attach_scenario_artifact,
     attach_step_artifact,
-    attach_global_artifact,
 )
 
 from ._utils import (
@@ -284,50 +283,3 @@ async def test_attach_step_artifact(attach, event_class, *, dispatcher: Dispatch
 
     with then:
         assert step_result.artifacts == [artifact]
-
-
-@pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
-async def test_attach_global_artifact(event_class, *, dispatcher: Dispatcher):
-    with given:
-        artifacted = ArtifactedPlugin(Artifacted)
-        artifacted.subscribe(dispatcher)
-
-        artifact = create_memory_artifact()
-        attach_global_artifact(artifact)
-
-        scenario_result = ScenarioResult(make_vscenario())
-        event = event_class(scenario_result)
-
-    with when:
-        await dispatcher.fire(event)
-
-    with then:
-        assert scenario_result.artifacts == []
-
-
-@pytest.mark.usefixtures(artifacted.__name__)
-async def test_scenario_reported_event_saves_global_artifacts(*, dispatcher: Dispatcher,
-                                                              project_dir: Path):
-    with given:
-        await fire_config_loaded_event(dispatcher, project_dir)
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True)
-
-        artifact = create_memory_artifact(content := "global text")
-        attach_global_artifact(artifact)
-
-        scenario_result = ScenarioResult(make_vscenario())
-        scenario_result.set_started_at(3.14)
-
-        aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
-        event = ScenarioReportedEvent(aggregated_result)
-
-    with when:
-        await dispatcher.fire(event)
-
-    with then:
-        global_artifacts_path = project_dir / ".vedro/artifacts/global"
-        assert global_artifacts_path.exists()
-
-        artifact_path = global_artifacts_path / artifact.name
-        assert artifact_path.exists()
-        assert artifact_path.read_text() == content
