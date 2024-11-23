@@ -1,5 +1,6 @@
 import shutil
 from collections import deque
+from os import linesep
 from pathlib import Path
 from typing import Deque, Type, Union, final
 
@@ -306,26 +307,36 @@ class ArtifactedPlugin(Plugin):
         :return: The Path to the saved artifact.
         :raises TypeError: If the artifact type is unknown.
         """
-        if not path.exists():
-            path.mkdir(parents=True, exist_ok=True)
+        try:
+            if not path.exists():
+                path.mkdir(parents=True, exist_ok=True)
 
-        if isinstance(artifact, MemoryArtifact):
-            artifact_dest_path = (path / artifact.name).resolve()
-            artifact_dest_path.write_bytes(artifact.data)
-            return artifact_dest_path
+            if isinstance(artifact, MemoryArtifact):
+                artifact_dest = (path / artifact.name).resolve()
+                artifact_dest.write_bytes(artifact.data)
+                return artifact_dest
 
-        elif isinstance(artifact, FileArtifact):
-            artifact_dest_path = (path / artifact.name).resolve()
-            artifact_source_path = artifact.path
-            if not artifact_source_path.is_absolute():
-                artifact_source_path = (self._get_project_dir() / artifact_source_path).resolve()
-            shutil.copy2(artifact_source_path, artifact_dest_path)
-            return artifact_dest_path
+            elif isinstance(artifact, FileArtifact):
+                artifact_dest = (path / artifact.name).resolve()
+                artifact_source = artifact.path
+                if not artifact_source.is_absolute():
+                    artifact_source = (self._get_project_dir() / artifact_source).resolve()
+                shutil.copy2(artifact_source, artifact_dest)
+                return artifact_dest
 
-        else:
-            artifact_type = type(artifact).__name__
-            rel_path = path.relative_to(self._get_project_dir())
-            raise TypeError(f"Can't save artifact to '{rel_path}': unknown type '{artifact_type}'")
+            else:
+                artifact_type = type(artifact).__name__
+                rel_path = path.relative_to(self._get_project_dir())
+                message = f"Can't save artifact to '{rel_path}': unknown type '{artifact_type}'"
+                raise TypeError(message)
+        except PermissionError as e:
+            raise PermissionError(linesep.join([
+                "Failed to save artifact to '{path}'. To resolve this issue, you can:",
+                (f"- Fix the permissions of the directory '{self._artifacts_dir}' "
+                 "to allow write access"),
+                "- Change the target directory to one with correct permissions",
+                "- Disable saving artifacts by providing the `--no-save-artifacts` option"
+            ])) from e
 
 
 class Artifacted(PluginConfig):
