@@ -30,6 +30,7 @@ from ._utils import (
     dispatcher,
     fire_arg_parsed_event,
     fire_config_loaded_event,
+    global_artifacts,
     make_vscenario,
     make_vstep,
     project_dir,
@@ -37,8 +38,8 @@ from ._utils import (
     step_artifacts,
 )
 
-__all__ = ("dispatcher", "scenario_artifacts", "step_artifacts", "artifacted",
-           "project_dir")  # fixtures
+__all__ = ("dispatcher", "global_artifacts", "scenario_artifacts", "step_artifacts",
+           "artifacted", "project_dir")  # fixtures
 
 
 @pytest.mark.usefixtures(artifacted.__name__)
