@@ -1,4 +1,3 @@
-import shutil
 from collections import deque
 from os import linesep
 from pathlib import Path
@@ -8,8 +7,6 @@ from vedro.core import (
     Artifact,
     ConfigType,
     Dispatcher,
-    FileArtifact,
-    MemoryArtifact,
     Plugin,
     PluginConfig,
     ScenarioResult,
@@ -29,6 +26,7 @@ from vedro.events import (
     StepPassedEvent,
 )
 
+from ._artifact_manager import ArtifactManager, ArtifactManagerFactory
 from ._utils import is_relative_to
 
 __all__ = ("Artifacted", "ArtifactedPlugin", "attach_artifact", "attach_step_artifact",
@@ -84,8 +82,8 @@ class ArtifactedPlugin(Plugin):
     This plugin handles artifact collection and saving, ensuring artifacts are attached
     to the appropriate step or scenario, and optionally saved to the file system.
     """
-
     def __init__(self, config: Type["Artifacted"], *,
+                 artifact_manager_factory: ArtifactManagerFactory = ArtifactManager,
                  global_artifacts: Deque[Artifact] = _global_artifacts,
                  scenario_artifacts: Deque[Artifact] = _scenario_artifacts,
                  step_artifacts: Deque[Artifact] = _step_artifacts) -> None:
@@ -98,6 +96,7 @@ class ArtifactedPlugin(Plugin):
         :param global_artifacts: The deque holding global artifacts.
         """
         super().__init__(config)
+        self._artifact_manager_factory = artifact_manager_factory
         self._global_artifacts = global_artifacts
         self._scenario_artifacts = scenario_artifacts
         self._step_artifacts = step_artifacts
@@ -106,6 +105,7 @@ class ArtifactedPlugin(Plugin):
         self._add_artifact_details = config.add_artifact_details
         self._cleanup_artifacts_dir = config.cleanup_artifacts_dir
         self._global_config: Union[ConfigType, None] = None
+        self._artifact_manager: Union[ArtifactManager, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
@@ -191,8 +191,10 @@ class ArtifactedPlugin(Plugin):
             raise ValueError(f"Artifacts directory '{self._artifacts_dir}' "
                              f"must be within the project directory '{project_dir}'")
 
-        if self._cleanup_artifacts_dir and self._artifacts_dir.exists():
-            self._cleanup_artifacts_directory(self._artifacts_dir)
+        self._artifact_manager = self._artifact_manager_factory(self._artifacts_dir,
+                                                                self._get_project_dir())
+        if self._cleanup_artifacts_dir:
+            self._artifact_manager.cleanup_artifacts()
 
     def on_startup(self, event: StartupEvent) -> None:
         """
@@ -201,20 +203,6 @@ class ArtifactedPlugin(Plugin):
         :param event: The StartupEvent instance.
         """
         self._global_artifacts.clear()
-
-    def _cleanup_artifacts_directory(self, artifacts_dir: Path) -> None:
-        try:
-            shutil.rmtree(artifacts_dir)
-        except FileNotFoundError:
-            # The directory was deleted between the check and the rmtree call
-            pass
-        except PermissionError as e:
-            rel_path = self._get_rel_path(artifacts_dir)
-            failure_message = f"Failed to clean up artifacts directory '{rel_path}'."
-            raise self._make_permissions_error(failure_message) from e
-        except OSError as e:
-            rel_path = self._get_rel_path(artifacts_dir)
-            raise OSError(f"Failed to cleanup artifacts directory '{rel_path}': {e}") from e
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         """
@@ -255,17 +243,21 @@ class ArtifactedPlugin(Plugin):
         if not self._save_artifacts:
             return
 
+        assert self._artifact_manager is not None  # for type checker
+
         aggregated_result = event.aggregated_result
         for scenario_result in aggregated_result.scenario_results:
             scenario_artifacts_dir = self._get_scenario_artifacts_dir(scenario_result)
 
             for step_result in scenario_result.step_results:
                 for artifact in step_result.artifacts:
-                    artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
+                    artifact_path = self._artifact_manager.save_artifact(artifact,
+                                                                         scenario_artifacts_dir)
                     self._add_extra_details(step_result, artifact_path)
 
             for artifact in scenario_result.artifacts:
-                artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
+                artifact_path = self._artifact_manager.save_artifact(artifact,
+                                                                     scenario_artifacts_dir)
                 self._add_extra_details(scenario_result, artifact_path)
 
     async def on_cleanup(self, event: CleanupEvent) -> None:
@@ -277,20 +269,19 @@ class ArtifactedPlugin(Plugin):
         if not self._save_artifacts:
             return
 
+        assert self._artifact_manager is not None  # for type checker
+
         global_artifacts_dir = self._artifacts_dir / "global"
 
         artifacts = []
         for artifact in self._global_artifacts:
-            artifact_path = self._save_artifact(artifact, global_artifacts_dir)
+            artifact_path = self._artifact_manager.save_artifact(artifact, global_artifacts_dir)
             artifacts.append(self._get_rel_path(artifact_path))
 
         if self._add_artifact_details and len(artifacts) > 0:
             sep = f"{linesep}#   - "
             summary = f"global artifacts:{sep}" + f"{sep}".join(str(x) for x in artifacts)
             event.report.add_summary(summary)
-
-    def _get_rel_path(self, path: Path) -> Path:
-        return path.relative_to(self._get_project_dir())
 
     def _add_extra_details(self, result: Union[ScenarioResult, StepResult],
                            artifact_path: Path) -> None:
@@ -303,6 +294,9 @@ class ArtifactedPlugin(Plugin):
         if self._add_artifact_details:
             rel_path = self._get_rel_path(artifact_path)
             result.add_extra_details(f"artifact '{rel_path}'")
+
+    def _get_rel_path(self, path: Path) -> Path:
+        return path.relative_to(self._get_project_dir())
 
     def _get_project_dir(self) -> Path:
         """
@@ -328,51 +322,6 @@ class ArtifactedPlugin(Plugin):
         scenario_path /= f"{started_at}-{scenario.name}-{template_index}"
 
         return scenario_path
-
-    def _save_artifact(self, artifact: Artifact, path: Path) -> Path:
-        """
-        Save an artifact to the file system.
-
-        :param artifact: The artifact to be saved.
-        :param path: The directory path where the artifact should be saved.
-        :return: The Path to the saved artifact.
-        :raises TypeError: If the artifact type is unknown.
-        """
-        try:
-            if not path.exists():
-                path.mkdir(parents=True, exist_ok=True)
-
-            if isinstance(artifact, MemoryArtifact):
-                artifact_dest = (path / artifact.name).resolve()
-                artifact_dest.write_bytes(artifact.data)
-                return artifact_dest
-
-            elif isinstance(artifact, FileArtifact):
-                artifact_dest = (path / artifact.name).resolve()
-                artifact_source = artifact.path
-                if not artifact_source.is_absolute():
-                    artifact_source = (self._get_project_dir() / artifact_source).resolve()
-                shutil.copy2(artifact_source, artifact_dest)
-                return artifact_dest
-
-            else:
-                artifact_type = type(artifact).__name__
-                rel_path = self._get_rel_path(path)
-                message = f"Can't save artifact to '{rel_path}': unknown type '{artifact_type}'"
-                raise TypeError(message)
-        except PermissionError as e:
-            rel_path = self._get_rel_path(path)
-            failure_message = f"Failed to save artifact to '{rel_path}'."
-            raise self._make_permissions_error(failure_message) from e
-
-    def _make_permissions_error(self, failure_message: str) -> PermissionError:
-        return PermissionError(linesep.join([
-            failure_message,
-            "To resolve this issue, you can:",
-            "- Adjust the directory permissions to allow write access.",
-            "- Change the target directory to one with the appropriate permissions.",
-            "- Disable saving artifacts by using the `--no-save-artifacts` option."
-        ]))
 
 
 class Artifacted(PluginConfig):
