@@ -23,43 +23,67 @@ class ArtifactManager:
             # The directory was deleted between the check and the rmtree call
             pass
         except PermissionError as e:
-            rel_path = self._get_rel_path(self._artifacts_dir)
-            failure_message = f"Failed to clean up artifacts directory '{rel_path}'."
-            raise self._make_permissions_error(failure_message) from e
+            raise self._make_permissions_error(
+                f"Failed to clean up artifacts directory '{self._artifacts_dir}'."
+            ) from e
         except OSError as e:
-            rel_path = self._get_rel_path(self._artifacts_dir)
-            raise OSError(f"Failed to cleanup artifacts directory '{rel_path}': {e}") from e
+            raise OSError(
+                f"Failed to clean up artifacts directory '{self._artifacts_dir}': {e}"
+            ) from e
 
     def save_artifact(self, artifact: Artifact, path: Path) -> Path:
-        try:
-            if not path.exists():
+        self._ensure_directory_exists(path)
+
+        if isinstance(artifact, MemoryArtifact):
+            return self._save_memory_artifact(artifact, path)
+        elif isinstance(artifact, FileArtifact):
+            return self._save_file_artifact(artifact, path)
+        else:
+            artifact_type = type(artifact).__name__
+            message = f"Can't save artifact to '{path}': unknown type '{artifact_type}'"
+            raise TypeError(message)
+
+    def _ensure_directory_exists(self, path: Path) -> None:
+        if not path.exists():
+            try:
                 path.mkdir(parents=True, exist_ok=True)
+            except PermissionError as e:
+                raise self._make_permissions_error(f"Failed to create directory '{path}'.") from e
+            except OSError as e:
+                raise OSError(f"Failed to create directory '{path}': {e}") from e
 
-            if isinstance(artifact, MemoryArtifact):
-                artifact_dest = (path / artifact.name).resolve()
-                artifact_dest.write_bytes(artifact.data)
-                return artifact_dest
-
-            elif isinstance(artifact, FileArtifact):
-                artifact_dest = (path / artifact.name).resolve()
-                artifact_source = artifact.path
-                if not artifact_source.is_absolute():
-                    artifact_source = (self._project_dir / artifact_source).resolve()
-                shutil.copy2(artifact_source, artifact_dest)
-                return artifact_dest
-
-            else:
-                artifact_type = type(artifact).__name__
-                rel_path = self._get_rel_path(path)
-                message = f"Can't save artifact to '{rel_path}': unknown type '{artifact_type}'"
-                raise TypeError(message)
+    def _save_memory_artifact(self, artifact: MemoryArtifact, path: Path) -> Path:
+        artifact_dest = (path / artifact.name).resolve()
+        try:
+            artifact_dest.write_bytes(artifact.data)
         except PermissionError as e:
-            rel_path = self._get_rel_path(path)
-            failure_message = f"Failed to save artifact to '{rel_path}'."
-            raise self._make_permissions_error(failure_message) from e
+            raise self._make_permissions_error(
+                f"Permission denied when writing to '{artifact_dest}'."
+            ) from e
+        except OSError as e:
+            raise OSError(f"Failed to write MemoryArtifact to '{artifact_dest}': {e}") from e
+        else:
+            return artifact_dest
 
-    def _get_rel_path(self, path: Path) -> Path:
-        return path.relative_to(self._project_dir)
+    def _save_file_artifact(self, artifact: FileArtifact, path: Path) -> Path:
+        artifact_dest = (path / artifact.name).resolve()
+        artifact_source = artifact.path
+        if not artifact_source.is_absolute():
+            artifact_source = (self._project_dir / artifact_source).resolve()
+        try:
+            shutil.copy2(artifact_source, artifact_dest)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Source file '{artifact_source}' not found: {e}") from e
+        except PermissionError as e:
+            raise self._make_permissions_error(
+                f"Permission denied when copying from '{artifact_source}' to '{artifact_dest}'."
+            ) from e
+        except OSError as e:
+            raise OSError(
+                f"Failed to copy FileArtifact from '{artifact_source}' to '{artifact_dest}': {e}"
+            ) from e
+        else:
+            return artifact_dest
 
     def _make_permissions_error(self, failure_message: str) -> PermissionError:
         return PermissionError(linesep.join([
@@ -67,7 +91,7 @@ class ArtifactManager:
             "To resolve this issue, you can:",
             "- Adjust the directory permissions to allow write access.",
             "- Change the target directory to one with the appropriate permissions.",
-            "- Disable saving artifacts by using the `--no-save-artifacts` option."
+            "- Disable saving artifacts."
         ]))
 
 

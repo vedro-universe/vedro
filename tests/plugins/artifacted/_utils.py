@@ -11,7 +11,7 @@ from vedro import FileArtifact
 from vedro import Scenario as VedroScenario
 from vedro.core import Dispatcher, VirtualScenario, VirtualStep
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
-from vedro.plugins.artifacted import Artifacted, ArtifactedPlugin, MemoryArtifact
+from vedro.plugins.artifacted import Artifacted, ArtifactedPlugin, MemoryArtifact, ArtifactManager
 
 
 @pytest.fixture()
@@ -40,7 +40,20 @@ def project_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
+def artifacts_dir(project_dir: Path):
+    artifacts_dir = project_dir / "artifacts/"
+    artifacts_dir.mkdir(exist_ok=True)
+    return artifacts_dir
+
+
+@pytest.fixture()
+def artifact_manager(artifacts_dir: Path, project_dir: Path):
+    return ArtifactManager(artifacts_dir, project_dir)
+
+
+@pytest.fixture()
 def artifacted(dispatcher: Dispatcher,
+               artifact_manager: ArtifactManager,
                global_artifacts: deque,
                scenario_artifacts: deque,
                step_artifacts: deque) -> ArtifactedPlugin:
