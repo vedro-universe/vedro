@@ -281,7 +281,7 @@ def test_report_attach_incorrect_artifact():
 
     with then:
         assert exc.type is TypeError
-        assert str(exc.value) == "artifact must be an instance of Artifact"
+        assert str(exc.value) == "Expected an instance of Artifact, got dict"
 
 
 def test_report_get_artifacts():

@@ -100,11 +100,12 @@ class StepResult:
 
     def attach(self, artifact: Artifact) -> None:
         if not isinstance(artifact, Artifact):
-            raise TypeError("artifact must be an instance of Artifact")
+            raise TypeError(f"Expected an instance of Artifact, got {type(artifact).__name__}")
         self._artifacts.append(artifact)
 
     @property
     def artifacts(self) -> List[Artifact]:
+        # Returns a shallow copy of the artifacts list (change to tuple in V2)
         return self._artifacts[:]
 
     def add_extra_details(self, extra: str) -> None:
