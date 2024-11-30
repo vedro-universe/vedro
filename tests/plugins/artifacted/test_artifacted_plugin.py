@@ -25,6 +25,7 @@ from vedro.plugins.artifacted import (
 
 from ._utils import (
     artifacted,
+    artifacts_dir,
     create_file_artifact,
     create_memory_artifact,
     dispatcher,
@@ -39,20 +40,18 @@ from ._utils import (
 )
 
 __all__ = ("dispatcher", "global_artifacts", "scenario_artifacts", "step_artifacts",
-           "artifacted", "project_dir")  # fixtures
+           "artifacted", "project_dir", "artifacts_dir")  # fixtures
 
 
 @pytest.mark.usefixtures(artifacted.__name__)
 async def test_arg_parsed_event_with_artifacts_dir_created(*, dispatcher: Dispatcher,
-                                                           project_dir: Path):
+                                                           project_dir: Path,
+                                                           artifacts_dir: Path):
     with given:
         await fire_config_loaded_event(dispatcher, project_dir)
 
-        artifacts_dir = project_dir / "artifacts/"
-        artifacts_dir.mkdir(exist_ok=True)
-
     with when:
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True, artifacts_dir=artifacts_dir)
+        await fire_arg_parsed_event(dispatcher, artifacts_dir=artifacts_dir)
 
     with then:
         assert artifacts_dir.exists() is False
@@ -60,11 +59,10 @@ async def test_arg_parsed_event_with_artifacts_dir_created(*, dispatcher: Dispat
 
 @pytest.mark.usefixtures(artifacted.__name__)
 async def test_arg_parsed_event_error_on_disabled_artifact_saving(*, dispatcher: Dispatcher,
-                                                                  project_dir: Path):
+                                                                  project_dir: Path,
+                                                                  artifacts_dir: Path):
     with given:
         await fire_config_loaded_event(dispatcher, project_dir)
-
-        artifacts_dir = Path("./artifacts")
 
     with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, save_artifacts=False, artifacts_dir=artifacts_dir)
@@ -85,7 +83,7 @@ async def test_arg_parsed_event_error_outside_artifacts_dir(*, dispatcher: Dispa
         artifacts_dir = Path("../artifacts")
 
     with when, raises(BaseException) as exc:
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True, artifacts_dir=artifacts_dir)
+        await fire_arg_parsed_event(dispatcher, artifacts_dir=artifacts_dir)
 
     with then:
         assert exc.type is ValueError
@@ -161,7 +159,7 @@ async def test_scenario_reported_event_saves_scenario_artifacts(*, dispatcher: D
                                                                 project_dir: Path):
     with given:
         await fire_config_loaded_event(dispatcher, project_dir)
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True)
+        await fire_arg_parsed_event(dispatcher)
 
         scenario_result = ScenarioResult(make_vscenario())
         scenario_result.set_started_at(3.14)
@@ -197,7 +195,7 @@ async def test_scenario_reported_event_saves_step_artifacts(*, dispatcher: Dispa
                                                             project_dir: Path):
     with given:
         await fire_config_loaded_event(dispatcher, project_dir)
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True)
+        await fire_arg_parsed_event(dispatcher)
 
         step_result = StepResult(make_vstep())
         artifact = create_memory_artifact(content := "text")
@@ -227,7 +225,7 @@ async def test_scenario_reported_event_incorrect_artifact(*, dispatcher: Dispatc
                                                           project_dir: Path):
     with given:
         await fire_config_loaded_event(dispatcher, project_dir)
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True)
+        await fire_arg_parsed_event(dispatcher)
 
         scenario_result = ScenarioResult(make_vscenario())
         artifact = type("NewArtifact", (Artifact,), {})()

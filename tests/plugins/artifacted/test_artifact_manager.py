@@ -1,12 +1,18 @@
 from pathlib import Path
 
-from baby_steps import given, when, then
+from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import Artifact
 from vedro.plugins.artifacted import ArtifactManager
-from ._utils import (project_dir, create_memory_artifact, create_file_artifact, artifact_manager,
-                     artifacts_dir)
+
+from ._utils import (
+    artifact_manager,
+    artifacts_dir,
+    create_file_artifact,
+    create_memory_artifact,
+    project_dir,
+)
 
 __all__ = ("project_dir", "artifacts_dir", "artifact_manager")  # fixtures
 
@@ -61,7 +67,6 @@ def test_save_artifact_unknown_type(artifact_manager: ArtifactManager, artifacts
 
     with when, raises(BaseException) as exc:
         artifact_manager.save_artifact(artifact, artifacts_dir)
-
 
     with then:
         assert exc.type is TypeError

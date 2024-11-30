@@ -11,7 +11,7 @@ from vedro import FileArtifact
 from vedro import Scenario as VedroScenario
 from vedro.core import Dispatcher, VirtualScenario, VirtualStep
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
-from vedro.plugins.artifacted import Artifacted, ArtifactedPlugin, MemoryArtifact, ArtifactManager
+from vedro.plugins.artifacted import Artifacted, ArtifactedPlugin, ArtifactManager, MemoryArtifact
 
 
 @pytest.fixture()
@@ -53,7 +53,6 @@ def artifact_manager(artifacts_dir: Path, project_dir: Path):
 
 @pytest.fixture()
 def artifacted(dispatcher: Dispatcher,
-               artifact_manager: ArtifactManager,
                global_artifacts: deque,
                scenario_artifacts: deque,
                step_artifacts: deque) -> ArtifactedPlugin:
