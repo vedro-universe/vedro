@@ -26,26 +26,6 @@ class StepStatus(Enum):
     FAILED = "FAILED"
 
 
-class StepStatus(Enum):
-    """
-    Enumeration of possible states for `StepResult` to indicate the current status
-    of a test step.
-
-    This enumeration is used to represent the lifecycle state of a step during test execution.
-
-    For more information, refer to https://vedro.io/docs/core/step-status.
-    """
-
-    # Indicates the step is awaiting execution.
-    PENDING = "PENDING"
-
-    # Signifies the step has completed successfully.
-    PASSED = "PASSED"
-
-    # Marks the step as unsuccessful due to an assertion failure or an unexpected error.
-    FAILED = "FAILED"
-
-
 class StepResult:
     """
     Represents the result of a step execution.

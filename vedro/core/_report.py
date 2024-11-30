@@ -12,8 +12,8 @@ class Report:
     Represents a report for test execution results.
 
     This class aggregates results from multiple test scenarios, tracks execution
-    statistics such as total, passed, failed, skipped scenarios, and provides 
-    summary information. It also handles execution timing, artifacts, and 
+    statistics such as total, passed, failed, skipped scenarios, and provides
+    summary information. It also handles execution timing, artifacts, and
     interruptions.
     """
 
