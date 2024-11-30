@@ -22,7 +22,8 @@ class ArtifactManager:
         Initialize the ArtifactManager with the specified directories.
 
         :param artifacts_dir: The directory where artifacts will be stored.
-        :param project_dir: The base project directory, used to resolve relative paths for file artifacts.
+        :param project_dir: The base project directory, used to resolve relative paths
+                            for file artifacts.
         """
         self._artifacts_dir = artifacts_dir
         self._project_dir = project_dir
@@ -65,7 +66,8 @@ class ArtifactManager:
         :param path: The directory where the artifact should be saved.
         :return: The path to the saved artifact.
         :raises TypeError: If the artifact type is unknown.
-        :raises PermissionError: If the directory or file cannot be created due to permissions issues.
+        :raises PermissionError: If the directory or file cannot be created due to
+                                 permissions issues.
         :raises OSError: If an unexpected OS error occurs during the save operation.
         """
         self._ensure_directory_exists(path)

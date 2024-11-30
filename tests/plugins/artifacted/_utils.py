@@ -3,6 +3,7 @@ from collections import deque
 from pathlib import Path
 from time import monotonic_ns
 from typing import Optional
+from unittest.mock import patch
 
 import pytest
 
@@ -103,3 +104,19 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
         artifacts_dir=artifacts_dir,
     )
     await dispatcher.fire(ArgParsedEvent(namespace))
+
+
+def patch_rmtree(exception: Optional[Exception] = None):
+    return patch("shutil.rmtree", side_effect=exception)
+
+
+def patch_copy2(exception: Optional[Exception] = None):
+    return patch("shutil.copy2", side_effect=exception)
+
+
+def patch_write_bytes(exception: Optional[Exception] = None):
+    return patch("pathlib.Path.write_bytes", side_effect=exception)
+
+
+def patch_mkdir(exception: Optional[Exception] = None):
+    return patch("pathlib.Path.mkdir", side_effect=exception)
