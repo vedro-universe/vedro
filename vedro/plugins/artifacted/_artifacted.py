@@ -82,18 +82,20 @@ class ArtifactedPlugin(Plugin):
     This plugin handles artifact collection and saving, ensuring artifacts are attached
     to the appropriate step or scenario, and optionally saved to the file system.
     """
+
     def __init__(self, config: Type["Artifacted"], *,
                  artifact_manager_factory: ArtifactManagerFactory = ArtifactManager,
                  global_artifacts: Deque[Artifact] = _global_artifacts,
                  scenario_artifacts: Deque[Artifact] = _scenario_artifacts,
                  step_artifacts: Deque[Artifact] = _step_artifacts) -> None:
         """
-        Initialize the ArtifactedPlugin with the provided configuration.
+        Initialize the ArtifactedPlugin instance with configuration and artifact queues.
 
-        :param config: The Artifacted configuration class.
-        :param scenario_artifacts: The deque holding scenario artifacts.
-        :param step_artifacts: The deque holding step artifacts.
-        :param global_artifacts: The deque holding global artifacts.
+        :param config: The Artifacted plugin configuration.
+        :param artifact_manager_factory: A factory for creating ArtifactManager instances.
+        :param global_artifacts: A deque to store global artifacts.
+        :param scenario_artifacts: A deque to store scenario artifacts.
+        :param step_artifacts: A deque to store step artifacts.
         """
         super().__init__(config)
         self._artifact_manager_factory = artifact_manager_factory
@@ -169,7 +171,7 @@ class ArtifactedPlugin(Plugin):
         Handle the event after arguments have been parsed, processing artifact options.
 
         :param event: The ArgParsedEvent instance containing parsed arguments.
-        :raises ValueError: If artifacts directory is specified but saving is disabled.
+        :raises ValueError: If invalid argument combinations are provided.
         """
         self._add_artifact_details = event.args.add_artifact_details
         self._save_artifacts = event.args.save_artifacts
@@ -262,9 +264,9 @@ class ArtifactedPlugin(Plugin):
 
     async def on_cleanup(self, event: CleanupEvent) -> None:
         """
-        Handle cleanup after test execution, saving global artifacts if configured.
+        Handle the cleanup event, saving and summarizing global artifacts if configured.
 
-        :param event: The CleanupEvent instance signaling the end of test execution.
+        :param event: The CleanupEvent instance.
         """
         if not self._save_artifacts:
             return
@@ -299,6 +301,12 @@ class ArtifactedPlugin(Plugin):
             result.add_extra_details(f"artifact '{rel_path}'")
 
     def _get_rel_path(self, path: Path) -> Path:
+        """
+        Get the relative path of a given path with respect to the project directory.
+
+        :param path: The path to be converted to a relative path.
+        :return: The relative Path.
+        """
         return path.relative_to(self._get_project_dir())
 
     def _get_project_dir(self) -> Path:
