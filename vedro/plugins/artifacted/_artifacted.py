@@ -271,10 +271,13 @@ class ArtifactedPlugin(Plugin):
 
         assert self._artifact_manager is not None  # for type checker
 
-        global_artifacts_dir = self._artifacts_dir / "global"
+        while len(self._global_artifacts) > 0:
+            artifact = self._global_artifacts.popleft()
+            event.report.attach(artifact)
 
+        global_artifacts_dir = self._get_global_artifacts_dir()
         artifacts = []
-        for artifact in self._global_artifacts:
+        for artifact in event.report.artifacts:
             artifact_path = self._artifact_manager.save_artifact(artifact, global_artifacts_dir)
             artifacts.append(self._get_rel_path(artifact_path))
 
@@ -306,6 +309,14 @@ class ArtifactedPlugin(Plugin):
         """
         assert self._global_config is not None  # for type checker
         return self._global_config.project_dir.resolve()
+
+    def _get_global_artifacts_dir(self) -> Path:
+        """
+        Get the directory path where global artifacts should be stored.
+
+        :return: The Path to the directory for global artifacts.
+        """
+        return self._artifacts_dir / "global"
 
     def _get_scenario_artifacts_dir(self, scenario_result: ScenarioResult) -> Path:
         """

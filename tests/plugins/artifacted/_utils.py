@@ -120,3 +120,8 @@ def patch_write_bytes(exception: Optional[Exception] = None):
 
 def patch_mkdir(exception: Optional[Exception] = None):
     return patch("pathlib.Path.mkdir", side_effect=exception)
+
+
+def make_artifacted_plugin(artifact_manager: ArtifactManager) -> ArtifactedPlugin:
+    return ArtifactedPlugin(Artifacted,
+                            artifact_manager_factory=lambda *args: artifact_manager)

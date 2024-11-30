@@ -1,7 +1,8 @@
 from typing import Any, List, Union, cast
 
-from ._exc_info import ExcInfo
-from .scenario_result import AggregatedResult
+from vedro.core._artifacts import Artifact
+from vedro.core._exc_info import ExcInfo
+from vedro.core._scenario_result import AggregatedResult
 
 __all__ = ("Report",)
 
@@ -16,6 +17,7 @@ class Report:
         self._failed: int = 0
         self._skipped: int = 0
         self._interrupted: Union[ExcInfo, None] = None
+        self._artifacts: List[Artifact] = []
 
     @property
     def interrupted(self) -> Union[ExcInfo, None]:
@@ -76,6 +78,15 @@ class Report:
 
     def add_summary(self, summary: str) -> None:
         self._summary.append(summary)
+
+    def attach(self, artifact: Artifact) -> None:
+        if not isinstance(artifact, Artifact):
+            raise TypeError("artifact must be an instance of Artifact")
+        self._artifacts.append(artifact)
+
+    @property
+    def artifacts(self) -> List[Artifact]:
+        return self._artifacts[:]
 
     def set_interrupted(self, exc_info: ExcInfo) -> None:
         self._interrupted = exc_info
