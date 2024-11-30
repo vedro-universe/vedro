@@ -1,5 +1,5 @@
-import shutil
 from collections import deque
+from os import linesep
 from pathlib import Path
 from typing import Deque, Type, Union, final
 
@@ -7,8 +7,6 @@ from vedro.core import (
     Artifact,
     ConfigType,
     Dispatcher,
-    FileArtifact,
-    MemoryArtifact,
     Plugin,
     PluginConfig,
     ScenarioResult,
@@ -17,21 +15,27 @@ from vedro.core import (
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
+    CleanupEvent,
     ConfigLoadedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
     ScenarioReportedEvent,
     ScenarioRunEvent,
+    StartupEvent,
     StepFailedEvent,
     StepPassedEvent,
 )
 
-__all__ = ("Artifacted", "ArtifactedPlugin",
-           "attach_artifact", "attach_step_artifact", "attach_scenario_artifact",)
+from ._artifact_manager import ArtifactManager, ArtifactManagerFactory
+from ._utils import is_relative_to
+
+__all__ = ("Artifacted", "ArtifactedPlugin", "attach_artifact", "attach_step_artifact",
+           "attach_scenario_artifact", "attach_global_artifact")
 
 
 _scenario_artifacts: Deque[Artifact] = deque()
 _step_artifacts: Deque[Artifact] = deque()
+_global_artifacts: Deque[Artifact] = deque()
 
 
 def attach_scenario_artifact(artifact: Artifact) -> None:
@@ -61,6 +65,15 @@ def attach_artifact(artifact: Artifact) -> None:
     attach_step_artifact(artifact)
 
 
+def attach_global_artifact(artifact: Artifact) -> None:
+    """
+    Attach an artifact to the entire test run.
+
+    :param artifact: The artifact to be attached globally.
+    """
+    _global_artifacts.append(artifact)
+
+
 @final
 class ArtifactedPlugin(Plugin):
     """
@@ -71,22 +84,30 @@ class ArtifactedPlugin(Plugin):
     """
 
     def __init__(self, config: Type["Artifacted"], *,
+                 artifact_manager_factory: ArtifactManagerFactory = ArtifactManager,
+                 global_artifacts: Deque[Artifact] = _global_artifacts,
                  scenario_artifacts: Deque[Artifact] = _scenario_artifacts,
                  step_artifacts: Deque[Artifact] = _step_artifacts) -> None:
         """
-        Initialize the ArtifactedPlugin with the provided configuration.
+        Initialize the ArtifactedPlugin instance with configuration and artifact queues.
 
-        :param config: The Artifacted configuration class.
-        :param scenario_artifacts: The deque holding scenario artifacts.
-        :param step_artifacts: The deque holding step artifacts.
+        :param config: The Artifacted plugin configuration.
+        :param artifact_manager_factory: A factory for creating ArtifactManager instances.
+        :param global_artifacts: A deque to store global artifacts.
+        :param scenario_artifacts: A deque to store scenario artifacts.
+        :param step_artifacts: A deque to store step artifacts.
         """
         super().__init__(config)
+        self._artifact_manager_factory = artifact_manager_factory
+        self._global_artifacts = global_artifacts
         self._scenario_artifacts = scenario_artifacts
         self._step_artifacts = step_artifacts
         self._save_artifacts = config.save_artifacts
         self._artifacts_dir = config.artifacts_dir
         self._add_artifact_details = config.add_artifact_details
+        self._cleanup_artifacts_dir = config.cleanup_artifacts_dir
         self._global_config: Union[ConfigType, None] = None
+        self._artifact_manager: Union[ArtifactManager, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
@@ -97,12 +118,14 @@ class ArtifactedPlugin(Plugin):
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
                   .listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed) \
+                  .listen(StartupEvent, self.on_startup) \
                   .listen(ScenarioRunEvent, self.on_scenario_run) \
                   .listen(StepPassedEvent, self.on_step_end) \
                   .listen(StepFailedEvent, self.on_step_end) \
                   .listen(ScenarioPassedEvent, self.on_scenario_end) \
                   .listen(ScenarioFailedEvent, self.on_scenario_end) \
-                  .listen(ScenarioReportedEvent, self.on_scenario_reported)
+                  .listen(ScenarioReportedEvent, self.on_scenario_reported) \
+                  .listen(CleanupEvent, self.on_cleanup)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         """
@@ -120,37 +143,68 @@ class ArtifactedPlugin(Plugin):
         """
         group = event.arg_parser.add_argument_group("Artifacted")
 
-        group.add_argument("-a", "--save-artifacts", action="store_true",
-                           default=self._save_artifacts,
-                           help="Save artifacts to the file system")
+        save_artifacts_group = group.add_mutually_exclusive_group()
+        save_artifacts_group.add_argument("--save-artifacts",
+                                          action="store_true",
+                                          default=self._save_artifacts,
+                                          help="Save artifacts to the file system")
+        save_artifacts_group.add_argument("--no-save-artifacts",
+                                          dest="save_artifacts",
+                                          action="store_false",
+                                          help="Disable saving artifacts to the file system")
+
         group.add_argument("--artifacts-dir", type=Path, default=None,
                            help=("Specify the directory path for saving artifacts "
                                  f"(default: '{self._artifacts_dir}')"))
+
+        add_details_group = group.add_mutually_exclusive_group()
+        add_details_group.add_argument("--add-artifact-details", action="store_true",
+                                       default=self._add_artifact_details,
+                                       help="Add artifact details to scenario and step extras")
+        add_details_group.add_argument("--no-add-artifact-details", action="store_false",
+                                       dest="add_artifact_details",
+                                       help=("Disable adding artifact details to scenario and "
+                                             "step extras"))
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         """
         Handle the event after arguments have been parsed, processing artifact options.
 
         :param event: The ArgParsedEvent instance containing parsed arguments.
-        :raises ValueError: If artifacts directory is specified but saving is disabled.
+        :raises ValueError: If invalid argument combinations are provided.
         """
+        self._add_artifact_details = event.args.add_artifact_details
         self._save_artifacts = event.args.save_artifacts
         if not self._save_artifacts:
             if event.args.artifacts_dir is not None:
                 raise ValueError(
                     "Artifacts directory cannot be specified when artifact saving is disabled")
+            if self._add_artifact_details:
+                raise ValueError(
+                    "Adding artifact details requires artifact saving to be enabled")
             return
+
         self._artifacts_dir = event.args.artifacts_dir or self._artifacts_dir
 
         project_dir = self._get_project_dir()
         if not self._artifacts_dir.is_absolute():
             self._artifacts_dir = (project_dir / self._artifacts_dir).resolve()
-        if not self._is_relative_to(self._artifacts_dir, project_dir):
+        if not is_relative_to(self._artifacts_dir, project_dir):
             raise ValueError(f"Artifacts directory '{self._artifacts_dir}' "
                              f"must be within the project directory '{project_dir}'")
 
-        if self._artifacts_dir.exists():
-            shutil.rmtree(self._artifacts_dir)
+        self._artifact_manager = self._artifact_manager_factory(self._artifacts_dir,
+                                                                self._get_project_dir())
+        if self._cleanup_artifacts_dir:
+            self._artifact_manager.cleanup_artifacts()
+
+    def on_startup(self, event: StartupEvent) -> None:
+        """
+        Handle the event when the test run starts, clearing global artifacts.
+
+        :param event: The StartupEvent instance.
+        """
+        self._global_artifacts.clear()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         """
@@ -191,33 +245,48 @@ class ArtifactedPlugin(Plugin):
         if not self._save_artifacts:
             return
 
+        assert self._artifact_manager is not None  # for type checker
+
         aggregated_result = event.aggregated_result
         for scenario_result in aggregated_result.scenario_results:
             scenario_artifacts_dir = self._get_scenario_artifacts_dir(scenario_result)
 
             for step_result in scenario_result.step_results:
                 for artifact in step_result.artifacts:
-                    artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
+                    artifact_path = self._artifact_manager.save_artifact(artifact,
+                                                                         scenario_artifacts_dir)
                     self._add_extra_details(step_result, artifact_path)
 
             for artifact in scenario_result.artifacts:
-                artifact_path = self._save_artifact(artifact, scenario_artifacts_dir)
+                artifact_path = self._artifact_manager.save_artifact(artifact,
+                                                                     scenario_artifacts_dir)
                 self._add_extra_details(scenario_result, artifact_path)
 
-    def _is_relative_to(self, path: Path, parent: Path) -> bool:
+    async def on_cleanup(self, event: CleanupEvent) -> None:
         """
-        Check if the given path is relative to the specified parent directory.
+        Handle the cleanup event, saving and summarizing global artifacts if configured.
 
-        :param path: The path to check.
-        :param parent: The parent directory to check against.
-        :return: True if the path is relative to the parent directory, False otherwise.
+        :param event: The CleanupEvent instance.
         """
-        try:
-            path.relative_to(parent)
-        except ValueError:
-            return False
-        else:
-            return path != parent
+        if not self._save_artifacts:
+            return
+
+        assert self._artifact_manager is not None  # for type checker
+
+        while len(self._global_artifacts) > 0:
+            artifact = self._global_artifacts.popleft()
+            event.report.attach(artifact)
+
+        global_artifacts_dir = self._get_global_artifacts_dir()
+        artifacts = []
+        for artifact in event.report.artifacts:
+            artifact_path = self._artifact_manager.save_artifact(artifact, global_artifacts_dir)
+            artifacts.append(self._get_rel_path(artifact_path))
+
+        if self._add_artifact_details and len(artifacts) > 0:
+            sep = f"{linesep}#   - "
+            summary = f"global artifacts:{sep}" + f"{sep}".join(str(x) for x in artifacts)
+            event.report.add_summary(summary)
 
     def _add_extra_details(self, result: Union[ScenarioResult, StepResult],
                            artifact_path: Path) -> None:
@@ -228,8 +297,17 @@ class ArtifactedPlugin(Plugin):
         :param artifact_path: The file path where the artifact was saved.
         """
         if self._add_artifact_details:
-            rel_path = artifact_path.relative_to(self._get_project_dir())
+            rel_path = self._get_rel_path(artifact_path)
             result.add_extra_details(f"artifact '{rel_path}'")
+
+    def _get_rel_path(self, path: Path) -> Path:
+        """
+        Get the relative path of a given path with respect to the project directory.
+
+        :param path: The path to be converted to a relative path.
+        :return: The relative Path.
+        """
+        return path.relative_to(self._get_project_dir())
 
     def _get_project_dir(self) -> Path:
         """
@@ -239,6 +317,14 @@ class ArtifactedPlugin(Plugin):
         """
         assert self._global_config is not None  # for type checker
         return self._global_config.project_dir.resolve()
+
+    def _get_global_artifacts_dir(self) -> Path:
+        """
+        Get the directory path where global artifacts should be stored.
+
+        :return: The Path to the directory for global artifacts.
+        """
+        return self._artifacts_dir / "global"
 
     def _get_scenario_artifacts_dir(self, scenario_result: ScenarioResult) -> Path:
         """
@@ -256,36 +342,6 @@ class ArtifactedPlugin(Plugin):
 
         return scenario_path
 
-    def _save_artifact(self, artifact: Artifact, scenario_path: Path) -> Path:
-        """
-        Save an artifact to the file system.
-
-        :param artifact: The artifact to be saved.
-        :param scenario_path: The directory path where the artifact should be saved.
-        :return: The Path to the saved artifact.
-        :raises TypeError: If the artifact type is unknown.
-        """
-        if not scenario_path.exists():
-            scenario_path.mkdir(parents=True, exist_ok=True)
-
-        if isinstance(artifact, MemoryArtifact):
-            artifact_dest_path = (scenario_path / artifact.name).resolve()
-            artifact_dest_path.write_bytes(artifact.data)
-            return artifact_dest_path
-
-        elif isinstance(artifact, FileArtifact):
-            artifact_dest_path = (scenario_path / artifact.name).resolve()
-            artifact_source_path = artifact.path
-            if not artifact_source_path.is_absolute():
-                artifact_source_path = (self._get_project_dir() / artifact_source_path).resolve()
-            shutil.copy2(artifact_source_path, artifact_dest_path)
-            return artifact_dest_path
-
-        else:
-            artifact_type = type(artifact).__name__
-            rel_path = scenario_path.relative_to(self._get_project_dir())
-            raise TypeError(f"Can't save artifact to '{rel_path}': unknown type '{artifact_type}'")
-
 
 class Artifacted(PluginConfig):
     """
@@ -298,13 +354,20 @@ class Artifacted(PluginConfig):
     plugin = ArtifactedPlugin
     description = "Manages artifacts for step and scenario results"
 
-    # Save artifacts to the file system
-    save_artifacts: bool = False
+    # Enable or disable saving artifacts to the file system.
+    # If False, artifacts will not be saved, and `artifacts_dir` cannot be specified.
+    save_artifacts: bool = True
 
-    # Directory path for saving artifacts
-    # Available if `save_artifacts` is True
+    # Directory path where artifacts will be saved.
+    # This option is only applicable if `save_artifacts` is set to True.
+    # If unspecified, the default directory is ".vedro/artifacts/".
     artifacts_dir: Path = Path(".vedro/artifacts/")
 
-    # Add artifact details to scenario and steps extras
-    # Available if `save_artifacts` is True
+    # Enable or disable adding artifact details to scenario and step extras.
+    # This option is only applicable if `save_artifacts` is set to True.
+    # If `save_artifacts` is False and this is True, a ValueError will be raised.
     add_artifact_details: bool = True
+
+    # Enable or disable cleanup of the artifacts directory before starting the test run.
+    # If True, the artifacts directory will be removed at the start of the test run.
+    cleanup_artifacts_dir: bool = True

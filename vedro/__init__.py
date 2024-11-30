@@ -14,6 +14,7 @@ from .plugins.artifacted import (
     FileArtifact,
     MemoryArtifact,
     attach_artifact,
+    attach_global_artifact,
     attach_scenario_artifact,
     attach_step_artifact,
 )
@@ -26,7 +27,8 @@ __version__ = version
 __all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params", "ensure",
            "context", "defer", "defer_global", "Config", "catched", "create_tmp_dir",
            "create_tmp_file", "attach_artifact", "attach_scenario_artifact",
-           "attach_step_artifact", "MemoryArtifact", "FileArtifact", "Artifact",)
+           "attach_step_artifact", "attach_global_artifact", "MemoryArtifact", "FileArtifact",
+           "Artifact",)
 
 
 def run(*, plugins: Any = None) -> None:
