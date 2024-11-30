@@ -2,7 +2,9 @@ from math import isclose
 from unittest.mock import Mock
 
 from baby_steps import given, then, when
+from pytest import raises
 
+from vedro import MemoryArtifact
 from vedro.core import ExcInfo, Report, ScenarioResult, VirtualScenario
 
 
@@ -255,3 +257,45 @@ def test_repr_with_interrupted():
     with then:
         assert res == ("<Report total=0 passed=0 failed=0 skipped=0"
                        " interrupted=<class 'KeyboardInterrupt'>>")
+
+
+def test_report_attach_artifact():
+    with given:
+        artifact = MemoryArtifact("name", "text/plain", b"")
+        report = Report()
+
+    with when:
+        res = report.attach(artifact)
+
+    with then:
+        assert res is None
+
+
+def test_report_attach_incorrect_artifact():
+    with given:
+        artifact = {}
+        report = Report()
+
+    with when, raises(BaseException) as exc:
+        report.attach(artifact)
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value) == "artifact must be an instance of Artifact"
+
+
+def test_report_get_artifacts():
+    with given:
+        report = Report()
+
+        artifact1 = MemoryArtifact("name1", "text/plain", b"")
+        report.attach(artifact1)
+
+        artifact2 = MemoryArtifact("name2", "text/plain", b"")
+        report.attach(artifact2)
+
+    with when:
+        artifacts = report.artifacts
+
+    with then:
+        assert artifacts == [artifact1, artifact2]
