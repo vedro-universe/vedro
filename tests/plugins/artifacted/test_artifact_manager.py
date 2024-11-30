@@ -54,11 +54,9 @@ def test_cleanup_artifacts_os_error(exc_type: Type[Exception], *,
     with given:
         artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    with (
-        when,
-        patch_rmtree(exc_type()) as mock,
-        raises(Exception) as exc
-    ):
+    with when, \
+         patch_rmtree(exc_type()) as mock, \
+         raises(Exception) as exc:
         artifact_manager.cleanup_artifacts()
 
     with then:
@@ -91,11 +89,9 @@ def test_save_memory_artifact_os_error(exc_type: Type[Exception], exc_msg: str, 
         file_content = "Hello, World!"
         artifact = create_memory_artifact(file_content)
 
-    with (
-        when,
-        patch_write_bytes(exc_type()) as mock,
-        raises(Exception) as exc
-    ):
+    with when, \
+         patch_write_bytes(exc_type()) as mock, \
+         raises(Exception) as exc:
         artifact_manager.save_artifact(artifact, artifacts_dir)
 
     with then:
@@ -137,11 +133,9 @@ def test_save_file_artifact_os_error(exc_type: Type[Exception], exc_msg: str, *,
         file_content = "Hello, World!"
         artifact = create_file_artifact(file_path, file_content)
 
-    with (
-        when,
-        patch_copy2(exc_type()) as mock,
-        raises(Exception) as exc
-    ):
+    with when, \
+         patch_copy2(exc_type()) as mock, \
+         raises(Exception) as exc:
         artifact_manager.save_artifact(artifact, artifacts_dir)
 
     with then:
@@ -164,11 +158,9 @@ def test_save_artifact_directory_mkdir_failure(exc_type: Type[Exception], *,
         file_content = "Hello, World!"
         artifact = create_memory_artifact(file_content)
 
-    with (
-        when,
-        patch_mkdir(exc_type()) as mock,
-        raises(Exception) as exc
-    ):
+    with when, \
+         patch_mkdir(exc_type()) as mock, \
+         raises(Exception) as exc:
         artifact_manager.save_artifact(artifact, artifacts_dir)
 
     with then:
