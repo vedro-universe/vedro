@@ -33,8 +33,8 @@ def test_aggregate_nothing(scheduler: Scheduler):
     lambda: [make_scenario_result().mark_failed(), make_scenario_result().mark_failed()],
     lambda: [make_scenario_result().mark_skipped(), make_scenario_result().mark_skipped()],
 ])
-def test_aggreate_results(get_scenario_results: Callable[[], List[ScenarioResult]], *,
-                          scheduler: Scheduler):
+def test_aggregate_results(get_scenario_results: Callable[[], List[ScenarioResult]], *,
+                           scheduler: Scheduler):
     with when:
         scenario_results = get_scenario_results()
         aggregated_result = scheduler.aggregate_results(scenario_results)
