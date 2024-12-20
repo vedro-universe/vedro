@@ -30,7 +30,7 @@ class LogicTagMatcher(TagMatcher):
         """
         Initialize the LogicTagMatcher with a logical expression string.
 
-        :param expr: The logical expression to parse, which may include tags and the 
+        :param expr: The logical expression to parse, which may include tags and the
                      logical operators 'and', 'or', and 'not'. For example:
                      "(API and not CLI) or UI".
         """
@@ -58,7 +58,7 @@ class LogicTagMatcher(TagMatcher):
         """
         Validate that a given tag name meets the required criteria:
         - Must be a string
-        - Must match the pattern: start with a letter or underscore, followed by letters, digits, 
+        - Must match the pattern: start with a letter or underscore, followed by letters, digits,
           or underscores.
         - Must not be a reserved keyword ('and', 'or', 'not').
 
@@ -97,7 +97,7 @@ class LogicTagMatcher(TagMatcher):
         """
         Create a Not operator expression from parsed tokens.
 
-        The 'not' operator is unary, so this method is called when the parser recognizes a 
+        The 'not' operator is unary, so this method is called when the parser recognizes a
         pattern like "not <operand>". It returns a Not instance that negates the operand's result.
 
         :param orig: The original input string (unused).
@@ -112,9 +112,9 @@ class LogicTagMatcher(TagMatcher):
         """
         Create an And operator expression from parsed tokens.
 
-        For chained 'and' operations, the parser may return multiple operands. For example, 
+        For chained 'and' operations, the parser may return multiple operands. For example,
         parsing "A and B and C" may produce tokens like [[A, 'and', B, 'and', C]].
-        This method extracts all operands and folds them from left to right into nested And 
+        This method extracts all operands and folds them from left to right into nested And
         expressions:
         "A and B and C" -> And(And(A, B), C)
 
