@@ -115,6 +115,30 @@ async def test_tag_and_operator(*, dispatcher: Dispatcher):
 
 
 @pytest.mark.usefixtures(tagger.__name__)
+async def test_tag_and_operators(*, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, tags="SMOKE and P0 and API")
+
+        scenarios = [
+            make_vscenario(tags=["SMOKE"]),
+            make_vscenario(tags=["SMOKE", "P0"]),
+            make_vscenario(tags=["P0", "API"]),
+            make_vscenario(tags=["SMOKE", "API"]),
+            make_vscenario(tags=["SMOKE", "P0", "API"]),
+            make_vscenario(tags=["API"]),
+            make_vscenario(),
+        ]
+        scheduler = Scheduler(scenarios)
+        startup_event = StartupEvent(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert list(scheduler.scheduled) == [scenarios[4]]
+
+
+@pytest.mark.usefixtures(tagger.__name__)
 async def test_tag_or_operator(*, dispatcher: Dispatcher):
     with given:
         await fire_arg_parsed_event(dispatcher, tags="SMOKE or P0")
@@ -132,6 +156,29 @@ async def test_tag_or_operator(*, dispatcher: Dispatcher):
 
     with then:
         assert list(scheduler.scheduled) == [scenarios[0], scenarios[2]]
+
+
+@pytest.mark.usefixtures(tagger.__name__)
+async def test_tag_or_operators(*, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, tags="SMOKE or P0 or API")
+
+        scenarios = [
+            make_vscenario(),
+            make_vscenario(tags=["SMOKE"]),
+            make_vscenario(tags=["P0"]),
+            make_vscenario(tags=["SMOKE", "P0"]),
+            make_vscenario(tags=["API"]),
+            make_vscenario(tags=["SMOKE", "P0", "API"]),
+        ]
+        scheduler = Scheduler(scenarios)
+        startup_event = StartupEvent(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert list(scheduler.scheduled) == scenarios[1:]
 
 
 @pytest.mark.usefixtures(tagger.__name__)

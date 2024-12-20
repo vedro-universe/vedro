@@ -108,9 +108,11 @@ class LogicTagMatcher(TagMatcher):
                        the last token is the right operand.
         :return: An And instance representing the logical AND of the two operands.
         """
-        left = tokens[0][0]
-        right = tokens[0][-1]
-        return And(left, right)
+        exprs = tokens[0][::2]
+        result = exprs[0]
+        for e in exprs[1:]:
+            result = And(result, e)
+        return cast(Expr, result)
 
     def _create_or(self, orig: str, location: int, tokens: ParseResults) -> Expr:
         """
@@ -122,9 +124,11 @@ class LogicTagMatcher(TagMatcher):
                        the last token is the right operand.
         :return: An Or instance representing the logical OR of the two operands.
         """
-        left = tokens[0][0]
-        right = tokens[0][-1]
-        return Or(left, right)
+        exprs = tokens[0][::2]
+        result = exprs[0]
+        for e in exprs[1:]:
+            result = Or(result, e)
+        return cast(Expr, result)
 
     def _parse(self, grammar: Parser, expr: str) -> Expr:
         """
