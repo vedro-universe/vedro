@@ -112,7 +112,7 @@ class RepeaterPlugin(Plugin):
                               event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
         if not self._is_repeating_enabled():
             return
-        assert isinstance(self._scheduler, RepeaterScenarioScheduler)  # for type checking
+        assert isinstance(self._scheduler, ScenarioScheduler)  # for type checking
 
         scenario = event.scenario_result.scenario
         if scenario.unique_id != self._repeat_scenario_id:

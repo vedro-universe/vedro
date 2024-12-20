@@ -89,7 +89,7 @@ class RerunnerPlugin(Plugin):
                               event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
         if not self._is_rerunning_enabled():
             return
-        assert isinstance(self._scheduler, RerunnerScenarioScheduler)  # for type checking
+        assert isinstance(self._scheduler, ScenarioScheduler)  # for type checking
 
         scenario = event.scenario_result.scenario
         if scenario.unique_id != self._rerun_scenario_id:
