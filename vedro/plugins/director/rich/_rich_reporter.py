@@ -224,7 +224,7 @@ class RichReporterPlugin(Reporter):
         # WORKAROUND: This logic is in place as a temporary solution until
         # https://github.com/vedro-universe/vedro/issues/113 is resolved.
         if sys.version_info >= (3, 11):
-            return isinstance(exc_info.value, ExceptionGroup)
+            return isinstance(exc_info.value, ExceptionGroup)  # noqa: F821
         return False
 
     def _prefix_to_indent(self, prefix: str, indent: int = 0) -> str:
