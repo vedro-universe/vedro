@@ -61,6 +61,6 @@ bump:
 	@git verify-commit HEAD
 	@git verify-tag `git describe`
 	@echo
-	# git push origin master --tags
+	# git push origin main --tags
 %:
 	@:

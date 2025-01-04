@@ -1,6 +1,6 @@
 # Vedro
 
-[![Codecov](https://img.shields.io/codecov/c/github/vedro-universe/vedro/master.svg?style=flat-square)](https://codecov.io/gh/vedro-universe/vedro)
+[![Codecov](https://img.shields.io/codecov/c/github/vedro-universe/vedro/main.svg?style=flat-square)](https://codecov.io/gh/vedro-universe/vedro)
 [![PyPI](https://img.shields.io/pypi/v/vedro.svg?style=flat-square)](https://pypi.python.org/pypi/vedro/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/vedro?style=flat-square)](https://pypi.python.org/pypi/vedro/)
 [![Python Version](https://img.shields.io/pypi/pyversions/vedro.svg?style=flat-square)](https://pypi.python.org/pypi/vedro/)
