@@ -23,16 +23,42 @@ __all__ = ("RunCommand",)
 
 
 class RunCommand(Command):
+    """
+    Represents the "run" command for executing scenarios.
+
+    This command handles the entire lifecycle of scenario execution, including:
+    - Validating configuration parameters.
+    - Registering plugins with the dispatcher.
+    - Parsing command-line arguments.
+    - Discovering scenarios.
+    - Scheduling and executing scenarios.
+    - Dispatching events before and after scenario execution.
+
+    :param config: The global configuration instance.
+    :param arg_parser: The argument parser for parsing command-line options.
+    """
+
     def __init__(self, config: Type[Config], arg_parser: CommandArgumentParser) -> None:
         """
-        Initialize a new instance of the RunCommand class.
+        Initialize the RunCommand instance.
 
-        :param config: Global configuration
-        :param arg_parser: Argument parser for command-line options
+        :param config: The global configuration instance.
+        :param arg_parser: The argument parser for parsing command-line options.
         """
         super().__init__(config, arg_parser)
 
     def _validate_config(self) -> None:
+        """
+        Validate the configuration parameters.
+
+        Ensures that the `default_scenarios_dir` is a valid directory within the
+        project directory. Raises appropriate exceptions if validation fails.
+
+        :raises TypeError: If `default_scenarios_dir` is not a `Path` or `str`.
+        :raises FileNotFoundError: If `default_scenarios_dir` does not exist.
+        :raises NotADirectoryError: If `default_scenarios_dir` is not a directory.
+        :raises ValueError: If `default_scenarios_dir` is not inside the project directory.
+        """
         default_scenarios_dir = self._config.default_scenarios_dir
         if not isinstance(default_scenarios_dir, (Path, str)):
             raise TypeError(
@@ -63,7 +89,11 @@ class RunCommand(Command):
         """
         Register plugins with the dispatcher.
 
-        :param dispatcher: Dispatcher to register plugins with
+        Iterates through the configuration's `Plugins` section, validates plugin configurations,
+        and registers enabled plugins with the dispatcher.
+
+        :param dispatcher: The dispatcher to register plugins with.
+        :raises TypeError: If a plugin is not a subclass of `vedro.core.Plugin`.
         """
         for _, section in self._config.Plugins.items():
             if not issubclass(section.plugin, Plugin) or (section.plugin is Plugin):
@@ -80,9 +110,12 @@ class RunCommand(Command):
 
     def _validate_plugin_config(self, plugin_config: Type[PluginConfig]) -> None:
         """
-        Validate plugin's configuration.
+        Validate the configuration of a plugin.
 
-        :param plugin_config: Configuration of the plugin.
+        Ensures that the plugin's configuration does not contain unknown attributes.
+
+        :param plugin_config: The configuration of the plugin.
+        :raises AttributeError: If the plugin configuration contains unknown attributes.
         """
         unknown_attrs = self._get_attrs(plugin_config) - self._get_parent_attrs(plugin_config)
         if unknown_attrs:
@@ -93,19 +126,19 @@ class RunCommand(Command):
 
     def _get_attrs(self, cls: type) -> Set[str]:
         """
-        Get the set of attributes for a class.
+        Retrieve the set of attributes for a class.
 
-        :param cls: The class to get attributes for
-        :return: The set of attribute names for the class
+        :param cls: The class to retrieve attributes for.
+        :return: A set of attribute names for the class.
         """
         return set(vars(cls))
 
     def _get_parent_attrs(self, cls: type) -> Set[str]:
         """
-        Recursively get attributes from parent classes.
+        Recursively retrieve attributes from parent classes.
 
-        :param cls: The class to get parent attributes for
-        :return: The set of attribute names for the parent classes
+        :param cls: The class to retrieve parent attributes for.
+        :return: A set of attribute names for the parent classes.
         """
         attrs = set()
         # `object` (the base for all classes) has no __bases__
@@ -118,7 +151,11 @@ class RunCommand(Command):
         """
         Parse command-line arguments and fire corresponding dispatcher events.
 
-        :param dispatcher: The dispatcher to fire events
+        Adds the `--project-dir` argument, fires the `ArgParseEvent`, parses
+        the arguments, and then fires the `ArgParsedEvent`.
+
+        :param dispatcher: The dispatcher to fire events.
+        :return: The parsed arguments as a `Namespace` object.
         """
 
         # Avoid unrecognized arguments error
@@ -141,8 +178,12 @@ class RunCommand(Command):
 
     async def run(self) -> None:
         """
-        Execute the command, including plugin registration, event dispatching,
-        and scenario execution.
+        Execute the command lifecycle.
+
+        This method validates the configuration, registers plugins, parses arguments,
+        discovers scenarios, schedules them, and executes them.
+
+        :raises Exception: If scenario discovery raises a `SystemExit`.
         """
         self._validate_config()  # Must be before ConfigLoadedEvent
 
@@ -181,10 +222,23 @@ class RunCommand(Command):
         """
         Determine the starting directory for discovering scenarios.
 
-        :param args: Parsed command-line arguments
-        :return: The resolved starting directory
+        Resolves the starting directory based on the parsed arguments, ensuring
+        it is a valid directory inside the project directory.
+
+        :param args: Parsed command-line arguments.
+        :return: The resolved starting directory.
+        :raises ValueError: If the starting directory is outside the project directory.
         """
-        common_path = os.path.commonpath([self._normalize_path(x) for x in args.file_or_dir])
+        file_or_dir = getattr(args, "file_or_dir", [])
+        # Note: `args.file_or_dir` is an argument that is registered by the core Skipper plugin.
+        # This introduces a dependency on the Skipper plugin's implementation,
+        # violating best practices, as the higher-level RunCommand component directly relies
+        # on a lower-level plugin.
+        # TODO: Fix this in v2.0 by introducing a more generic mechanism for passing arguments
+        if not file_or_dir:
+            return Path(self._config.default_scenarios_dir).resolve()
+
+        common_path = os.path.commonpath([self._normalize_path(x) for x in file_or_dir])
         start_dir = Path(common_path).resolve()
         if not start_dir.is_dir():
             start_dir = start_dir.parent
@@ -200,6 +254,14 @@ class RunCommand(Command):
         return start_dir
 
     def _normalize_path(self, file_or_dir: str) -> str:
+        """
+        Normalize the provided path and handle backward compatibility.
+
+        Ensures the path is absolute and adjusts it based on legacy rules if necessary.
+
+        :param file_or_dir: The path to normalize.
+        :return: The normalized absolute path.
+        """
         path = os.path.normpath(file_or_dir)
         if os.path.isabs(path):
             return path

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
@@ -24,6 +25,20 @@ class CustomConfig(Config):
 
 
 async def test_run_command_without_scenarios(arg_parser: ArgumentParser):
+    with given:
+        command = RunCommand(CustomConfig, arg_parser)
+
+    with when, raises(BaseException) as exc:
+        await command.run()
+
+    with then:
+        assert exc.type is FileNotFoundError
+        assert "default_scenarios_dir" in str(exc.value)
+        assert "does not exist" in str(exc.value)
+
+
+@pytest.mark.usefixtures(tmp_dir.__name__)
+async def test_run_command_with_no_scenarios(arg_parser: ArgumentParser):
     with given:
         command = RunCommand(CustomConfig, arg_parser)
 
@@ -68,6 +83,7 @@ async def test_run_command_validate_plugin(tmp_dir: Path, arg_parser: ArgumentPa
         assert str(exc.value) == "0"
 
 
+@pytest.mark.usefixtures(tmp_dir.__name__)
 async def test_run_command_validate_plugin_error(arg_parser: ArgumentParser):
     with given:
         class InvalidConfig(CustomConfig):
