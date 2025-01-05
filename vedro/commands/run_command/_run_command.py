@@ -2,8 +2,11 @@ import inspect
 import os
 import warnings
 from argparse import Namespace
+from collections.abc import Sequence
+from inspect import isclass
+from os import linesep
 from pathlib import Path
-from typing import Set, Type
+from typing import Any, List, Set, Type
 
 from vedro import Config
 from vedro.core import Dispatcher, MonotonicScenarioRunner, Plugin, PluginConfig
@@ -89,43 +92,84 @@ class RunCommand(Command):
             )
 
     async def _register_plugins(self, dispatcher: Dispatcher) -> None:
-        """
-        Register plugins with the dispatcher.
+        for plugin_config in self._get_ordered_plugins():
+            plugin = plugin_config.plugin(config=plugin_config)
+            dispatcher.register(plugin)
 
-        Iterates through the configuration's `Plugins` section, validates plugin configurations,
-        and registers enabled plugins with the dispatcher.
+    def _get_ordered_plugins(self) -> List[Type[PluginConfig]]:
+        available_plugins = set(self._config.Plugins.values())
 
-        :param dispatcher: The dispatcher to register plugins with.
-        :raises TypeError: If a plugin is not a subclass of `vedro.core.Plugin`.
-        """
-        for _, section in self._config.Plugins.items():
-            if not issubclass(section.plugin, Plugin) or (section.plugin is Plugin):
+        plugins = []
+        for plugin_config in self._config.Plugins.values():
+            self._validate_plugin_config(plugin_config, available_plugins)
+            if plugin_config.enabled:
+                plugins.append(plugin_config)
+
+        return self._order_plugins(plugins)
+
+    def _order_plugins(self, plugins: List[Type[PluginConfig]]) -> List[Type[PluginConfig]]:
+        for plugin in plugins:
+            ...
+
+        return plugins
+
+    def _validate_plugin_config(self, plugin_config: Type[PluginConfig],
+                                available_plugins: Set[Type[PluginConfig]]) -> None:
+        if not self._is_subclass(plugin_config, PluginConfig):
+            raise TypeError(
+                f"PluginConfig '{plugin_config}' must be a subclass of 'vedro.core.PluginConfig'"
+            )
+
+        if not self._is_subclass(plugin_config.plugin, Plugin) or (plugin_config.plugin is Plugin):
+            raise TypeError(
+                f"Attribute 'plugin' in '{plugin_config.__name__}' must be a subclass of "
+                "'vedro.core.Plugin'"
+            )
+
+        if not isinstance(plugin_config.depends_on, Sequence):
+            raise TypeError(
+                f"Attribute 'depends_on' in '{plugin_config.__name__}' plugin must be a list "
+                f"or another sequence ({type(plugin_config.depends_on)} given). "
+                + linesep.join([
+                    "Example:",
+                    "  @computed",
+                    "  def depends_on(cls):",
+                    "    return [Config.Plugins.Tagger]"
+                ])
+            )
+
+        for dep in plugin_config.depends_on:
+            if not self._is_subclass(dep, PluginConfig):
                 raise TypeError(
-                    f"Plugin {section.plugin} should be subclass of vedro.core.Plugin"
+                    f"Dependency '{dep}' in 'depends_on' of '{plugin_config.__name__}' "
+                    "must be a subclass of 'vedro.core.PluginConfig'."
                 )
 
-            if self._config.validate_plugins_configs:
-                self._validate_plugin_config(section)
+            if dep not in available_plugins:
+                raise ValueError(
+                    f"Dependency '{dep.__name__}' in 'depends_on' of '{plugin_config.__name__}' "
+                    "is not found in the plugins list."
+                )
 
-            if section.enabled:
-                plugin = section.plugin(config=section)
-                dispatcher.register(plugin)
+            if plugin_config.enabled and not dep.enabled:
+                raise ValueError(
+                    f"Dependency '{dep.__name__}' in 'depends_on' of '{plugin_config.__name__}' "
+                    "is not enabled."
+                )
 
-    def _validate_plugin_config(self, plugin_config: Type[PluginConfig]) -> None:
-        """
-        Validate the configuration of a plugin.
+        if self._config.validate_plugins_configs:
+            self._validate_plugin_config_attrs(plugin_config)
 
-        Ensures that the plugin's configuration does not contain unknown attributes.
-
-        :param plugin_config: The configuration of the plugin.
-        :raises AttributeError: If the plugin configuration contains unknown attributes.
-        """
+    def _validate_plugin_config_attrs(self, plugin_config: Type[PluginConfig]) -> None:
         unknown_attrs = self._get_attrs(plugin_config) - self._get_parent_attrs(plugin_config)
         if unknown_attrs:
             attrs = ", ".join(unknown_attrs)
             raise AttributeError(
                 f"{plugin_config.__name__} configuration contains unknown attributes: {attrs}"
             )
+
+    def _is_subclass(self, cls: Any, parent: Any) -> bool:
+        return isclass(cls) and issubclass(cls, parent)
 
     def _get_attrs(self, cls: type) -> Set[str]:
         """

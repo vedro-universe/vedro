@@ -1,4 +1,6 @@
-from typing import Type
+from typing import Sequence, Type
+
+from cabina import computed
 
 from ._dispatcher import Dispatcher, Subscriber
 from .config_loader import Section as ConfigSection
@@ -27,3 +29,7 @@ class PluginConfig(ConfigSection):
     plugin: Type[Plugin] = Plugin
     description: str = ""
     enabled: bool = True
+
+    @computed
+    def depends_on(self) -> Sequence[Type["PluginConfig"]]:
+        return ()
