@@ -128,8 +128,8 @@ class RunCommand(Command):
 
         if not isinstance(plugin_config.depends_on, Sequence):
             raise TypeError(
-                f"Attribute 'depends_on' in '{plugin_config.__name__}' plugin must be a list "
-                f"or another sequence ({type(plugin_config.depends_on)} given). "
+                f"Attribute 'depends_on' in '{plugin_config.__name__}' plugin must be a list or"
+                f"another sequence type ({type(plugin_config.depends_on)} provided). "
                 + linesep.join([
                     "Example:",
                     "  @computed",
@@ -142,19 +142,19 @@ class RunCommand(Command):
             if not self._is_subclass(dep, PluginConfig):
                 raise TypeError(
                     f"Dependency '{dep}' in 'depends_on' of '{plugin_config.__name__}' "
-                    "must be a subclass of 'vedro.core.PluginConfig'."
+                    "must be a subclass of 'vedro.core.PluginConfig'"
                 )
 
             if dep not in available_plugins:
                 raise ValueError(
                     f"Dependency '{dep.__name__}' in 'depends_on' of '{plugin_config.__name__}' "
-                    "is not found in the plugins list."
+                    "is not found among the configured plugins"
                 )
 
             if plugin_config.enabled and not dep.enabled:
                 raise ValueError(
                     f"Dependency '{dep.__name__}' in 'depends_on' of '{plugin_config.__name__}' "
-                    "is not enabled."
+                    "is not enabled"
                 )
 
         if self._config.validate_plugins_configs:
