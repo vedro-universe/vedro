@@ -130,7 +130,7 @@ async def test_select_rel_dir(dirname: str, *, dispatcher: Dispatcher, tmp_dir: 
         ]
 
         rel_path = tmp_dir.relative_to(getcwd())
-        await fire_arg_parsed_event(dispatcher, file_or_dir=[
+        await fire_arg_parsed_event(dispatcher, project_dir=tmp_dir, file_or_dir=[
             str(rel_path / dirname)
         ])
 

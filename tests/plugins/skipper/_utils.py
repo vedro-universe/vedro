@@ -41,8 +41,14 @@ def tmp_dir(tmp_path: Path) -> Path:
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 file_or_dir: Optional[List[str]] = None,
                                 ignore: Optional[List[str]] = None,
-                                subject: Optional[str] = None) -> None:
-    await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
+                                subject: Optional[str] = None,
+                                project_dir: Optional[Path] = None) -> None:
+    project_dir_ = project_dir if project_dir else Config.project_dir
+
+    class CustomConfig(Config):
+        project_dir = project_dir_
+
+    await dispatcher.fire(ConfigLoadedEvent(Path(), CustomConfig))
 
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)

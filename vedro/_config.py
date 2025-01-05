@@ -49,6 +49,7 @@ __all__ = ("Config",)
 
 
 class Config(core.Config):
+
     # Validate each plugin's configuration, checking for unknown attributes to prevent errors
     validate_plugins_configs: bool = True
 

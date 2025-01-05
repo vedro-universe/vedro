@@ -11,6 +11,7 @@ class Section(cabina.Section):
 
 
 class Config(cabina.Config, Section):
+
     # Path to the configuration file. By default, it points to the file
     # where this class is defined (__file__). At runtime, it is typically
     # set to 'vedro.cfg.py' in the project's root directory.
