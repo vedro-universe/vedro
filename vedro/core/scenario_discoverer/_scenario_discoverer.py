@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from .._virtual_scenario import VirtualScenario
 from ..scenario_finder import ScenarioFinder
@@ -38,7 +38,8 @@ class ScenarioDiscoverer(ABC):
         self._orderer = orderer
 
     @abstractmethod
-    async def discover(self, root: Path) -> List[VirtualScenario]:
+    async def discover(self, root: Path, *,
+                       project_dir: Optional[Path] = None) -> List[VirtualScenario]:
         """
         Discover scenarios from a given root path.
 
@@ -46,6 +47,7 @@ class ScenarioDiscoverer(ABC):
         given root path. The method should return a list of discovered VirtualScenarios.
 
         :param root: The root path to start discovering scenarios.
+        :param project_dir: The project directory to resolve relative paths.
         :return: A list of discovered VirtualScenario instances.
         """
         pass

@@ -60,10 +60,16 @@ class ScenarioFileLoader(ScenarioLoader):
 
         # Iterate over the module's dictionary because it preserves the order of definitions,
         # which is not guaranteed when using dir(module)
-        for name in module.__dict__:
+        for name, val in module.__dict__.items():
+            # Skip private and special attributes
             if name.startswith("_"):
                 continue
-            val = getattr(module, name)
+
+            # Skip scenarios defined in other modules
+            if getattr(val, "__module__", None) != module.__name__:
+                continue
+
+            # Check if the value is a Vedro scenario
             if self._is_vedro_scenario(val):
                 val.__file__ = os.path.abspath(module.__file__)  # type: ignore
                 loaded.append(val)
@@ -98,6 +104,9 @@ class ScenarioFileLoader(ScenarioLoader):
         # Raise an error if a class name suggests it's a scenario, but
         # it doesn't inherit from Vedro.Scenario
         if cls_name.startswith("Scenario") or cls_name.endswith("Scenario"):
-            raise TypeError(f"'{val.__module__}.{cls_name}' must inherit from 'vedro.Scenario'")
+            if len(val.__bases__) == 1 and val.__bases__[0] is object:
+                raise TypeError(
+                    f"'{val.__module__}.{cls_name}' must inherit from 'vedro.Scenario'"
+                )
 
         return False

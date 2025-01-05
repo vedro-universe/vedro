@@ -8,8 +8,8 @@ import pytest
 from niltype import Nil, Nilable
 
 from vedro import Scenario
-from vedro.core import Dispatcher, VirtualScenario
-from vedro.events import ArgParsedEvent, ArgParseEvent
+from vedro.core import Config, Dispatcher, VirtualScenario
+from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.skipper import Skipper, SkipperPlugin
 from vedro.plugins.skipper import only as only_scenario
 from vedro.plugins.skipper import skip as skip_scenario
@@ -41,7 +41,15 @@ def tmp_dir(tmp_path: Path) -> Path:
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 file_or_dir: Optional[List[str]] = None,
                                 ignore: Optional[List[str]] = None,
-                                subject: Optional[str] = None) -> None:
+                                subject: Optional[str] = None,
+                                project_dir: Optional[Path] = None) -> None:
+    project_dir_ = project_dir if project_dir else Config.project_dir
+
+    class CustomConfig(Config):
+        project_dir = project_dir_
+
+    await dispatcher.fire(ConfigLoadedEvent(Path(), CustomConfig))
+
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
