@@ -60,6 +60,9 @@ class RunCommand(Command):
         :raises ValueError: If `default_scenarios_dir` is not inside the project directory.
         """
         default_scenarios_dir = self._config.default_scenarios_dir
+        if default_scenarios_dir == Config.default_scenarios_dir:
+            return
+
         if not isinstance(default_scenarios_dir, (Path, str)):
             raise TypeError(
                 "Expected `default_scenarios_dir` to be a Path, "
@@ -185,6 +188,7 @@ class RunCommand(Command):
 
         :raises Exception: If scenario discovery raises a `SystemExit`.
         """
+        # TODO: move config validation to somewhere else in v2
         self._validate_config()  # Must be before ConfigLoadedEvent
 
         dispatcher = self._config.Registry.Dispatcher()
