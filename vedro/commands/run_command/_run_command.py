@@ -108,10 +108,37 @@ class RunCommand(Command):
         return self._order_plugins(plugins)
 
     def _order_plugins(self, plugins: List[Type[PluginConfig]]) -> List[Type[PluginConfig]]:
-        for plugin in plugins:
-            ...
+        ordered = []
 
-        return plugins
+        visited = set()
+        in_stack = set()
+
+        def visit(plugin: Type[PluginConfig], path: List[str]) -> None:
+            if plugin in in_stack:
+                cycle = " -> ".join(path + [plugin.__name__])
+                raise ValueError(
+                    f"Circular dependency detected: {cycle}. "
+                    "Please review plugin dependencies to eliminate the circular reference"
+                )
+
+            in_stack.add(plugin)
+
+            path.append(plugin.__name__)
+            for dep in plugin.depends_on:
+                if dep not in visited:
+                    visit(dep, path=path)
+            path.pop()
+
+            in_stack.remove(plugin)
+            visited.add(plugin)
+
+            ordered.append(plugin)
+
+        for plugin in plugins:
+            if plugin not in visited:
+                visit(plugin, path=[])
+
+        return ordered
 
     def _validate_plugin_config(self, plugin_config: Type[PluginConfig],
                                 available_plugins: Set[Type[PluginConfig]]) -> None:
