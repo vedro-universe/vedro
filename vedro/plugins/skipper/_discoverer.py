@@ -14,14 +14,19 @@ class SelectiveScenarioDiscoverer(ScenarioDiscoverer):
         super().__init__(finder, loader, orderer)
         self._selected_paths = selected_paths
 
-    async def discover(self, root: Path) -> List[VirtualScenario]:
+    async def discover(self, root: Path, *,
+                       project_dir: Optional[Path] = None) -> List[VirtualScenario]:
+        if project_dir is None:
+            # TODO: Make project_dir required in v2.0
+            project_dir = root.parent
+
         scenarios = []
         async for path in self._finder.find(root):
             if not self._is_path_selected(path):
                 continue
             loaded = await self._loader.load(path)
             for scn in loaded:
-                scenarios.append(create_vscenario(scn))
+                scenarios.append(create_vscenario(scn, project_dir=project_dir))
         return await self._orderer.sort(scenarios)
 
     def _is_path_selected(self, path: Path) -> bool:

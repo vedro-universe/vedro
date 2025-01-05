@@ -23,6 +23,7 @@ class SkipperPlugin(Plugin):
         super().__init__(config)
         self._global_config: Union[ConfigType, None] = None
         self._project_dir: Union[Path, None] = None
+        self._default_scenarios_dir: Union[Path, None] = None
         self._subject: Union[str, None] = None
         self._selected: List[_CompositePath] = []
         self._deselected: List[_CompositePath] = []
@@ -37,11 +38,14 @@ class SkipperPlugin(Plugin):
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         self._global_config = event.config
         self._project_dir = self._global_config.project_dir
+        self._default_scenarios_dir = Path(self._global_config.default_scenarios_dir).resolve()
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("file_or_dir", nargs="*", default=["."],
+        event.arg_parser.add_argument("file_or_dir", nargs="*",
+                                      default=[self._default_scenarios_dir],
                                       help="Select scenarios in a given file or directory")
-        event.arg_parser.add_argument("-i", "--ignore", nargs="+", default=[],
+        event.arg_parser.add_argument("-i", "--ignore", nargs="+",
+                                      default=[],
                                       help="Skip scenarios in a given file or directory")
         event.arg_parser.add_argument("--subject", help="Select scenarios with a given subject")
 
@@ -106,9 +110,16 @@ class SkipperPlugin(Plugin):
         path = os.path.normpath(file_or_dir)
         if os.path.isabs(path):
             return path
-        # Joining "./scenarios" will be removed in v2
-        if os.path.commonpath(["scenarios", path]) != "scenarios":
-            path = os.path.join("scenarios", path)
+
+        # Backward compatibility (to be removed in v2):
+        # Only prepend "scenarios/" if:
+        # 1) The default_scenarios_dir is exactly <project_dir>/scenarios
+        # 2) The original path does not exist, but "scenarios/<path>" does
+        if self._default_scenarios_dir == self._project_dir / "scenarios":  # type: ignore
+            updated_path = os.path.join("scenarios/", path)
+            if not os.path.exists(path) and os.path.exists(updated_path):
+                return os.path.abspath(updated_path)
+
         return os.path.abspath(path)
 
     def _get_scenario_attr(self, scenario: VirtualScenario, name: str, default_value: Any) -> Any:
@@ -195,8 +206,8 @@ class SkipperPlugin(Plugin):
 
 class Skipper(PluginConfig):
     plugin = SkipperPlugin
-    description = "Allows selective scenario skipping and selection " \
-                  "based on file/directory or subject"
+    description = ("Allows selective scenario skipping and selection "
+                   "based on file/directory or subject")
 
     # Forbid execution of scenarios with '@vedro.only' decorator
     forbid_only: bool = False

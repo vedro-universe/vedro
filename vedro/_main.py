@@ -14,6 +14,22 @@ from .core import ConfigFileLoader
 
 
 async def main() -> None:
+    """
+    Execute the main logic of the Vedro command-line interface.
+
+    This function handles the parsing of command-line arguments, dynamically loads
+    configuration files, and invokes the appropriate command based on the user's input.
+
+    Steps include:
+    - Parsing the project directory argument.
+    - Validating the existence and type of the specified project directory.
+    - Dynamically loading the configuration file.
+    - Parsing the main command (run, version, plugin, etc.).
+    - Executing the corresponding command logic.
+
+    :raises FileNotFoundError: If the specified project directory does not exist.
+    :raises NotADirectoryError: If the specified project directory path is not a directory.
+    """
     shadow_parser = ArgumentParser(add_help=False, allow_abbrev=False)
     shadow_parser.add_argument("--project-dir", type=Path, default=Path.cwd())
     shadow_args, _ = shadow_parser.parse_known_args()
