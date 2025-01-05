@@ -54,7 +54,8 @@ async def test_run_command_with_nonexistent_scenario_dir(arg_parser: ArgumentPar
         assert "does not exist" in str(exc.value)
 
 
-async def test_run_command_with_non_directory_scenario_dir(tmp_dir: Path, arg_parser: ArgumentParser):
+async def test_run_command_with_non_directory_scenario_dir(tmp_dir: Path,
+                                                           arg_parser: ArgumentParser):
     with given:
         existing_file = tmp_dir / "scenario.py"
         existing_file.touch()

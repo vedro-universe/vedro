@@ -28,6 +28,7 @@ class SkipperPlugin(Plugin):
         self._selected: List[_CompositePath] = []
         self._deselected: List[_CompositePath] = []
         self._forbid_only = config.forbid_only
+        self._exp_selective_discoverer = config.exp_selective_discoverer
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
@@ -57,6 +58,7 @@ class SkipperPlugin(Plugin):
             "thus reducing the initial load time and improving overall test execution efficiency."
         )
         event.arg_parser.add_argument("--exp-selective-discoverer", action="store_true",
+                                      default=self._exp_selective_discoverer,
                                       help=help_message)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
@@ -74,8 +76,10 @@ class SkipperPlugin(Plugin):
             assert os.path.isdir(path) or os.path.isfile(path), f"{path!r} does not exist"
             self._deselected.append(composite_path)
 
-        exp_selective_discoverer = event.args.exp_selective_discoverer
-        if exp_selective_discoverer and len(self._deselected) == 0 and self._subject is None:
+        self._exp_selective_discoverer = event.args.exp_selective_discoverer
+        if not self._exp_selective_discoverer:
+            return
+        if len(self._deselected) == 0 and (self._subject is None):
             assert self._global_config is not None  # for type checking
             self._global_config.Registry.ScenarioDiscoverer.register(lambda: ScenarioDiscoverer(
                 finder=self._global_config.Registry.ScenarioFinder(),
@@ -85,13 +89,10 @@ class SkipperPlugin(Plugin):
             ), self)
 
     def __get_selected_paths(self) -> Set[Path]:
-        assert self._project_dir is not None  # for type checking
-        default_path = self._project_dir / "scenarios"
-
         selected_paths = set()
         for path in self._selected:
             file_path = Path(path.file_path)
-            if file_path != default_path:
+            if file_path != self._default_scenarios_dir:
                 selected_paths.add(file_path)
         return selected_paths
 
@@ -211,3 +212,7 @@ class Skipper(PluginConfig):
 
     # Forbid execution of scenarios with '@vedro.only' decorator
     forbid_only: bool = False
+
+    # Enable the experimental selective discoverer feature
+    # to optimize startup speed by loading scenarios only from specified files
+    exp_selective_discoverer: bool = False

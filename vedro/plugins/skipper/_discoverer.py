@@ -68,7 +68,7 @@ class SelectiveScenarioDiscoverer(ScenarioDiscoverer):
         :param path: The path to check.
         :return: True if the path is selected, False otherwise.
         """
-        if self._selected_paths is None or len(self._selected_paths) == 0:
+        if (self._selected_paths is None) or len(self._selected_paths) == 0:
             return True
         abs_path = path.absolute()
         return any(self._is_relative_to(abs_path, selected) for selected in self._selected_paths)
