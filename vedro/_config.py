@@ -50,11 +50,31 @@ __all__ = ("Config", "computed",)
 
 
 class Config(core.Config):
+    """
+    Defines the main configuration for the Vedro testing framework.
 
-    # Validate each plugin's configuration, checking for unknown attributes to prevent errors
+    This class contains settings for the framework's behavior, such as enabling
+    plugins, defining factories for core components, and specifying filters
+    for scenario discovery.
+    """
+
     validate_plugins_configs: bool = True
+    """
+    Whether to validate plugin configurations.
+
+    If set to `True`, the framework will validate plugin configurations to
+    ensure that no unknown attributes are defined, reducing the likelihood
+    of errors.
+    """
 
     class Registry(core.Config.Registry):
+        """
+        Defines factories and singleton instances for core components.
+
+        The `Registry` class is responsible for configuring key components,
+        such as the scenario finder, loader, scheduler, and runner.
+        """
+
         Dispatcher = Singleton[Dispatcher](Dispatcher)
 
         ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
@@ -87,6 +107,13 @@ class Config(core.Config):
         ))
 
     class Plugins(core.Config.Plugins):
+        """
+        Configuration for enabling and disabling plugins.
+
+        This class contains nested classes for each plugin, where the `enabled`
+        attribute determines whether the plugin is active.
+        """
+
         class Director(director.Director):
             enabled = True
 

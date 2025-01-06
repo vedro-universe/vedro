@@ -9,10 +9,9 @@ class Artifact(ABC):
     """
     The base class for representing artifacts in a system.
 
-    An artifact in this context is a piece of data generated during the execution
-    of a scenario or a step. It can be anything from log files, screenshots, to data dumps.
-    This class serves as an abstract base class for different types of artifacts,
-    such as MemoryArtifact and FileArtifact.
+    An artifact is a piece of data generated during the execution of a scenario or a step.
+    It can be anything such as log files, screenshots, or data dumps. This class serves as
+    an abstract base class for other artifact types, such as `MemoryArtifact` and`FileArtifact`.
     """
     pass
 
@@ -20,15 +19,19 @@ class Artifact(ABC):
 class MemoryArtifact(Artifact):
     """
     Represents an artifact that is stored in memory.
+
+    This class is used for artifacts whose data resides entirely in memory, such as
+    temporary data buffers, small data blobs, or in-memory-generated files.
     """
 
-    def __init__(self, name: str,  mime_type: str, data: bytes) -> None:
+    def __init__(self, name: str, mime_type: str, data: bytes) -> None:
         """
         Initialize a MemoryArtifact with a name, MIME type, and data.
 
         :param name: The name of the artifact.
-        :param mime_type: The MIME type of the data.
-        :param data: The actual data in bytes.
+        :param mime_type: The MIME type of the data (e.g., "text/plain", "application/json").
+        :param data: The actual data of the artifact as a byte sequence.
+        :raises TypeError: If `data` is not of type `bytes`.
         """
         if not isinstance(data, bytes):
             raise TypeError("'data' must be of type bytes")
@@ -41,7 +44,7 @@ class MemoryArtifact(Artifact):
         """
         Get the name of the artifact.
 
-        :return: The name of the artifact.
+        :return: The name of the artifact as a string.
         """
         return self._name
 
@@ -59,7 +62,7 @@ class MemoryArtifact(Artifact):
         """
         Get the data stored in the artifact.
 
-        :return: The data as bytes.
+        :return: The data as a byte sequence.
         """
         return self._data
 
@@ -67,7 +70,8 @@ class MemoryArtifact(Artifact):
         """
         Represent the MemoryArtifact as a string.
 
-        :return: A string representation of the MemoryArtifact.
+        :return: A string representation of the MemoryArtifact, including its name,
+                 MIME type, and size of the data.
         """
         size = len(self._data)
         return f"{self.__class__.__name__}<{self._name!r}, {self._mime_type!r}, size={size}>"
@@ -85,6 +89,9 @@ class MemoryArtifact(Artifact):
 class FileArtifact(Artifact):
     """
     Represents an artifact that is stored as a file on the filesystem.
+
+    This class is used for artifacts whose data is written to or read from disk,
+    such as large logs, reports, or exported data files.
     """
 
     def __init__(self, name: str, mime_type: str, path: Path) -> None:
@@ -92,8 +99,9 @@ class FileArtifact(Artifact):
         Initialize a FileArtifact with a name, MIME type, and file path.
 
         :param name: The name of the artifact.
-        :param mime_type: The MIME type of the file.
-        :param path: The path to the file.
+        :param mime_type: The MIME type of the file (e.g., "image/png", "text/plain").
+        :param path: The path to the file containing the artifact data.
+        :raises TypeError: If `path` is not an instance of `pathlib.Path`.
         """
         if not isinstance(path, Path):
             raise TypeError("'path' must be an instance of pathlib.Path")
@@ -106,7 +114,7 @@ class FileArtifact(Artifact):
         """
         Get the name of the artifact.
 
-        :return: The name of the artifact.
+        :return: The name of the artifact as a string.
         """
         return self._name
 
@@ -124,7 +132,7 @@ class FileArtifact(Artifact):
         """
         Get the file path of the artifact.
 
-        :return: The path of the file as a Path object.
+        :return: The path of the file as a `Path` object.
         """
         return self._path
 
@@ -132,7 +140,8 @@ class FileArtifact(Artifact):
         """
         Represent the FileArtifact as a string.
 
-        :return: A string representation of the FileArtifact.
+        :return: A string representation of the FileArtifact, including its name,
+                 MIME type, and file path.
         """
         return f"{self.__class__.__name__}<{self._name!r}, {self._mime_type!r}, {self._path!r}>"
 

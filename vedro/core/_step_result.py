@@ -10,20 +10,25 @@ __all__ = ("StepResult", "StepStatus",)
 
 class StepStatus(Enum):
     """
-    Enumeration of possible states for `StepResult` to indicate the current status
-    of a test step.
+    Enumeration of possible states for a `StepResult`.
 
-    For more information, refer to https://vedro.io/docs/core/step-status.
+    Used to indicate the current status of a test step during execution.
     """
 
-    # Indicates the step is awaiting execution.
     PENDING = "PENDING"
+    """
+    Indicates the step is awaiting execution.
+    """
 
-    # Signifies the step has completed successfully.
     PASSED = "PASSED"
+    """
+    Signifies the step has completed successfully.
+    """
 
-    # Marks the step as unsuccessful due to an assertion failure or an unexpected error.
     FAILED = "FAILED"
+    """
+    Marks the step as unsuccessful due to an assertion failure or an unexpected error.
+    """
 
 
 class StepResult:

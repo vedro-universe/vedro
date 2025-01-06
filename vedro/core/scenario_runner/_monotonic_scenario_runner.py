@@ -30,20 +30,51 @@ __all__ = ("MonotonicScenarioRunner",)
 
 
 class MonotonicScenarioRunner(ScenarioRunner):
+    """
+    Represents a scenario runner that executes scenarios in a monotonic order.
+
+    This runner is responsible for managing the execution of scenarios and their steps,
+    firing events during the process, and handling interruptions.
+    """
+
     def __init__(self, dispatcher: Dispatcher, *,
                  interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
+        """
+        Initialize the MonotonicScenarioRunner.
+
+        :param dispatcher: The dispatcher used to fire events during the execution process.
+        :param interrupt_exceptions: A tuple of exceptions that should interrupt the execution.
+        """
         self._dispatcher = dispatcher
         assert isinstance(interrupt_exceptions, tuple)
         self._interrupt_exceptions = interrupt_exceptions + (Interrupted,)
 
     def _is_interruption(self, exc_info: ExcInfo,
                          exceptions: Tuple[Type[BaseException], ...]) -> bool:
+        """
+        Check if the given exception matches one of the interruption exceptions.
+
+        :param exc_info: The exception information.
+        :param exceptions: A tuple of exception types to check against.
+        :return: True if the exception matches one of the interruption exceptions, False otherwise.
+        """
         for exception in exceptions:
             if isinstance(exc_info.value, exception):
                 return True
         return False
 
     async def run_step(self, step: VirtualStep, ref: Scenario) -> StepResult:
+        """
+        Execute a single step of a scenario.
+
+        This method handles both synchronous and asynchronous steps, fires events
+        during execution, and manages exceptions raised during the step.
+
+        :param step: The virtual step to be executed.
+        :param ref: The reference to the scenario instance.
+        :return: The result of the step execution.
+        :raises StepInterrupted: If the step execution is interrupted.
+        """
         step_result = StepResult(step)
 
         await self._dispatcher.fire(StepRunEvent(step_result))
@@ -71,6 +102,16 @@ class MonotonicScenarioRunner(ScenarioRunner):
         return step_result
 
     async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
+        """
+        Execute a single scenario and its associated steps.
+
+        This method fires events during execution, handles skipped scenarios,
+        and manages interruptions or failures within the scenario.
+
+        :param scenario: The virtual scenario to be executed.
+        :return: The result of the scenario execution.
+        :raises ScenarioInterrupted: If the scenario execution is interrupted.
+        """
         scenario_result = ScenarioResult(scenario)
 
         if scenario.is_skipped():
@@ -78,7 +119,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
             await self._dispatcher.fire(ScenarioSkippedEvent(scenario_result))
             return scenario_result
 
-        os.chdir(scenario._project_dir)  # TODO: do not use private attribute
+        os.chdir(scenario._project_dir)  # TODO: Avoid using private attributes directly
         await self._dispatcher.fire(ScenarioRunEvent(scenario_result))
         scenario_result.set_started_at(time())
 
@@ -113,11 +154,30 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
     async def _report_scenario_results(self, scenario_results: List[ScenarioResult],
                                        report: Report, scheduler: ScenarioScheduler) -> None:
+        """
+        Report the results of a scenario's executions.
+
+        This method aggregates the results of the scenario's executions and adds
+        them to the report. It also fires a `ScenarioReportedEvent`.
+
+        :param scenario_results: A list of scenario results to report.
+        :param report: The report object to which results are added.
+        :param scheduler: The scheduler used to aggregate the scenario results.
+        """
         aggregated_result = scheduler.aggregate_results(scenario_results)
         report.add_result(aggregated_result)
         await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
 
     async def _run_scenarios(self, scheduler: ScenarioScheduler, report: Report) -> None:
+        """
+        Execute all scenarios provided by the scheduler.
+
+        This method manages scenario execution, aggregates results, and handles interruptions.
+
+        :param scheduler: The scheduler providing scenarios to execute.
+        :param report: The report object to which results are added.
+        :raises RunInterrupted: If the execution is interrupted by an exception.
+        """
         scenario_results: List[ScenarioResult] = []
 
         async for scenario in scheduler:
@@ -144,6 +204,15 @@ class MonotonicScenarioRunner(ScenarioRunner):
             await self._report_scenario_results(scenario_results, report, scheduler)
 
     async def run(self, scheduler: ScenarioScheduler) -> Report:
+        """
+        Execute all scenarios and return the final report.
+
+        This method manages the execution of all scenarios provided by the scheduler
+        and handles any interruptions during the process.
+
+        :param scheduler: The scheduler providing scenarios to execute.
+        :return: The final report containing all results and any interruption information.
+        """
         report = Report()
         try:
             await self._run_scenarios(scheduler, report)
