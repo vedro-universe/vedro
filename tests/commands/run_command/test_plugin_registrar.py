@@ -4,7 +4,7 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro._config import computed
+from vedro import computed
 from vedro.commands.run_command._plugin_registrar import PluginRegistrar
 from vedro.core import Dispatcher, Plugin, PluginConfig
 
