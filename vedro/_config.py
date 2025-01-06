@@ -1,4 +1,5 @@
 from asyncio import CancelledError
+from typing import Sequence, Type
 
 import vedro.core as core
 import vedro.plugins.artifacted as artifacted
@@ -27,6 +28,7 @@ from vedro.core import (
     MonotonicScenarioRunner,
     MonotonicScenarioScheduler,
     MultiScenarioDiscoverer,
+    PluginConfig,
     ScenarioDiscoverer,
     ScenarioFileFinder,
     ScenarioFileLoader,
@@ -120,11 +122,23 @@ class Config(core.Config):
         class RichReporter(director.RichReporter):
             enabled = True
 
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Director]
+
         class SilentReporter(director.SilentReporter):
             enabled = True
 
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Director]
+
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
+
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Director]
 
         class TempKeeper(temp_keeper.TempKeeper):
             enabled = True
@@ -149,6 +163,10 @@ class Config(core.Config):
 
         class Slicer(slicer.Slicer):
             enabled = True
+
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Skipper]
 
         class Tagger(tagger.Tagger):
             enabled = True
