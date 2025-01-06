@@ -37,9 +37,24 @@ PluginRegistrarFactory = Union[
 
 
 class RunCommand(Command):
+    """
+    Implements the 'run' command for Vedro.
+
+    This command handles the lifecycle of running scenarios, including configuration
+    validation, plugin registration, scenario discovery, execution, and reporting.
+    """
+
     def __init__(self, config: Type[Config], arg_parser: CommandArgumentParser, *,
                  config_validator_factory: ConfigValidatorFactory = ConfigValidator,
                  plugin_registrar_factory: PluginRegistrarFactory = PluginRegistrar) -> None:
+        """
+        Initialize the RunCommand.
+
+        :param config: The configuration class for Vedro.
+        :param arg_parser: The argument parser for parsing command-line arguments.
+        :param config_validator_factory: Factory for creating a `ConfigValidator` instance.
+        :param plugin_registrar_factory: Factory for creating a `PluginRegistrar` instance.
+        """
         super().__init__(config, arg_parser)
         self._config_validator = config_validator_factory(config)
         self._plugin_registrar = plugin_registrar_factory(
@@ -49,6 +64,15 @@ class RunCommand(Command):
         )
 
     async def run(self) -> None:
+        """
+        Execute the 'run' command.
+
+        This method validates the configuration, registers plugins, discovers scenarios,
+        executes scenarios, and generates the report. It also fires various events during
+        the lifecycle.
+
+        :raises Exception: If a `SystemExit` exception is encountered during discovery.
+        """
         # TODO: move config validation to somewhere else in v2
         # (e.g. to the ConfigLoader)
         self._config_validator.validate()  # Must be before ConfigLoadedEvent

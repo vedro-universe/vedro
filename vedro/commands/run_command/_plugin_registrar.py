@@ -14,18 +14,48 @@ PluginConfigValidatorFactory = Union[
 
 
 class PluginRegistrar:
+    """
+    Manages the registration of plugins and ensures their dependencies are satisfied.
+
+    This class validates plugins, resolves their dependencies, orders them
+    topologically, and registers them with the provided dispatcher.
+    """
+
     def __init__(self, *,
                  plugin_config_validator_factory: PluginConfigValidatorFactory =
                  PluginConfigValidator) -> None:
+        """
+        Initialize the PluginRegistrar.
+
+        :param plugin_config_validator_factory: Factory for creating a `PluginConfigValidator`
+                                                instance, used to validate plugin configurations.
+        """
         self._plugin_config_validator = plugin_config_validator_factory()
 
     def register(self, plugins: Iterable[Type[PluginConfig]], dispatcher: Dispatcher) -> None:
+        """
+        Register plugins with the dispatcher.
+
+        This method validates, orders, and registers enabled plugins with the dispatcher.
+
+        :param plugins: An iterable of plugin configuration classes.
+        :param dispatcher: The dispatcher to which the plugins will be registered.
+        """
         for plugin_config in self._get_ordered_plugins(plugins):
             plugin = plugin_config.plugin(config=plugin_config)
             dispatcher.register(plugin)
 
     def _get_ordered_plugins(self,
                              plugins: Iterable[Type[PluginConfig]]) -> List[Type[PluginConfig]]:
+        """
+        Retrieve an ordered list of enabled plugins based on their dependencies.
+
+        This method first validates plugins, filters enabled plugins,
+        and then orders them using topological sorting.
+
+        :param plugins: An iterable of plugin configuration classes.
+        :return: A list of plugin configuration classes in topological order.
+        """
         available_plugins = set(plugins)
 
         enabled_plugins = []
@@ -38,10 +68,13 @@ class PluginRegistrar:
 
     def _order_plugins(self, plugins: List[Type[PluginConfig]]) -> List[Type[PluginConfig]]:
         """
-        Orders the given plugins based on their dependencies using a topological sort.
+        Order the given plugins based on their dependencies using a topological sort.
 
-        :param plugins: A list of plugin config classes.
-        :return: A list of plugin config classes in topological order.
+        This method ensures that plugins are loaded in an order that respects their
+        dependencies, raising an error if a cyclic dependency is detected.
+
+        :param plugins: A list of plugin configuration classes.
+        :return: A list of plugin configuration classes in topological order.
         :raises RuntimeError: If a cycle is detected in the plugin dependencies.
         """
         # adjacency will map each plugin to the list of plugins that depend on it

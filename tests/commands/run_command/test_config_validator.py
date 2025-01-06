@@ -39,7 +39,7 @@ def test_validate_with_invalid_scenario_dir():
     with then:
         assert exc.type is TypeError
         assert str(exc.value) == (
-            "Expected `default_scenarios_dir` to be a Path, got <class 'NoneType'> (None)"
+            "Expected `default_scenarios_dir` to be a Path or str, got <class 'NoneType'> (None)"
         )
 
 
@@ -95,6 +95,6 @@ def test_validate_with_scenario_dir_outside_project_dir():
 
         scenario_dir = Path(CustomScenarioDir.default_scenarios_dir).resolve()
         assert str(exc.value) == (
-            f"`default_scenarios_dir` ('{scenario_dir}') must be inside project directory "
+            f"`default_scenarios_dir` ('{scenario_dir}') must be inside the project directory "
             f"('{Config.project_dir}')"
         )

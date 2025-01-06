@@ -79,7 +79,7 @@ def test_validate_depends_on_not_sequence():
     with then:
         assert exc.type is TypeError
         assert str(exc.value) == (
-            "Attribute 'depends_on' in 'InvalidPluginConfig' plugin must be a list or"
+            "Attribute 'depends_on' in 'InvalidPluginConfig' plugin must be a list or "
             "another sequence type (<class 'object'> provided). " +
             linesep.join([
                 "Example:",
