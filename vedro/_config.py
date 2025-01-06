@@ -37,6 +37,7 @@ from vedro.core import (
     ScenarioScheduler,
     Singleton,
 )
+from vedro.core.config_loader import computed
 from vedro.core.scenario_finder.scenario_file_finder import (
     AnyFilter,
     DunderFilter,
@@ -45,7 +46,7 @@ from vedro.core.scenario_finder.scenario_file_finder import (
 )
 from vedro.core.scenario_orderer import StableScenarioOrderer
 
-__all__ = ("Config",)
+__all__ = ("Config", "computed",)
 
 
 class Config(core.Config):

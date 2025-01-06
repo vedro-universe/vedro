@@ -3,7 +3,7 @@ from typing import Type, Union
 
 import cabina
 
-__all__ = ("Config", "Section", "ConfigType",)
+__all__ = ("Config", "Section", "ConfigType", "computed",)
 
 
 class Section(cabina.Section):
@@ -34,3 +34,5 @@ class Config(cabina.Config, Section):
 
 
 ConfigType = Type[Config]
+
+computed = cabina.computed

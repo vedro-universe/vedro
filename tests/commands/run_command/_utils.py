@@ -6,7 +6,7 @@ import pytest
 
 from vedro.commands import CommandArgumentParser
 
-__all__ = ("tmp_dir", "create_scenario", "arg_parser",)
+__all__ = ("tmp_dir", "create_scenario", "arg_parser", "ArgumentParser",)
 
 
 @pytest.fixture()

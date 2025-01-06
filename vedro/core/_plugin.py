@@ -1,9 +1,8 @@
 from typing import Sequence, Type
 
-from cabina import computed
-
 from ._dispatcher import Dispatcher, Subscriber
 from .config_loader import Section as ConfigSection
+from .config_loader import computed
 
 __all__ = ("Plugin", "PluginConfig",)
 
@@ -31,5 +30,5 @@ class PluginConfig(ConfigSection):
     enabled: bool = True
 
     @computed
-    def depends_on(self) -> Sequence[Type["PluginConfig"]]:
+    def depends_on(cls) -> Sequence[Type["PluginConfig"]]:
         return ()
