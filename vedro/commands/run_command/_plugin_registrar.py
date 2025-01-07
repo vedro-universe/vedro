@@ -50,6 +50,15 @@ class PluginRegistrar:
 
     def _get_ordered_plugins(self,
                              plugins: Iterable[Type[PluginConfig]]) -> List[Type[PluginConfig]]:
+        """
+        Get a topologically ordered list of enabled plugins.
+
+        This method validates each plugin, filters out disabled plugins, resolves their
+        dependencies, and returns them in a dependency-respecting order.
+
+        :param plugins: An iterable of plugin configuration classes.
+        :return: A list of enabled plugin configuration classes in topological order.
+        """
         enabled_plugins = []
         for plugin_config in plugins:
             self._plugin_config_validator.validate(plugin_config)
@@ -59,6 +68,16 @@ class PluginRegistrar:
         return self._order_plugins(enabled_plugins, self._resolve_dependencies(plugins))
 
     def _resolve_dependencies(self, plugins: Iterable[Type[PluginConfig]]) -> ResolvedDeps:
+        """
+        Resolve dependencies between plugins.
+
+        This method maps each plugin to its dependencies, ensuring that they are satisfied
+        and enabled.
+
+        :param plugins: An iterable of plugin configuration classes.
+        :return: A dictionary mapping plugin configuration classes to their resolved dependencies.
+        :raises ValueError: If a plugin depends on an unknown or disabled plugin.
+        """
         resolved_deps = {plugin: plugin for plugin in plugins}
 
         for plugin in plugins:
@@ -66,12 +85,12 @@ class PluginRegistrar:
                 resolved = self._resolve_dependency(dep, resolved_deps)
 
                 if resolved is None:
-                    raise RuntimeError(
+                    raise ValueError(
                         f"Plugin '{plugin.__name__}' depends on unknown plugin '{dep.__name__}'"
                     )
 
                 if not resolved.enabled:
-                    raise RuntimeError(
+                    raise ValueError(
                         f"Plugin '{plugin.__name__}' depends on disabled plugin '{dep.__name__}'"
                     )
 
@@ -81,6 +100,15 @@ class PluginRegistrar:
 
     def _resolve_dependency(self, dep: Type[PluginConfig],
                             resolved_deps: ResolvedDeps) -> Union[Type[PluginConfig], None]:
+        """
+        Resolve a single dependency.
+
+        This method attempts to find a match for the dependency in the resolved dependencies.
+
+        :param dep: The plugin configuration class to resolve.
+        :param resolved_deps: A dictionary of already resolved dependencies.
+        :return: The resolved plugin configuration class if found, or `None` if not found.
+        """
         if dep in resolved_deps:
             return dep
 
@@ -97,8 +125,12 @@ class PluginRegistrar:
 
         This method ensures that plugins are loaded in an order that respects their
         dependencies, raising an error if a cyclic dependency is detected.
-        """
 
+        :param plugins: A list of enabled plugin configuration classes.
+        :param resolved_deps: A dictionary mapping plugins to their resolved dependencies.
+        :return: A list of plugin configuration classes in topological order.
+        :raises RuntimeError: If a cyclic dependency is detected between plugins.
+        """
         # adjacency will map each plugin to the list of plugins that depend on it
         adjacency: Dict[Type[PluginConfig], List[Type[PluginConfig]]] = defaultdict(list)
         # in_degree keeps track of how many direct dependencies each plugin has
