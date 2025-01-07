@@ -13,6 +13,8 @@ PluginConfigValidatorFactory = Union[
     Callable[[], PluginConfigValidator]
 ]
 
+ResolvedDeps = Dict[Type[PluginConfig], Type[PluginConfig]]
+
 
 class PluginRegistrar:
     """
@@ -48,36 +50,55 @@ class PluginRegistrar:
 
     def _get_ordered_plugins(self,
                              plugins: Iterable[Type[PluginConfig]]) -> List[Type[PluginConfig]]:
-        """
-        Retrieve an ordered list of enabled plugins based on their dependencies.
-
-        This method first validates plugins, filters enabled plugins,
-        and then orders them using topological sorting.
-
-        :param plugins: An iterable of plugin configuration classes.
-        :return: A list of plugin configuration classes in topological order.
-        """
-        available_plugins = set(plugins)
-
         enabled_plugins = []
         for plugin_config in plugins:
-            self._plugin_config_validator.validate(plugin_config, available_plugins)
+            self._plugin_config_validator.validate(plugin_config)
             if plugin_config.enabled:
                 enabled_plugins.append(plugin_config)
 
-        return self._order_plugins(enabled_plugins)
+        return self._order_plugins(enabled_plugins, self._resolve_dependencies(plugins))
 
-    def _order_plugins(self, plugins: List[Type[PluginConfig]]) -> List[Type[PluginConfig]]:
+    def _resolve_dependencies(self, plugins: Iterable[Type[PluginConfig]]) -> ResolvedDeps:
+        resolved_deps = {plugin: plugin for plugin in plugins}
+
+        for plugin in plugins:
+            for dep in plugin.depends_on:
+                resolved = self._resolve_dependency(dep, resolved_deps)
+
+                if resolved is None:
+                    raise RuntimeError(
+                        f"Plugin '{plugin.__name__}' depends on unknown plugin '{dep.__name__}'"
+                    )
+
+                if not resolved.enabled:
+                    raise RuntimeError(
+                        f"Plugin '{plugin.__name__}' depends on disabled plugin '{dep.__name__}'"
+                    )
+
+                resolved_deps[dep] = resolved
+
+        return resolved_deps
+
+    def _resolve_dependency(self, dep: Type[PluginConfig],
+                            resolved_deps: ResolvedDeps) -> Union[Type[PluginConfig], None]:
+        if dep in resolved_deps:
+            return dep
+
+        for candidate in resolved_deps:
+            if (candidate.__name__ == dep.__name__) and issubclass(candidate.plugin, dep.plugin):
+                return candidate
+
+        return None
+
+    def _order_plugins(self, plugins: List[Type[PluginConfig]],
+                       resolved_deps: ResolvedDeps) -> List[Type[PluginConfig]]:
         """
         Order the given plugins based on their dependencies using a topological sort.
 
         This method ensures that plugins are loaded in an order that respects their
         dependencies, raising an error if a cyclic dependency is detected.
-
-        :param plugins: A list of plugin configuration classes.
-        :return: A list of plugin configuration classes in topological order.
-        :raises RuntimeError: If a cycle is detected in the plugin dependencies.
         """
+
         # adjacency will map each plugin to the list of plugins that depend on it
         adjacency: Dict[Type[PluginConfig], List[Type[PluginConfig]]] = defaultdict(list)
         # in_degree keeps track of how many direct dependencies each plugin has
@@ -91,7 +112,8 @@ class PluginRegistrar:
         for plugin in plugins:
             in_degree[plugin] = in_degree.get(plugin, 0)
             for dep in plugin.depends_on:
-                adjacency[dep].append(plugin)
+                resolved = resolved_deps[dep]
+                adjacency[resolved].append(plugin)
                 in_degree[plugin] += 1
 
         # Initialize a queue with all plugins that have an in_degree of 0,

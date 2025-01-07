@@ -28,7 +28,7 @@ def test_validate():
         validator = PluginConfigValidator()
 
     with when:
-        res = validator.validate(CustomPluginConfigWithDependency, {CustomPluginConfig})
+        res = validator.validate(CustomPluginConfigWithDependency)
 
     with then:
         assert res is None
@@ -39,7 +39,7 @@ def test_validate_not_subclass():
         validator = PluginConfigValidator()
 
     with when, raises(BaseException) as exc:
-        validator.validate(object, set())
+        validator.validate(object)
 
     with then:
         assert exc.type is TypeError
@@ -56,7 +56,7 @@ def test_validate_not_subclass_plugin():
         validator = PluginConfigValidator()
 
     with when, raises(BaseException) as exc:
-        validator.validate(InvalidPluginConfig, set())
+        validator.validate(InvalidPluginConfig)
 
     with then:
         assert exc.type is TypeError
@@ -74,7 +74,7 @@ def test_validate_depends_on_not_sequence():
         validator = PluginConfigValidator()
 
     with when, raises(BaseException) as exc:
-        validator.validate(InvalidPluginConfig, set())
+        validator.validate(InvalidPluginConfig)
 
     with then:
         assert exc.type is TypeError
@@ -99,55 +99,13 @@ def test_validate_depends_on_not_subclass():
         validator = PluginConfigValidator()
 
     with when, raises(BaseException) as exc:
-        validator.validate(InvalidPluginConfig, set())
+        validator.validate(InvalidPluginConfig)
 
     with then:
         assert exc.type is TypeError
         assert str(exc.value) == (
             "Dependency '<class 'object'>' in 'depends_on' of 'InvalidPluginConfig' "
             "must be a subclass of 'vedro.core.PluginConfig'"
-        )
-
-
-def test_validate_depends_on_not_found():
-    with given:
-        class InvalidPluginConfig(PluginConfig):
-            plugin = CustomPlugin
-            depends_on = [CustomPluginConfig]
-
-        validator = PluginConfigValidator()
-
-    with when, raises(BaseException) as exc:
-        validator.validate(InvalidPluginConfig, set())
-
-    with then:
-        assert exc.type is ValueError
-        assert str(exc.value) == (
-            "Dependency 'CustomPluginConfig' in 'depends_on' of 'InvalidPluginConfig' "
-            "is not found among the configured plugins"
-        )
-
-
-def test_validate_depends_on_not_enabled():
-    with given:
-        class DisabledPluginConfig(PluginConfig):
-            plugin = CustomPlugin
-            enabled = False
-
-        class InvalidPluginConfig(PluginConfig):
-            plugin = CustomPlugin
-            depends_on = [DisabledPluginConfig]
-
-        validator = PluginConfigValidator()
-
-    with when, raises(BaseException) as exc:
-        validator.validate(InvalidPluginConfig, {DisabledPluginConfig})
-
-    with then:
-        assert exc.type is ValueError
-        assert str(exc.value) == (
-            "Dependency 'DisabledPluginConfig' in 'depends_on' of 'InvalidPluginConfig' "
-            "is not enabled"
         )
 
 
@@ -160,7 +118,7 @@ def test_validate_unknown_attributes():
         validator = PluginConfigValidator()
 
     with when, raises(BaseException) as exc:
-        validator.validate(InvalidPluginConfig, set())
+        validator.validate(InvalidPluginConfig)
 
     with then:
         assert exc.type is AttributeError
@@ -178,7 +136,7 @@ def test_validate_unknown_attributes_disabled():
         validator = PluginConfigValidator(validate_plugins_attrs=False)
 
     with when:
-        validator.validate(InvalidPluginConfig, set())
+        validator.validate(InvalidPluginConfig)
 
     with then:
         # no exception raised

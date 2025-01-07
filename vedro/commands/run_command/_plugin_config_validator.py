@@ -25,8 +25,7 @@ class PluginConfigValidator:
         """
         self._validate_plugins_attrs = validate_plugins_attrs
 
-    def validate(self, plugin_config: Type[PluginConfig],
-                 available_plugins: Set[Type[PluginConfig]]) -> None:
+    def validate(self, plugin_config: Type[PluginConfig]) -> None:
         """
         Validate a plugin configuration class and its dependencies.
 
@@ -34,14 +33,12 @@ class PluginConfigValidator:
         - The plugin configuration class is a subclass of `PluginConfig`.
         - The `plugin` attribute in the configuration is a subclass of `Plugin`.
         - The `depends_on` attribute is a sequence of valid plugin configuration classes.
-        - All dependencies exist in the set of available plugins.
         - Enabled dependencies are also enabled when the current plugin is enabled.
         - Optionally, unknown attributes in the plugin configuration class.
 
         :param plugin_config: The plugin configuration class to validate.
-        :param available_plugins: A set of available plugin configuration classes.
         :raises TypeError: If the plugin configuration or its attributes are invalid.
-        :raises ValueError: If dependencies are missing or not enabled.
+        :raises ValueError: If dependencies are not enabled when the current plugin is enabled.
         :raises AttributeError: If unknown attributes are found in the plugin configuration.
         """
         if not self._is_subclass(plugin_config, PluginConfig):
@@ -72,18 +69,6 @@ class PluginConfigValidator:
                 raise TypeError(
                     f"Dependency '{dep}' in 'depends_on' of '{plugin_config.__name__}' "
                     "must be a subclass of 'vedro.core.PluginConfig'"
-                )
-
-            if dep not in available_plugins:
-                raise ValueError(
-                    f"Dependency '{dep.__name__}' in 'depends_on' of '{plugin_config.__name__}' "
-                    "is not found among the configured plugins"
-                )
-
-            if plugin_config.enabled and not dep.enabled:
-                raise ValueError(
-                    f"Dependency '{dep.__name__}' in 'depends_on' of '{plugin_config.__name__}' "
-                    "is not enabled"
                 )
 
         if self._validate_plugins_attrs:
