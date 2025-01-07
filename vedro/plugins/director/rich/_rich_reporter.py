@@ -1,3 +1,4 @@
+import sys
 from types import ModuleType
 from typing import Callable, Tuple, Type, Union, final
 
@@ -207,7 +208,7 @@ class RichReporterPlugin(Reporter):
             traceback = self._tb_filter.filter_tb(exc_info.traceback)
             exc_info = ExcInfo(exc_info.type, exc_info.value, traceback)
 
-        if self._tb_pretty:
+        if self._tb_pretty and not self._is_exception_group(exc_info):
             self._printer.print_pretty_exception(exc_info,
                                                  width=self._tb_width,
                                                  max_frames=self._tb_max_frames,
@@ -218,6 +219,13 @@ class RichReporterPlugin(Reporter):
             self._printer.print_exception(exc_info,
                                           max_frames=self._tb_max_frames,
                                           show_internal_calls=True)
+
+    def _is_exception_group(self, exc_info: ExcInfo) -> bool:
+        # WORKAROUND: This logic is in place as a temporary solution until
+        # https://github.com/vedro-universe/vedro/issues/113 is resolved.
+        if sys.version_info >= (3, 11):
+            return isinstance(exc_info.value, ExceptionGroup)  # noqa: F821
+        return False
 
     def _prefix_to_indent(self, prefix: str, indent: int = 0) -> str:
         last_line = prefix.split("\n")[-1]

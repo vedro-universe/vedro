@@ -17,14 +17,14 @@ class ScenarioFinder(ABC):
     @abstractmethod
     async def find(self, root: Path) -> AsyncGenerator[Path, None]:
         """
-        Finds and yields paths to scenario files starting from the given root directory.
+        Find and yield paths to scenario files starting from the given root directory.
 
         This is an abstract method that must be implemented by subclasses. It should define
         how scenario files are located and yielded from the specified root directory.
 
         :param root: The root directory path to start the search for scenario files.
         :yield: Paths to scenario files found under the root directory.
-        :raises NotImplementedError: This method should be overridden in subclasses.
+        :raises NotImplementedError: If the method is not implemented in a subclass.
         """
-        # Next line is just a placeholder due to https://github.com/python/mypy/issues/5070
+        # Placeholder due to https://github.com/python/mypy/issues/5070
         yield Path()

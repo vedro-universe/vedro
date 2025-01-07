@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import sys
 from importlib.abc import Loader
 from importlib.machinery import ModuleSpec
 from keyword import iskeyword
@@ -42,7 +43,10 @@ class ModuleFileLoader(ModuleLoader):
         """
         spec = self._spec_from_path(path)
         module = self._module_from_spec(spec)
+        sys.modules[spec.name] = module
+
         self._exec_module(cast(Loader, spec.loader), module)
+
         return module
 
     def _path_to_module_name(self, path: Path) -> str:

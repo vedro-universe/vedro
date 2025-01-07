@@ -52,7 +52,7 @@ def test_already_registered_event():
             pass
 
     with then:
-        assert exception.type is Exception
+        assert exception.type is RuntimeError
         assert str(exception.value) == f"Event {RegisteredEvent!r} already registered"
 
 

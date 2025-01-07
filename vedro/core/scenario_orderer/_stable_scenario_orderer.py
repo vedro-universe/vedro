@@ -32,6 +32,9 @@ class StableScenarioOrderer(ScenarioOrderer):
         """
         Sort the scenarios in a stable order based on their file paths.
 
+        This method ensures a consistent order of scenarios by using a comparison
+        key derived from the structure and content of their file paths.
+
         :param scenarios: The list of `VirtualScenario` instances to be sorted.
         :return: A new list of scenarios sorted in a stable order.
         """

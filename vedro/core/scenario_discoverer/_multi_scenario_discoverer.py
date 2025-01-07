@@ -1,6 +1,6 @@
 import warnings
 from pathlib import Path
-from typing import List, Type
+from typing import List, Optional, Type
 
 from ..._scenario import Scenario
 from .._virtual_scenario import VirtualScenario
@@ -35,7 +35,8 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
         warnings.warn("Deprecated: use create_vscenario instead", DeprecationWarning)
         return create_vscenario(scenario).steps
 
-    async def discover(self, root: Path) -> List[VirtualScenario]:
+    async def discover(self, root: Path, *,
+                       project_dir: Optional[Path] = None) -> List[VirtualScenario]:
         """
         Discover and organize scenarios from a specified root path.
 
@@ -44,13 +45,25 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
         It then sorts the scenarios using '_orderer'.
 
         :param root: The root path to start the discovery of scenarios.
+        :param project_dir: The project directory to resolve relative paths.
         :return: A sorted list of virtual scenarios discovered from the root path.
         """
-        project_dir = root.parent
+        if project_dir is None:
+            # TODO: Make project_dir required in v2.0
+            # TODO: Rename root to start_dir in v2.0
+            project_dir = root.parent
 
         scenarios = []
         async for path in self._finder.find(root):
             loaded = await self._loader.load(path)
             for scn in loaded:
                 scenarios.append(create_vscenario(scn, project_dir=project_dir))
-        return await self._orderer.sort(scenarios)
+
+        ordered = await self._orderer.sort(scenarios)
+        if len(scenarios) != len(ordered):
+            raise ValueError(
+                f"The scenario orderer returned {len(ordered)} scenarios, "
+                f"but {len(scenarios)} scenarios were discovered. "
+                "Please ensure the orderer only reorders scenarios without adding or removing any"
+            )
+        return ordered

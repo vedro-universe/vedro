@@ -1,4 +1,5 @@
 from asyncio import CancelledError
+from typing import Sequence, Type
 
 import vedro.core as core
 import vedro.plugins.artifacted as artifacted
@@ -6,6 +7,7 @@ import vedro.plugins.assert_rewriter as assert_rewriter
 import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.dry_runner as dry_runner
+import vedro.plugins.ensurer as ensurer
 import vedro.plugins.interrupter as interrupter
 import vedro.plugins.last_failed as last_failed
 import vedro.plugins.orderer as orderer
@@ -26,6 +28,7 @@ from vedro.core import (
     MonotonicScenarioRunner,
     MonotonicScenarioScheduler,
     MultiScenarioDiscoverer,
+    PluginConfig,
     ScenarioDiscoverer,
     ScenarioFileFinder,
     ScenarioFileLoader,
@@ -36,6 +39,7 @@ from vedro.core import (
     ScenarioScheduler,
     Singleton,
 )
+from vedro.core.config_loader import computed
 from vedro.core.scenario_finder.scenario_file_finder import (
     AnyFilter,
     DunderFilter,
@@ -44,15 +48,35 @@ from vedro.core.scenario_finder.scenario_file_finder import (
 )
 from vedro.core.scenario_orderer import StableScenarioOrderer
 
-__all__ = ("Config",)
+__all__ = ("Config", "computed",)
 
 
 class Config(core.Config):
+    """
+    Defines the main configuration for the Vedro testing framework.
 
-    # Validate each plugin's configuration, checking for unknown attributes to prevent errors
+    This class contains settings for the framework's behavior, such as enabling
+    plugins, defining factories for core components, and specifying filters
+    for scenario discovery.
+    """
+
     validate_plugins_configs: bool = True
+    """
+    Whether to validate plugin configurations.
+
+    If set to `True`, the framework will validate plugin configurations to
+    ensure that no unknown attributes are defined, reducing the likelihood
+    of errors.
+    """
 
     class Registry(core.Config.Registry):
+        """
+        Defines factories and singleton instances for core components.
+
+        The `Registry` class is responsible for configuring key components,
+        such as the scenario finder, loader, scheduler, and runner.
+        """
+
         Dispatcher = Singleton[Dispatcher](Dispatcher)
 
         ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
@@ -85,17 +109,36 @@ class Config(core.Config):
         ))
 
     class Plugins(core.Config.Plugins):
+        """
+        Configuration for enabling and disabling plugins.
+
+        This class contains nested classes for each plugin, where the `enabled`
+        attribute determines whether the plugin is active.
+        """
+
         class Director(director.Director):
             enabled = True
 
         class RichReporter(director.RichReporter):
             enabled = True
 
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Director]
+
         class SilentReporter(director.SilentReporter):
             enabled = True
 
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Director]
+
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
+
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Director]
 
         class TempKeeper(temp_keeper.TempKeeper):
             enabled = True
@@ -121,6 +164,10 @@ class Config(core.Config):
         class Slicer(slicer.Slicer):
             enabled = True
 
+            @computed
+            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+                return [Config.Plugins.Skipper]
+
         class Tagger(tagger.Tagger):
             enabled = True
 
@@ -134,6 +181,9 @@ class Config(core.Config):
             enabled = True
 
         class DryRunner(dry_runner.DryRunner):
+            enabled = True
+
+        class Ensurer(ensurer.Ensurer):
             enabled = True
 
         class Interrupter(interrupter.Interrupter):

@@ -20,8 +20,13 @@ def queue() -> deque:
 
 
 @pytest.fixture()
-def deferrer(dispatcher: Dispatcher, queue: deque) -> DeferrerPlugin:
-    deferrer = DeferrerPlugin(Deferrer, queue=queue)
+def global_queue() -> deque:
+    return deque()
+
+
+@pytest.fixture()
+def deferrer(dispatcher: Dispatcher, queue: deque, global_queue: queue) -> DeferrerPlugin:
+    deferrer = DeferrerPlugin(Deferrer, queue=queue, global_queue=global_queue)
     deferrer.subscribe(dispatcher)
     return deferrer
 
