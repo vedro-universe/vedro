@@ -1,4 +1,5 @@
 from collections import defaultdict, deque
+from os import linesep
 from typing import Callable, Dict, Iterable, List, Type, Union
 
 from vedro.core import Dispatcher, PluginConfig
@@ -120,6 +121,13 @@ class PluginRegistrar:
         # If the number of visited plugins doesn't match
         # the total number of plugins, we have a cycle.
         if visited_count != len(plugins):
-            raise RuntimeError("Cycle detected in plugin dependencies")
+            problematic_plugins = [p.__name__ for p, deg in in_degree.items() if deg > 0]
+            bullet_prefix = f"{linesep}  - "
+            raise RuntimeError(
+                "A cyclic dependency between plugins has been detected. "
+                "Any of the following plugins could be referencing each other in a cycle:"
+                f"{bullet_prefix + bullet_prefix.join(problematic_plugins)}{linesep}"
+                "Please review their 'depends_on' references to resolve this issue."
+            )
 
         return ordered

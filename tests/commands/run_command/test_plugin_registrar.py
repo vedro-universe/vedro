@@ -1,3 +1,4 @@
+from os import linesep
 from unittest.mock import MagicMock
 
 import pytest
@@ -120,7 +121,13 @@ def test_register_plugins_with_deps_cycle(*, registrar: PluginRegistrar, dispatc
 
     with then:
         assert exc.type is RuntimeError
-        assert str(exc.value) == "Cycle detected in plugin dependencies"
+        assert str(exc.value) == (
+            "A cyclic dependency between plugins has been detected. "
+            f"Any of the following plugins could be referencing each other in a cycle:{linesep}"
+            f"  - AnotherPluginConfig{linesep}"
+            f"  - CyclePluginConfig{linesep}"
+            "Please review their 'depends_on' references to resolve this issue."
+        )
 
         assert dispatcher_.register.mock_calls == []
 
