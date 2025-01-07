@@ -1,10 +1,3 @@
-from typing import TypeVar
+from vedro.plugins.context_tracer import context
 
 __all__ = ("context",)
-
-T = TypeVar("T")
-
-
-def context(fn: T) -> T:
-    setattr(fn, "__vedro__context__", True)
-    return fn
