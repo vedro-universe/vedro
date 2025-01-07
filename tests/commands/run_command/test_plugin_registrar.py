@@ -104,6 +104,48 @@ def test_register_plugins_with_deps(*, registrar: PluginRegistrar, dispatcher_: 
         assert registered_plugin2.config is AnotherPluginConfig
 
 
+def test_register_plugins_with_deps_with_unknown_plugin(*, registrar: PluginRegistrar,
+                                                        dispatcher_: Dispatcher):
+    with given:
+        class AnotherPluginConfig(PluginConfig):
+            plugin = CustomPlugin
+            depends_on = [CustomPluginConfig]
+
+        plugins = [AnotherPluginConfig]
+
+    with when, raises(BaseException) as exc:
+        registrar.register(plugins, dispatcher_)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value) == (
+            "Plugin 'AnotherPluginConfig' depends on unknown plugin 'CustomPluginConfig'"
+        )
+
+
+def test_register_plugins_with_deps_with_disabled_plugin(*, registrar: PluginRegistrar,
+                                                         dispatcher_: Dispatcher):
+    with given:
+        class DisabledPluginConfig(PluginConfig):
+            plugin = CustomPlugin
+            enabled = False
+
+        class AnotherPluginConfig(PluginConfig):
+            plugin = CustomPlugin
+            depends_on = [DisabledPluginConfig]
+
+        plugins = [DisabledPluginConfig, AnotherPluginConfig]
+
+    with when, raises(BaseException) as exc:
+        registrar.register(plugins, dispatcher_)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value) == (
+            "Plugin 'AnotherPluginConfig' depends on disabled plugin 'DisabledPluginConfig'"
+        )
+
+
 def test_register_plugins_with_deps_cycle(*, registrar: PluginRegistrar, dispatcher_: Dispatcher):
     with given:
         class AnotherPluginConfig(PluginConfig):
