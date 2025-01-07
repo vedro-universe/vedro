@@ -58,4 +58,12 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
             loaded = await self._loader.load(path)
             for scn in loaded:
                 scenarios.append(create_vscenario(scn, project_dir=project_dir))
-        return await self._orderer.sort(scenarios)
+
+        ordered = await self._orderer.sort(scenarios)
+        if len(scenarios) != len(ordered):
+            raise ValueError(
+                f"The scenario orderer returned {len(ordered)} scenarios, "
+                f"but {len(scenarios)} scenarios were discovered. "
+                "Please ensure the orderer only reorders scenarios without adding or removing any"
+            )
+        return ordered

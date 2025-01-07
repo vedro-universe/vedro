@@ -30,6 +30,7 @@ async def main() -> None:
     :raises FileNotFoundError: If the specified project directory does not exist.
     :raises NotADirectoryError: If the specified project directory path is not a directory.
     """
+    # TODO: add argv parameter to main function in v2 to make it testable
     shadow_parser = ArgumentParser(add_help=False, allow_abbrev=False)
     shadow_parser.add_argument("--project-dir", type=Path, default=Path.cwd())
     shadow_args, _ = shadow_parser.parse_known_args()

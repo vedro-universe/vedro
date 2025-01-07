@@ -3,10 +3,11 @@ import os
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import Set, Type
+from typing import Callable, Type, Union
 
 from vedro import Config
-from vedro.core import Dispatcher, MonotonicScenarioRunner, Plugin, PluginConfig
+from vedro.core import Config as BaseConfig
+from vedro.core import Dispatcher, MonotonicScenarioRunner
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -18,137 +19,94 @@ from vedro.plugins.dry_runner import DryRunner
 
 from .._cmd_arg_parser import CommandArgumentParser
 from .._command import Command
+from ._config_validator import ConfigValidator
+from ._plugin_config_validator import PluginConfigValidator
+from ._plugin_registrar import PluginRegistrar
 
 __all__ = ("RunCommand",)
+
+ConfigValidatorFactory = Union[
+    Type[ConfigValidator],
+    Callable[[Type[BaseConfig]], ConfigValidator]
+]
+
+PluginRegistrarFactory = Union[
+    Type[PluginRegistrar],
+    Callable[[], PluginRegistrar]
+]
 
 
 class RunCommand(Command):
     """
-    Represents the "run" command for executing scenarios.
+    Implements the 'run' command for Vedro.
 
-    This command handles the entire lifecycle of scenario execution, including:
-    - Validating configuration parameters.
-    - Registering plugins with the dispatcher.
-    - Parsing command-line arguments.
-    - Discovering scenarios.
-    - Scheduling and executing scenarios.
-    - Dispatching events before and after scenario execution.
-
-    :param config: The global configuration instance.
-    :param arg_parser: The argument parser for parsing command-line options.
+    This command handles the lifecycle of running scenarios, including configuration
+    validation, plugin registration, scenario discovery, execution, and reporting.
     """
 
-    def __init__(self, config: Type[Config], arg_parser: CommandArgumentParser) -> None:
+    def __init__(self, config: Type[Config], arg_parser: CommandArgumentParser, *,
+                 config_validator_factory: ConfigValidatorFactory = ConfigValidator,
+                 plugin_registrar_factory: PluginRegistrarFactory = PluginRegistrar) -> None:
         """
-        Initialize the RunCommand instance.
+        Initialize the RunCommand.
 
-        :param config: The global configuration instance.
-        :param arg_parser: The argument parser for parsing command-line options.
+        :param config: The configuration class for Vedro.
+        :param arg_parser: The argument parser for parsing command-line arguments.
+        :param config_validator_factory: Factory for creating a `ConfigValidator` instance.
+        :param plugin_registrar_factory: Factory for creating a `PluginRegistrar` instance.
         """
         super().__init__(config, arg_parser)
+        self._config_validator = config_validator_factory(config)
+        self._plugin_registrar = plugin_registrar_factory(
+            plugin_config_validator_factory=lambda: PluginConfigValidator(
+                validate_plugins_attrs=config.validate_plugins_configs  # type: ignore
+            )
+        )
 
-    def _validate_config(self) -> None:
+    async def run(self) -> None:
         """
-        Validate the configuration parameters.
+        Execute the 'run' command.
 
-        Ensures that the `default_scenarios_dir` is a valid directory within the
-        project directory. Raises appropriate exceptions if validation fails.
+        This method validates the configuration, registers plugins, discovers scenarios,
+        executes scenarios, and generates the report. It also fires various events during
+        the lifecycle.
 
-        :raises TypeError: If `default_scenarios_dir` is not a `Path` or `str`.
-        :raises FileNotFoundError: If `default_scenarios_dir` does not exist.
-        :raises NotADirectoryError: If `default_scenarios_dir` is not a directory.
-        :raises ValueError: If `default_scenarios_dir` is not inside the project directory.
+        :raises Exception: If a `SystemExit` exception is encountered during discovery.
         """
-        default_scenarios_dir = self._config.default_scenarios_dir
-        if default_scenarios_dir == Config.default_scenarios_dir:
-            return
+        # TODO: move config validation to somewhere else in v2
+        # (e.g. to the ConfigLoader)
+        self._config_validator.validate()  # Must be before ConfigLoadedEvent
 
-        if not isinstance(default_scenarios_dir, (Path, str)):
-            raise TypeError(
-                "Expected `default_scenarios_dir` to be a Path, "
-                f"got {type(default_scenarios_dir)} ({default_scenarios_dir!r})"
-            )
+        dispatcher = self._config.Registry.Dispatcher()
+        self._plugin_registrar.register(self._config.Plugins.values(), dispatcher)
 
-        scenarios_dir = Path(default_scenarios_dir).resolve()
-        if not scenarios_dir.exists():
-            raise FileNotFoundError(
-                f"`default_scenarios_dir` ('{scenarios_dir}') does not exist"
-            )
+        await dispatcher.fire(ConfigLoadedEvent(self._config.path, self._config))
 
-        if not scenarios_dir.is_dir():
-            raise NotADirectoryError(
-                f"`default_scenarios_dir` ('{scenarios_dir}') is not a directory"
-            )
+        args = await self._parse_args(dispatcher)
+        start_dir = self._get_start_dir(args)
+
+        discoverer = self._config.Registry.ScenarioDiscoverer()
+
+        kwargs = {}
+        # Backward compatibility (to be removed in v2):
+        signature = inspect.signature(discoverer.discover)
+        if "project_dir" in signature.parameters:
+            kwargs["project_dir"] = self._config.project_dir
 
         try:
-            scenarios_dir.relative_to(self._config.project_dir)
-        except ValueError:
-            raise ValueError(
-                f"`default_scenarios_dir` ('{scenarios_dir}') must be inside project directory "
-                f"('{self._config.project_dir}')"
-            )
+            scenarios = await discoverer.discover(start_dir, **kwargs)
+        except SystemExit as e:
+            raise Exception(f"SystemExit({e.code}) ⬆")
 
-    async def _register_plugins(self, dispatcher: Dispatcher) -> None:
-        """
-        Register plugins with the dispatcher.
+        scheduler = self._config.Registry.ScenarioScheduler(scenarios)
+        await dispatcher.fire(StartupEvent(scheduler))
 
-        Iterates through the configuration's `Plugins` section, validates plugin configurations,
-        and registers enabled plugins with the dispatcher.
+        runner = self._config.Registry.ScenarioRunner()
+        if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
+            warnings.warn("Deprecated: custom runners will be removed in v2.0", DeprecationWarning)
+        report = await runner.run(scheduler)
 
-        :param dispatcher: The dispatcher to register plugins with.
-        :raises TypeError: If a plugin is not a subclass of `vedro.core.Plugin`.
-        """
-        for _, section in self._config.Plugins.items():
-            if not issubclass(section.plugin, Plugin) or (section.plugin is Plugin):
-                raise TypeError(
-                    f"Plugin {section.plugin} should be subclass of vedro.core.Plugin"
-                )
-
-            if self._config.validate_plugins_configs:
-                self._validate_plugin_config(section)
-
-            if section.enabled:
-                plugin = section.plugin(config=section)
-                dispatcher.register(plugin)
-
-    def _validate_plugin_config(self, plugin_config: Type[PluginConfig]) -> None:
-        """
-        Validate the configuration of a plugin.
-
-        Ensures that the plugin's configuration does not contain unknown attributes.
-
-        :param plugin_config: The configuration of the plugin.
-        :raises AttributeError: If the plugin configuration contains unknown attributes.
-        """
-        unknown_attrs = self._get_attrs(plugin_config) - self._get_parent_attrs(plugin_config)
-        if unknown_attrs:
-            attrs = ", ".join(unknown_attrs)
-            raise AttributeError(
-                f"{plugin_config.__name__} configuration contains unknown attributes: {attrs}"
-            )
-
-    def _get_attrs(self, cls: type) -> Set[str]:
-        """
-        Retrieve the set of attributes for a class.
-
-        :param cls: The class to retrieve attributes for.
-        :return: A set of attribute names for the class.
-        """
-        return set(vars(cls))
-
-    def _get_parent_attrs(self, cls: type) -> Set[str]:
-        """
-        Recursively retrieve attributes from parent classes.
-
-        :param cls: The class to retrieve parent attributes for.
-        :return: A set of attribute names for the parent classes.
-        """
-        attrs = set()
-        # `object` (the base for all classes) has no __bases__
-        for base in cls.__bases__:
-            attrs |= self._get_attrs(base)
-            attrs |= self._get_parent_attrs(base)
-        return attrs
+        await dispatcher.fire(CleanupEvent(report))
 
     async def _parse_args(self, dispatcher: Dispatcher) -> Namespace:
         """
@@ -178,49 +136,6 @@ class RunCommand(Command):
         await dispatcher.fire(ArgParsedEvent(args))
 
         return args
-
-    async def run(self) -> None:
-        """
-        Execute the command lifecycle.
-
-        This method validates the configuration, registers plugins, parses arguments,
-        discovers scenarios, schedules them, and executes them.
-
-        :raises Exception: If scenario discovery raises a `SystemExit`.
-        """
-        # TODO: move config validation to somewhere else in v2
-        self._validate_config()  # Must be before ConfigLoadedEvent
-
-        dispatcher = self._config.Registry.Dispatcher()
-        await self._register_plugins(dispatcher)
-
-        await dispatcher.fire(ConfigLoadedEvent(self._config.path, self._config))
-
-        args = await self._parse_args(dispatcher)
-        start_dir = self._get_start_dir(args)
-
-        discoverer = self._config.Registry.ScenarioDiscoverer()
-
-        kwargs = {}
-        # Backward compatibility (to be removed in v2):
-        signature = inspect.signature(discoverer.discover)
-        if "project_dir" in signature.parameters:
-            kwargs["project_dir"] = self._config.project_dir
-
-        try:
-            scenarios = await discoverer.discover(start_dir, **kwargs)
-        except SystemExit as e:
-            raise Exception(f"SystemExit({e.code}) ⬆")
-
-        scheduler = self._config.Registry.ScenarioScheduler(scenarios)
-        await dispatcher.fire(StartupEvent(scheduler))
-
-        runner = self._config.Registry.ScenarioRunner()
-        if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
-            warnings.warn("Deprecated: custom runners will be removed in v2.0", DeprecationWarning)
-        report = await runner.run(scheduler)
-
-        await dispatcher.fire(CleanupEvent(report))
 
     def _get_start_dir(self, args: Namespace) -> Path:
         """
