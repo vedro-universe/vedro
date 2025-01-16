@@ -20,6 +20,7 @@ import vedro.plugins.system_upgrade as system_upgrade
 import vedro.plugins.tagger as tagger
 import vedro.plugins.temp_keeper as temp_keeper
 import vedro.plugins.terminator as terminator
+import vedro.plugins.tip_adviser as tip_adviser
 from vedro.core import (
     Dispatcher,
     Factory,
@@ -190,6 +191,9 @@ class Config(core.Config):
             enabled = True
 
         class SystemUpgrade(system_upgrade.SystemUpgrade):
+            enabled = True
+
+        class TipAdviser(tip_adviser.TipAdviser):
             enabled = True
 
         class Terminator(terminator.Terminator):
