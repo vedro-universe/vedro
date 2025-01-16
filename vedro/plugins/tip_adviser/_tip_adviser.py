@@ -51,6 +51,17 @@ class TipAdviserPlugin(Plugin):
         self._fail_fast = event.args.fail_fast if hasattr(event.args, 'fail_fast') else False
         self._fixed_seed = event.args.fixed_seed if hasattr(event.args, 'fixed_seed') else False
 
+        # Note: In Vedro, plugins are generally designed to operate independently and
+        # do not have knowledge of each other's existence. This modular design ensures
+        # that plugins can be used in isolation without unintended dependencies or
+        # interference.
+        # However, the `TipAdviserPlugin` is an experimental plugin that is aware of
+        # certain other plugins and their  associated command-line arguments.
+        # This awareness allows it to provide helpful tips based on the presence and
+        # configuration of those plugins. While  this behavior breaks the typical
+        # isolation of Vedro plugins, it is intentional  to enhance the user experience
+        # by offering actionable suggestions tailored to the test execution context.
+
     def on_cleanup(self, event: CleanupEvent) -> None:
         """
         Handle the cleanup event by displaying a random tip, if applicable.
