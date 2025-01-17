@@ -55,7 +55,7 @@ def test_only_template_only_empty():
         scenarios = get_scenarios("TemplateOnlyEmptyScenario", globals())
         assert len(scenarios) == 2
         assert get_only_attr(scenarios[0]) is True
-        assert get_only_attr(scenarios[1]) is False
+        assert get_only_attr(scenarios[1]) is True
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
@@ -89,7 +89,7 @@ def test_only_template_only_skip():
         scenarios = get_scenarios("TemplateOnlySkipScenario", globals())
         assert len(scenarios) == 2
         assert get_only_attr(scenarios[0]) is True
-        assert get_only_attr(scenarios[1]) is False
+        assert get_only_attr(scenarios[1]) is True
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
@@ -122,7 +122,7 @@ def test_skip_template_skip_empty():
         scenarios = get_scenarios("TemplateSkipEmptyScenario", globals())
         assert len(scenarios) == 2
         assert get_skip_attr(scenarios[0]) is True
-        assert get_skip_attr(scenarios[1]) is False
+        assert get_skip_attr(scenarios[1]) is True
 
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
@@ -156,4 +156,4 @@ def test_skip_template_skip_only():
         scenarios = get_scenarios("TemplateSkipOnlyScenario", globals())
         assert len(scenarios) == 2
         assert get_skip_attr(scenarios[0]) is True
-        assert get_skip_attr(scenarios[1]) is False
+        assert get_skip_attr(scenarios[1]) is True

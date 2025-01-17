@@ -1,12 +1,18 @@
 from hashlib import blake2b
 from inspect import BoundArguments
 from pathlib import Path
-from typing import Any, List, Optional, Type, Union, cast
+from typing import Any, List, Optional, Type, TypeVar, Union, cast, overload
+
+from niltype import Nil, Nilable, NilType
 
 from .._scenario import Scenario
+from ._plugin import Plugin
+from ._scenario_meta import get_scenario_meta, set_scenario_meta
 from ._virtual_step import VirtualStep
 
 __all__ = ("VirtualScenario", "ScenarioInitError",)
+
+T = TypeVar("T")
 
 
 class ScenarioInitError(Exception):
@@ -189,6 +195,29 @@ class VirtualScenario:
         :return: A boolean indicating if the scenario is skipped.
         """
         return self._is_skipped
+
+    def set_meta(self, key: str, value: Any, *, plugin: Plugin,
+                 fallback_key: Optional[str] = None) -> None:
+        set_scenario_meta(self._orig_scenario, key, value,
+                          plugin=plugin,
+                          fallback_key=fallback_key)
+
+    @overload
+    def get_meta(self, key: str, *, plugin: Plugin, default: T,
+                 fallback_key: Optional[str] = None) -> T:
+        ...  # When default is provided, return T
+
+    @overload
+    def get_meta(self, key: str, *, plugin: Plugin, default: NilType = Nil,
+                 fallback_key: Optional[str] = None) -> NilType:
+        ...  # When default is not provided, return NilType
+
+    def get_meta(self, key: str, *, plugin: Plugin, default: Nilable[T] = Nil,
+                 fallback_key: Optional[str] = None) -> Union[T, NilType]:
+        return get_scenario_meta(self._orig_scenario, key,
+                                 default=default,
+                                 plugin=plugin,
+                                 fallback_key=fallback_key)
 
     def __call__(self) -> Scenario:
         """

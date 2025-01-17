@@ -2,6 +2,9 @@ from inspect import isclass
 from typing import Callable, Type, TypeVar, overload
 
 from vedro._scenario import Scenario
+from vedro.core import set_scenario_meta
+
+from ._skipper import SkipperPlugin
 
 __all__ = ("skip",)
 
@@ -29,9 +32,12 @@ def skip(reason=None):  # type: ignore
         if not issubclass(scenario, Scenario):
             raise TypeError("Decorator @skip can be used only with 'vedro.Scenario' subclasses")
 
-        setattr(scenario, "__vedro__skipped__", True)
+        set_scenario_meta(scenario, key="skipped", value=True, plugin=SkipperPlugin,
+                          fallback_key="__vedro__skipped__")
+
         if isinstance(reason, str):
-            setattr(scenario, "__vedro__skip_reason__", reason)
+            set_scenario_meta(scenario, key="skip_reason", value=reason, plugin=SkipperPlugin,
+                              fallback_key="__vedro__skip_reason__")
 
         return scenario
 
