@@ -198,6 +198,18 @@ class VirtualScenario:
 
     def set_meta(self, key: str, value: Any, *, plugin: Plugin,
                  fallback_key: Optional[str] = None) -> None:
+        """
+        Set metadata for the associated scenario.
+
+        This method sets a metadata key-value pair for the original scenario
+        wrapped by this VirtualScenario, scoped to the specified plugin.
+        Optionally, a fallback key can be set for backward compatibility.
+
+        :param key: The metadata key to set. Must be a valid Python identifier.
+        :param value: The metadata value to set.
+        :param plugin: The plugin instance to scope the metadata under.
+        :param fallback_key: Optional. A fallback attribute name for backward compatibility.
+        """
         set_scenario_meta(self._orig_scenario, key, value,
                           plugin=plugin,
                           fallback_key=fallback_key)
@@ -214,6 +226,21 @@ class VirtualScenario:
 
     def get_meta(self, key: str, *, plugin: Plugin, default: Nilable[T] = Nil,
                  fallback_key: Optional[str] = None) -> Union[T, NilType]:
+        """
+        Retrieve metadata for the associated scenario.
+
+        This method retrieves the metadata value associated with the specified key,
+        scoped to the given plugin, from the original scenario wrapped by this VirtualScenario.
+        If the metadata is not found, it returns the provided default value or Nil.
+        Optionally, a fallback key can be checked for backward compatibility.
+
+        :param key: The metadata key to retrieve. Must be a valid Python identifier.
+        :param plugin: The plugin instance the metadata is scoped under.
+        :param default: The default value to return if the metadata is not found. Defaults to Nil.
+        :param fallback_key: Optional. A fallback attribute name for backward compatibility.
+        :return: The metadata value if found, the fallback attribute value,
+                 or the default if not found.
+        """
         return get_scenario_meta(self._orig_scenario, key,
                                  default=default,
                                  plugin=plugin,
