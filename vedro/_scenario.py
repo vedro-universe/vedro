@@ -9,8 +9,9 @@ __all__ = ("Scenario",)
 
 class _Meta(type):
     # In v2, this logic should be moved to a `ScenarioLoader` to better encapsulate and
-    # separate the behavior, making it easier to maintain and extend. However, doing this now would
-    # break backward compatibility for external plugins relying on the current metaclass design.
+    # separate the behavior, making it easier to maintain and extend.
+    # However, making this change now would break backward compatibility for external plugins
+    # that rely on the current metaclass design.
 
     def __new__(mcs, name: str, bases: Tuple[Any], namespace: Dict[str, Any]) -> Any:
         namespace["__vedro__meta__"] = MetaData()
