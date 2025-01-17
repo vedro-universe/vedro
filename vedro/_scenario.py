@@ -2,9 +2,15 @@ import inspect
 from functools import partialmethod
 from typing import Any, Dict, Tuple
 
+from .core._meta_data import MetaData
+
+__all__ = ("Scenario",)
+
 
 class _Meta(type):
     def __new__(mcs, name: str, bases: Tuple[Any], namespace: Dict[str, Any]) -> Any:
+        namespace["__vedro__meta__"] = MetaData()
+
         if len(bases) == 0:
             return super().__new__(mcs, name, bases, namespace)
 
