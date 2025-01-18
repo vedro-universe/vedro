@@ -3,6 +3,12 @@ from typing import TYPE_CHECKING, Any, Callable, Tuple, TypeVar, Union, cast
 
 __all__ = ("params",)
 
+F = TypeVar("F", bound=Callable[..., Any])
+ItemType = Union[
+    Callable[[F], F],
+    Tuple[Callable[[F], F], ...]
+]
+
 
 class Parameterized:
     """
@@ -25,7 +31,7 @@ class Parameterized:
         self._kwargs = kwargs
         self._decorators = decorators
 
-    def __call__(self, fn: Callable[..., None]) -> Callable[..., None]:
+    def __call__(self, fn: F) -> F:
         """
         Apply parameters and decorators to the specified function.
 
@@ -36,10 +42,6 @@ class Parameterized:
             setattr(fn, "__vedro__params__", [])
         getattr(fn, "__vedro__params__").append((self._args, self._kwargs, self._decorators))
         return fn
-
-
-T = TypeVar("T")
-ItemType = Union[Callable[[T], T], Tuple[Callable[[T], T], ...]]
 
 
 class Params:
@@ -61,7 +63,7 @@ class Params:
         self._args = args
         self._kwargs = kwargs
 
-    def __call__(self, fn: Callable[..., None]) -> Callable[..., None]:
+    def __call__(self, fn: F) -> F:
         """
         Apply parameters to the specified function.
 
@@ -70,7 +72,7 @@ class Params:
         """
         return Parameterized(self._args, self._kwargs, ())(fn)
 
-    def __class_getitem__(cls, item: ItemType[T]) -> Callable[..., Parameterized]:
+    def __class_getitem__(cls, item: ItemType[F]) -> Callable[..., Parameterized]:
         """
         Create a wrapped parameterized instance with decorators.
 
@@ -118,7 +120,7 @@ else:  # pragma: no cover
             """
             return cast(Callable[[_T], _T], ...)
 
-        def __getitem__(self, item: ItemType[T]) -> Callable[..., Callable[[_T], _T]]:
+        def __getitem__(self, item: ItemType[F]) -> Callable[..., Callable[[_T], _T]]:
             """
             Create a wrapped parameterized instance with decorators during static type checking.
 

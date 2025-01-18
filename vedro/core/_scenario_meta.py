@@ -1,3 +1,4 @@
+from inspect import isclass
 from keyword import iskeyword
 from typing import Any, Optional, Type, TypeVar, Union, cast, overload
 
@@ -15,7 +16,7 @@ T = TypeVar("T")
 
 def set_scenario_meta(scenario: Type[Scenario], key: str, value: Any, *,
                       plugin: PluginType, fallback_key: Optional[str] = None) -> None:
-    assert issubclass(scenario, Scenario) and scenario != Scenario
+    assert isclass(scenario) and issubclass(scenario, Scenario) and scenario != Scenario
     assert isinstance(key, str) and key.isidentifier() and not iskeyword(key)
     assert isinstance(plugin, Plugin) or (issubclass(plugin, Plugin) and plugin != Plugin)
 
