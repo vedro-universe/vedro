@@ -216,12 +216,12 @@ class VirtualScenario:
 
     @overload
     def get_meta(self, key: str, *, plugin: Plugin, default: T,
-                 fallback_key: Optional[str] = None) -> T:
+                 fallback_key: Optional[str] = None) -> T:  # pragma: no cover
         ...  # When default is provided, return T
 
     @overload
     def get_meta(self, key: str, *, plugin: Plugin, default: NilType = Nil,
-                 fallback_key: Optional[str] = None) -> NilType:
+                 fallback_key: Optional[str] = None) -> NilType:  # pragma: no cover
         ...  # When default is not provided, return NilType
 
     def get_meta(self, key: str, *, plugin: Plugin, default: Nilable[T] = Nil,
