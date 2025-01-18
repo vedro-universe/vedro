@@ -62,29 +62,6 @@ def test_has_non_existing_key():
         assert res is False
 
 
-def test_items_empty():
-    with given:
-        data = MetaData()
-
-    with when:
-        res = data.items()
-
-    with then:
-        assert list(res) == []
-
-
-def test_items_with_data():
-    with given:
-        initial_data = {"key1": "value1", "key2": "value2"}
-        data = MetaData(initial_data)
-
-    with when:
-        res = data.items()
-
-    with then:
-        assert set(res) == set(initial_data.items())
-
-
 def test_repr_empty():
     with given:
         data = MetaData()
@@ -98,8 +75,11 @@ def test_repr_empty():
 
 def test_repr_with_data():
     with given:
+        data = MetaData()
+
         initial_data = {"key": "value", "another_key": True}
-        data = MetaData(initial_data)
+        for key, value in initial_data.items():
+            data._set(key, value)
 
     with when:
         representation = repr(data)
@@ -108,32 +88,49 @@ def test_repr_with_data():
         assert representation == f"MetaData({initial_data!r})"
 
 
-def test_initialization_with_data():
-    with given:
-        initial_data = {"key": "value"}
-
-    with when:
-        data = MetaData(initial_data)
-
-    with then:
-        assert data.get("key") == "value"
-
-
 def test_set_overwrites_existing_key():
     with given:
-        data = MetaData({"key": "initial"})
+        data = MetaData()
+        data._set("key", "initial")
 
     with when:
         data._set("key", "updated")
-        result = data.get("key")
 
     with then:
-        assert result == "updated"
+        assert data.get("key") == "updated"
+
+
+def test_items_empty():
+    with given:
+        data = MetaData()
+
+    with when:
+        res = data.items()
+
+    with then:
+        assert list(res) == []
+
+
+def test_items_with_data():
+    with given:
+        data = MetaData()
+
+        initial_data = {"key1": "value1", "key2": "value2"}
+        for key, value in initial_data.items():
+            data._set(key, value)
+
+    with when:
+        res = data.items()
+
+    with then:
+        assert list(res) == list(initial_data.items())
 
 
 def test_items_immutable():
     with given:
-        data = MetaData({"key": "value"})
+        data = MetaData()
+        data._set("key", "value")
+
         items_view = data.items()
 
     with when, raises(Exception) as exc:

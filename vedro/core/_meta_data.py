@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import Any, Dict, ItemsView, Optional
+from typing import Any, Dict, ItemsView
 
 from niltype import Nil, Nilable
 
@@ -14,14 +14,11 @@ class MetaData:
     and iterate over the metadata items. The data is stored internally as a dictionary.
     """
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self) -> None:
         """
-        Initialize the MetaData instance with optional initial data.
-
-        :param data: Optional. A dictionary of initial key-value pairs for the metadata.
-                     If not provided, an empty dictionary is used.
+        Initialize the MetaData instance.
         """
-        self.__data = data or {}
+        self.__data: Dict[str, Any] = {}
 
     def has(self, key: str) -> bool:
         """
