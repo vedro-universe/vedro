@@ -55,7 +55,8 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
 
         scenarios = []
         async for path in self._finder.find(root):
-            loaded = await self._loader.load(path)
+            rel_path = path.relative_to(project_dir) if path.is_absolute() else path
+            loaded = await self._loader.load(rel_path)
             for scn in loaded:
                 scenarios.append(create_vscenario(scn, project_dir=project_dir))
 

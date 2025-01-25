@@ -29,7 +29,7 @@ class ScenarioFileLoader(ScenarioLoader):
                               a default `ModuleFileLoader` is used.
         """
         self._module_loader = module_loader or ModuleFileLoader()  # backward compatibility
-        self._enforce_scenario_presence: bool = True
+        self._enforce_scenario_presence: bool = True  # Add to config in v2
 
     async def load(self, path: Path) -> List[Type[Scenario]]:
         """
