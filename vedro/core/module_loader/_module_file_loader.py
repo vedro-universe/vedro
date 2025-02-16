@@ -30,6 +30,7 @@ class ModuleFileLoader(ModuleLoader):
                                       validated. Defaults to False.
         """
         self._validate_module_names = validate_module_names
+        # Maybe add project root path here in v2
 
     async def load(self, path: Path) -> ModuleType:
         """

@@ -64,7 +64,7 @@ class TaggerPlugin(Plugin):
         """
         self._tags_expr = event.args.tags
         if isinstance(self._tags_expr, str) and self._tags_expr.strip() == "":
-            raise ValueError("Tags cannot be an empty string. Please specify valid tags.")
+            raise ValueError("Tags cannot be an empty string. Please specify valid tags")
 
     def _get_tags(self, scenario: VirtualScenario, validate: Callable[[str], bool]) -> Any:
         """
@@ -76,6 +76,8 @@ class TaggerPlugin(Plugin):
         :raises TypeError: If the scenario's tags are not a list, tuple, or set.
         :raises ValueError: If any tag is not valid.
         """
+
+        # TODO: In v2, consider moving the 'tags' attribute directly into the Scenario class
         orig_tags = getattr(scenario._orig_scenario, "tags", ())
         if not isinstance(orig_tags, (list, tuple, set)):
             raise TypeError(f"Scenario '{scenario.unique_id}' tags must be a list, tuple or set, "

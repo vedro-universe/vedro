@@ -50,7 +50,7 @@ async def test_empty_tags_error(*, dispatcher: Dispatcher):
 
     with then:
         assert exc.type is ValueError
-        assert str(exc.value) == "Tags cannot be an empty string. Please specify valid tags."
+        assert str(exc.value) == "Tags cannot be an empty string. Please specify valid tags"
 
 
 @pytest.mark.usefixtures(tagger.__name__)

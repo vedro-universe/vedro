@@ -9,7 +9,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro import Scenario
-from vedro.core import VirtualScenario, VirtualStep
+from vedro.core import Plugin, PluginConfig, VirtualScenario, VirtualStep
 from vedro.core._virtual_scenario import ScenarioInitError
 
 
@@ -270,3 +270,42 @@ def test_virtual_scenario_not_eq_with_steps(*, scenario_: Type[Scenario], method
 
     with then:
         assert res is False
+
+
+def test_set_meta():
+    with given:
+        class CustomPlugin(Plugin):
+            pass
+
+        plugin = CustomPlugin(PluginConfig)
+
+        class CustomScenario(Scenario):
+            pass
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        res = virtual_scenario.set_meta("key", "value", plugin=plugin)
+
+    with then:
+        assert res is None
+
+
+def test_get_meta():
+    with given:
+        class CustomPlugin(Plugin):
+            pass
+
+        plugin = CustomPlugin(PluginConfig)
+
+        class CustomScenario(Scenario):
+            pass
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+        virtual_scenario.set_meta("key", "value", plugin=plugin)
+
+    with when:
+        value = virtual_scenario.get_meta("key", plugin=plugin)
+
+    with then:
+        assert value == "value"

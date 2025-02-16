@@ -47,7 +47,7 @@ def tmp_dir(tmp_path: Path) -> Path:
 
 
 async def test_scenario_discoverer(tmp_dir: Path):
-    root = tmp_dir / "scenarios"
+    root = Path("scenarios")
     scenario1 = create_scenario(root / "scenario-1.py")
     scenario3 = create_scenario(root / "folder" / "scenario-2.py")
     scenario4 = create_scenario(root / "folder" / "scenario-10.py")
@@ -61,11 +61,11 @@ async def test_scenario_discoverer(tmp_dir: Path):
     orderer_ = make_orderer()
     discoverer = MultiScenarioDiscoverer(finder_, loader_, orderer_)
 
-    scenarios = await discoverer.discover(root)
+    scenarios = await discoverer.discover(tmp_dir, project_dir=tmp_dir)
     assert scenarios == [
         VirtualScenario(scenario1, [], project_dir=tmp_dir),
         VirtualScenario(scenario3, [], project_dir=tmp_dir),
         VirtualScenario(scenario4, [], project_dir=tmp_dir),
     ]
-    assert finder_.mock_calls == [call.find(root)]
+    assert finder_.mock_calls == [call.find(tmp_dir)]
     assert loader_.mock_calls == [call.load(f) for f in tree.keys()]

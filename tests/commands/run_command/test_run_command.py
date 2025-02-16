@@ -27,20 +27,10 @@ class CustomConfig(Config):
 @pytest.mark.usefixtures(tmp_dir.__name__)
 async def test_run_command_without_scenarios(arg_parser: ArgumentParser):
     with given:
-        command = RunCommand(CustomConfig, arg_parser)
+        class CustomConfigProject(CustomConfig):
+            project_dir = tmp_dir
 
-    with when, raises(BaseException) as exc:
-        await command.run()
-
-    with then:
-        assert exc.type is SystemExit
-        assert str(exc.value) == "1"
-
-
-@pytest.mark.usefixtures(tmp_dir.__name__)
-async def test_run_command_with_no_scenarios(arg_parser: ArgumentParser):
-    with given:
-        command = RunCommand(CustomConfig, arg_parser)
+        command = RunCommand(CustomConfigProject, arg_parser)
 
     with when, raises(BaseException) as exc:
         await command.run()
@@ -52,7 +42,10 @@ async def test_run_command_with_no_scenarios(arg_parser: ArgumentParser):
 
 async def test_run_command_with_scenarios(tmp_dir: Path, arg_parser: ArgumentParser):
     with given:
-        command = RunCommand(CustomConfig, arg_parser)
+        class CustomConfigProject(CustomConfig):
+            project_dir = tmp_dir
+
+        command = RunCommand(CustomConfigProject, arg_parser)
         create_scenario(tmp_dir, "scenario.py")
 
     with when, raises(BaseException) as exc:

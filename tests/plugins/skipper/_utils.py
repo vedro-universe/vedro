@@ -8,7 +8,7 @@ import pytest
 from niltype import Nil, Nilable
 
 from vedro import Scenario
-from vedro.core import Config, Dispatcher, VirtualScenario
+from vedro.core import Config, Dispatcher, VirtualScenario, get_scenario_meta
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.skipper import Skipper, SkipperPlugin
 from vedro.plugins.skipper import only as only_scenario
@@ -127,12 +127,12 @@ def get_scenarios(key: str, globals_: Dict[str, Any]) -> List[Type[Scenario]]:
 
 
 def get_only_attr(scenario: Type[Scenario]) -> bool:
-    return getattr(scenario, "__vedro__only__", False)
+    return get_scenario_meta(scenario, "only", default=False, plugin=SkipperPlugin)
 
 
 def get_skip_attr(scenario: Type[Scenario]) -> bool:
-    return getattr(scenario, "__vedro__skipped__", False)
+    return get_scenario_meta(scenario, "skipped", default=False, plugin=SkipperPlugin)
 
 
 def get_skip_reason_attr(scenario: Type[Scenario]) -> Nilable[str]:
-    return getattr(scenario, "__vedro__skip_reason__", Nil)
+    return get_scenario_meta(scenario, "skip_reason", default=Nil, plugin=SkipperPlugin)

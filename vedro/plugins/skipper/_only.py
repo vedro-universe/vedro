@@ -2,6 +2,9 @@ from inspect import isclass
 from typing import Callable, Type, TypeVar, overload
 
 from vedro._scenario import Scenario
+from vedro.core import set_scenario_meta
+
+from ._skipper import SkipperPlugin
 
 __all__ = ("only",)
 
@@ -22,7 +25,10 @@ def only(scenario_or_nothing=None):  # type: ignore
     def wrapped(scenario: T) -> T:
         if not issubclass(scenario, Scenario):
             raise TypeError("Decorator @only can be used only with 'vedro.Scenario' subclasses")
-        setattr(scenario, "__vedro__only__", True)
+
+        set_scenario_meta(scenario, key="only", value=True, plugin=SkipperPlugin,
+                          fallback_key="__vedro__only__")
+
         return scenario
 
     if scenario_or_nothing is None:
