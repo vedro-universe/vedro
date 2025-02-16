@@ -45,7 +45,7 @@ async def main() -> None:
         sys.path.insert(0, str(project_dir))
 
     config_loader = ConfigFileLoader(Config)
-    config_path = project_dir / "vedro.cfg.py"
+    config_path = Path("vedro.cfg.py")
     config = cast(Type[Config], await config_loader.load(config_path))
 
     formatter = partial(HelpFormatter, max_help_position=30)
