@@ -20,17 +20,14 @@ class SlicerPlugin(Plugin):
     test runs across multiple machines or processes.
     """
 
-    def __init__(self, config: Type["Slicer"], *,
-                 slicing_strategy: SlicingStrategyType = SkipAdjustedSlicingStrategy) -> None:
+    def __init__(self, config: Type["Slicer"]) -> None:
         """
         Initialize the SlicerPlugin with the provided configuration.
 
         :param config: The Slicer configuration class.
-        :param slicing_strategy: The slicing strategy to be used for scenario distribution.
-            Defaults to `SkipAdjustedSlicingStrategy`.
         """
         super().__init__(config)
-        self._slicing_strategy = slicing_strategy
+        self._slicing_strategy = config.slicing_strategy
         self._total: Union[int, None] = None
         self._index: Union[int, None] = None
 
