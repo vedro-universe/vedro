@@ -125,21 +125,25 @@ class Config(core.Config):
 
             @computed
             def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-                return [Config.Plugins.Director]
+                # Temporarily commented out due to issue
+                # https://github.com/vedro-universe/vedro/issues/123 until
+                # https://github.com/vedro-universe/vedro/pull/83 is merged
+                # return [Config.Plugins.Director]
+                return []
 
         class SilentReporter(director.SilentReporter):
             enabled = True
 
-            @computed
-            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-                return [Config.Plugins.Director]
+            # @computed
+            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+            #     return [Config.Plugins.Director]
 
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
 
-            @computed
-            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-                return [Config.Plugins.Director]
+            # @computed
+            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
+            #     return [Config.Plugins.Director]
 
         class TempKeeper(temp_keeper.TempKeeper):
             enabled = True
