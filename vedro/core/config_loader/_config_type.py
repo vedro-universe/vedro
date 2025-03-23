@@ -3,7 +3,7 @@ from typing import Type, Union
 
 import cabina
 
-__all__ = ("Config", "Section", "ConfigType", "computed",)
+__all__ = ("Config", "Section", "ConfigType", "computed", "env", "lazy_env",)
 
 
 class Section(cabina.Section):
@@ -88,4 +88,20 @@ Decorator for computed configuration properties.
 
 This is a re-export of `cabina.computed`, allowing you to define dynamic
 configuration options whose values are computed based on other properties.
+"""
+
+env = cabina.env
+"""
+Decorator to define environment-variable-based configuration properties.
+
+This is a re-export of `cabina.env`, used to declare configuration properties
+whose values are populated from environment variables.
+"""
+
+lazy_env = cabina.lazy_env
+"""
+Decorator to define lazily evaluated environment-variable-based properties.
+
+This is a re-export of `cabina.lazy_env`, allowing you to lazily resolve
+configuration values from environment variables upon first access.
 """
