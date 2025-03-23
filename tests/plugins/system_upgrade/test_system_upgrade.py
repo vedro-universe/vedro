@@ -43,6 +43,7 @@ async def test_update_available_no_last_request(*, dispatcher: Dispatcher):
     with then:
         assert report.summary == [
             f"(!) Vedro update available: {cur_version} → {new_version}"
+            " | https://vedro.io/changelog"
         ]
         assert patched.assert_called_once() is None
 
@@ -70,6 +71,7 @@ async def test_update_available_expired_last_request(
     with then:
         assert report.summary == [
             f"(!) Vedro update available: {cur_version} → {new_version}"
+            " | https://vedro.io/changelog"
         ]
         assert patched.assert_called_once() is None
 
