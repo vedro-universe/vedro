@@ -24,6 +24,7 @@ class TempFileManager:
         """
         self._project_dir = project_dir.resolve()
         # default project_dir will be removed in v2.0
+        self._tmp_root = self._project_dir / ".vedro" / "tmp/"
 
     def get_project_dir(self) -> Path:
         """
@@ -43,11 +44,19 @@ class TempFileManager:
 
     def get_tmp_root(self) -> Path:
         """
-        Get the root directory for temporary files and directories.
+        Get the root directory where temporary files and directories are stored.
 
-        :return: A Path object representing the root directory for temporary resources.
+        :return: A Path object representing the root temporary directory.
         """
-        return self._project_dir / ".vedro" / "tmp/"
+        return self._tmp_root
+
+    def set_tmp_root(self, tmp_root: Path) -> None:
+        """
+        Set the root directory for temporary files and directories.
+
+        :param tmp_root: A path to use as the root temporary directory.
+        """
+        self._tmp_root = tmp_root
 
     def create_tmp_dir(self, *,
                        suffix: Optional[str] = None, prefix: Optional[str] = None) -> Path:
@@ -82,4 +91,5 @@ class TempFileManager:
         tmp_root.mkdir(parents=True, exist_ok=True)
         tmp_file = tempfile.NamedTemporaryFile(dir=str(tmp_root), suffix=suffix, prefix=prefix,
                                                delete=False)
+        tmp_file.close()
         return Path(tmp_file.name)
