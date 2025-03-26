@@ -1,4 +1,5 @@
 import shutil
+from pathlib import Path
 from typing import Type, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
@@ -34,6 +35,7 @@ class TempKeeperPlugin(Plugin):
         """
         super().__init__(config)
         self._tmp_file_manager = tmp_file_manager
+        self._tmp_root = config.tmp_dir
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
@@ -49,17 +51,21 @@ class TempKeeperPlugin(Plugin):
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         """
-        Handle the `ConfigLoadedEvent` by setting the project directory in the file manager.
+        Set the project and temporary root directories when configuration is loaded.
 
         :param event: The `ConfigLoadedEvent` containing the loaded configuration.
         """
-        self._tmp_file_manager.set_project_dir(event.config.project_dir)
+        project_dir = event.config.project_dir
+        self._tmp_file_manager.set_project_dir(project_dir)
+        if not self._tmp_root.is_absolute():
+            self._tmp_root = project_dir / self._tmp_root
+        self._tmp_file_manager.set_tmp_root(self._tmp_root)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         """
-        Handle the `ArgParsedEvent` by removing the temporary files.
+        Remove all temporary files and directories after argument parsing is complete.
 
-        Deletes the temporary files and directories if they exist in the `.vedro/tmp` directory.
+        If the temporary root directory exists, its entire contents will be deleted recursively.
 
         :param event: The `ArgParsedEvent` containing the parsed arguments.
         """
@@ -77,3 +83,7 @@ class TempKeeper(PluginConfig):
     """
     plugin = TempKeeperPlugin
     description = "Manages temporary directories and files"
+
+    # Root directory for storing temporary files and directories
+    # (!) This directory is deleted at the start of each run.
+    tmp_dir: Path = Path(".vedro/tmp/")
