@@ -1,10 +1,18 @@
+from pathlib import Path
+
 import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher
-from vedro.plugins.temp_keeper import TempFileManager
+from vedro.plugins.temp_keeper import TempFileManager, TempKeeper, TempKeeperPlugin
 
-from ._utils import dispatcher, fire_arg_parsed_event, temp_file_manager, temp_keeper
+from ._utils import (
+    dispatcher,
+    fire_arg_parsed_event,
+    fire_config_loaded_event,
+    temp_file_manager,
+    temp_keeper,
+)
 
 __all__ = ("dispatcher", "temp_file_manager", "temp_keeper",)  # fixtures
 
@@ -36,3 +44,37 @@ async def test_temp_keeper_plugin_no_tmp_root(*, dispatcher: Dispatcher,
     with then:
         tmp_root = temp_file_manager.get_tmp_root()
         assert tmp_root.exists() is False
+
+
+async def test_relative_tmp_dir_default(*, dispatcher: Dispatcher,
+                                        temp_file_manager: TempFileManager, tmp_path: Path):
+    with given:
+        class TempKeeperConfig(TempKeeper):
+            pass
+
+        plugin = TempKeeperPlugin(TempKeeperConfig, tmp_file_manager=temp_file_manager)
+        plugin.subscribe(dispatcher)
+
+    with when:
+        await fire_config_loaded_event(dispatcher, project_directory=tmp_path)
+
+    with then:
+        assert temp_file_manager.get_project_dir() == tmp_path
+        assert temp_file_manager.get_tmp_root() == tmp_path / ".vedro/tmp/"
+
+
+async def test_abs_tmp_dir_custom(*, dispatcher: Dispatcher, temp_file_manager: TempFileManager,
+                                  tmp_path: Path):
+    with given:
+        class TempKeeperConfig(TempKeeper):
+            tmp_dir = tmp_path / ".tmp/"
+
+        plugin = TempKeeperPlugin(TempKeeperConfig, tmp_file_manager=temp_file_manager)
+        plugin.subscribe(dispatcher)
+
+    with when:
+        await fire_config_loaded_event(dispatcher, project_directory=tmp_path)
+
+    with then:
+        assert temp_file_manager.get_project_dir() == tmp_path
+        assert temp_file_manager.get_tmp_root() == tmp_path / ".tmp/"
