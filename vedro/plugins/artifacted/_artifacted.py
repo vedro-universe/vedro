@@ -103,7 +103,7 @@ class ArtifactedPlugin(Plugin):
         self._scenario_artifacts = scenario_artifacts
         self._step_artifacts = step_artifacts
         self._save_artifacts = config.save_artifacts
-        self._artifacts_dir = config.artifacts_dir
+        self._artifacts_dir = Path(config.artifacts_dir)
         self._add_artifact_details = config.add_artifact_details
         self._cleanup_artifacts_dir = config.cleanup_artifacts_dir
         self._global_config: Union[ConfigType, None] = None
