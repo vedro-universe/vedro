@@ -36,13 +36,11 @@ class TempKeeperPlugin(Plugin):
         super().__init__(config)
         self._tmp_file_manager = tmp_file_manager
         self._tmp_dir = Path(config.tmp_dir)
+        self._cleanup_tmp = config.cleanup_tmp
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
         Subscribe to events in the dispatcher.
-
-        Listens to the `ConfigLoadedEvent` to set the project directory and to the
-        `ArgParsedEvent` to clean up the temporary files after the arguments are parsed.
 
         :param dispatcher: The dispatcher to subscribe events from.
         """
@@ -52,25 +50,40 @@ class TempKeeperPlugin(Plugin):
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         """
-        Set the project and temporary root directories when configuration is loaded.
+        Handle the ConfigLoadedEvent to set the project directory in the TempFileManager.
 
-        :param event: The `ConfigLoadedEvent` containing the loaded configuration.
+        :param event: The configuration loaded event containing the project directory.
         """
         project_dir = event.config.project_dir
         self._tmp_file_manager.set_project_dir(project_dir)
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("--tmp-dir", type=Path, default=self._tmp_dir,
-                                      help="Temporary directory for storing files")
+        """
+        Handle the ArgParseEvent to add CLI arguments for temp directory and cleanup options.
+
+        :param event: The argument parser event to which CLI arguments will be added.
+        """
+        group = event.arg_parser.add_argument_group("TempKeeper")
+        group.add_argument("--tmp-dir", type=Path, default=self._tmp_dir,
+                           help="Temporary directory for storing files")
+        group.add_argument("--no-tmp-cleanup", action="store_true", default=not self._cleanup_tmp,
+                           help="Do not clean up temporary directory before run")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
+        """
+        Handle the ArgParsedEvent to apply CLI arguments and clean up the temporary directory.
+
+        :param event: The parsed CLI arguments event.
+        """
         self._tmp_dir = event.args.tmp_dir
         if not self._tmp_dir.is_absolute():
             project_dir = self._tmp_file_manager.get_project_dir()
             self._tmp_dir = project_dir / self._tmp_dir
         self._tmp_file_manager.set_tmp_root(self._tmp_dir)
 
-        if self._tmp_dir.exists():
+        # CLI flag is `no_tmp_cleanup`, so negate it
+        self._cleanup_tmp = not event.args.no_tmp_cleanup
+        if self._cleanup_tmp and self._tmp_dir.exists():
             shutil.rmtree(self._tmp_dir)
 
 
@@ -84,6 +97,10 @@ class TempKeeper(PluginConfig):
     plugin = TempKeeperPlugin
     description = "Manages temporary directories and files"
 
-    # Root directory for storing temporary files and directories
+    # Root directory for storing temporary files and directories.
     # (!) This directory is deleted at the start of each run.
     tmp_dir: Path = Path(".vedro/tmp/")
+
+    # Whether to clean up the temporary directory at the start of each run.
+    # Can be overridden via CLI using `--no-tmp-cleanup`.
+    cleanup_tmp: bool = True

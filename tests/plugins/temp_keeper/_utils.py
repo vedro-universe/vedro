@@ -36,9 +36,11 @@ async def fire_config_loaded_event(dispatcher: Dispatcher, project_directory: Pa
     await dispatcher.fire(config_loaded_event)
 
 
-async def fire_arg_parsed_event(dispatcher: Dispatcher, *, tmp_dir: Path):
+async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
+                                tmp_dir: Path = TempKeeper.tmp_dir,
+                                no_tmp_cleanup: bool = not TempKeeper.cleanup_tmp):
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(tmp_dir=tmp_dir))
+    arg_parsed_event = ArgParsedEvent(Namespace(tmp_dir=tmp_dir, no_tmp_cleanup=no_tmp_cleanup))
     await dispatcher.fire(arg_parsed_event)
