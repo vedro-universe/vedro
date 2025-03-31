@@ -18,14 +18,14 @@ __all__ = ("dispatcher", "temp_file_manager", "temp_keeper",)  # fixtures
 
 
 @pytest.mark.usefixtures(temp_keeper.__name__)
-async def test_temp_keeper_plugin(*, dispatcher: Dispatcher,
+async def test_temp_keeper_plugin(*, dispatcher: Dispatcher, tmp_path: Path,
                                   temp_file_manager: TempFileManager):
     with given:
         tmp_dir = temp_file_manager.create_tmp_dir()
         tmp_file = temp_file_manager.create_tmp_file()
 
     with when:
-        await fire_arg_parsed_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher, tmp_dir=tmp_path)
 
     with then:
         assert tmp_dir.exists() is False
@@ -36,18 +36,18 @@ async def test_temp_keeper_plugin(*, dispatcher: Dispatcher,
 
 
 @pytest.mark.usefixtures(temp_keeper.__name__)
-async def test_temp_keeper_plugin_no_tmp_root(*, dispatcher: Dispatcher,
+async def test_temp_keeper_plugin_no_tmp_root(*, dispatcher: Dispatcher, tmp_path: Path,
                                               temp_file_manager: TempFileManager):
     with when:
-        await fire_arg_parsed_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher, tmp_dir=tmp_path)
 
     with then:
         tmp_root = temp_file_manager.get_tmp_root()
         assert tmp_root.exists() is False
 
 
-async def test_relative_tmp_dir_default(*, dispatcher: Dispatcher,
-                                        temp_file_manager: TempFileManager, tmp_path: Path):
+async def test_rel_tmp_dir_default(*, dispatcher: Dispatcher, tmp_path: Path,
+                                   temp_file_manager: TempFileManager):
     with given:
         class TempKeeperConfig(TempKeeper):
             pass
@@ -63,8 +63,8 @@ async def test_relative_tmp_dir_default(*, dispatcher: Dispatcher,
         assert temp_file_manager.get_tmp_root() == tmp_path / ".vedro/tmp/"
 
 
-async def test_abs_tmp_dir_custom(*, dispatcher: Dispatcher, temp_file_manager: TempFileManager,
-                                  tmp_path: Path):
+async def test_abs_tmp_dir_custom(*, dispatcher: Dispatcher, tmp_path: Path,
+                                  temp_file_manager: TempFileManager):
     with given:
         class TempKeeperConfig(TempKeeper):
             tmp_dir = tmp_path / ".tmp/"
@@ -74,6 +74,8 @@ async def test_abs_tmp_dir_custom(*, dispatcher: Dispatcher, temp_file_manager: 
 
     with when:
         await fire_config_loaded_event(dispatcher, project_directory=tmp_path)
+
+        await fire_arg_parsed_event(dispatcher, tmp_dir=TempKeeperConfig.tmp_dir)
 
     with then:
         assert temp_file_manager.get_project_dir() == tmp_path

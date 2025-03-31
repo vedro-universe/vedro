@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Type, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
-from vedro.events import ArgParsedEvent, ConfigLoadedEvent
+from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 
 from ._temp_file_manager import TempFileManager
 
@@ -35,7 +35,7 @@ class TempKeeperPlugin(Plugin):
         """
         super().__init__(config)
         self._tmp_file_manager = tmp_file_manager
-        self._tmp_root = config.tmp_dir
+        self._tmp_dir = Path(config.tmp_dir)
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
@@ -47,6 +47,7 @@ class TempKeeperPlugin(Plugin):
         :param dispatcher: The dispatcher to subscribe events from.
         """
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
+                  .listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
@@ -57,21 +58,20 @@ class TempKeeperPlugin(Plugin):
         """
         project_dir = event.config.project_dir
         self._tmp_file_manager.set_project_dir(project_dir)
-        if not self._tmp_root.is_absolute():
-            self._tmp_root = project_dir / self._tmp_root
-        self._tmp_file_manager.set_tmp_root(self._tmp_root)
+
+    def on_arg_parse(self, event: ArgParseEvent) -> None:
+        event.arg_parser.add_argument("--tmp-dir", type=Path, default=self._tmp_dir,
+                                      help="Temporary directory for storing files")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
-        """
-        Remove all temporary files and directories after argument parsing is complete.
+        self._tmp_dir = event.args.tmp_dir
+        if not self._tmp_dir.is_absolute():
+            project_dir = self._tmp_file_manager.get_project_dir()
+            self._tmp_dir = project_dir / self._tmp_dir
+        self._tmp_file_manager.set_tmp_root(self._tmp_dir)
 
-        If the temporary root directory exists, its entire contents will be deleted recursively.
-
-        :param event: The `ArgParsedEvent` containing the parsed arguments.
-        """
-        tmp_root = self._tmp_file_manager.get_tmp_root()
-        if tmp_root.exists():
-            shutil.rmtree(tmp_root)
+        if self._tmp_dir.exists():
+            shutil.rmtree(self._tmp_dir)
 
 
 class TempKeeper(PluginConfig):
