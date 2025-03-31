@@ -98,7 +98,7 @@ This is a re-export of `cabina.env`, used to declare configuration properties
 whose values are populated from environment variables.
 """
 
-lazy_env = cabina.lazy_env
+lazy_env = getattr(cabina, "lazy_env", env)  # backward compatibility for older versions
 """
 Decorator to define lazily evaluated environment-variable-based properties.
 
