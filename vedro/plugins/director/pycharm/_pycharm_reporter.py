@@ -1,5 +1,8 @@
 from typing import Any, Callable, Dict, Type, final
 
+from niltype import Nil
+from rich.pretty import pretty_repr
+
 from vedro.core import Dispatcher, PluginConfig, ScenarioResult
 from vedro.events import (
     ArgParsedEvent,
@@ -27,6 +30,7 @@ class PyCharmReporterPlugin(Reporter):
         self._show_internal_calls = config.show_internal_calls
         self._show_skipped = config.show_skipped
         self._no_output = config.no_output
+        self._show_comparison = config.show_comparison
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
@@ -100,16 +104,46 @@ class PyCharmReporterPlugin(Reporter):
 
     def on_scenario_failed(self, event: ScenarioFailedEvent) -> None:
         scenario_result = event.scenario_result
+
         self._print_scenario(scenario_result)
+
+        comparison_attrs = self._get_comparison_attrs(scenario_result)
         self._write_message("testFailed", {
             "name": scenario_result.scenario.subject,
             "message": "",
             "details": "",
+            **comparison_attrs,
         })
+
         self._write_message("testFinished", {
             "name": scenario_result.scenario.subject,
             "duration": int(scenario_result.elapsed * 1000),
         })
+
+    def _get_comparison_attrs(self, scenario_result: ScenarioResult) -> Dict[str, Any]:
+        if not self._show_comparison:
+            return {}
+
+        for step_result in scenario_result.step_results:
+            if step_result.exc_info is None:
+                continue
+
+            exc_value = step_result.exc_info.value
+            operator = getattr(exc_value, "__vedro_assert_operator__", Nil)
+            if (operator is Nil) or (operator != "=="):
+                continue
+
+            actual = getattr(exc_value, "__vedro_assert_left__", Nil)
+            expected = getattr(exc_value, "__vedro_assert_right__", Nil)
+            if (actual is not Nil) and (expected is not Nil):
+                return {
+                    "message": "assert actual == expected",
+                    "actual": pretty_repr(actual),
+                    "expected": pretty_repr(expected),
+                    "type": "comparisonFailure",
+                }
+
+        return {}
 
     def on_scenario_skipped(self, event: ScenarioSkippedEvent) -> None:
         if not self._show_skipped:
@@ -152,3 +186,6 @@ class PyCharmReporter(PluginConfig):
 
     # Don't produce report output
     no_output: bool = False
+
+    # Enable adding expected vs actual comparison to PyCharm messages
+    show_comparison: bool = True
