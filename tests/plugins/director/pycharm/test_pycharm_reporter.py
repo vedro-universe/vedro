@@ -64,7 +64,7 @@ async def test_scenario_run(no_output: bool, *, dispatcher: Dispatcher, printer_
         assert printer_.mock_calls == [
             call.console.out("##teamcity[testStarted "
                              f"name='{scenario_result.scenario.subject}' "
-                             f"locationHint='{scenario_result.scenario.path}']")
+                             f"locationHint='file://{scenario_result.scenario.path}']")
         ]
 
 

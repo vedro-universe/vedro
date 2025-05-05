@@ -67,7 +67,7 @@ class PyCharmReporterPlugin(Reporter):
         scenario_result = event.scenario_result
         self._write_message("testStarted", {
             "name": scenario_result.scenario.subject,
-            "locationHint": scenario_result.scenario.path,
+            "locationHint": f"file://{scenario_result.scenario.path}",
         })
 
     def _print_scenario(self, scenario_result: ScenarioResult) -> None:
