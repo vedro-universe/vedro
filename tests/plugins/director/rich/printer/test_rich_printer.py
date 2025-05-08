@@ -517,7 +517,7 @@ def test_pretty_print_renderable(*, printer: RichPrinter, console_: Mock):
 
     with then:
         assert console_.mock_calls == [
-            call.print(renderable),
+            call.print(renderable, soft_wrap=False),
         ]
 
 
