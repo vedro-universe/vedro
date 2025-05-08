@@ -13,7 +13,7 @@ def find_dev_required():
 
 setup(
     name="vedro",
-    version="1.13.4",
+    version="1.13.5",
     description="Pragmatic Testing Framework",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
