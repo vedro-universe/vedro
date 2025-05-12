@@ -61,10 +61,11 @@ async def test_scenario_run(no_output: bool, *, dispatcher: Dispatcher, printer_
         await dispatcher.fire(event)
 
     with then:
+        location_hint = f"file://{scenario_result.scenario.path}:{scenario_result.scenario.lineno}"
         assert printer_.mock_calls == [
             call.console.out("##teamcity[testStarted "
                              f"name='{scenario_result.scenario.subject}' "
-                             f"locationHint='file://{scenario_result.scenario.path}']")
+                             f"locationHint='{location_hint}']")
         ]
 
 

@@ -309,3 +309,39 @@ def test_get_meta():
 
     with then:
         assert value == "value"
+
+
+def test_virtual_scenario_lineno(*, scenario_: Type[Scenario]):
+    with given:
+        scenario_.__vedro__lineno__ = 42
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        lineno = virtual_scenario.lineno
+
+    with then:
+        assert lineno == 42
+
+
+def test_virtual_scenario_no_lineno(*, scenario_: Type[Scenario]):
+    with given:
+        # __vedro__lineno__ attribute is not set
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        lineno = virtual_scenario.lineno
+
+    with then:
+        assert lineno is None
+
+
+def test_virtual_template_lineno(*, template_: Type[Scenario]):
+    with given:
+        template_.__vedro__lineno__ = 42
+        virtual_scenario = VirtualScenario(template_, [])
+
+    with when:
+        lineno = virtual_scenario.lineno
+
+    with then:
+        assert lineno == 42
