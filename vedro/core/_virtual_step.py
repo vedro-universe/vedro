@@ -1,5 +1,7 @@
 from asyncio import iscoroutinefunction
+from inspect import getdoc
 from typing import Any, Callable
+from typing import Optional as Maybe
 
 __all__ = ("VirtualStep",)
 
@@ -28,6 +30,15 @@ class VirtualStep:
         :return: A string representing the name of the original step.
         """
         return self._orig_step.__name__
+
+    @property
+    def doc(self) -> Maybe[str]:
+        """
+        Get the docstring of the original step.
+
+        :return: The docstring of the original step, or None if not available.
+        """
+        return getdoc(self._orig_step)
 
     def is_coro(self) -> bool:
         """

@@ -1,7 +1,10 @@
 from hashlib import blake2b
-from inspect import BoundArguments
+from inspect import BoundArguments, getdoc
 from pathlib import Path
-from typing import Any, List, Optional, Type, TypeVar, Union, cast, overload
+from typing import Any, List
+from typing import Optional
+from typing import Optional as Maybe
+from typing import Type, TypeVar, Union, cast, overload
 
 from niltype import Nil, Nilable, NilType
 
@@ -48,6 +51,15 @@ class VirtualScenario:
         self._path = Path(getattr(orig_scenario, "__file__", "."))
         self._is_skipped = False
         self._skip_reason: Union[str, None] = None
+
+    @property
+    def doc(self) -> Maybe[str]:
+        """
+        Get the docstring of the original scenario.
+
+        :return: The docstring of the original scenario or None if not available.
+        """
+        return getdoc(self._orig_scenario)
 
     @property
     def steps(self) -> List[VirtualStep]:

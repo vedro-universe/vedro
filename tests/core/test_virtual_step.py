@@ -107,3 +107,45 @@ def test_virtual_step_not_eq():
 
     with then:
         assert res is False
+
+
+def test_virtual_step_doc():
+    with given:
+        async def my_step():  # could be sync too – doesn’t matter here
+            """Adds a product to the basket"""
+        step = VirtualStep(my_step)
+
+    with when:
+        doc = step.doc
+
+    with then:
+        assert doc == "Adds a product to the basket"
+
+
+def test_virtual_step_doc_multiline():
+    with given:
+        def my_step():
+            """
+            Step first line
+            Step second line
+            """
+        step = VirtualStep(my_step)
+
+    with when:
+        doc = step.doc
+
+    with then:
+        assert doc == "Step first line\nStep second line"
+
+
+def test_virtual_step_doc_when_absent():
+    with given:
+        def my_step():
+            pass  # no docstring
+        step = VirtualStep(my_step)
+
+    with when:
+        doc = step.doc
+
+    with then:
+        assert doc is None
