@@ -24,6 +24,13 @@ class _Meta(type):
                 module = namespace.get("__module__", "")
                 raise TypeError(f"Subclassing is restricted <{module}.{name}>")
 
+        frame = inspect.currentframe()
+        try:
+            lineno = frame.f_back.f_lineno if frame and frame.f_back else None
+        finally:
+            del frame
+        namespace["__vedro__lineno__"] = lineno
+
         cls_constructor = namespace.get("__init__")
         cls_params = getattr(cls_constructor, "__vedro__params__", None)
         if cls_params is None or len(cls_params) == 0:
@@ -57,6 +64,8 @@ class _Meta(type):
                 "__vedro__template_args__": bound_args,
             }
             cls = type(cls_name, bases, cls_namespace)
+            setattr(cls, "__vedro__lineno__", lineno)
+
             for decorator in decorators:
                 cls = decorator(cls)
             cls_globals[cls_name] = cls

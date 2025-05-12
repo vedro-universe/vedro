@@ -169,6 +169,15 @@ class VirtualScenario:
         parts = self.rel_path.parts[1:-1]
         return str(Path(*parts)) if parts else ""
 
+    @property
+    def lineno(self) -> Union[int, None]:
+        """
+        Get the line number where the scenario class is defined.
+
+        :return: An integer representing the line number, or None if not available.
+        """
+        return getattr(self._orig_scenario, "__vedro__lineno__", None)
+
     def skip(self, reason: Optional[str] = None) -> None:
         """
         Mark the scenario as skipped with an optional reason.
