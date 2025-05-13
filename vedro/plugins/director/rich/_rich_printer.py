@@ -84,6 +84,9 @@ class RichPrinter:
 
     def print_step_name(self, name: str, status: StepStatus, *,
                         elapsed: Optional[float] = None, prefix: str = "") -> None:
+        if " " not in name:
+            name = name.replace("_", " ")
+
         if status == StepStatus.PASSED:
             name = f"✔ {name}"
             style = Style(color="green")

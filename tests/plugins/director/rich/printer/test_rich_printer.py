@@ -174,6 +174,28 @@ def test_print_step_name(status: StepStatus, symbol: str, color: str, prefix: st
     (StepStatus.PASSED, "✔", "green"),
     (StepStatus.FAILED, "✗", "red"),
 ])
+@pytest.mark.parametrize(("name", "expected_name"), [
+    ("<step>", "<step>"),
+    ("step_name", "step name"),
+    ("step with spaces", "step with spaces"),
+])
+def test_step_name_format(status: StepStatus, symbol: str, color: str,
+                          name: str, expected_name: str, *,
+                          printer: RichPrinter, console_: Mock):
+    with when:
+        printer.print_step_name(name, status)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out("", end=""),
+            call.out(f"{symbol} {expected_name}", style=Style(color=color)),
+        ]
+
+
+@pytest.mark.parametrize(("status", "symbol", "color"), [
+    (StepStatus.PASSED, "✔", "green"),
+    (StepStatus.FAILED, "✗", "red"),
+])
 @pytest.mark.parametrize(("elapsed", "elapsed_repr"), [
     (3.1, "3.10s"),
     (3.1415, "3.14s")
