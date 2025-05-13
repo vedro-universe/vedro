@@ -11,10 +11,15 @@ __all__ = ("Skipper", "SkipperPlugin",)
 
 
 class _CompositePath:
-    def __init__(self, file_path: str, cls_name: Optional[str], tmpl_idx: Optional[int]) -> None:
+    def __init__(self,
+                 file_path: str,
+                 cls_name: Optional[str],
+                 tmpl_idx: Optional[int],
+                 lineno: Optional[int]) -> None:
         self.file_path = file_path
         self.cls_name = cls_name
         self.tmpl_idx = tmpl_idx
+        self.lineno = lineno
 
 
 @final
@@ -98,13 +103,23 @@ class SkipperPlugin(Plugin):
 
     def _get_composite_path(self, file_or_dir: str) -> _CompositePath:
         head, tail = os.path.split(file_or_dir)
-        file_name, *other = tail.split("::")
-        cls_name, *other = "".join(other).split("#")
-        tmpl_idx = "".join(other)
+
+        if "::" in tail:
+            file_name, *other = tail.rsplit("::")
+            cls_name, *other = "".join(other).rsplit("#")
+            tmpl_idx = "".join(other)
+            lineno = None
+        else:
+            file_name, *lineno_part = tail.rsplit(":")
+            lineno = int(lineno_part[0]) if lineno_part and lineno_part[0].isdigit() else None
+            cls_name = ""
+            tmpl_idx = ""
+
         return _CompositePath(
             file_path=self._normalize_path(os.path.join(head, file_name)),
             cls_name=cls_name if len(cls_name) > 0 else None,
             tmpl_idx=int(tmpl_idx) if tmpl_idx.isnumeric() else None,
+            lineno=lineno,
         )
 
     def _normalize_path(self, file_or_dir: str) -> str:
@@ -137,6 +152,9 @@ class SkipperPlugin(Plugin):
 
     def _is_match_scenario(self, path: _CompositePath, scenario: VirtualScenario) -> bool:
         if os.path.commonpath([path.file_path, scenario.path]) != path.file_path:
+            return False
+
+        if (path.lineno is not None) and (path.lineno != scenario.lineno):
             return False
 
         if (path.cls_name is not None) and (path.cls_name != scenario.name):
