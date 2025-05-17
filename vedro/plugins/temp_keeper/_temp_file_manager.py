@@ -63,7 +63,7 @@ class TempFileManager:
         """
         Create a temporary directory within a specified root directory.
 
-        The dir is created in the '.vedro/tmp' directory within the current working directory.
+        The dir is created in the '.vedro/tmp' directory within the project directory.
         It has a unique name, which can be customized with an optional suffix and prefix.
 
         :param suffix: An optional suffix to append to the temporary directory's name.
@@ -80,7 +80,7 @@ class TempFileManager:
         """
         Create a temporary file within a specified root directory.
 
-        The file is created in the '.vedro/tmp' directory within the current working directory.
+        The file is created in the '.vedro/tmp' directory within the project directory.
         It has a unique name, which can be customized with an optional suffix and prefix.
 
         :param suffix: An optional suffix to append to the temporary file's name.
