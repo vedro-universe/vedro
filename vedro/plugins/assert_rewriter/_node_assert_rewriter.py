@@ -1,6 +1,6 @@
 import ast
 import warnings
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 from niltype import Nil
 
@@ -91,7 +91,7 @@ class NodeAssertRewriter(ast.NodeTransformer):
         :raises ValueError: If the operator is unsupported.
         """
         args = [left, right] if (right is not None) else [left]
-        keywords = [ast.keyword(arg="message", value=msg)] if (msg is not None) else []
+        keywords = [ast.keyword("message", cast(ast.expr, msg))] if (msg is not None) else []
 
         method = self._assert_methods.get(type(operator), Nil)
         if method is not Nil:
@@ -117,6 +117,6 @@ class NodeAssertRewriter(ast.NodeTransformer):
                 attr=method,
                 ctx=ast.Load()
             ),
-            args=args,
+            args=cast(List[ast.expr], args),
             keywords=kwargs
         )
