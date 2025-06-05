@@ -25,11 +25,11 @@ from .plugins.skipper import only, skip, skip_if
 from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
 
 __version__ = version
-__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
+__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params", "catched",
            "scenario", "given", "when", "then", "ensure", "context", "defer", "defer_global",
-           "catched", "create_tmp_dir", "create_tmp_file", "attach_artifact", "attach_scenario_artifact",
-           "attach_step_artifact", "attach_global_artifact", "MemoryArtifact", "FileArtifact", "Artifact",
-           "Config", "computed",)
+           "create_tmp_dir", "create_tmp_file", "attach_artifact", "attach_scenario_artifact",
+           "attach_step_artifact", "attach_global_artifact", "Config", "computed",
+           "MemoryArtifact", "FileArtifact", "Artifact",)
 
 
 def run(*, plugins: Any = None) -> None:
