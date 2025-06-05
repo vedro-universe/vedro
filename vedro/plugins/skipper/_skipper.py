@@ -203,4 +203,4 @@ class Skipper(PluginConfig):
 
     # Enable the experimental selective discoverer feature
     # to optimize startup speed by loading scenarios only from specified files
-    exp_selective_discoverer: bool = True
+    exp_selective_discoverer: bool = False
