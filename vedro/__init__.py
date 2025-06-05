@@ -20,15 +20,16 @@ from .plugins.artifacted import (
 )
 from .plugins.deferrer import defer, defer_global
 from .plugins.ensurer import ensure
+from .plugins.functioner import given, scenario, then, when
 from .plugins.skipper import only, skip, skip_if
 from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
 
 __version__ = version
-__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params", "ensure",
-           "context", "defer", "defer_global", "Config", "computed", "catched", "create_tmp_dir",
-           "create_tmp_file", "attach_artifact", "attach_scenario_artifact",
-           "attach_step_artifact", "attach_global_artifact", "MemoryArtifact", "FileArtifact",
-           "Artifact",)
+__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
+           "scenario", "given", "when", "then", "ensure", "context", "defer", "defer_global",
+           "catched", "create_tmp_dir", "create_tmp_file", "attach_artifact", "attach_scenario_artifact",
+           "attach_step_artifact", "attach_global_artifact", "MemoryArtifact", "FileArtifact", "Artifact",
+           "Config", "computed",)
 
 
 def run(*, plugins: Any = None) -> None:

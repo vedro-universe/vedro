@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from .._virtual_scenario import VirtualScenario
+from ..scenario_collector import ScenarioCollector
 from ..scenario_finder import ScenarioFinder
 from ..scenario_loader import ScenarioLoader
 from ..scenario_orderer import ScenarioOrderer
@@ -24,7 +25,7 @@ class ScenarioDiscoverer(ABC):
     """
 
     def __init__(self, finder: ScenarioFinder,
-                 loader: ScenarioLoader,
+                 loader: Union[ScenarioLoader, ScenarioCollector],
                  orderer: ScenarioOrderer) -> None:
         """
         Initialize the ScenarioDiscoverer with necessary components.
@@ -33,7 +34,15 @@ class ScenarioDiscoverer(ABC):
         :param loader: An instance of ScenarioLoader to load scenarios from files.
         :param orderer: An instance of ScenarioOrderer to order the loaded scenarios.
         """
+        # NOTE: Two alternatives are under consideration for v2:
+        #   1. Replace the finder with a `DirectoryTraverser` that exposes
+        #      async def traverse(self, root: Path) -> AsyncGenerator[Path, None]
+        #   2. Introduce a `ScenarioLocator` abstraction with
+        #      async def find() -> AsyncIterable[ScenarioSource]
+        #      so the discoverer remains agnostic of where scenarios are stored.
         self._finder = finder
+        # NOTE: In v2, keep only `ScenarioCollector`; support for `ScenarioLoader`
+        #       will be removed.
         self._loader = loader
         self._orderer = orderer
 

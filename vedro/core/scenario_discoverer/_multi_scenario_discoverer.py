@@ -5,6 +5,7 @@ from typing import List, Optional, Type
 from ..._scenario import Scenario
 from .._virtual_scenario import VirtualScenario
 from .._virtual_step import VirtualStep
+from ..scenario_collector import ScenarioCollector
 from ._create_vscenario import create_vscenario
 from ._scenario_discoverer import ScenarioDiscoverer
 
@@ -55,10 +56,15 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
 
         scenarios = []
         async for path in self._finder.find(root):
-            rel_path = path.relative_to(project_dir) if path.is_absolute() else path
-            loaded = await self._loader.load(rel_path)
-            for scn in loaded:
-                scenarios.append(create_vscenario(scn, project_dir=project_dir))
+            # Backward compatibility
+            if isinstance(self._loader, ScenarioCollector):
+                loaded_vscenarios = await self._loader.collect(path, project_dir=project_dir)
+                scenarios.extend(loaded_vscenarios)
+            else:
+                rel_path = path.relative_to(project_dir) if path.is_absolute() else path
+                loaded_scenarios = await self._loader.load(rel_path)
+                for scn in loaded_scenarios:
+                    scenarios.append(create_vscenario(scn, project_dir=project_dir))
 
         ordered = await self._orderer.sort(scenarios)
         if len(scenarios) != len(ordered):
