@@ -14,24 +14,23 @@ __all__ = ("MultiScenarioDiscoverer",)
 
 class MultiScenarioDiscoverer(ScenarioDiscoverer):
     """
-    A class that discovers and organizes multiple Vedro scenarios.
+    Discovers and organizes multiple Vedro scenarios.
 
-    This class extends ScenarioDiscoverer to handle the discovery of scenarios in a given
-    directory and organizes them for further processing. It leverages the functionalities of
-    'create_vscenario' for creating virtual scenarios.
+    Extends the functionality of ScenarioDiscoverer to support the discovery of multiple
+    scenarios within a given directory. It uses the 'create_vscenario' function to generate
+    VirtualScenario objects and ensures they are properly sorted.
     """
 
     def _discover_steps(self, scenario: Type[Scenario]) -> List[VirtualStep]:
         """
-        Discover steps within a given scenario.
+        Discover steps within a given scenario class.
 
-        This method is deprecated and should not be used in child classes. It serves as a
-        placeholder for compatibility purposes and relies on 'create_vscenario' to discover
-        steps in a scenario.
+        This method is deprecated and retained only for backward compatibility. It uses
+        'create_vscenario' to generate virtual steps from the scenario.
 
         :param scenario: The scenario class to discover steps from.
         :return: A list of virtual steps extracted from the scenario.
-        :raises DeprecationWarning: Indicates the method is deprecated.
+        :raises DeprecationWarning: Indicates the method is deprecated and should not be used.
         """
         warnings.warn("Deprecated: use create_vscenario instead", DeprecationWarning)
         return create_vscenario(scenario).steps
@@ -39,15 +38,18 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
     async def discover(self, root: Path, *,
                        project_dir: Optional[Path] = None) -> List[VirtualScenario]:
         """
-        Discover and organize scenarios from a specified root path.
+        Discover and organize scenarios from the given root directory.
 
-        This method iterates through paths found by '_finder', loads scenarios from each path
-        using '_loader', and converts them into virtual scenarios with 'create_vscenario'.
-        It then sorts the scenarios using '_orderer'.
+        Searches for scenario files starting from the root path, loads them as scenario
+        objects or virtual scenarios depending on the loader, and then sorts them using
+        the configured orderer.
 
-        :param root: The root path to start the discovery of scenarios.
-        :param project_dir: The project directory to resolve relative paths.
-        :return: A sorted list of virtual scenarios discovered from the root path.
+        :param root: The root directory where the scenario discovery begins.
+        :param project_dir: The project directory relative to which paths are resolved.
+                            Defaults to the parent of the root directory if not provided.
+        :return: A list of ordered VirtualScenario objects.
+        :raises ValueError: If the number of scenarios returned by the orderer does not
+                            match the number of discovered scenarios.
         """
         if project_dir is None:
             # TODO: Make project_dir required in v2.0

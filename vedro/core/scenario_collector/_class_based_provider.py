@@ -14,17 +14,32 @@ __all__ = ("ClassBasedProvider",)
 
 
 class ClassBasedProvider(ScenarioProvider):
+    """
+    Provides scenarios by inspecting classes in a module.
+
+    This provider extracts scenarios by identifying valid classes that inherit from
+    Vedro's `Scenario` base class within a given Python module.
+    """
+
     async def provide(self, source: ScenarioSource) -> List[VirtualScenario]:
+        """
+        Provide scenarios discovered from the given source module.
+
+        :param source: The ScenarioSource containing the path and project directory.
+        :return: A list of VirtualScenario objects extracted from the module.
+        """
         module = await source.get_module()
         scenarios = self._collect_scenarios(module)
         return [create_vscenario(scn, project_dir=source.project_dir) for scn in scenarios]
 
     def _collect_scenarios(self, module: ModuleType) -> List[Type[Scenario]]:
         """
-        Collect scenarios from the given module.
+        Collect scenario classes from the specified module.
+
+        Iterates through module members and selects those that are valid Vedro scenarios.
 
         :param module: The module from which to collect scenarios.
-        :return: A list of collected scenarios.
+        :return: A list of Scenario subclasses defined in the module.
         """
         loaded = []
 
@@ -48,12 +63,15 @@ class ClassBasedProvider(ScenarioProvider):
 
     def _is_vedro_scenario(self, val: Any) -> bool:
         """
-        Check if the given value is a Vedro scenario.
+        Determine whether the provided value is a valid Vedro scenario.
+
+        Checks if the value is a class that inherits from `Scenario`, and ensures
+        it is not a base or template class.
 
         :param val: The value to check.
-        :return: True if the value is a Vedro scenario, False otherwise.
-        :raises TypeError: If a class name suggests it's a scenario, but
-                           it doesn't inherit from `vedro.Scenario`.
+        :return: True if the value is a valid scenario class, False otherwise.
+        :raises TypeError: If the value resembles a scenario class
+                           but does not inherit from `Scenario`.
         """
 
         # First, check if 'val' is a class. Non-class values are not scenarios

@@ -9,7 +9,22 @@ __all__ = ("ScenarioSource",)
 
 
 class ScenarioSource:
+    """
+    Represents the source of a scenario including its file path, project directory,
+    and module loader.
+
+    This class provides utilities to access the module and content associated with a scenario
+    file while ensuring thread-safe lazy loading.
+    """
+
     def __init__(self, path: Path, project_dir: Path, module_loader: ModuleLoader) -> None:
+        """
+        Initialize a ScenarioSource instance.
+
+        :param path: The absolute or relative path to the scenario file.
+        :param project_dir: The root directory of the project.
+        :param module_loader: The module loader used to load the scenario module.
+        """
         self._path = path
         self._project_dir = project_dir
         self._module_loader = module_loader
@@ -19,25 +34,54 @@ class ScenarioSource:
 
     @property
     def path(self) -> Path:
+        """
+        Get the full path to the scenario file.
+
+        :return: The full path as a Path object.
+        """
         return self._path
 
     @property
     def rel_path(self) -> Path:
+        """
+        Get the scenario file path relative to the project directory.
+
+        :return: A relative path to the scenario file.
+        """
         if self._path.is_absolute():
             return self._path.relative_to(self._project_dir)
         return self._path
 
     @property
     def project_dir(self) -> Path:
+        """
+        Get the root directory of the project.
+
+        :return: The project directory as a Path object.
+        """
         return self._project_dir
 
     async def get_module(self) -> ModuleType:
+        """
+        Load and return the module corresponding to the scenario file.
+
+        The module is cached after the first load and protected by an asynchronous lock.
+
+        :return: The loaded module object.
+        """
         async with self._lock:
             if self._module is None:
                 self._module = await self._module_loader.load(self._path)
         return self._module
 
     async def get_content(self) -> str:
+        """
+        Read and return the content of the scenario file.
+
+        The content is cached after the first read and protected by an asynchronous lock.
+
+        :return: The scenario file content as a string.
+        """
         async with self._lock:
             if self._content is None:
                 self._content = self._path.read_text()
