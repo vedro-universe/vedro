@@ -91,19 +91,21 @@ async def test_register_provider(tmp_dir: Path, module_loader: ModuleLoader):
 
 
 async def test_init_empty_providers(module_loader: ModuleLoader):
-    with when, raises(ValueError) as exc_info:
+    with when, raises(BaseException) as exc:
         MultiProviderCollector([], module_loader)
 
     with then:
-        assert str(exc_info.value) == "At least one provider must be specified"
+        assert exc.type is ValueError
+        assert str(exc.value) == "At least one provider must be specified"
 
 
 async def test_init_invalid_provider(module_loader: ModuleLoader):
-    with when, raises(TypeError) as exc_info:
+    with when, raises(BaseException) as exc:
         MultiProviderCollector([...], module_loader)
 
     with then:
-        assert str(exc_info.value) == "All providers must be instances of ScenarioProvider"
+        assert exc.type is TypeError
+        assert str(exc.value) == "All providers must be instances of ScenarioProvider"
 
 
 async def test_collect_provider_exception(tmp_dir: Path, module_loader: ModuleLoader):
@@ -111,34 +113,37 @@ async def test_collect_provider_exception(tmp_dir: Path, module_loader: ModuleLo
         provider = make_provider([], spy=Mock(side_effect=RuntimeError("Provider error")))
         collector = MultiProviderCollector([provider], module_loader)
 
-    with when, raises(RuntimeError) as exc_info:
+    with when, raises(BaseException) as exc:
         await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
 
     with then:
-        assert str(exc_info.value) == "Provider error"
+        assert exc.type is RuntimeError
+        assert str(exc.value) == "Provider error"
 
 
-async def collect_invalid_return_type(tmp_dir: Path, module_loader: ModuleLoader):
+async def test_collect_invalid_return_type(tmp_dir: Path, module_loader: ModuleLoader):
     with given:
         provider = make_provider(...)  # Invalid return type
         collector = MultiProviderCollector([provider], module_loader)
 
-    with when, raises(TypeError) as exc_info:
+    with when, raises(BaseException) as exc:
         await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
 
     with then:
-        assert str(exc_info.value) == "Provider must return a list of VirtualScenario"
+        assert exc.type is TypeError
+        assert str(exc.value) == "Provider must return a list of VirtualScenario"
 
 
-async def collect_invalid_return_type2(tmp_dir: Path, module_loader: ModuleLoader):
+async def test_collect_invalid_scenario_type(tmp_dir: Path, module_loader: ModuleLoader):
     with given:
         provider = make_provider([make_vscenario(), ...])  # Invalid scenario type
         collector = MultiProviderCollector([provider], module_loader)
 
-    with when, raises(TypeError) as exc_info:
+    with when, raises(BaseException) as exc_info:
         await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
 
     with then:
+        assert exc_info.type is TypeError
         assert str(exc_info.value) == "Each item in the list must be a VirtualScenario"
 
 
@@ -147,9 +152,10 @@ async def test_register_invalid_provider(module_loader: ModuleLoader):
         provider = make_provider([])
         collector = MultiProviderCollector([provider], module_loader)
 
-    with when, raises(TypeError) as exc_info:
+    with when, raises(BaseException) as exc:
         collector.register_provider(..., registrant=Mock(wraps=Plugin))
 
     with then:
-        assert str(exc_info.value) == "Provider must be an instance of ScenarioProvider"
+        assert exc.type is TypeError
+        assert str(exc.value) == "Provider must be an instance of ScenarioProvider"
         assert len(collector.providers) == 1
