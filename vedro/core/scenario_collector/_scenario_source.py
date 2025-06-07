@@ -1,7 +1,7 @@
 from asyncio import Lock
 from pathlib import Path
 from types import ModuleType
-from typing import Union
+from typing import Any, Union
 
 from vedro.core import ModuleLoader
 
@@ -84,3 +84,32 @@ class ScenarioSource:
             if self._content is None:
                 self._content = self._path.read_text()
         return self._content
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Compare this ScenarioSource with another for equality.
+
+        Two ScenarioSource instances are considered equal if their paths, project directories,
+        and module loaders are equal.
+
+        :param other: The object to compare against.
+        :return: True if both instances are equivalent, False otherwise.
+        """
+        if not isinstance(other, ScenarioSource):
+            return False
+        return (
+            self._path == other._path and
+            self._project_dir == other._project_dir and
+            self._module_loader == other._module_loader
+        )
+
+    def __repr__(self) -> str:
+        """
+        Return the string representation of the ScenarioSource.
+
+        :return: A string that includes the relative path, project directory, and module loader.
+        """
+        return (
+            f"ScenarioSource<path={self.rel_path!r}, project_dir={self._project_dir!r}), "
+            f"module_loader={self._module_loader!r}>"
+        )
