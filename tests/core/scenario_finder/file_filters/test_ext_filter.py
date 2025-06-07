@@ -51,8 +51,8 @@ def test_ext_file_filter_ignore(value: str, expected: bool):
 
 
 def test_ext_file_filter_only_and_ignore():
-    with raises(BaseException) as exc_info:
+    with raises(BaseException) as exc:
         ExtFilter(only=[".py"], ignore=[".sh"])
 
-    assert exc_info.type is ValueError
-    assert str(exc_info.value) == "Use 'only' or 'ignore' (not both)"
+    assert exc.type is ValueError
+    assert str(exc.value) == "Use 'only' or 'ignore' (not both)"

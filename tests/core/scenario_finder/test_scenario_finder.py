@@ -4,8 +4,8 @@ from vedro.core import ScenarioFinder
 
 
 def test_scenario_finder():
-    with raises(BaseException) as exc_info:
+    with raises(BaseException) as exc:
         ScenarioFinder()
 
-    assert exc_info.type is TypeError
-    assert "Can't instantiate abstract class ScenarioFinder" in str(exc_info.value)
+    assert exc.type is TypeError
+    assert "Can't instantiate abstract class ScenarioFinder" in str(exc.value)

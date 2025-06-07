@@ -28,7 +28,7 @@ def test_truthy_fail(*, assert_: AssertionTool):
     with given:
         actual = False
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         assert_.assert_truthy(actual)
 
     with then:
@@ -46,7 +46,7 @@ def test_truthy_fail_with_message(*, assert_: AssertionTool):
         actual = False
         message = "<message>"
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         assert_.assert_truthy(actual, message)
 
     with then:
@@ -98,7 +98,7 @@ def test_compare_pass(method, actual, expected, *, assert_: AssertionTool):
     (AssertionTool.assert_not_in, 1, [1], Op.NOT_IN),
 ])
 def test_compare_fail(method, actual, expected, operator, *, assert_: AssertionTool):
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         getattr(assert_, method.__name__)(actual, expected)
 
     with then:
@@ -130,7 +130,7 @@ def test_compare_fail_with_message(method, actual, expected, operator, *, assert
     with given:
         message = "<message>"
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         getattr(assert_, method.__name__)(actual, expected, message)
 
     with then:

@@ -5,9 +5,9 @@ from vedro.core import ScenarioLoader
 
 
 def test_scenario_loader():
-    with when, raises(Exception) as exc_info:
+    with when, raises(BaseException) as exc:
         ScenarioLoader()
 
     with then:
-        assert exc_info.type is TypeError
-        assert "Can't instantiate abstract class ScenarioLoader" in str(exc_info.value)
+        assert exc.type is TypeError
+        assert "Can't instantiate abstract class ScenarioLoader" in str(exc.value)

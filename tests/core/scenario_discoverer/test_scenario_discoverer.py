@@ -97,11 +97,12 @@ async def test_scenario_discoverer_orderer_changes_count(tmp_dir: Path):
 
         discoverer = MultiScenarioDiscoverer(finder_, loader_, ScenarioOrdererWithChange())
 
-    with when, raises(ValueError) as exc_info:
+    with when, raises(BaseException) as exc:
         await discoverer.discover(tmp_dir, project_dir=tmp_dir)
 
     with then:
-        assert str(exc_info.value) == (
+        assert exc.type is ValueError
+        assert str(exc.value) == (
             "The scenario orderer returned 1 scenario(s), but 2 scenario(s) were discovered. "
             "Please ensure the orderer only reorders scenarios without adding or removing any"
         )

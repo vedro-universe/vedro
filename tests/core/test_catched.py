@@ -37,7 +37,7 @@ def test_catched_with_no_exception():
 
 
 def test_catched_with_unexpected_exception():
-    with when, raises(KeyError) as excinfo:
+    with when, raises(BaseException) as excinfo:
         with catched(ValueError) as exc_info:
             raise KeyError("msg")
 
@@ -93,7 +93,7 @@ async def test_async_catched_with_no_exception():
 
 
 async def test_async_catched_with_unexpected_exception():
-    with when, raises(KeyError) as excinfo:
+    with when, raises(BaseException) as excinfo:
         async with catched(ValueError) as exc_info:
             raise KeyError("msg")
 
