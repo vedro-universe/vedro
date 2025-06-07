@@ -25,8 +25,8 @@ class ScenarioSource:
         :param project_dir: The root directory of the project.
         :param module_loader: The module loader used to load the scenario module.
         """
-        self._path = path
-        self._project_dir = project_dir
+        self._project_dir = project_dir if project_dir.is_absolute() else project_dir.absolute()
+        self._path = path if path.is_absolute() else self._project_dir / path
         self._module_loader = module_loader
         self._module: Union[ModuleType, None] = None
         self._content: Union[str, None] = None
@@ -48,9 +48,7 @@ class ScenarioSource:
 
         :return: A relative path to the scenario file.
         """
-        if self._path.is_absolute():
-            return self._path.relative_to(self._project_dir)
-        return self._path
+        return self._path.relative_to(self._project_dir)
 
     @property
     def project_dir(self) -> Path:
