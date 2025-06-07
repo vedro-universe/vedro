@@ -3,21 +3,15 @@ from time import monotonic_ns
 from typing import List, Optional
 from unittest.mock import Mock, call
 
-import pytest
 from pytest import raises
 
 from vedro import Scenario, given, then, when
 from vedro.core import ModuleLoader, Plugin, VirtualScenario
 from vedro.core.scenario_collector import MultiProviderCollector, ScenarioProvider, ScenarioSource
 
-from ._utils import tmp_dir
+from ._utils import loaded_module, module_loader, tmp_dir
 
-__all__ = ("tmp_dir",)  # fixtures
-
-
-@pytest.fixture()
-def module_loader() -> ModuleLoader:
-    return Mock(ModuleLoader)
+__all__ = ("tmp_dir", "loaded_module", "module_loader",)  # fixtures
 
 
 def make_vscenario() -> VirtualScenario:

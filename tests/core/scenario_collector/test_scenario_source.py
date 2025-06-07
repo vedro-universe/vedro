@@ -1,27 +1,16 @@
 from pathlib import Path
 from textwrap import dedent
 from types import ModuleType
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import Mock, call
 
-import pytest
 from baby_steps import given, then, when
 
 from vedro.core import ModuleLoader
 from vedro.core.scenario_collector import ScenarioSource
 
-from ._utils import tmp_dir
+from ._utils import loaded_module, module_loader, tmp_dir
 
-__all__ = ("tmp_dir",)  # fixtures
-
-
-@pytest.fixture()
-def loaded_module() -> ModuleType:
-    return Mock(ModuleType)
-
-
-@pytest.fixture()
-def module_loader(loaded_module: ModuleType) -> ModuleLoader:
-    return Mock(ModuleLoader, load=AsyncMock(return_value=loaded_module))
+__all__ = ("tmp_dir", "loaded_module", "module_loader",)  # fixtures
 
 
 async def test_properties_of_scenario_source(tmp_dir: Path, module_loader: ModuleLoader):
