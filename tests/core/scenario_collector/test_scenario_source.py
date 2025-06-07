@@ -50,7 +50,7 @@ async def test_get_module_first_time(tmp_dir: Path, module_loader: ModuleLoader,
 
     with then:
         assert module is loaded_module
-        assert module_loader.mock_calls == [call.load(path)]
+        assert module_loader.mock_calls == [call.load(source.rel_path)]
 
 
 async def test_get_module_uses_cache(tmp_dir: Path, module_loader: ModuleLoader,
@@ -66,7 +66,7 @@ async def test_get_module_uses_cache(tmp_dir: Path, module_loader: ModuleLoader,
 
     with then:
         assert module is loaded_module
-        assert module_loader.mock_calls == [call.load(path)]
+        assert module_loader.mock_calls == [call.load(source.rel_path)]
 
 
 async def test_get_content_first_time(tmp_dir: Path, module_loader: ModuleLoader):

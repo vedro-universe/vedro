@@ -69,7 +69,7 @@ class ScenarioSource:
         """
         async with self._lock:
             if self._module is None:
-                self._module = await self._module_loader.load(self._path)
+                self._module = await self._module_loader.load(self.rel_path)
         return self._module
 
     async def get_content(self) -> str:
