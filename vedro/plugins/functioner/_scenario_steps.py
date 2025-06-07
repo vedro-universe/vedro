@@ -28,6 +28,8 @@ class Step:
         return self.__exit__(exc_type, exc_val, exc_tb)
 
     def __call__(self, name: str) -> "Step":
+        if not isinstance(name, str):
+            raise TypeError(f"Step name must be a string, got {type(name)}")
         self._name = name
         return self
 
