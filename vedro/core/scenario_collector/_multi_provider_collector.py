@@ -35,6 +35,15 @@ class MultiProviderCollector(ScenarioCollector):
         if not all(isinstance(provider, ScenarioProvider) for provider in providers):
             raise TypeError("All providers must be instances of ScenarioProvider")
 
+    @property
+    def providers(self) -> List[ScenarioProvider]:
+        """
+        Get the list of registered scenario providers.
+
+        :return: A list of ScenarioProvider instances.
+        """
+        return self._providers
+
     async def collect(self, path: Path, *, project_dir: Path) -> List[VirtualScenario]:
         """
         Collect scenarios from the specified path using all registered providers.
