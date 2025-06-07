@@ -25,6 +25,7 @@ class Step:
                         exc_type: Optional[Type[BaseException]],
                         exc_val: Optional[BaseException],
                         exc_tb: Optional[TracebackType]) -> bool:
+        self._name = None
         return self.__exit__(exc_type, exc_val, exc_tb)
 
     def __call__(self, name: str) -> "Step":
@@ -32,6 +33,11 @@ class Step:
             raise TypeError(f"Step name must be a string, got {type(name)}")
         self._name = name
         return self
+
+    def __repr__(self) -> str:
+        if self._name is None:
+            return f"<{self.__class__.__name__}>"
+        return f"<{self.__class__.__name__} name={self._name!r}>"
 
 
 class Given(Step):
