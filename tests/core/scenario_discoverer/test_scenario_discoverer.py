@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, call
 
 import pytest
+from pytest import raises
 
 from vedro import Scenario
 from vedro.core import (
@@ -69,3 +70,29 @@ async def test_scenario_discoverer(tmp_dir: Path):
     ]
     assert finder_.mock_calls == [call.find(tmp_dir)]
     assert loader_.mock_calls == [call.load(f) for f in tree.keys()]
+
+
+async def test_scenario_discoverer_orderer_changes_count(tmp_dir: Path):
+    root = Path("scenarios")
+    scenario1 = create_scenario(root / "scenario-1.py")
+    scenario2 = create_scenario(root / "scenario-2.py")
+    tree = {
+        scenario1.__file__: [scenario1],
+        scenario2.__file__: [scenario2],
+    }
+    finder_ = make_finder(tree.keys())
+    loader_ = make_loader(tree.values())
+
+    class ScenarioOrdererWithChange(ScenarioOrderer):
+        async def sort(self, scenarios):
+            return scenarios[:1]
+
+    discoverer = MultiScenarioDiscoverer(finder_, loader_, ScenarioOrdererWithChange())
+
+    with raises(ValueError) as exc_info:
+        await discoverer.discover(tmp_dir, project_dir=tmp_dir)
+
+    assert str(exc_info.value) == (
+        "The scenario orderer returned 1 scenario(s), but 2 scenario(s) were discovered. "
+        "Please ensure the orderer only reorders scenarios without adding or removing any"
+    )

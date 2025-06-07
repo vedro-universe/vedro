@@ -71,8 +71,8 @@ class MultiScenarioDiscoverer(ScenarioDiscoverer):
         ordered = await self._orderer.sort(scenarios)
         if len(scenarios) != len(ordered):
             raise ValueError(
-                f"The scenario orderer returned {len(ordered)} scenarios, "
-                f"but {len(scenarios)} scenarios were discovered. "
+                f"The scenario orderer returned {len(ordered)} scenario(s), "
+                f"but {len(scenarios)} scenario(s) were discovered. "
                 "Please ensure the orderer only reorders scenarios without adding or removing any"
             )
         return ordered
