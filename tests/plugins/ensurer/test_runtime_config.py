@@ -20,7 +20,7 @@ def test_attempts_not_set():
     with given:
         runtime_config = RuntimeConfig()
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         runtime_config.get_attempts()
 
     with then:
@@ -44,7 +44,7 @@ def test_delay_not_set():
     with given:
         runtime_config = RuntimeConfig()
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         runtime_config.get_delay()
 
     with then:
@@ -68,7 +68,7 @@ def test_swallow_not_set():
     with given:
         runtime_config = RuntimeConfig()
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         runtime_config.get_swallow()
 
     with then:
@@ -92,7 +92,7 @@ def test_logger_not_set():
     with given:
         runtime_config = RuntimeConfig()
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         runtime_config.get_logger()
 
     with then:

@@ -195,13 +195,13 @@ def test_virtual_scenario_init(*, scenario_: Type[Scenario]):
         scenario_.side_effect = (exception,)
         virtual_scenario = VirtualScenario(scenario_, [])
 
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         virtual_scenario()
 
     with then:
-        assert exc_info.type is ScenarioInitError
-        assert str(exc_info.value) == ('Can\'t initialize scenario "scenario" '
-                                       f'at "scenarios/scenario.py" ({exception!r})')
+        assert exc.type is ScenarioInitError
+        assert str(exc.value) == ('Can\'t initialize scenario "scenario" '
+                                  f'at "scenarios/scenario.py" ({exception!r})')
 
 
 def test_virtual_scenario_repr(*, scenario_: Type[Scenario], method_: MethodType):

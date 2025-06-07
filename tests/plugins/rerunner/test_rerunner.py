@@ -30,32 +30,32 @@ __all__ = ("rerunner", "scheduler_", "dispatcher", "sleep_")  # fixtures
 
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_reruns_validation(dispatcher: Dispatcher):
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, reruns=-1)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == "--reruns must be >= 0"
+        assert exc.type is ValueError
+        assert str(exc.value) == "--reruns must be >= 0"
 
 
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_reruns_delay_validation(dispatcher: Dispatcher):
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, reruns=1, reruns_delay=-0.1)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == "--reruns-delay must be >= 0.0"
+        assert exc.type is ValueError
+        assert str(exc.value) == "--reruns-delay must be >= 0.0"
 
 
 @pytest.mark.usefixtures(rerunner.__name__)
 async def test_reruns_delay_without_reruns_validation(dispatcher: Dispatcher):
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, reruns=0, reruns_delay=0.1)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == "--reruns-delay must be used with --reruns > 0"
+        assert exc.type is ValueError
+        assert str(exc.value) == "--reruns-delay must be used with --reruns > 0"
 
 
 @pytest.mark.parametrize("reruns", [0, 1, 3])

@@ -42,7 +42,7 @@ async def test_attempts_with_errors():
         ensure = Ensure(attempts=3)
         mock_ = AsyncMock(side_effect=[Exception(), Exception(), Exception()])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         await ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
@@ -92,7 +92,7 @@ async def test_delay_with_errors():
         ensure = Ensure(attempts=3, delay=0.1)
         mock_ = AsyncMock(side_effect=[Exception(), Exception(), Exception()])
 
-    with when, patch("asyncio.sleep") as sleep_, raises(Exception) as exc:
+    with when, patch("asyncio.sleep") as sleep_, raises(BaseException) as exc:
         await ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
@@ -112,7 +112,7 @@ async def test_delay_fn_with_errors():
 
         mock_ = AsyncMock(side_effect=[Exception(), Exception(), Exception()])
 
-    with when, patch("asyncio.sleep") as sleep_, raises(Exception) as exc:
+    with when, patch("asyncio.sleep") as sleep_, raises(BaseException) as exc:
         await ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
@@ -131,7 +131,7 @@ async def test_swallow_exception():
         ensure = Ensure(attempts=3, swallow=KeyError)
         mock_ = AsyncMock(side_effect=[IndexError()])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         await ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
@@ -207,7 +207,7 @@ async def test_logger_with_errors():
         exception = Exception()
         mock_ = AsyncMock(side_effect=[exception, exception, exception])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         await ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:

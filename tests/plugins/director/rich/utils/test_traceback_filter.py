@@ -146,7 +146,7 @@ def test_resolve_path_invalid_type():
     with given:
         traceback_filter = TracebackFilter(modules=[])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         traceback_filter.resolve_module_path(None)  # type: ignore
 
     with then:

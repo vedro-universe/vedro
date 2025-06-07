@@ -88,6 +88,37 @@ class catched:
         self._traceback = traceback
         return True
 
+    async def __aenter__(self) -> "catched":
+        """
+        Async method invoked upon entering the context managed by this async context manager.
+
+        :return: The instance of 'catched'.
+        """
+        return self
+
+    async def __aexit__(self,
+                        exc_type: Union[Type[BaseException], None],
+                        exc_value: Union[BaseException, None],
+                        traceback: Union[TracebackType, None]) -> bool:
+        """
+        Async method invoked upon exiting the context managed by this async context manager.
+
+        This method checks if the raised exception matches the expected exceptions. If it does,
+        it captures the exception details and returns True to suppress the exception.
+
+        :param exc_type: The type of the exception raised.
+        :param exc_value: The exception instance raised.
+        :param traceback: The traceback object associated with the exception.
+        :return: True if the exception matches the expected exceptions and is to be handled,
+        False otherwise.
+        """
+        if not isinstance(exc_value, self._expected_exc):
+            return False
+        self._type = exc_type
+        self._value = exc_value
+        self._traceback = traceback
+        return True
+
     def __repr__(self) -> str:
         """
         Return a string representation of the 'catched' instance.

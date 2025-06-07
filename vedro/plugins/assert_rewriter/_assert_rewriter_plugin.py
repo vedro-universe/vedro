@@ -9,6 +9,40 @@ from ._legacy_assert_rewriter_loader import LegacyAssertRewriterLoader
 __all__ = ("AssertRewriter", "AssertRewriterPlugin",)
 
 
+# While assertion rewriting might initially seem like a tricky—or even hacky—
+# approach, it is in fact a deliberate and pragmatic solution that delivers
+# expressive failure reports without forcing the user into a custom assert API.
+#
+# 1. Bypassing Python’s Limitations
+#    ------------------------------
+#    At runtime, Python reduces `assert left OP right` to a Boolean check and,
+#    on failure, raises a bare `AssertionError`. The original left/right
+#    expressions and the operator are discarded. During module import, the
+#    loader amends the abstract-syntax tree (AST) so that this missing
+#    meta-information is preserved, implemented in the most straightforward
+#    manner possible.
+#
+# 2. Developer Ergonomics / Experience
+#    ---------------------------------
+#    Without rewriting, a test author would need to remember helper functions
+#    such as `assert_eq()` or `assert_isinstance()`, import them in every file,
+#    and wrap each comparison manually—making tests less readable, harder to
+#    write, and more tedious to maintain. Rewriting lets the author keep
+#    idiomatic asserts, and when one fails, Vedro’s reporters can display a
+#    coloured diff of the mismatched values — exactly what developers expect,
+#    rather than Python’s cryptic traceback.
+#
+# 3. Zero Behavioral Impact
+#    ----------------------
+#    The transformation acts as a compile-time pre-processor that preserves the
+#    exact semantics of the original code. It doesn’t alter control flow,
+#    introduce side effects, or slow down execution in any measurable way. Its
+#    sole purpose is to enrich the resulting `AssertionError` with additional
+#    context, so reporters can render precise, readable diffs. In that sense, it
+#    is conceptually identical to the miniature AST edits that debugging or
+#    coverage tools perform, just laser-focused on assertions.
+
+
 @final
 class AssertRewriterPlugin(Plugin):
     """

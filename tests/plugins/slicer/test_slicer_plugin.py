@@ -129,9 +129,9 @@ async def test_arg_validation_error(total: Union[int, None], index: Union[int, N
     with given:
         event = ArgParsedEvent(Namespace(slicer_total=total, slicer_index=index))
 
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await dispatcher.fire(event)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == error
+        assert exc.type is ValueError
+        assert str(exc.value) == error

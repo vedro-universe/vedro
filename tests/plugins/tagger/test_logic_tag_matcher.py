@@ -31,7 +31,7 @@ def test_invalid_expr():
     with given:
         matcher = LogicTagMatcher("P0 and")
 
-    with when, raises(ValueError) as exc:
+    with when, raises(BaseException) as exc:
         matcher.match(set())
 
     with then:
@@ -55,7 +55,7 @@ def test_invalid_tag(expr: str):
     with given:
         matcher = LogicTagMatcher(expr)
 
-    with when, raises(ValueError) as exc:
+    with when, raises(BaseException) as exc:
         matcher.match(set())
 
     with then:

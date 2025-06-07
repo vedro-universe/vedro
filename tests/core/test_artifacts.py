@@ -36,12 +36,12 @@ def test_memory_artifact_repr():
 
 
 def test_memory_artifact_binary_only():
-    with raises(BaseException) as exc_info:
+    with raises(BaseException) as exc:
         MemoryArtifact("log", "text/plain", "text")
 
     with then:
-        assert exc_info.type is TypeError
-        assert str(exc_info.value) == "'data' must be of type bytes"
+        assert exc.type is TypeError
+        assert str(exc.value) == "'data' must be of type bytes"
 
 
 def test_memory_artifact_eq():
@@ -105,12 +105,12 @@ def test_file_artifact_repr():
 
 
 def test_file_artifact_path_only():
-    with raises(BaseException) as exc_info:
+    with raises(BaseException) as exc:
         FileArtifact("log", "text/plain", "./log.txt")
 
     with then:
-        assert exc_info.type is TypeError
-        assert str(exc_info.value) == "'path' must be an instance of pathlib.Path"
+        assert exc.type is TypeError
+        assert str(exc.value) == "'path' must be an instance of pathlib.Path"
 
 
 def test_file_artifact_eq():

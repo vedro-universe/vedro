@@ -66,7 +66,7 @@ def test_validate_plugin_invalid():
         class CustomPluginInvalid:
             pass
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         _validate_plugin(CustomPluginInvalid)
 
     with then:
@@ -88,7 +88,7 @@ def test_validate_key():
     "pass",  # reserved keyword
 ])
 def test_validate_key_invalid(key: str):
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         _validate_key(key)
 
     with then:
@@ -115,7 +115,7 @@ def test_validate_scenario_invalid():
         class CustomScenarioInvalid:
             pass
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         _validate_scenario(CustomScenarioInvalid)
 
     with then:

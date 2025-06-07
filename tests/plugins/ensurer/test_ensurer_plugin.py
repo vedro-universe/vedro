@@ -79,7 +79,7 @@ async def test_custom_attempts(*, dispatcher: Dispatcher):
         mock_ = Mock(side_effect=[Exception(), None])
         step_result = make_step_result(ensure()(mock_))
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         await run_step(dispatcher, StepPassedEvent, step_result)
 
     with then:
@@ -109,7 +109,7 @@ async def test_custom_swallow(*, dispatcher: Dispatcher):
         mock_ = Mock(side_effect=[Exception(), None])
         step_result = make_step_result(ensure()(mock_))
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         await run_step(dispatcher, StepPassedEvent, step_result)
 
     with then:

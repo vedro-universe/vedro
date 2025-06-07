@@ -92,7 +92,7 @@ def test_delay_with_errors():
         ensure = Ensure(attempts=3, delay=0.1)
         mock_ = Mock(side_effect=[Exception(), Exception(), Exception()])
 
-    with when, patch("time.sleep") as sleep_, raises(Exception) as exc:
+    with when, patch("time.sleep") as sleep_, raises(BaseException) as exc:
         ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
@@ -112,7 +112,7 @@ def test_delay_fn_with_errors():
 
         mock_ = Mock(side_effect=[Exception(), Exception(), Exception()])
 
-    with when, patch("time.sleep") as sleep_, raises(Exception) as exc:
+    with when, patch("time.sleep") as sleep_, raises(BaseException) as exc:
         ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
@@ -131,7 +131,7 @@ def test_swallow_exception():
         ensure = Ensure(attempts=3, swallow=KeyError)
         mock_ = Mock(side_effect=[IndexError()])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
@@ -207,7 +207,7 @@ def test_logger_with_errors():
         exception = Exception()
         mock_ = Mock(side_effect=[exception, exception, exception])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         ensure(mock_)(sentinel.arg, kwarg=sentinel.kwarg)
 
     with then:
