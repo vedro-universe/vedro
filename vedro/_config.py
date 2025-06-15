@@ -130,31 +130,16 @@ class Config(core.Config):
 
         class Director(director.Director):
             enabled = True
+            default_reporters = ["rich"]
 
         class RichReporter(director.RichReporter):
             enabled = True
 
-            @computed
-            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-                # Temporarily commented out due to issue
-                # https://github.com/vedro-universe/vedro/issues/123 until
-                # https://github.com/vedro-universe/vedro/pull/83 is merged
-                # return [Config.Plugins.Director]
-                return []
-
         class SilentReporter(director.SilentReporter):
             enabled = True
 
-            # @computed
-            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-            #     return [Config.Plugins.Director]
-
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
-
-            # @computed
-            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-            #     return [Config.Plugins.Director]
 
         class Functioner(functioner.Functioner):
             enabled = True
