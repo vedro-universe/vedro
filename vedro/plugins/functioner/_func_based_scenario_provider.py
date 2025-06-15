@@ -67,7 +67,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
 
         scenarios = []
         for idx, _ in enumerate(descriptor.params, start=1):
-            scn_name = f"Scenario_{descriptor.name}_{idx}_VedroScenario"
+            scn_name = f"{self._create_scenario_name(descriptor)}_{idx}_VedroScenario"
             scenarios.append(
                 # This is a temporary and dirty workaround; to be revisited after the v2 release
                 # Logic adapted from the `_Meta` class in vedro/_scenario.py
@@ -130,7 +130,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         :param descriptor: The scenario descriptor to derive the name from.
         :return: A string representing the scenario class name.
         """
-        return f"Scenario_{descriptor.name}"
+        return f"{descriptor.name}"
 
     def _create_subject(self, descriptor: ScenarioDescriptor) -> str:
         """
