@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from .._virtual_scenario import VirtualScenario
-from ..scenario_collector import ScenarioCollector
+from ..scenario_collector._scenario_collector import ScenarioCollector
 from ..scenario_finder import ScenarioFinder
 from ..scenario_loader import ScenarioLoader
 from ..scenario_orderer import ScenarioOrderer

@@ -5,7 +5,7 @@ from typing import List, Optional, Type
 from ..._scenario import Scenario
 from .._virtual_scenario import VirtualScenario
 from .._virtual_step import VirtualStep
-from ..scenario_collector import ScenarioCollector
+from ..scenario_collector._scenario_collector import ScenarioCollector
 from ._create_vscenario import create_vscenario
 from ._scenario_discoverer import ScenarioDiscoverer
 
