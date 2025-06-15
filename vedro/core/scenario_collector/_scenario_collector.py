@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List
 
-from vedro.core import VirtualScenario
+from .._virtual_scenario import VirtualScenario
 
 __all__ = ("ScenarioCollector",)
 

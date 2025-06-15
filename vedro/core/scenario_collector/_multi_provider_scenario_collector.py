@@ -2,8 +2,9 @@ from asyncio import gather
 from pathlib import Path
 from typing import List
 
-from vedro.core import ModuleLoader, Plugin, VirtualScenario
-
+from .._plugin import Plugin
+from .._virtual_scenario import VirtualScenario
+from ..module_loader import ModuleLoader
 from ._scenario_collector import ScenarioCollector
 from ._scenario_provider import ScenarioProvider
 from ._scenario_source import ScenarioSource

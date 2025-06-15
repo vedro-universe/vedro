@@ -3,7 +3,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Union
 
-from vedro.core import ModuleLoader
+from ..module_loader import ModuleLoader
 
 __all__ = ("ScenarioSource",)
 

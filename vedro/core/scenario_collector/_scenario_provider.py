@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from vedro.core import VirtualScenario
-
+from .._virtual_scenario import VirtualScenario
 from ._scenario_source import ScenarioSource
 
 __all__ = ("ScenarioProvider",)

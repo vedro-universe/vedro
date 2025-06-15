@@ -3,10 +3,9 @@ from inspect import isclass
 from types import ModuleType
 from typing import Any, List, Type
 
-from vedro.core import VirtualScenario
-from vedro.core.scenario_discoverer import create_vscenario
-
 from ..._scenario import Scenario
+from .._virtual_scenario import VirtualScenario
+from ..scenario_discoverer._create_vscenario import create_vscenario
 from ._scenario_provider import ScenarioProvider
 from ._scenario_source import ScenarioSource
 
