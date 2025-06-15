@@ -5,16 +5,15 @@ from typing import Any, List, Type, cast
 
 from vedro._scenario import Scenario
 from vedro.core import VirtualScenario
-from vedro.core.scenario_collector import ScenarioProvider as BaseScenarioProvider
-from vedro.core.scenario_collector import ScenarioSource
+from vedro.core.scenario_collector import ScenarioProvider, ScenarioSource
 from vedro.core.scenario_discoverer import create_vscenario
 
 from ._scenario_descriptor import ScenarioDescriptor
 
-__all__ = ("ScenarioProvider",)
+__all__ = ("FuncBasedScenarioProvider",)
 
 
-class ScenarioProvider(BaseScenarioProvider):
+class FuncBasedScenarioProvider(ScenarioProvider):
     """
     Provides scenario classes by extracting and building them from a given module source.
 

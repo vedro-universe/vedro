@@ -7,8 +7,8 @@ from baby_steps import given, then, when
 from vedro import Scenario
 from vedro.core import ModuleLoader
 from vedro.core.scenario_collector import ScenarioSource
+from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
 from vedro.plugins.functioner import FunctionerPlugin
-from vedro.plugins.functioner._scenario_provider import ScenarioProvider
 
 from ._utils import module_loader, provider, scenario_source, tmp_dir
 

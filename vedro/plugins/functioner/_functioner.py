@@ -3,7 +3,7 @@ from typing import Type
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ConfigLoadedEvent
 
-from ._scenario_provider import ScenarioProvider
+from ._scenario_provider import FuncBasedScenarioProvider
 
 __all__ = ("Functioner", "FunctionerPlugin",)
 
@@ -39,7 +39,7 @@ class FunctionerPlugin(Plugin):
         :param event: The event containing the loaded configuration.
         """
         scenario_collector = event.config.Registry.ScenarioCollector()
-        scenario_collector.register_provider(ScenarioProvider(), self)
+        scenario_collector.register_provider(FuncBasedScenarioProvider(), self)
 
 
 class Functioner(PluginConfig):
