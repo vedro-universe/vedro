@@ -1,7 +1,7 @@
 import os
 from inspect import iscoroutinefunction
 from types import ModuleType
-from typing import Any, List, Type, cast
+from typing import Any, List, Type, cast, Dict
 
 from vedro._scenario import Scenario
 from vedro.core import VirtualScenario
@@ -84,12 +84,11 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         :param module: The module in which the scenario resides.
         :return: A Scenario class derived from the base Scenario.
         """
-        scenario_cls = type(self._create_scenario_name(descriptor), (Scenario,), {
-            "__module__": module.__name__,
-            "__file__": self._create_module_path(module),
-            "subject": self._create_subject(descriptor),
-            "do": self._make_do(descriptor.fn),
+        attrs = self._build_common_attrs(descriptor, module)
+        attrs.update({
+            "do": self._make_do(descriptor.fn)
         })
+        scenario_cls = type(self._create_scenario_name(descriptor), (Scenario,), attrs)
 
         for decorator in descriptor.decorators:
             scenario_cls = decorator(scenario_cls)
@@ -111,17 +110,32 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         for params in reversed(descriptor.params):
             __init__ = params(__init__)
 
-        scenario_cls = type(self._create_scenario_name(descriptor), (Scenario,), {
-            "__module__": module.__name__,
-            "__file__": self._create_module_path(module),
+        attrs = self._build_common_attrs(descriptor, module)
+        attrs.update({
             "__init__": __init__,
-            "subject": self._create_subject(descriptor),
             "do": self._make_do_with_params(descriptor.fn),
         })
+        scenario_cls = type(self._create_scenario_name(descriptor), (Scenario,), attrs)
 
         for decorator in descriptor.decorators:
             scenario_cls = decorator(scenario_cls)
         return scenario_cls
+
+    def _build_common_attrs(self, descriptor: ScenarioDescriptor,
+                            module: ModuleType) -> Dict[str, Any]:
+        """
+        Build common attributes for a Scenario class based on the descriptor and module.
+
+        :param descriptor: The descriptor containing scenario metadata and function.
+        :param module: The module from which the scenario is defined.
+        :return: A dictionary of attributes to be used in the Scenario class.
+        """
+        return {
+            "__module__": module.__name__,
+            "__file__": self._create_module_path(module),
+            "__doc__": descriptor.fn.__doc__,
+            "subject": self._create_subject(descriptor),
+        }
 
     def _create_scenario_name(self, descriptor: ScenarioDescriptor) -> str:
         """

@@ -355,6 +355,8 @@ def test_virtual_scenario_doc_when_absent():
 
     with then:
         assert doc is None
+
+
 def test_virtual_scenario_lineno(*, scenario_: Type[Scenario]):
     with given:
         scenario_.__vedro__lineno__ = 42
