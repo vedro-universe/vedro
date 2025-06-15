@@ -1,5 +1,6 @@
 from inspect import isclass
-from typing import Callable, Type, TypeVar, overload
+from os import linesep
+from typing import Callable, Type, TypeVar, Union, cast, overload
 
 from vedro._scenario import Scenario
 from vedro.core import set_scenario_meta
@@ -8,32 +9,48 @@ from ._skipper import SkipperPlugin
 
 __all__ = ("only",)
 
-T = TypeVar("T", bound=Type[Scenario])
+T = TypeVar("T", bound=Scenario)
+Decorator = Callable[[Type[T]], Type[T]]
 
 
 @overload
-def only(scenario_or_nothing: T) -> T:  # pragma: no cover
+def only(scenario: Type[T]) -> Type[T]:  # @only
     pass
 
 
 @overload
-def only(scenario_or_nothing: None = None) -> Callable[[T], T]:  # pragma: no cover
+def only() -> Decorator[T]:  # @only()
     pass
 
 
-def only(scenario_or_nothing=None):  # type: ignore
-    def wrapped(scenario: T) -> T:
-        if not issubclass(scenario, Scenario):
-            raise TypeError("Decorator @only can be used only with 'vedro.Scenario' subclasses")
+def only(scenario: Union[Type[T], None] = None) -> Union[Type[T], Decorator[T]]:
+    def apply_only(scn: Type[T]) -> Type[T]:
+        if not isclass(scn) or not issubclass(scn, Scenario):
+            raise TypeError(_format_only_usage_error())
 
-        set_scenario_meta(scenario, key="only", value=True, plugin=SkipperPlugin,
+        set_scenario_meta(scn, key="only", value=True, plugin=SkipperPlugin,
                           fallback_key="__vedro__only__")
 
-        return scenario
+        return cast(Type[T], scn)
 
-    if scenario_or_nothing is None:
-        return wrapped
-    elif isclass(scenario_or_nothing):
-        return wrapped(scenario_or_nothing)
-    else:
-        raise TypeError("Usage: @only")
+    # @only()
+    if scenario is None:
+        return apply_only
+    # @only
+    return apply_only(scenario)
+
+
+def _format_only_usage_error() -> str:
+    return linesep.join([
+        "Decorator @only can be used only with Vedro scenarios:",
+        "",
+        "cls-based:",
+        "    @only",
+        "    class Scenario(vedro.Scenario):",
+        "        ...",
+        "",
+        "fn-based:",
+        "    @scenario[only]()",
+        "    def subject():",
+        "        ...",
+    ])
