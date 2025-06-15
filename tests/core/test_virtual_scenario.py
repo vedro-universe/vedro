@@ -311,6 +311,52 @@ def test_get_meta():
         assert value == "value"
 
 
+def test_virtual_scenario_doc():
+    with given:
+        class CustomScenario(Scenario):
+            """My scenario docstring"""
+            pass
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        doc = virtual_scenario.doc
+
+    with then:
+        assert doc == "My scenario docstring"
+
+
+def test_virtual_scenario_doc_multiline():
+    with given:
+        class CustomScenario(Scenario):
+            """
+            First line
+            Second line
+            """
+        vs = VirtualScenario(CustomScenario, [])
+
+    with when:
+        doc = vs.doc
+
+    with then:
+        # `inspect.getdoc` strips indentation & leading blank
+        assert doc == "First line\nSecond line"
+
+
+def test_virtual_scenario_doc_when_absent():
+    with given:
+        class CustomScenario(Scenario):
+            pass  # no docstring here
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        doc = virtual_scenario.doc
+
+    with then:
+        assert doc is None
+
+
 def test_virtual_scenario_lineno(*, scenario_: Type[Scenario]):
     with given:
         scenario_.__vedro__lineno__ = 42
