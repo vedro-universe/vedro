@@ -15,12 +15,33 @@ __all__ = ("ScenarioProvider",)
 
 
 class ScenarioProvider(BaseScenarioProvider):
+    """
+    Provides scenario classes by extracting and building them from a given module source.
+
+    This class extends the base ScenarioProvider to support extraction of scenarios defined using
+    ScenarioDescriptor and converts them into instances of VirtualScenario. It handles both
+    parameterized and non-parameterized scenarios, applying decorators and assembling
+    scenario classes.
+    """
+
     async def provide(self, source: ScenarioSource) -> List[VirtualScenario]:
+        """
+        Extract and return all VirtualScenario instances from the given source.
+
+        :param source: The scenario source containing a module and project directory information.
+        :return: A list of VirtualScenario instances built from the discovered scenarios.
+        """
         module = await source.get_module()
         scenarios = self._collect_scenarios(module)
         return [create_vscenario(scn, project_dir=source.project_dir) for scn in scenarios]
 
     def _collect_scenarios(self, module: ModuleType) -> List[Type[Scenario]]:
+        """
+        Collect all scenario classes from the specified module.
+
+        :param module: The module from which to collect scenario descriptors.
+        :return: A list of Scenario classes built from descriptors found in the module.
+        """
         loaded = []
         for name, val in module.__dict__.items():
             if not name.startswith("_") and isinstance(val, ScenarioDescriptor):
@@ -30,6 +51,13 @@ class ScenarioProvider(BaseScenarioProvider):
 
     def _build_vedro_scenarios(self, descriptor: ScenarioDescriptor,
                                module: ModuleType) -> List[Type[Scenario]]:
+        """
+        Build one or more Scenario classes from a given descriptor.
+
+        :param descriptor: The descriptor containing scenario definition and metadata.
+        :param module: The module in which the scenario is defined.
+        :return: A list of Scenario classes, one for each parameterization if applicable.
+        """
         if len(descriptor.params) == 0:
             scenario_cls = self._build_vedro_scenario(descriptor, module)
             return [scenario_cls]
@@ -48,6 +76,13 @@ class ScenarioProvider(BaseScenarioProvider):
 
     def _build_vedro_scenario(self, descriptor: ScenarioDescriptor,
                               module: ModuleType) -> Type[Scenario]:
+        """
+        Build a single Scenario class from a descriptor without parameters.
+
+        :param descriptor: The descriptor defining the scenario behavior and metadata.
+        :param module: The module in which the scenario resides.
+        :return: A Scenario class derived from the base Scenario.
+        """
         scenario_cls = type(self._create_scenario_name(descriptor), (Scenario,), {
             "__module__": module.__name__,
             "__file__": self._create_module_path(module),
@@ -61,6 +96,13 @@ class ScenarioProvider(BaseScenarioProvider):
 
     def _build_vedro_scenario_with_params(self, descriptor: ScenarioDescriptor,
                                           module: ModuleType) -> Type[Scenario]:
+        """
+        Build a Scenario class that supports parameterization.
+
+        :param descriptor: The descriptor containing parameterized test data and metadata.
+        :param module: The module where the scenario is defined.
+        :return: A Scenario class with parameterized initialization.
+        """
         def __init__(self, *args: Any, **kwargs: Any) -> None:  # type: ignore
             self.__args = args
             self.__kwargs = kwargs
@@ -81,34 +123,60 @@ class ScenarioProvider(BaseScenarioProvider):
         return scenario_cls
 
     def _create_scenario_name(self, descriptor: ScenarioDescriptor) -> str:
+        """
+        Create a scenario class name based on the descriptor name.
+
+        :param descriptor: The scenario descriptor to derive the name from.
+        :return: A string representing the scenario class name.
+        """
         return f"Scenario_{descriptor.name}"
 
     def _create_subject(self, descriptor: ScenarioDescriptor) -> str:
+        """
+        Generate the subject string used in the scenario based on the descriptor name.
+
+        :param descriptor: The descriptor containing the original scenario name.
+        :return: A human-readable string subject for the scenario.
+        """
         return descriptor.name.replace("_", " ")
 
     def _create_module_path(self, module: ModuleType) -> str:
+        """
+        Determine the absolute file path of the given module.
+
+        :param module: The module to retrieve the file path from.
+        :return: An absolute path to the module's file.
+        """
         return os.path.abspath(str(module.__file__))
 
     def _make_do(self, fn: Any) -> Any:
+        """
+        Wrap the given function into a 'do' method for a scenario.
+
+        :param fn: The function to be executed in the scenario.
+        :return: A method suitable for the 'do' attribute of a scenario class.
+        """
         if iscoroutinefunction(fn):
             async def do(self) -> None:  # type: ignore
                 await fn()
-
             return do
         else:
             def do(self) -> None:  # type: ignore
                 fn()
-
             return do
 
     def _make_do_with_params(self, fn: Any) -> Any:
+        """
+        Wrap the given function into a parameterized 'do' method.
+
+        :param fn: The function to be executed with parameters in the scenario.
+        :return: A method suitable for the 'do' attribute of a parameterized scenario class.
+        """
         if iscoroutinefunction(fn):
             async def do(self) -> None:  # type: ignore
                 await fn(*self.__args, **self.__kwargs)
-
             return do
         else:
             def do(self) -> None:  # type: ignore
                 fn(*self.__args, **self.__kwargs)
-
             return do
