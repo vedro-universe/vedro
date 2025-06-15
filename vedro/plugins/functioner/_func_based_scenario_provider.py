@@ -1,7 +1,7 @@
 import os
 from inspect import iscoroutinefunction
 from types import ModuleType
-from typing import Any, List, Type, cast, Dict
+from typing import Any, Dict, List, Type, cast
 
 from vedro._scenario import Scenario
 from vedro.core import VirtualScenario

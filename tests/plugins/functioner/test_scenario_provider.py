@@ -26,6 +26,7 @@ async def test_func_scenario_detected(fn_def: str, is_coro: bool, *,
             from vedro import scenario
             @scenario
             {fn_def} create_user():
+                """Create a user scenario."""
                 pass
         '''))
 
@@ -40,6 +41,7 @@ async def test_func_scenario_detected(fn_def: str, is_coro: bool, *,
         assert scenario.subject == "create user"
         assert scenario.name == "create_user"
         assert scenario.unique_id == "scenarios/scenario.py::create_user"
+        assert scenario.doc == "Create a user scenario."
         assert scenario.template_index is None
         assert scenario.template_total is None
 
@@ -62,6 +64,7 @@ async def test_parametrized_func_scenarios(provider: ScenarioProvider,
                 params(2)
             ])
             def create_user(user_id):
+                """Create a user scenario."""
                 pass
         '''))
 
@@ -75,6 +78,7 @@ async def test_parametrized_func_scenarios(provider: ScenarioProvider,
             assert scenario.subject == "create user"
             assert scenario.name == "create_user"
             assert scenario.unique_id == f"scenarios/scenario.py::create_user#{idx}"
+            assert scenario.doc == "Create a user scenario."
             assert scenario.template_index == idx
             assert scenario.template_total == 2
 
