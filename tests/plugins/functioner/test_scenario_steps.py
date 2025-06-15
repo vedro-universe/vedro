@@ -1,7 +1,8 @@
 import pytest
 from pytest import raises
 
-from vedro.plugins.functioner._scenario_steps import Given, Step, Then, When, given, then, when
+from vedro.plugins.functioner import given, then, when
+from vedro.plugins.functioner._scenario_steps import Given, Step, Then, When
 
 
 @pytest.mark.parametrize("step", [given, when, then])
