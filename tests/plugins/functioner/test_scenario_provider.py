@@ -5,31 +5,14 @@ import pytest
 from baby_steps import given, then, when
 
 from vedro import Scenario
-from vedro.core import ModuleFileLoader, ModuleLoader
+from vedro.core import ModuleLoader
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FunctionerPlugin
 from vedro.plugins.functioner._scenario_provider import ScenarioProvider
 
-from ._utils import tmp_dir
+from ._utils import module_loader, provider, scenario_source, tmp_dir
 
-__all__ = ("tmp_dir",)  # fixtures
-
-
-@pytest.fixture()
-def module_loader() -> ModuleLoader:
-    return ModuleFileLoader()
-
-
-@pytest.fixture()
-def provider() -> ScenarioProvider:
-    return ScenarioProvider()
-
-
-@pytest.fixture()
-def scenario_source(tmp_dir: Path, module_loader: ModuleLoader) -> ScenarioSource:
-    project_dir = tmp_dir
-    path = project_dir / "scenarios" / "scenario.py"
-    return ScenarioSource(path, project_dir, module_loader)
+__all__ = ("tmp_dir", "provider", "module_loader", "scenario_source",)  # fixtures
 
 
 @pytest.mark.parametrize(("fn_def", "is_coro"), [

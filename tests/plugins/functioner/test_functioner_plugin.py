@@ -15,13 +15,13 @@ def dispatcher() -> Dispatcher:
 
 
 @pytest.fixture()
-def functioner_plugin(dispatcher: Dispatcher) -> FunctionerPlugin:
+def plugin(dispatcher: Dispatcher) -> FunctionerPlugin:
     plugin = FunctionerPlugin(Functioner)
     plugin.subscribe(dispatcher)
     return plugin
 
 
-@pytest.mark.usefixtures(functioner_plugin.__name__)
+@pytest.mark.usefixtures(plugin.__name__)
 async def test_register_scenario_collector(dispatcher: Dispatcher):
     with given:
         class TestConfig(Config):
