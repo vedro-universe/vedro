@@ -31,6 +31,8 @@ class ScenarioProvider(BaseScenarioProvider):
         :param source: The scenario source containing a module and project directory information.
         :return: A list of VirtualScenario instances built from the discovered scenarios.
         """
+        if source.path.suffix != ".py":
+            return []
         module = await source.get_module()
         scenarios = self._collect_scenarios(module)
         return [create_vscenario(scn, project_dir=source.project_dir) for scn in scenarios]
@@ -157,12 +159,12 @@ class ScenarioProvider(BaseScenarioProvider):
         :return: A method suitable for the 'do' attribute of a scenario class.
         """
         if iscoroutinefunction(fn):
-            async def do(self) -> None:  # type: ignore
-                await fn()
+            async def do(self):  # type: ignore
+                return await fn()
             return do
         else:
-            def do(self) -> None:  # type: ignore
-                fn()
+            def do(self):  # type: ignore
+                return fn()
             return do
 
     def _make_do_with_params(self, fn: Any) -> Any:
@@ -173,10 +175,10 @@ class ScenarioProvider(BaseScenarioProvider):
         :return: A method suitable for the 'do' attribute of a parameterized scenario class.
         """
         if iscoroutinefunction(fn):
-            async def do(self) -> None:  # type: ignore
-                await fn(*self.__args, **self.__kwargs)
+            async def do(self):  # type: ignore
+                return await fn(*self.__args, **self.__kwargs)
             return do
         else:
-            def do(self) -> None:  # type: ignore
-                fn(*self.__args, **self.__kwargs)
+            def do(self):  # type: ignore
+                return fn(*self.__args, **self.__kwargs)
             return do

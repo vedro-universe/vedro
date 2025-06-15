@@ -28,6 +28,8 @@ class ClassBasedProvider(ScenarioProvider):
         :param source: The ScenarioSource containing the path and project directory.
         :return: A list of VirtualScenario objects extracted from the module.
         """
+        if source.path.suffix != ".py":
+            return []
         module = await source.get_module()
         scenarios = self._collect_scenarios(module)
         return [create_vscenario(scn, project_dir=source.project_dir) for scn in scenarios]
