@@ -27,6 +27,12 @@ class DirectorPlugin(Plugin):
 
     async def on_arg_parse(self, event: ArgParseEvent) -> None:
         if len(self._registered_reporters) == 0:
+            if len(self._default_reporters) > 0:
+                default_reporters = "', '".join(self._default_reporters)
+                raise ValueError(
+                    "Default reporters are specified, but no reporters have been registered: "
+                    f"'{default_reporters}'."
+                )
             return
 
         default_reporters = "', '".join(self._default_reporters) or '<no reporters>'
@@ -39,8 +45,8 @@ class DirectorPlugin(Plugin):
                                       help=help_message)
         args, *_ = event.arg_parser.parse_known_args()
         for reporter_name in args.reporters:
-            if reporter_name not in self._registered_reporters:  # pragma: no cover
-                raise ValueError(f"Unknown reporter: '{reporter_name}'")
+            if reporter_name not in self._registered_reporters:
+                raise ValueError(f"Unknown reporter specified: '{reporter_name}'.")
             reporter = self._registered_reporters[reporter_name]
             reporter.on_chosen()
 
