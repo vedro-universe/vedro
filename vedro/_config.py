@@ -22,6 +22,7 @@ import vedro.plugins.tagger as tagger
 import vedro.plugins.temp_keeper as temp_keeper
 import vedro.plugins.terminator as terminator
 import vedro.plugins.tip_adviser as tip_adviser
+from vedro.config import computed
 from vedro.core import (
     Dispatcher,
     Factory,
@@ -41,7 +42,6 @@ from vedro.core import (
     ScenarioScheduler,
     Singleton,
 )
-from vedro.core.config_loader import computed
 from vedro.core.scenario_collector import (
     ClassBasedScenarioProvider,
     MultiProviderScenarioCollector,
