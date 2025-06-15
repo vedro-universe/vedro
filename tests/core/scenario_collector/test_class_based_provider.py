@@ -153,3 +153,16 @@ async def test_ignore_function_named_scenario(provider: ClassBasedProvider,
 
     with then:
         assert len(scenarios) == 1
+
+
+async def test_ignore_non_python_scenario_files(provider: ClassBasedProvider,
+                                                tmp_dir: Path, module_loader: ModuleLoader):
+    with given:
+        path = tmp_dir / "scenarios" / "scenario.md"
+        scenario_source_md = ScenarioSource(path, tmp_dir, module_loader)
+
+    with when:
+        scenarios = await provider.provide(scenario_source_md)
+
+    with then:
+        assert len(scenarios) == 0
