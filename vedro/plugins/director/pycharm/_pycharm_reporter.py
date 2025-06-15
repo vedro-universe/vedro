@@ -218,15 +218,27 @@ class PyCharmReporter(PluginConfig):
 
     Defines options for how output is displayed in PyCharm-compatible format.
     """
-
     plugin = PyCharmReporterPlugin
     description = "Outputs scenario results in a PyCharm-friendly format"
 
-    # Show internal calls in the traceback output
     show_internal_calls: bool = False
+    """
+   Show internal calls in the traceback output.
 
-    # Show skipped scenarios
+   When enabled, traceback output includes frames from the framework's core internals.
+   """
+
     show_skipped: bool = True
+    """
+    Show skipped scenarios in the output.
 
-    # Don't produce report output
+    When enabled, skipped scenarios will appear in the test report.
+    """
+
     no_output: bool = False
+    """
+    Disable all output from the reporter.
+    
+    When set to True, no scenario output is printed to the console or IDE.
+    TeamCity service messages are still emitted. This option exists for backward compatibility.
+    """

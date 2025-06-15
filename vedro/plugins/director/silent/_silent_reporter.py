@@ -48,6 +48,5 @@ class SilentReporter(PluginConfig):
     This reporter does not produce any output during scenario execution.
     It is intended for cases where silent execution is desired.
     """
-
     plugin = SilentReporterPlugin
     description = "Does not produce any output during scenario execution"

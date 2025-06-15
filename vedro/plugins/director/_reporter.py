@@ -10,8 +10,9 @@ class Reporter(Plugin):
     """
     Defines the base interface for all scenario reporters.
 
-    Reporters are responsible for outputting results and can hook into
-    the event system to provide customized behavior.
+    Reporters are responsible for outputting scenario results and can
+    respond to various events during the execution lifecycle to provide
+    customized reporting behavior.
     """
 
     def __init__(self, config: Type[PluginConfig]) -> None:

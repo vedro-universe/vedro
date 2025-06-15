@@ -96,8 +96,13 @@ class Director(PluginConfig):
     This configuration allows defining default reporters that are used
     if no other reporters are specified via CLI.
     """
-
     plugin = DirectorPlugin
     description = "Manages and configures reporters for scenario execution"
 
     default_reporters: Sequence[str] = []
+    """
+    List of default reporters to be used if no other reporters are specified.
+
+    These reporters will be activated automatically unless overridden via
+    the '--reporters' CLI option.
+    """
