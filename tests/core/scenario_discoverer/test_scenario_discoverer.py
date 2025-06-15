@@ -1,5 +1,10 @@
+import os
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, call
+
+import pytest
+from baby_steps import given, then, when
+from pytest import raises
 
 from vedro import Scenario
 from vedro.core import (
@@ -31,26 +36,73 @@ def create_scenario(filename):
     return Mock(Scenario, __file__=filename)
 
 
-async def test_scenario_discoverer():
-    root = Path("/tmp")
-    scenario1 = create_scenario(root / "scenario-1.py")
-    scenario3 = create_scenario(root / "folder" / "scenario-2.py")
-    scenario4 = create_scenario(root / "folder" / "scenario-10.py")
-    tree = {
-        scenario1.__file__: [scenario1],
-        root / "scenario-2.py": [],
-        scenario3.__file__: [scenario3, scenario4],
-    }
-    finder_ = make_finder(tree.keys())
-    loader_ = make_loader(tree.values())
-    orderer_ = make_orderer()
-    discoverer = MultiScenarioDiscoverer(finder_, loader_, orderer_)
+@pytest.fixture()
+def tmp_dir(tmp_path: Path) -> Path:
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
 
-    scenarios = await discoverer.discover(root)
-    assert scenarios == [
-        VirtualScenario(scenario1, []),
-        VirtualScenario(scenario3, []),
-        VirtualScenario(scenario4, []),
-    ]
-    assert finder_.mock_calls == [call.find(root)]
-    assert loader_.mock_calls == [call.load(f) for f in tree.keys()]
+        Path("./scenarios").mkdir(exist_ok=True)
+        yield tmp_path
+    finally:
+        os.chdir(cwd)
+
+
+async def test_scenario_discoverer(tmp_dir: Path):
+    with given:
+        root = Path("scenarios")
+        scenario1 = create_scenario(root / "scenario-1.py")
+        scenario3 = create_scenario(root / "folder" / "scenario-2.py")
+        scenario4 = create_scenario(root / "folder" / "scenario-10.py")
+        tree = {
+            scenario1.__file__: [scenario1],
+            root / "scenario-2.py": [],
+            scenario3.__file__: [scenario3, scenario4],
+        }
+        finder_ = make_finder(tree.keys())
+        loader_ = make_loader(tree.values())
+        orderer_ = make_orderer()
+        discoverer = MultiScenarioDiscoverer(finder_, loader_, orderer_)
+
+    with when:
+        scenarios = await discoverer.discover(tmp_dir, project_dir=tmp_dir)
+
+    with then("scenarios discovered correctly"):
+        assert scenarios == [
+            VirtualScenario(scenario1, [], project_dir=tmp_dir),
+            VirtualScenario(scenario3, [], project_dir=tmp_dir),
+            VirtualScenario(scenario4, [], project_dir=tmp_dir),
+        ]
+
+    with then("finder and loader called with correct arguments"):
+        assert finder_.mock_calls == [call.find(tmp_dir)]
+        assert loader_.mock_calls == [call.load(f) for f in tree.keys()]
+
+
+async def test_scenario_discoverer_orderer_changes_count(tmp_dir: Path):
+    with given:
+        root = Path("scenarios")
+        scenario1 = create_scenario(root / "scenario-1.py")
+        scenario2 = create_scenario(root / "scenario-2.py")
+        tree = {
+            scenario1.__file__: [scenario1],
+            scenario2.__file__: [scenario2],
+        }
+        finder_ = make_finder(tree.keys())
+        loader_ = make_loader(tree.values())
+
+        class ScenarioOrdererWithChange(ScenarioOrderer):
+            async def sort(self, scenarios):
+                return scenarios[:1]
+
+        discoverer = MultiScenarioDiscoverer(finder_, loader_, ScenarioOrdererWithChange())
+
+    with when, raises(BaseException) as exc:
+        await discoverer.discover(tmp_dir, project_dir=tmp_dir)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value) == (
+            "The scenario orderer returned 1 scenario(s), but 2 scenario(s) were discovered. "
+            "Please ensure the orderer only reorders scenarios without adding or removing any"
+        )

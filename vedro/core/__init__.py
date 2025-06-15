@@ -7,11 +7,18 @@ from ._plugin import Plugin, PluginConfig
 from ._report import Report
 from ._scenario_finder import ScenarioFileFinder, ScenarioFinder
 from ._scenario_loader import ScenarioFileLoader, ScenarioLoader
+from ._scenario_meta import get_scenario_meta, set_scenario_meta
 from ._step_result import StepResult, StepStatus
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 from .config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
 from .module_loader import ModuleFileLoader, ModuleLoader
+from .scenario_collector import (
+    MultiProviderScenarioCollector,
+    ScenarioCollector,
+    ScenarioProvider,
+    ScenarioSource,
+)
 from .scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from .scenario_orderer import ScenarioOrderer
 from .scenario_result import AggregatedResult, ScenarioResult, ScenarioStatus
@@ -26,4 +33,6 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Plugin", "PluginConf
            "ConfigLoader", "ConfigFileLoader", "Config", "Section", "ConfigType",
            "ModuleLoader", "ModuleFileLoader", "Artifact", "MemoryArtifact", "FileArtifact",
            "ScenarioScheduler", "MonotonicScenarioScheduler", "FactoryType",
-           "Container", "Factory", "Singleton", "ScenarioOrderer")
+           "Container", "Factory", "Singleton", "ScenarioOrderer", "get_scenario_meta",
+           "ScenarioCollector", "ScenarioProvider", "ScenarioSource",
+           "MultiProviderScenarioCollector", "set_scenario_meta",)

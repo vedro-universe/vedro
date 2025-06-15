@@ -6,7 +6,25 @@ __all__ = ("RepeaterScenarioScheduler",)
 
 
 class RepeaterScenarioScheduler(MonotonicScenarioScheduler):
+    """
+    Custom scenario scheduler that handles the aggregation of repeated scenario results.
+
+    This scheduler aggregates results of repeated scenario executions. It ensures that
+    the final result reflects the failure of any individual execution, while capturing
+    all attempts for reporting purposes.
+    """
+
     def aggregate_results(self, scenario_results: List[ScenarioResult]) -> AggregatedResult:
+        """
+        Aggregate results from repeated scenario executions into a single result.
+
+        This method processes a list of scenario results and determines the final
+        outcome based on whether any scenario execution failed. The last failed result
+        is returned if any failures occurred, otherwise the last passed result.
+
+        :param scenario_results: A list of `ScenarioResult` instances from repeated executions.
+        :return: An aggregated result that summarizes the repeated executions.
+        """
         assert len(scenario_results) > 0
 
         passed, failed = [], []

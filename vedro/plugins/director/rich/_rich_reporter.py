@@ -1,5 +1,8 @@
-from typing import Callable, Type, Union
+import sys
+from types import ModuleType
+from typing import Callable, Tuple, Type, Union, final
 
+import vedro
 from vedro.core import Dispatcher, ExcInfo, PluginConfig, ScenarioResult, StepResult
 from vedro.events import (
     ArgParsedEvent,
@@ -16,10 +19,12 @@ from vedro.plugins.director._director_init_event import DirectorInitEvent
 from vedro.plugins.director._reporter import Reporter
 
 from ._rich_printer import RichPrinter
+from .utils import TracebackFilter
 
 __all__ = ("RichReporterPlugin", "RichReporter",)
 
 
+@final
 class RichReporterPlugin(Reporter):
     def __init__(self, config: Type["RichReporter"], *,
                  printer_factory: Callable[[], RichPrinter] = RichPrinter) -> None:
@@ -31,6 +36,8 @@ class RichReporterPlugin(Reporter):
         self._tb_show_locals = config.tb_show_locals
         self._scope_width = config.scope_width
         self._tb_max_frames = config.tb_max_frames
+        self._tb_width = config.tb_width
+        self._tb_suppress_modules = config.tb_suppress_modules
         self._show_scenario_extras = config.show_scenario_extras
         self._show_step_extras = config.show_step_extras
         self._show_skipped = config.show_skipped
@@ -40,10 +47,14 @@ class RichReporterPlugin(Reporter):
         self._show_steps = config.show_steps
         self._hide_namespaces = config.hide_namespaces
         self._show_scenario_spinner = config.show_scenario_spinner
+        self._show_discovering_spinner = False
         self._show_interrupted_traceback = config.show_interrupted_traceback
+        self._show_scope = config.show_scope
+        self._show_full_diff = config.show_full_diff
         self._v2_verbosity = config.v2_verbosity
         self._ring_bell = config.ring_bell
         self._namespace: Union[str, None] = None
+        self._tb_filter: Union[TracebackFilter, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
@@ -74,6 +85,15 @@ class RichReporterPlugin(Reporter):
                            action="count",
                            default=self._verbosity,
                            help=help_message)
+        group.add_argument("-S", "--show-scope",
+                           action="store_true",
+                           default=self._show_scope,
+                           help="Show a snapshot of crucial variables (Scope) "
+                                "when a scenario fails")
+        group.add_argument("--show-full-diff",
+                           action="store_true",
+                           default=self._show_full_diff,
+                           help="Show full diff in assertion errors")
         group.add_argument("--show-timings",
                            action="store_true",
                            default=self._show_timings,
@@ -85,7 +105,7 @@ class RichReporterPlugin(Reporter):
         group.add_argument("--show-paths",
                            action="store_true",
                            default=self._show_paths,
-                           help="Show the relative path of each passed scenario")
+                           help="Show the relative path of each passed/failed scenario")
         group.add_argument("--show-scenario-spinner",
                            action="store_true",
                            default=self._show_scenario_spinner,
@@ -110,8 +130,15 @@ class RichReporterPlugin(Reporter):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
+        self._show_scope = event.args.show_scope
+
         if self._v2_verbosity:
             self._verbosity = self._verbosity + 2
+
+        if self._show_scope:
+            self._verbosity = 3
+
+        self._show_full_diff = event.args.show_full_diff
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
         self._show_steps = event.args.show_steps
@@ -135,7 +162,21 @@ class RichReporterPlugin(Reporter):
             raise ValueError(
                 "RichReporter: to enable `show_skip_reason` set `show_scenario_extras` to `True`")
 
+        if self._show_discovering_spinner:
+            self._printer.show_spinner("Discovering scenarios...")
+
+        if not self._tb_show_internal_calls:
+            self._tb_suppress_modules = tuple(self._tb_suppress_modules) + (vedro,)
+        else:
+            self._tb_suppress_modules = tuple(self._tb_suppress_modules)
+        try:
+            self._tb_filter = TracebackFilter(self._tb_suppress_modules)
+        except (AttributeError, TypeError):
+            raise ValueError("RichReporter: `tb_suppress_modules` must be a tuple of modules")
+
     def on_startup(self, event: StartupEvent) -> None:
+        if self._show_discovering_spinner:
+            self._printer.hide_spinner()
         self._printer.print_header()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
@@ -162,15 +203,29 @@ class RichReporterPlugin(Reporter):
         self._print_namespace(event.scenario_result.scenario.namespace)
 
     def _print_exception(self, exc_info: ExcInfo) -> None:
-        if self._tb_pretty:
+        if self._tb_suppress_modules:
+            assert self._tb_filter
+            traceback = self._tb_filter.filter_tb(exc_info.traceback)
+            exc_info = ExcInfo(exc_info.type, exc_info.value, traceback)
+
+        if self._tb_pretty and not self._is_exception_group(exc_info):
             self._printer.print_pretty_exception(exc_info,
+                                                 width=self._tb_width,
                                                  max_frames=self._tb_max_frames,
                                                  show_locals=self._tb_show_locals,
-                                                 show_internal_calls=self._tb_show_internal_calls)
+                                                 show_internal_calls=True,
+                                                 show_full_diff=self._show_full_diff)
         else:
             self._printer.print_exception(exc_info,
                                           max_frames=self._tb_max_frames,
-                                          show_internal_calls=self._tb_show_internal_calls)
+                                          show_internal_calls=True)
+
+    def _is_exception_group(self, exc_info: ExcInfo) -> bool:
+        # WORKAROUND: This logic is in place as a temporary solution until
+        # https://github.com/vedro-universe/vedro/issues/113 is resolved.
+        if sys.version_info >= (3, 11):
+            return isinstance(exc_info.value, ExceptionGroup)  # noqa: F821
+        return False
 
     def _prefix_to_indent(self, prefix: str, indent: int = 0) -> str:
         last_line = prefix.split("\n")[-1]
@@ -344,17 +399,32 @@ class RichReporter(PluginConfig):
     # Available if `tb_pretty` is True
     tb_show_locals: bool = False
 
+    # Set the width of the traceback output
+    # If None, terminal width will be used
+    # Available if `tb_pretty` is True
+    tb_width: Union[int, None] = 100
+
+    # Max stack trace entries to show (min=4)
+    tb_max_frames: int = 8
+
+    # Suppress modules in the traceback output
+    tb_suppress_modules: Tuple[Union[str, ModuleType], ...] = ()
+
     # Truncate lines in Scope based on scope_width value.
     # If scope_width is None, lines are truncated to the terminal's width.
     # If scope_width is -1, lines aren't truncated.
     # Otherwise, lines are truncated to the given length.
     scope_width: Union[int, None] = -1
 
-    # Max stack trace entries to show (min=4)
-    tb_max_frames: int = 8
-
     # Show traceback if the execution is interrupted
     show_interrupted_traceback: bool = False
+
+    # Show a snapshot of crucial variables (Scope) when a test scenario fails
+    show_scope: bool = False
+
+    # Show full diff in assertion errors
+    # Available if `tb_pretty` is True
+    show_full_diff: bool = False
 
     # Enable new verbose levels
     v2_verbosity: bool = True

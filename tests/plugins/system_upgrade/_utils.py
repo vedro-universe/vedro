@@ -7,11 +7,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import vedro
-from vedro.core import Dispatcher
+from vedro.core import Config, Dispatcher
 from vedro.core import MonotonicScenarioScheduler as Scheduler
-from vedro.core import Plugin
-from vedro.core.exp.local_storage import LocalStorage
-from vedro.events import StartupEvent
+from vedro.core.exp.local_storage import LocalStorage, create_local_storage
+from vedro.events import ConfigLoadedEvent, StartupEvent
 from vedro.plugins.system_upgrade import SystemUpgrade, SystemUpgradePlugin
 
 
@@ -20,23 +19,28 @@ def dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
-def make_system_upgrade(dispatcher: Dispatcher,
-                        tmp_path: Path) -> Tuple[SystemUpgradePlugin, LocalStorage]:
+@pytest.fixture()
+async def system_upgrade_storage(dispatcher: Dispatcher,
+                                 tmp_path: Path) -> Tuple[SystemUpgradePlugin, LocalStorage]:
     local_storage = None
 
-    def create_local_storage(plugin: Plugin):
+    def _create_local_storage(*args, **kwargs) -> LocalStorage:
         nonlocal local_storage
-        local_storage = LocalStorage(plugin, project_dir=tmp_path)
+        local_storage = create_local_storage(*args, **kwargs)
         return local_storage
 
-    plugin = SystemUpgradePlugin(SystemUpgrade, local_storage_factory=create_local_storage)
+    plugin = SystemUpgradePlugin(SystemUpgrade, local_storage_factory=_create_local_storage)
     plugin.subscribe(dispatcher)
+
+    await fire_config_loaded_event(dispatcher, tmp_path)
+
     return plugin, cast(LocalStorage, local_storage)
 
 
 @pytest.fixture()
-def system_upgrade(dispatcher: Dispatcher, tmp_path: Path) -> SystemUpgradePlugin:
-    plugin, *_ = make_system_upgrade(dispatcher, tmp_path)
+def system_upgrade(system_upgrade_storage: Tuple[SystemUpgradePlugin, LocalStorage]
+                   ) -> SystemUpgradePlugin:
+    plugin, *_ = system_upgrade_storage
     return plugin
 
 
@@ -94,6 +98,14 @@ def gen_next_version(version: str) -> str:
 def gen_prev_version(version: str) -> str:
     major, minor, patch = tuple(int(x) for x in version.split("."))
     return ".".join(map(str, (major - 1, minor, patch)))
+
+
+async def fire_config_loaded_event(dispatcher: Dispatcher, tmp_path: Path) -> None:
+    class _Config(Config):
+        project_dir = tmp_path
+
+    config_loaded_event = ConfigLoadedEvent(_Config.project_dir, _Config)
+    await dispatcher.fire(config_loaded_event)
 
 
 async def fire_startup_event(dispatcher: Dispatcher) -> None:

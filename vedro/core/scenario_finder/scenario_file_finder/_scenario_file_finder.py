@@ -19,7 +19,7 @@ class ScenarioFileFinder(ScenarioFinder):
     def __init__(self, file_filter: Optional[FileFilter] = None,
                  dir_filter: Optional[FileFilter] = None) -> None:
         """
-        Initializes the ScenarioFileFinder with optional file and directory filters.
+        Initialize the ScenarioFileFinder with optional file and directory filters.
 
         :param file_filter: An optional FileFilter to apply to each file found. If provided,
                             only files that pass the filter will be included.
@@ -32,7 +32,7 @@ class ScenarioFileFinder(ScenarioFinder):
 
     async def find(self, root: Path) -> AsyncGenerator[Path, None]:
         """
-        Finds and yields scenario file paths starting from the given root directory.
+        Find and yield scenario file paths starting from the given root directory.
 
         This method traverses the directory tree starting from the specified root. It applies
         file and directory filters (if provided) to identify relevant scenario files.

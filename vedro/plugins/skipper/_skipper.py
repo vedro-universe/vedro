@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, List, Optional, Set, Type, Union, cast
+from typing import List, Optional, Set, Type, Union, final
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent, StartupEvent
@@ -17,14 +17,18 @@ class _CompositePath:
         self.tmpl_idx = tmpl_idx
 
 
+@final
 class SkipperPlugin(Plugin):
     def __init__(self, config: Type["Skipper"]) -> None:
         super().__init__(config)
         self._global_config: Union[ConfigType, None] = None
+        self._project_dir: Union[Path, None] = None
+        self._default_scenarios_dir: Union[Path, None] = None
         self._subject: Union[str, None] = None
         self._selected: List[_CompositePath] = []
         self._deselected: List[_CompositePath] = []
         self._forbid_only = config.forbid_only
+        self._exp_selective_discoverer = config.exp_selective_discoverer
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
@@ -34,22 +38,27 @@ class SkipperPlugin(Plugin):
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         self._global_config = event.config
+        self._project_dir = self._global_config.project_dir
+        self._default_scenarios_dir = Path(self._global_config.default_scenarios_dir).resolve()
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
-        event.arg_parser.add_argument("file_or_dir", nargs="*", default=["."],
+        event.arg_parser.add_argument("file_or_dir", nargs="*",
+                                      default=[self._default_scenarios_dir],
                                       help="Select scenarios in a given file or directory")
-        event.arg_parser.add_argument("-i", "--ignore", nargs="+", default=[],
+        event.arg_parser.add_argument("-i", "--ignore", nargs="+",
+                                      default=[],
                                       help="Skip scenarios in a given file or directory")
         event.arg_parser.add_argument("--subject", help="Select scenarios with a given subject")
 
         help_message = (
-            "Enables the experimental selective discoverer feature, "
-            "which optimizes startup speed by loading scenarios only from specified files. "
+            "Enable the experimental selective discoverer feature to optimize startup speed "
+            "by loading scenarios only from specified files. "
             "This is particularly beneficial for very large test suites "
             "where Python's import mechanism can be slow, "
             "thus reducing the initial load time and improving overall test execution efficiency."
         )
         event.arg_parser.add_argument("--exp-selective-discoverer", action="store_true",
+                                      default=self._exp_selective_discoverer,
                                       help=help_message)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
@@ -67,22 +76,23 @@ class SkipperPlugin(Plugin):
             assert os.path.isdir(path) or os.path.isfile(path), f"{path!r} does not exist"
             self._deselected.append(composite_path)
 
-        exp_selective_discoverer = event.args.exp_selective_discoverer
-        if exp_selective_discoverer and len(self._deselected) == 0 and self._subject is None:
+        self._exp_selective_discoverer = event.args.exp_selective_discoverer
+        if not self._exp_selective_discoverer:
+            return
+        if len(self._deselected) == 0 and (self._subject is None):
             assert self._global_config is not None  # for type checking
             self._global_config.Registry.ScenarioDiscoverer.register(lambda: ScenarioDiscoverer(
                 finder=self._global_config.Registry.ScenarioFinder(),
-                loader=self._global_config.Registry.ScenarioLoader(),
+                loader=self._global_config.Registry.ScenarioCollector(),
                 orderer=self._global_config.Registry.ScenarioOrderer(),
                 selected_paths=self.__get_selected_paths(),
             ), self)
 
     def __get_selected_paths(self) -> Set[Path]:
         selected_paths = set()
-        default_path = Path(self._normalize_path("."))
         for path in self._selected:
             file_path = Path(path.file_path)
-            if file_path != default_path:
+            if file_path != self._default_scenarios_dir:
                 selected_paths.add(file_path)
         return selected_paths
 
@@ -101,30 +111,29 @@ class SkipperPlugin(Plugin):
         path = os.path.normpath(file_or_dir)
         if os.path.isabs(path):
             return path
-        # Joining "./scenarios" will be removed in v2
-        if os.path.commonpath(["scenarios", path]) != "scenarios":
-            path = os.path.join("scenarios", path)
+
+        # Backward compatibility (to be removed in v2):
+        # Only prepend "scenarios/" if:
+        # 1) The default_scenarios_dir is exactly <project_dir>/scenarios
+        # 2) The original path does not exist, but "scenarios/<path>" does
+        if self._default_scenarios_dir == self._project_dir / "scenarios":  # type: ignore
+            updated_path = os.path.join("scenarios/", path)
+            if not os.path.exists(path) and os.path.exists(updated_path):
+                return os.path.abspath(updated_path)
+
         return os.path.abspath(path)
 
-    def _get_scenario_attr(self, scenario: VirtualScenario, name: str, default_value: Any) -> Any:
-        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if template and hasattr(template, name):
-            return getattr(template, name)
-        return getattr(scenario._orig_scenario, name, default_value)
+    def _is_scenario_special(self, scenario: VirtualScenario) -> bool:
+        return scenario.get_meta("only", default=False, plugin=self,
+                                 fallback_key="__vedro__only__")
 
     def _is_scenario_skipped(self, scenario: VirtualScenario) -> bool:
-        attr_name = "__vedro__skipped__"
-        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if template and hasattr(template, attr_name):
-            return bool(getattr(template, attr_name))
-        return getattr(scenario._orig_scenario, attr_name, False)
+        return scenario.get_meta("skipped", default=False, plugin=self,
+                                 fallback_key="__vedro__skipped__")
 
-    def _is_scenario_special(self, scenario: VirtualScenario) -> bool:
-        attr_name = "__vedro__only__"
-        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if template and hasattr(template, attr_name):
-            return bool(getattr(template, attr_name))
-        return getattr(scenario._orig_scenario, attr_name, False)
+    def _get_skip_reason(self, scenario: VirtualScenario) -> Union[str, None]:
+        return scenario.get_meta("skip_reason", default=None, plugin=self,
+                                 fallback_key="__vedro__skip_reason__")
 
     def _is_match_scenario(self, path: _CompositePath, scenario: VirtualScenario) -> bool:
         if os.path.commonpath([path.file_path, scenario.path]) != path.file_path:
@@ -162,10 +171,6 @@ class SkipperPlugin(Plugin):
 
         return False
 
-    def _get_skip_reason(self, scenario: VirtualScenario) -> Union[str, None]:
-        skip_reason = self._get_scenario_attr(scenario, "__vedro__skip_reason__", None)
-        return cast(Union[str, None], skip_reason)
-
     async def on_startup(self, event: StartupEvent) -> None:
         special_scenarios = set()
 
@@ -190,8 +195,12 @@ class SkipperPlugin(Plugin):
 
 class Skipper(PluginConfig):
     plugin = SkipperPlugin
-    description = "Allows selective scenario skipping and selection " \
-                  "based on file/directory or subject"
+    description = ("Allows selective scenario skipping and selection "
+                   "based on file/directory or subject")
 
     # Forbid execution of scenarios with '@vedro.only' decorator
     forbid_only: bool = False
+
+    # Enable the experimental selective discoverer feature
+    # to optimize startup speed by loading scenarios only from specified files
+    exp_selective_discoverer: bool = False

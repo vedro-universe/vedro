@@ -1,4 +1,4 @@
-from pathlib import Path
+from typing import Tuple
 
 import pytest
 from baby_steps import given, then, when
@@ -6,19 +6,21 @@ from baby_steps import given, then, when
 from vedro.core import Dispatcher
 from vedro.core import MonotonicScenarioScheduler as Scheduler
 from vedro.core import Report
+from vedro.core.exp.local_storage import LocalStorage
 from vedro.events import CleanupEvent, StartupEvent
+from vedro.plugins.last_failed import LastFailedPlugin
 
 from ._utils import (
     dispatcher,
     fire_arg_parsed_event,
     fire_scenario_reported_event,
     last_failed,
-    make_last_failed,
+    last_failed_storage,
     make_scenario_result,
     make_vscenario,
 )
 
-__all__ = ("dispatcher", "last_failed",)  # fixtures
+__all__ = ("dispatcher", "last_failed", "last_failed_storage",)  # fixtures
 
 
 @pytest.mark.usefixtures(last_failed.__name__)
@@ -40,9 +42,13 @@ async def test_startup_without_last_failed_file(*, dispatcher: Dispatcher):
         assert list(scheduler.scheduled) == []
 
 
-async def test_startup_with_last_failed_file_enabled(*, dispatcher: Dispatcher, tmp_path: Path):
+async def test_startup_with_last_failed_file_enabled(
+    *,
+    dispatcher: Dispatcher,
+    last_failed_storage: Tuple[LastFailedPlugin, LocalStorage]
+):
     with given:
-        plugin, local_storage = make_last_failed(dispatcher, tmp_path)
+        _, local_storage = last_failed_storage
         await fire_arg_parsed_event(dispatcher, last_failed=True)
 
         last_failed_scenario, another_scenario = make_vscenario(), make_vscenario()
@@ -58,9 +64,13 @@ async def test_startup_with_last_failed_file_enabled(*, dispatcher: Dispatcher, 
         assert list(scheduler.scheduled) == [last_failed_scenario]
 
 
-async def test_startup_with_last_failed_file_disabled(*, dispatcher: Dispatcher, tmp_path: Path):
+async def test_startup_with_last_failed_file_disabled(
+    *,
+    dispatcher: Dispatcher,
+    last_failed_storage: Tuple[LastFailedPlugin, LocalStorage]
+):
     with given:
-        plugin, local_storage = make_last_failed(dispatcher, tmp_path)
+        _, local_storage = last_failed_storage
         await fire_arg_parsed_event(dispatcher, last_failed=False)
 
         last_failed_scenario, another_scenario = make_vscenario(), make_vscenario()
@@ -76,10 +86,13 @@ async def test_startup_with_last_failed_file_disabled(*, dispatcher: Dispatcher,
         assert list(scheduler.scheduled) == [last_failed_scenario, another_scenario]
 
 
-async def test_cleanup_with_no_failed_scenarios_reported(*, dispatcher: Dispatcher,
-                                                         tmp_path: Path):
+async def test_cleanup_with_no_failed_scenarios_reported(
+    *,
+    dispatcher: Dispatcher,
+    last_failed_storage: Tuple[LastFailedPlugin, LocalStorage]
+):
     with given:
-        plugin, local_storage = make_last_failed(dispatcher, tmp_path)
+        _, local_storage = last_failed_storage
         await fire_arg_parsed_event(dispatcher, last_failed=True)
 
         cleanup_event = CleanupEvent(Report())
@@ -91,10 +104,13 @@ async def test_cleanup_with_no_failed_scenarios_reported(*, dispatcher: Dispatch
         assert await local_storage.get("last_failed") == []
 
 
-async def test_cleanup_with_one_failed_scenario_reported(*, dispatcher: Dispatcher,
-                                                         tmp_path: Path):
+async def test_cleanup_with_one_failed_scenario_reported(
+    *,
+    dispatcher: Dispatcher,
+    last_failed_storage: Tuple[LastFailedPlugin, LocalStorage]
+):
     with given:
-        plugin, local_storage = make_last_failed(dispatcher, tmp_path)
+        _, local_storage = last_failed_storage
         await fire_arg_parsed_event(dispatcher, last_failed=True)
 
         failed_scenario_result = make_scenario_result().mark_failed()
@@ -117,10 +133,13 @@ async def test_cleanup_with_one_failed_scenario_reported(*, dispatcher: Dispatch
         ]
 
 
-async def test_cleanup_with_multiple_failed_scenarios_reported(*, dispatcher: Dispatcher,
-                                                               tmp_path: Path):
+async def test_cleanup_with_multiple_failed_scenarios_reported(
+    *,
+    dispatcher: Dispatcher,
+    last_failed_storage: Tuple[LastFailedPlugin, LocalStorage]
+):
     with given:
-        plugin, local_storage = make_last_failed(dispatcher, tmp_path)
+        _, local_storage = last_failed_storage
         await fire_arg_parsed_event(dispatcher, last_failed=True)
 
         failed_scenario_result1 = make_scenario_result().mark_failed()

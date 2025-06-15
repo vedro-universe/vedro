@@ -314,7 +314,7 @@ def test_scenario_result_attach_incorrect_artifact(*, virtual_scenario: VirtualS
 
     with then:
         assert exc.type is TypeError
-        assert str(exc.value) == "artifact must be an instance of Artifact"
+        assert str(exc.value) == "Expected an instance of Artifact, got dict"
 
 
 def test_scenario_result_get_artifacts(*, virtual_scenario: VirtualScenario):

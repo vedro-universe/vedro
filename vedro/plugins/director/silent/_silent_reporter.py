@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, final
 
 from vedro.core import Dispatcher, PluginConfig
 
@@ -8,6 +8,7 @@ from .._reporter import Reporter
 __all__ = ("SilentReporter", "SilentReporterPlugin",)
 
 
+@final
 class SilentReporterPlugin(Reporter):
     def __init__(self, config: Type["SilentReporter"]) -> None:
         super().__init__(config)

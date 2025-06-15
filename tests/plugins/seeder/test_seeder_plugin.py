@@ -8,7 +8,7 @@ from baby_steps import given, then, when
 from vedro.core import Dispatcher
 from vedro.core import MonotonicScenarioScheduler as Scheduler
 from vedro.core import Report, ScenarioResult
-from vedro.events import CleanupEvent, StartupEvent
+from vedro.events import CleanupEvent, ScenarioRunEvent, StartupEvent
 from vedro.plugins.seeder import Seeder, SeederPlugin, StandardRandomGenerator
 
 from ._utils import (
@@ -214,7 +214,6 @@ async def test_run_discovered_and_scheduled_fixed_seed(*, seeder: SeederPlugin,
         generated = await run_scenarios(dispatcher, scheduler)
 
     with then:
-        print(generated)
         assert generated == [RAND_SCHEDULED[1][0], RAND_SCHEDULED[1][0],
                              RAND_DISCOVERED[0][0], RAND_DISCOVERED[0][0]]
 
@@ -279,3 +278,21 @@ async def test_dont_show_summary(get_scenario_results: Callable[[], List[Scenari
 
     with then:
         assert report.summary == []
+
+
+async def test_show_seeds(*, seeder: SeederPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL, show_seeds=True)
+
+        vscenario = make_vscenario("scenario-1.py")
+        scheduler = Scheduler(scenarios=[vscenario])
+        await fire_startup_event(dispatcher, scheduler)
+
+        scenario_result = ScenarioResult(vscenario)
+        event = ScenarioRunEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert scenario_result.extra_details == ["seed: 75fc9f22..3b0238c4"]

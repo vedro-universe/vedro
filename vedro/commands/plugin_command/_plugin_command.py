@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable, List, Type
+from typing import Callable, List, Type, Union
 
 from rich.console import Console
 from rich.status import Status
@@ -129,6 +129,8 @@ class PluginCommand(Command):
         enabled = await self._plugin_manager.enable(plugin_name)
         if len(enabled) == 0:
             self._console.print(f"✗ Plugin '{plugin_name}' not found", style="red")
+            if discovered := await self._discover_core_plugin(plugin_name):
+                self._console.print(f"? Did you mean '{discovered}'?", style="yellow")
         else:
             self._console.print(f"✔ Plugin '{plugin_name}' enabled", style="green")
 
@@ -136,8 +138,16 @@ class PluginCommand(Command):
         disabled = await self._plugin_manager.disable(plugin_name)
         if len(disabled) == 0:
             self._console.print(f"✗ Plugin '{plugin_name}' not found", style="red")
+            if discovered := await self._discover_core_plugin(plugin_name):
+                self._console.print(f"? Did you mean '{discovered}'?", style="yellow")
         else:
             self._console.print(f"✔ Plugin '{plugin_name}' disabled", style="green")
+
+    async def _discover_core_plugin(self, plugin_name: str) -> Union[str, None]:
+        discovered = await self._plugin_manager.discover(f"vedro.plugins.{plugin_name}")
+        if discovered:
+            return discovered[0][0]
+        return None
 
     async def _show_installed_plugins(self) -> None:
         table = Table(expand=True, border_style="grey50")

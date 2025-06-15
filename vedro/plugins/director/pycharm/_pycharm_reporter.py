@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict, Type, final
 
 from vedro.core import Dispatcher, PluginConfig, ScenarioResult
 from vedro.events import (
@@ -18,6 +18,7 @@ from ..rich import RichPrinter
 __all__ = ("PyCharmReporter", "PyCharmReporterPlugin",)
 
 
+@final
 class PyCharmReporterPlugin(Reporter):
     def __init__(self, config: Type["PyCharmReporter"], *,
                  printer_factory: Callable[[], RichPrinter] = RichPrinter) -> None:
@@ -64,9 +65,14 @@ class PyCharmReporterPlugin(Reporter):
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         scenario_result = event.scenario_result
+
+        location_hint = f"file://{scenario_result.scenario.path}"
+        if lineno := scenario_result.scenario.lineno:
+            location_hint += f":{lineno}"
+
         self._write_message("testStarted", {
             "name": scenario_result.scenario.subject,
-            "locationHint": scenario_result.scenario.path,
+            "locationHint": location_hint,
         })
 
     def _print_scenario(self, scenario_result: ScenarioResult) -> None:

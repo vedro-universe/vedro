@@ -3,6 +3,7 @@ from collections import deque
 from pathlib import Path
 from time import monotonic_ns
 from typing import Optional
+from unittest.mock import patch
 
 import pytest
 
@@ -11,12 +12,17 @@ from vedro import FileArtifact
 from vedro import Scenario as VedroScenario
 from vedro.core import Dispatcher, VirtualScenario, VirtualStep
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
-from vedro.plugins.artifacted import Artifacted, ArtifactedPlugin, MemoryArtifact
+from vedro.plugins.artifacted import Artifacted, ArtifactedPlugin, ArtifactManager, MemoryArtifact
 
 
 @pytest.fixture()
 def dispatcher() -> Dispatcher:
     return Dispatcher()
+
+
+@pytest.fixture()
+def global_artifacts() -> deque:
+    return deque()
 
 
 @pytest.fixture()
@@ -35,9 +41,24 @@ def project_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def artifacted(dispatcher: Dispatcher, scenario_artifacts: deque,
+def artifacts_dir(project_dir: Path):
+    artifacts_dir = project_dir / "artifacts/"
+    artifacts_dir.mkdir(exist_ok=True)
+    return artifacts_dir
+
+
+@pytest.fixture()
+def artifact_manager(artifacts_dir: Path, project_dir: Path):
+    return ArtifactManager(artifacts_dir, project_dir)
+
+
+@pytest.fixture()
+def artifacted(dispatcher: Dispatcher,
+               global_artifacts: deque,
+               scenario_artifacts: deque,
                step_artifacts: deque) -> ArtifactedPlugin:
     artifacted = ArtifactedPlugin(Artifacted,
+                                  global_artifacts=global_artifacts,
                                   scenario_artifacts=scenario_artifacts,
                                   step_artifacts=step_artifacts)
     artifacted.subscribe(dispatcher)
@@ -72,9 +93,35 @@ async def fire_config_loaded_event(dispatcher: Dispatcher, project_dir_: Path) -
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
-                                save_artifacts: bool = False,
+                                save_artifacts: bool = Artifacted.save_artifacts,
+                                add_artifact_details: bool = Artifacted.add_artifact_details,
                                 artifacts_dir: Optional[Path] = None) -> None:
     await dispatcher.fire(ArgParseEvent(ArgumentParser()))
 
-    namespace = Namespace(save_artifacts=save_artifacts, artifacts_dir=artifacts_dir)
+    namespace = Namespace(
+        save_artifacts=save_artifacts,
+        add_artifact_details=add_artifact_details,
+        artifacts_dir=artifacts_dir,
+    )
     await dispatcher.fire(ArgParsedEvent(namespace))
+
+
+def patch_rmtree(exception: Optional[Exception] = None):
+    return patch("shutil.rmtree", side_effect=exception)
+
+
+def patch_copy2(exception: Optional[Exception] = None):
+    return patch("shutil.copy2", side_effect=exception)
+
+
+def patch_write_bytes(exception: Optional[Exception] = None):
+    return patch("pathlib.Path.write_bytes", side_effect=exception)
+
+
+def patch_mkdir(exception: Optional[Exception] = None):
+    return patch("pathlib.Path.mkdir", side_effect=exception)
+
+
+def make_artifacted_plugin(artifact_manager: ArtifactManager) -> ArtifactedPlugin:
+    return ArtifactedPlugin(Artifacted,
+                            artifact_manager_factory=lambda *args: artifact_manager)

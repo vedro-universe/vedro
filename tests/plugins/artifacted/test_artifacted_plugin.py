@@ -1,12 +1,15 @@
 from collections import deque
+from os import linesep
 from pathlib import Path
+from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core import AggregatedResult, Dispatcher, ScenarioResult, StepResult
+from vedro.core import AggregatedResult, Dispatcher, Report, ScenarioResult, StepResult
 from vedro.events import (
+    CleanupEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
     ScenarioReportedEvent,
@@ -14,22 +17,18 @@ from vedro.events import (
     StepFailedEvent,
     StepPassedEvent,
 )
-from vedro.plugins.artifacted import (
-    Artifact,
-    Artifacted,
-    ArtifactedPlugin,
-    attach_artifact,
-    attach_scenario_artifact,
-    attach_step_artifact,
-)
+from vedro.plugins.artifacted import ArtifactManager
 
 from ._utils import (
     artifacted,
+    artifacts_dir,
     create_file_artifact,
     create_memory_artifact,
     dispatcher,
     fire_arg_parsed_event,
     fire_config_loaded_event,
+    global_artifacts,
+    make_artifacted_plugin,
     make_vscenario,
     make_vstep,
     project_dir,
@@ -37,33 +36,32 @@ from ._utils import (
     step_artifacts,
 )
 
-__all__ = ("dispatcher", "scenario_artifacts", "step_artifacts", "artifacted",
-           "project_dir")  # fixtures
+__all__ = ("dispatcher", "global_artifacts", "scenario_artifacts", "step_artifacts",
+           "artifacted", "project_dir", "artifacts_dir")  # fixtures
 
 
-@pytest.mark.usefixtures(artifacted.__name__)
 async def test_arg_parsed_event_with_artifacts_dir_created(*, dispatcher: Dispatcher,
-                                                           project_dir: Path):
+                                                           project_dir: Path,
+                                                           artifacts_dir: Path):
     with given:
+        artifact_manager_ = Mock(spec=ArtifactManager)
+        make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
+
         await fire_config_loaded_event(dispatcher, project_dir)
 
-        artifacts_dir = project_dir / "artifacts/"
-        artifacts_dir.mkdir(exist_ok=True)
-
     with when:
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True, artifacts_dir=artifacts_dir)
+        await fire_arg_parsed_event(dispatcher, artifacts_dir=artifacts_dir)
 
     with then:
-        assert artifacts_dir.exists() is False
+        assert artifact_manager_.mock_calls == [call.cleanup_artifacts()]
 
 
 @pytest.mark.usefixtures(artifacted.__name__)
 async def test_arg_parsed_event_error_on_disabled_artifact_saving(*, dispatcher: Dispatcher,
-                                                                  project_dir: Path):
+                                                                  project_dir: Path,
+                                                                  artifacts_dir: Path):
     with given:
         await fire_config_loaded_event(dispatcher, project_dir)
-
-        artifacts_dir = Path("./artifacts")
 
     with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, save_artifacts=False, artifacts_dir=artifacts_dir)
@@ -84,7 +82,7 @@ async def test_arg_parsed_event_error_outside_artifacts_dir(*, dispatcher: Dispa
         artifacts_dir = Path("../artifacts")
 
     with when, raises(BaseException) as exc:
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True, artifacts_dir=artifacts_dir)
+        await fire_arg_parsed_event(dispatcher, artifacts_dir=artifacts_dir)
 
     with then:
         assert exc.type is ValueError
@@ -155,52 +153,55 @@ async def test_step_end_event_attaches_artifacts(event_class, *, dispatcher: Dis
         assert step_result.artifacts == [artifact1, artifact2]
 
 
-@pytest.mark.usefixtures(artifacted.__name__)
 async def test_scenario_reported_event_saves_scenario_artifacts(*, dispatcher: Dispatcher,
                                                                 project_dir: Path):
     with given:
+        artifact_manager_ = Mock(spec=ArtifactManager)
+        make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
+
         await fire_config_loaded_event(dispatcher, project_dir)
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True)
+        await fire_arg_parsed_event(dispatcher)
 
         scenario_result = ScenarioResult(make_vscenario())
-        scenario_result.set_started_at(3.14)
-
-        file_path = project_dir / "test.txt"
-        file_content = "text"
-        artifact1 = create_memory_artifact(f"{file_content}-1")
-        artifact2 = create_file_artifact(file_path, f"{file_content}-2")
-        scenario_result.attach(artifact1)
-        scenario_result.attach(artifact2)
+        scenario_result.set_started_at(3.14)  # started_at is used in _get_scenario_artifacts_dir
+        scenario_result.attach(artifact1 := create_memory_artifact())
+        scenario_result.attach(artifact2 := create_file_artifact(project_dir / "test.txt"))
 
         aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
         event = ScenarioReportedEvent(aggregated_result)
+
+        artifact_manager_.reset_mock()
+        artifact_manager_.save_artifact = Mock(
+            side_effect=[
+                Path(project_dir / artifact1.name),
+                Path(project_dir / artifact2.name)
+            ]
+        )
 
     with when:
         await dispatcher.fire(event)
 
     with then:
         scn_artifacts_path = project_dir / ".vedro/artifacts/scenarios/scenario/3-14-Scenario-0"
-        assert scn_artifacts_path.exists()
 
-        artifact1_path = scn_artifacts_path / artifact1.name
-        assert artifact1_path.exists()
-        assert artifact1_path.read_text() == "text-1"
-
-        artifact2_path = scn_artifacts_path / artifact2.name
-        assert artifact2_path.exists()
-        assert artifact2_path.read_text() == "text-2"
+        assert artifact_manager_.mock_calls == [
+            call.save_artifact(artifact1, scn_artifacts_path),
+            call.save_artifact(artifact2, scn_artifacts_path),
+        ]
 
 
-@pytest.mark.usefixtures(artifacted.__name__)
 async def test_scenario_reported_event_saves_step_artifacts(*, dispatcher: Dispatcher,
                                                             project_dir: Path):
     with given:
+        artifact_manager_ = Mock(spec=ArtifactManager)
+        make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
+
         await fire_config_loaded_event(dispatcher, project_dir)
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True)
+        await fire_arg_parsed_event(dispatcher)
 
         step_result = StepResult(make_vstep())
-        artifact = create_memory_artifact(content := "text")
-        step_result.attach(artifact)
+        step_result.attach(artifact1 := create_memory_artifact())
+        step_result.attach(artifact2 := create_file_artifact(project_dir / "test.txt"))
 
         scenario_result = ScenarioResult(make_vscenario())
         scenario_result.set_started_at(3.14)
@@ -209,77 +210,63 @@ async def test_scenario_reported_event_saves_step_artifacts(*, dispatcher: Dispa
         aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
         event = ScenarioReportedEvent(aggregated_result)
 
+        artifact_manager_.reset_mock()
+        artifact_manager_.save_artifact = Mock(
+            side_effect=[
+                Path(project_dir / artifact1.name),
+                Path(project_dir / artifact2.name)
+            ]
+        )
+
     with when:
         await dispatcher.fire(event)
 
     with then:
         scn_artifacts_path = project_dir / ".vedro/artifacts/scenarios/scenario/3-14-Scenario-0"
-        assert scn_artifacts_path.exists()
 
-        step_artifacts_path = scn_artifacts_path / artifact.name
-        assert step_artifacts_path.exists()
-        assert step_artifacts_path.read_text() == content
+        assert artifact_manager_.mock_calls == [
+            call.save_artifact(artifact1, project_dir / scn_artifacts_path),
+            call.save_artifact(artifact2, project_dir / scn_artifacts_path),
+        ]
 
 
-@pytest.mark.usefixtures(artifacted.__name__)
-async def test_scenario_reported_event_incorrect_artifact(*, dispatcher: Dispatcher,
-                                                          project_dir: Path):
+async def test_cleanup_event_saves_global_artifacts(*, dispatcher: Dispatcher, project_dir: Path):
     with given:
+        artifact_manager_ = Mock(spec=ArtifactManager)
+        make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
+
         await fire_config_loaded_event(dispatcher, project_dir)
-        await fire_arg_parsed_event(dispatcher, save_artifacts=True)
+        await fire_arg_parsed_event(dispatcher)
 
-        scenario_result = ScenarioResult(make_vscenario())
-        artifact = type("NewArtifact", (Artifact,), {})()
-        scenario_result.attach(artifact)
+        report = Report()
+        report.attach(artifact1 := create_memory_artifact())
+        report.attach(artifact2 := create_file_artifact(project_dir / "test.txt"))
 
-        aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
-        event = ScenarioReportedEvent(aggregated_result)
-
-    with when, raises(BaseException) as exc:
-        await dispatcher.fire(event)
-
-    with then:
-        assert exc.type is TypeError
-        assert str(exc.value) == (
-            "Can't save artifact to '.vedro/artifacts/scenarios/scenario/0-Scenario-0': "
-            "unknown type 'NewArtifact'"
+        artifact_manager_.reset_mock()
+        artifact_manager_.save_artifact = Mock(
+            side_effect=[
+                Path(project_dir / artifact1.name),
+                Path(project_dir / artifact2.name)
+            ]
         )
 
-
-@pytest.mark.parametrize("event_class", [ScenarioPassedEvent, ScenarioFailedEvent])
-async def test_attach_scenario_artifact(event_class, *, dispatcher: Dispatcher):
-    with given:
-        artifacted = ArtifactedPlugin(Artifacted)
-        artifacted.subscribe(dispatcher)
-
-        artifact = create_memory_artifact()
-        attach_scenario_artifact(artifact)
-
-        scenario_result = ScenarioResult(make_vscenario())
-        event = event_class(scenario_result)
+        event = CleanupEvent(report)
 
     with when:
         await dispatcher.fire(event)
 
     with then:
-        assert scenario_result.artifacts == [artifact]
+        global_artifacts_dir = project_dir / ".vedro/artifacts/global"
 
+        assert artifact_manager_.mock_calls == [
+            call.save_artifact(artifact1, project_dir / global_artifacts_dir),
+            call.save_artifact(artifact2, project_dir / global_artifacts_dir),
+        ]
 
-@pytest.mark.parametrize("attach", [attach_artifact, attach_step_artifact])
-@pytest.mark.parametrize("event_class", [StepPassedEvent, StepFailedEvent])
-async def test_attach_step_artifact(attach, event_class, *, dispatcher: Dispatcher):
-    with given:
-        artifacted = ArtifactedPlugin(Artifacted)
-        artifacted.subscribe(dispatcher)
-
-        artifact = create_memory_artifact()
-        attach(artifact)
-
-        step_result = StepResult(make_vstep())
-        event = event_class(step_result)
-
-    with when:
-        await dispatcher.fire(event)
-
-    with then:
-        assert step_result.artifacts == [artifact]
+        assert report.summary == [
+            linesep.join([
+                "global artifacts:",
+                f"#   - {artifact1.name}",
+                f"#   - {artifact2.name}",
+            ])
+        ]

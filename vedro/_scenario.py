@@ -2,9 +2,20 @@ import inspect
 from functools import partialmethod
 from typing import Any, Dict, Tuple
 
+from .core._meta_data import MetaData
+
+__all__ = ("Scenario",)
+
 
 class _Meta(type):
+    # In v2, this logic should be moved to a `ScenarioLoader` to better encapsulate and
+    # separate the behavior, making it easier to maintain and extend.
+    # However, making this change now would break backward compatibility for external plugins
+    # that rely on the current metaclass design.
+
     def __new__(mcs, name: str, bases: Tuple[Any], namespace: Dict[str, Any]) -> Any:
+        namespace["__vedro__meta__"] = MetaData()
+
         if len(bases) == 0:
             return super().__new__(mcs, name, bases, namespace)
 
@@ -12,6 +23,13 @@ class _Meta(type):
             if base != Scenario:
                 module = namespace.get("__module__", "")
                 raise TypeError(f"Subclassing is restricted <{module}.{name}>")
+
+        frame = inspect.currentframe()
+        try:
+            lineno = frame.f_back.f_lineno if frame and frame.f_back else None
+        finally:
+            del frame
+        namespace["__vedro__lineno__"] = lineno
 
         cls_constructor = namespace.get("__init__")
         cls_params = getattr(cls_constructor, "__vedro__params__", None)
@@ -46,6 +64,8 @@ class _Meta(type):
                 "__vedro__template_args__": bound_args,
             }
             cls = type(cls_name, bases, cls_namespace)
+            setattr(cls, "__vedro__lineno__", lineno)
+
             for decorator in decorators:
                 cls = decorator(cls)
             cls_globals[cls_name] = cls
@@ -53,6 +73,7 @@ class _Meta(type):
         return created
 
 
+# In v2, consider moving this class to `vedro.core.scenario_provider`
 class Scenario(metaclass=_Meta):
     subject: str
 

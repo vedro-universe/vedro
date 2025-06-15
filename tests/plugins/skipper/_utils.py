@@ -1,5 +1,5 @@
+import os
 from argparse import ArgumentParser, Namespace
-from os import chdir
 from pathlib import Path
 from time import monotonic_ns
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type
@@ -8,8 +8,8 @@ import pytest
 from niltype import Nil, Nilable
 
 from vedro import Scenario
-from vedro.core import Dispatcher, VirtualScenario
-from vedro.events import ArgParsedEvent, ArgParseEvent
+from vedro.core import Config, Dispatcher, VirtualScenario, get_scenario_meta
+from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from vedro.plugins.skipper import Skipper, SkipperPlugin
 from vedro.plugins.skipper import only as only_scenario
 from vedro.plugins.skipper import skip as skip_scenario
@@ -29,15 +29,27 @@ def skipper(dispatcher: Dispatcher) -> SkipperPlugin:
 
 @pytest.fixture()
 def tmp_dir(tmp_path: Path) -> Path:
-    chdir(tmp_path)
-    Path("./scenarios").mkdir(exist_ok=True)
-    yield tmp_path
+    cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        Path("./scenarios").mkdir(exist_ok=True)
+        yield tmp_path
+    finally:
+        os.chdir(cwd)
 
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 file_or_dir: Optional[List[str]] = None,
                                 ignore: Optional[List[str]] = None,
-                                subject: Optional[str] = None) -> None:
+                                subject: Optional[str] = None,
+                                project_dir: Optional[Path] = None) -> None:
+    project_dir_ = project_dir if project_dir else Config.project_dir
+
+    class CustomConfig(Config):
+        project_dir = project_dir_
+
+    await dispatcher.fire(ConfigLoadedEvent(Path(), CustomConfig))
+
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
@@ -115,12 +127,12 @@ def get_scenarios(key: str, globals_: Dict[str, Any]) -> List[Type[Scenario]]:
 
 
 def get_only_attr(scenario: Type[Scenario]) -> bool:
-    return getattr(scenario, "__vedro__only__", False)
+    return get_scenario_meta(scenario, "only", default=False, plugin=SkipperPlugin)
 
 
 def get_skip_attr(scenario: Type[Scenario]) -> bool:
-    return getattr(scenario, "__vedro__skipped__", False)
+    return get_scenario_meta(scenario, "skipped", default=False, plugin=SkipperPlugin)
 
 
 def get_skip_reason_attr(scenario: Type[Scenario]) -> Nilable[str]:
-    return getattr(scenario, "__vedro__skip_reason__", Nil)
+    return get_scenario_meta(scenario, "skip_reason", default=Nil, plugin=SkipperPlugin)

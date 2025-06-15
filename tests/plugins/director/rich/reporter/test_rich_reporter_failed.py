@@ -24,13 +24,14 @@ __all__ = ("dispatcher", "rich_reporter", "director", "printer_")  # fixtures
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
 @pytest.mark.parametrize("show_locals", [False, True])
-@pytest.mark.parametrize("show_internal_calls", [False, True])
-async def test_scenario_failed(show_locals: bool, show_internal_calls: bool, *,
+@pytest.mark.parametrize("show_full_diff", [False, True])
+async def test_scenario_failed(show_locals: bool, show_full_diff: bool, *,
                                dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher,
                                     tb_show_locals=show_locals,
-                                    tb_show_internal_calls=show_internal_calls)
+                                    tb_show_internal_calls=True,
+                                    show_full_diff=show_full_diff)
 
         scenario_result = make_scenario_result().mark_failed()
 
@@ -61,9 +62,11 @@ async def test_scenario_failed(show_locals: bool, show_internal_calls: bool, *,
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=show_locals,
-                                        show_internal_calls=show_internal_calls)
+                                        show_internal_calls=True,
+                                        show_full_diff=show_full_diff)
         ]
 
 
@@ -104,9 +107,11 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False)
+                                        show_internal_calls=True,
+                                        show_full_diff=False)
         ]
 
 
@@ -144,9 +149,11 @@ async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock
                                  StepStatus.FAILED, elapsed=None, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True,
+                                        show_full_diff=False),
 
             call.print_scope(scope, scope_width=-1),
         ]
@@ -188,7 +195,9 @@ async def test_scenario_failed_verbose_show_timings(dispatcher: Dispatcher,
                                  StepStatus.FAILED, elapsed=3.0, prefix=" " * 3),
 
             call.print_pretty_exception(exc_info,
+                                        width=100,
                                         max_frames=8,
                                         show_locals=False,
-                                        show_internal_calls=False),
+                                        show_internal_calls=True,
+                                        show_full_diff=False),
         ]

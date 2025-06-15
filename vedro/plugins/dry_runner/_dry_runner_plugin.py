@@ -1,4 +1,4 @@
-from typing import Tuple, Type
+from typing import Tuple, Type, final
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
@@ -6,6 +6,7 @@ from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 from ._dry_runner import DryRunner as DryRunnerImpl
 
 
+@final
 class DryRunnerPlugin(Plugin):
     def __init__(self, config: Type["DryRunner"]) -> None:
         super().__init__(config)
@@ -35,6 +36,8 @@ class DryRunnerPlugin(Plugin):
             )
 
 
+# In Vedro v2, the logic of this plugin will be moved to the core,
+# making this plugin obsolete and eventually removed.
 class DryRunner(PluginConfig):
     plugin = DryRunnerPlugin
     description = "Simulates scenario execution without actually executing them"
