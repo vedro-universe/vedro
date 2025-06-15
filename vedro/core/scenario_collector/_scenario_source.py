@@ -66,6 +66,7 @@ class ScenarioSource:
         The module is cached after the first load and protected by an asynchronous lock.
 
         :return: The loaded module object.
+        :raises ModuleNotFoundError: If the module cannot be found or loaded.
         """
         async with self._lock:
             if self._module is None:

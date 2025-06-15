@@ -28,7 +28,7 @@ async def test_properties_of_scenario_source(tmp_dir: Path, module_loader: Modul
 
 
 async def test_get_module_first_time(tmp_dir: Path, module_loader: ModuleLoader,
-                                     loaded_module: ModuleType,):
+                                     loaded_module: ModuleType):
     with given:
         project_dir = tmp_dir
         path = project_dir / "scenarios" / "scenario.py"
@@ -40,10 +40,11 @@ async def test_get_module_first_time(tmp_dir: Path, module_loader: ModuleLoader,
     with then:
         assert module is loaded_module
         assert module_loader.mock_calls == [call.load(source.rel_path)]
+        assert module_loader.load.await_count == 1
 
 
 async def test_get_module_uses_cache(tmp_dir: Path, module_loader: ModuleLoader,
-                                     loaded_module: ModuleType,):
+                                     loaded_module: ModuleType):
     with given:
         project_dir = tmp_dir
         path = project_dir / "scenarios" / "scenario.py"
@@ -56,6 +57,7 @@ async def test_get_module_uses_cache(tmp_dir: Path, module_loader: ModuleLoader,
     with then:
         assert module is loaded_module
         assert module_loader.mock_calls == [call.load(source.rel_path)]
+        assert module_loader.load.await_count == 1
 
 
 async def test_get_content_first_time(tmp_dir: Path, module_loader: ModuleLoader):

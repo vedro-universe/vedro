@@ -2,7 +2,7 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
-from _pytest.python_api import raises
+from pytest import raises
 from baby_steps import given, then, when
 
 from vedro.core import ModuleFileLoader
