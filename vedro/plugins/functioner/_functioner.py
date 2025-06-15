@@ -3,7 +3,7 @@ from typing import Type
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ConfigLoadedEvent
 
-from ._scenario_provider import FuncBasedScenarioProvider
+from ._func_based_scenario_provider import FuncBasedScenarioProvider
 
 __all__ = ("Functioner", "FunctionerPlugin",)
 
