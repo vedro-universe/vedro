@@ -203,6 +203,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
         if len(scenario_results) > 0:
             await self._report_scenario_results(scenario_results, report, scheduler)
 
+    # In v2, add *args and **kwargs to the method signature to allow future extensibility
+    # without breaking changes.
     async def run(self, scheduler: ScenarioScheduler) -> Report:
         """
         Execute all scenarios and return the final report.

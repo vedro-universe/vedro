@@ -36,42 +36,42 @@ ScenarioExecuteFactory = Union[Type[ScenarioRunEvent], Type[ScenarioSkippedEvent
 
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_repeats_validation(dispatcher: Dispatcher):
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, repeats=0)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == "--repeats must be >= 1"
+        assert exc.type is ValueError
+        assert str(exc.value) == "--repeats must be >= 1"
 
 
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_repeats_delay_validation(dispatcher: Dispatcher):
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, repeats=2, repeats_delay=-0.001)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == "--repeats-delay must be >= 0.0"
+        assert exc.type is ValueError
+        assert str(exc.value) == "--repeats-delay must be >= 0.0"
 
 
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_repeats_delay_without_repeats_validation(dispatcher: Dispatcher):
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, repeats=1, repeats_delay=0.1)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == "--repeats-delay must be used with --repeats > 1"
+        assert exc.type is ValueError
+        assert str(exc.value) == "--repeats-delay must be used with --repeats > 1"
 
 
 @pytest.mark.usefixtures(repeater.__name__)
 async def test_fail_fast_without_repeats_validation(dispatcher: Dispatcher):
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await fire_arg_parsed_event(dispatcher, repeats=1, fail_fast_on_repeat=True)
 
     with then:
-        assert exc_info.type is ValueError
-        assert str(exc_info.value) == "--fail-fast-on-repeat must be used with --repeats > 1"
+        assert exc.type is ValueError
+        assert str(exc.value) == "--fail-fast-on-repeat must be used with --repeats > 1"
 
 
 @pytest.mark.parametrize("repeats", [1, 2, 3])
@@ -170,12 +170,12 @@ async def test_repeats_fail_fast(event_cls: ScenarioExecuteFactory, *, dispatche
 
         event = event_cls(make_scenario_result())
 
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         await dispatcher.fire(event)
 
     with then:
-        assert exc_info.type is RepeaterExecutionInterrupted
-        assert str(exc_info.value) == "Stop repeating scenarios after the first failure"
+        assert exc.type is RepeaterExecutionInterrupted
+        assert str(exc.value) == "Stop repeating scenarios after the first failure"
 
 
 @pytest.mark.usefixtures(repeater.__name__)

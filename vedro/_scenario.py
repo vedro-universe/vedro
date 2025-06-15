@@ -73,6 +73,7 @@ class _Meta(type):
         return created
 
 
+# In v2, consider moving this class to `vedro.core.scenario_provider`
 class Scenario(metaclass=_Meta):
     subject: str
 
