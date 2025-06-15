@@ -6,7 +6,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import ModuleFileLoader, ModuleLoader
-from vedro.core.scenario_collector import ClassBasedProvider, ScenarioSource
+from vedro.core.scenario_collector import ClassBasedScenarioProvider, ScenarioSource
 
 from ._utils import tmp_dir
 
@@ -19,8 +19,8 @@ def module_loader() -> ModuleLoader:
 
 
 @pytest.fixture()
-def provider() -> ClassBasedProvider:
-    return ClassBasedProvider()
+def provider() -> ClassBasedScenarioProvider:
+    return ClassBasedScenarioProvider()
 
 
 @pytest.fixture()
@@ -38,7 +38,7 @@ def scenario_source(tmp_dir: Path, module_loader: ModuleLoader) -> ScenarioSourc
     "Scenario_1_VedroScenario",  # parametrized
 ])
 async def test_single_scenario_with_various_class_names(name, *,
-                                                        provider: ClassBasedProvider,
+                                                        provider: ClassBasedScenarioProvider,
                                                         scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent(f'''
@@ -54,7 +54,7 @@ async def test_single_scenario_with_various_class_names(name, *,
         assert len(scenarios) == 1
 
 
-async def test_multiple_scenarios_in_one_module(provider: ClassBasedProvider,
+async def test_multiple_scenarios_in_one_module(provider: ClassBasedScenarioProvider,
                                                 scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
@@ -72,7 +72,7 @@ async def test_multiple_scenarios_in_one_module(provider: ClassBasedProvider,
         assert len(scenarios) == 2
 
 
-async def test_parametrized_scenarios(provider: ClassBasedProvider,
+async def test_parametrized_scenarios(provider: ClassBasedScenarioProvider,
                                       scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
@@ -91,7 +91,7 @@ async def test_parametrized_scenarios(provider: ClassBasedProvider,
         assert len(scenarios) == 2
 
 
-async def test_error_on_non_inheriting_scenario_class(provider: ClassBasedProvider,
+async def test_error_on_non_inheriting_scenario_class(provider: ClassBasedScenarioProvider,
                                                       scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
@@ -107,7 +107,7 @@ async def test_error_on_non_inheriting_scenario_class(provider: ClassBasedProvid
         assert str(exc.value) == "'scenarios.scenario.Scenario' must inherit from 'vedro.Scenario'"
 
 
-async def test_no_scenarios_in_empty_file(provider: ClassBasedProvider,
+async def test_no_scenarios_in_empty_file(provider: ClassBasedScenarioProvider,
                                           scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text("")
@@ -119,7 +119,7 @@ async def test_no_scenarios_in_empty_file(provider: ClassBasedProvider,
         assert len(scenarios) == 0
 
 
-async def test_detect_only_scenario_classes_among_others(provider: ClassBasedProvider,
+async def test_detect_only_scenario_classes_among_others(provider: ClassBasedScenarioProvider,
                                                          scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
@@ -137,7 +137,7 @@ async def test_detect_only_scenario_classes_among_others(provider: ClassBasedPro
         assert len(scenarios) == 1
 
 
-async def test_ignore_function_named_scenario(provider: ClassBasedProvider,
+async def test_ignore_function_named_scenario(provider: ClassBasedScenarioProvider,
                                               scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
@@ -155,7 +155,7 @@ async def test_ignore_function_named_scenario(provider: ClassBasedProvider,
         assert len(scenarios) == 1
 
 
-async def test_ignore_non_python_scenario_files(provider: ClassBasedProvider,
+async def test_ignore_non_python_scenario_files(provider: ClassBasedScenarioProvider,
                                                 tmp_dir: Path, module_loader: ModuleLoader):
     with given:
         path = tmp_dir / "scenarios" / "scenario.md"

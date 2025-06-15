@@ -10,10 +10,10 @@ from ..._scenario import Scenario
 from ._scenario_provider import ScenarioProvider
 from ._scenario_source import ScenarioSource
 
-__all__ = ("ClassBasedProvider",)
+__all__ = ("ClassBasedScenarioProvider",)
 
 
-class ClassBasedProvider(ScenarioProvider):
+class ClassBasedScenarioProvider(ScenarioProvider):
     """
     Provides scenarios by inspecting classes in a module.
 

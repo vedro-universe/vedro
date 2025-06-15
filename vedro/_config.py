@@ -43,7 +43,7 @@ from vedro.core import (
 )
 from vedro.core.config_loader import computed
 from vedro.core.scenario_collector import (
-    ClassBasedProvider,
+    ClassBasedScenarioProvider,
     MultiProviderCollector,
     ScenarioCollector,
 )
@@ -98,7 +98,7 @@ class Config(core.Config):
         ))
 
         ScenarioCollector = Singleton[ScenarioCollector](lambda: MultiProviderCollector(
-            providers=[ClassBasedProvider()],
+            providers=[ClassBasedScenarioProvider()],
             module_loader=Config.Registry.ModuleLoader(),
         ))
 
