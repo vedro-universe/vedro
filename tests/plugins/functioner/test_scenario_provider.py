@@ -38,8 +38,8 @@ async def test_func_scenario_detected(fn_def: str, is_coro: bool, *,
         # scenario
         scenario = scenarios[0]
         assert scenario.subject == "create user"
-        assert scenario.name == "Scenario_create_user"
-        assert scenario.unique_id == "scenarios/scenario.py::Scenario_create_user"
+        assert scenario.name == "create_user"
+        assert scenario.unique_id == "scenarios/scenario.py::create_user"
         assert scenario.template_index is None
         assert scenario.template_total is None
 
@@ -73,8 +73,8 @@ async def test_parametrized_func_scenarios(provider: ScenarioProvider,
 
         for idx, scenario in enumerate(scenarios, start=1):
             assert scenario.subject == "create user"
-            assert scenario.name == "Scenario_create_user"
-            assert scenario.unique_id == f"scenarios/scenario.py::Scenario_create_user#{idx}"
+            assert scenario.name == "create_user"
+            assert scenario.unique_id == f"scenarios/scenario.py::create_user#{idx}"
             assert scenario.template_index == idx
             assert scenario.template_total == 2
 
