@@ -8,10 +8,10 @@ from ._scenario_collector import ScenarioCollector
 from ._scenario_provider import ScenarioProvider
 from ._scenario_source import ScenarioSource
 
-__all__ = ("MultiProviderCollector",)
+__all__ = ("MultiProviderScenarioCollector",)
 
 
-class MultiProviderCollector(ScenarioCollector):
+class MultiProviderScenarioCollector(ScenarioCollector):
     """
     Collects scenarios using multiple scenario providers.
 
@@ -21,7 +21,7 @@ class MultiProviderCollector(ScenarioCollector):
 
     def __init__(self, providers: List[ScenarioProvider], module_loader: ModuleLoader) -> None:
         """
-        Initialize MultiProviderCollector with providers and a module loader.
+        Initialize MultiProviderScenarioCollector with providers and a module loader.
 
         :param providers: A list of ScenarioProvider instances used to collect scenarios.
         :param module_loader: The ModuleLoader used for dynamic module imports.

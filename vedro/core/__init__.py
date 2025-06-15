@@ -13,7 +13,12 @@ from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 from .config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
 from .module_loader import ModuleFileLoader, ModuleLoader
-from .scenario_collector import ScenarioCollector, ScenarioProvider, ScenarioSource
+from .scenario_collector import (
+    MultiProviderScenarioCollector,
+    ScenarioCollector,
+    ScenarioProvider,
+    ScenarioSource,
+)
 from .scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from .scenario_orderer import ScenarioOrderer
 from .scenario_result import AggregatedResult, ScenarioResult, ScenarioStatus
@@ -30,4 +35,4 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Plugin", "PluginConf
            "ScenarioScheduler", "MonotonicScenarioScheduler", "FactoryType",
            "Container", "Factory", "Singleton", "ScenarioOrderer", "get_scenario_meta",
            "ScenarioCollector", "ScenarioProvider", "ScenarioSource",
-           "set_scenario_meta",)
+           "MultiProviderScenarioCollector", "set_scenario_meta",)
