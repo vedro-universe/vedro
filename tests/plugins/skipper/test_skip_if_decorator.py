@@ -55,8 +55,24 @@ def test_skip_if_not_subclass():
 
     with then:
         assert exc.type is TypeError
-        assert str(exc.value) == ("Decorator @skip_if can be used only with "
-                                  "'vedro.Scenario' subclasses")
+        assert str(exc.value).startswith(
+            "Decorator @skip_if must be used as @skip_if(<condition>, 'reason?') "
+            "and only with Vedro scenarios:"
+        )
+
+
+def test_skip_if_not_subclass_with_reason():
+    with when, raises(BaseException) as exc:
+        @skip_if(lambda: True, "<reason>")
+        class _Scenario:
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value).startswith(
+            "Decorator @skip_if must be used as @skip_if(<condition>, 'reason?') "
+            "and only with Vedro scenarios:"
+        )
 
 
 def test_skip_if():
@@ -67,7 +83,10 @@ def test_skip_if():
 
     with then:
         assert exc.type is TypeError
-        assert str(exc.value) == 'Usage: @skip_if(<condition>, "reason?")'
+        assert str(exc.value).startswith(
+            "Decorator @skip_if must be used as @skip_if(<condition>, 'reason?') "
+            "and only with Vedro scenarios:"
+        )
 
 
 def test_skip_if_not_callable():
@@ -78,4 +97,7 @@ def test_skip_if_not_callable():
 
     with then:
         assert exc.type is TypeError
-        assert str(exc.value) == 'Usage: @skip_if(<condition>, "reason?")'
+        assert str(exc.value).startswith(
+            "Decorator @skip_if must be used as @skip_if(<condition>, 'reason?') "
+            "and only with Vedro scenarios:"
+        )

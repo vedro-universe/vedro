@@ -41,7 +41,7 @@ def skip_if(cond: Callable[[], bool], reason: Optional[str] = None) -> Decorator
     For more details and examples, see:
     https://vedro.io/docs/features/skipping-scenarios
     """
-    if not callable(cond):
+    if isinstance(cond, type) or not callable(cond):
         raise TypeError(_format_skip_if_usage_error(reason))
 
     def apply_skip_if(scenario: Type[T]) -> Type[T]:
