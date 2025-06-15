@@ -5,9 +5,9 @@ from vedro.core import ScenarioOrderer
 
 
 def test_abc():
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         ScenarioOrderer()
 
     with then:
-        assert exc_info.type is TypeError
-        assert "Can't instantiate abstract class ScenarioOrderer" in str(exc_info.value)
+        assert exc.type is TypeError
+        assert "Can't instantiate abstract class ScenarioOrderer" in str(exc.value)

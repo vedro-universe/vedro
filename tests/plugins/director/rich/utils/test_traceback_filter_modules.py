@@ -69,7 +69,7 @@ def test_resolve_path_missing_file_attr():
     with given:
         traceback_filter = TracebackFilter(modules=[])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         traceback_filter.resolve_module_path(sys)
 
     with then:

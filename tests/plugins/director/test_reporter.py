@@ -6,8 +6,8 @@ from vedro.plugins.director import Reporter
 
 
 def test_reporter():
-    with when, raises(BaseException) as exception:
+    with when, raises(BaseException) as exc:
         Reporter(PluginConfig)
 
     with then:
-        assert exception.type is TypeError
+        assert exc.type is TypeError

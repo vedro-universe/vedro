@@ -8,6 +8,7 @@ import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.dry_runner as dry_runner
 import vedro.plugins.ensurer as ensurer
+import vedro.plugins.functioner as functioner
 import vedro.plugins.interrupter as interrupter
 import vedro.plugins.last_failed as last_failed
 import vedro.plugins.orderer as orderer
@@ -21,6 +22,7 @@ import vedro.plugins.tagger as tagger
 import vedro.plugins.temp_keeper as temp_keeper
 import vedro.plugins.terminator as terminator
 import vedro.plugins.tip_adviser as tip_adviser
+from vedro.config import computed
 from vedro.core import (
     Dispatcher,
     Factory,
@@ -40,7 +42,11 @@ from vedro.core import (
     ScenarioScheduler,
     Singleton,
 )
-from vedro.core.config_loader import computed
+from vedro.core.scenario_collector import (
+    ClassBasedScenarioProvider,
+    MultiProviderScenarioCollector,
+    ScenarioCollector,
+)
 from vedro.core.scenario_finder.scenario_file_finder import (
     AnyFilter,
     DunderFilter,
@@ -91,11 +97,16 @@ class Config(core.Config):
             module_loader=Config.Registry.ModuleLoader(),
         ))
 
+        ScenarioCollector = Singleton[ScenarioCollector](lambda: MultiProviderScenarioCollector(
+            providers=[ClassBasedScenarioProvider()],
+            module_loader=Config.Registry.ModuleLoader(),
+        ))
+
         ScenarioOrderer = Factory[ScenarioOrderer](StableScenarioOrderer)
 
         ScenarioDiscoverer = Factory[ScenarioDiscoverer](lambda: MultiScenarioDiscoverer(
             finder=Config.Registry.ScenarioFinder(),
-            loader=Config.Registry.ScenarioLoader(),
+            loader=Config.Registry.ScenarioCollector(),
             orderer=Config.Registry.ScenarioOrderer(),
         ))
 
@@ -119,31 +130,19 @@ class Config(core.Config):
 
         class Director(director.Director):
             enabled = True
+            default_reporters = ["rich"]
 
         class RichReporter(director.RichReporter):
             enabled = True
 
-            @computed
-            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-                # Temporarily commented out due to issue
-                # https://github.com/vedro-universe/vedro/issues/123 until
-                # https://github.com/vedro-universe/vedro/pull/83 is merged
-                # return [Config.Plugins.Director]
-                return []
-
         class SilentReporter(director.SilentReporter):
             enabled = True
-
-            # @computed
-            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-            #     return [Config.Plugins.Director]
 
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
 
-            # @computed
-            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-            #     return [Config.Plugins.Director]
+        class Functioner(functioner.Functioner):
+            enabled = True
 
         class TempKeeper(temp_keeper.TempKeeper):
             enabled = True

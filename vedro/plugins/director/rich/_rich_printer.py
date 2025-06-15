@@ -22,6 +22,7 @@ __all__ = ("RichPrinter",)
 
 
 def make_console() -> Console:
+    # Consider setting soft_wrap to False by default in v2
     return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True)
 
 
@@ -83,6 +84,9 @@ class RichPrinter:
 
     def print_step_name(self, name: str, status: StepStatus, *,
                         elapsed: Optional[float] = None, prefix: str = "") -> None:
+        if " " not in name:
+            name = name.replace("_", " ")
+
         if status == StepStatus.PASSED:
             name = f"✔ {name}"
             style = Style(color="green")
@@ -176,7 +180,7 @@ class RichPrinter:
             if width > 0:
                 self._console.print(smth, width=width, overflow="ellipsis", no_wrap=True)
             else:
-                self._console.print(smth)
+                self._console.print(smth, soft_wrap=False)
         else:
             if width > 0:
                 self._console.print(
@@ -190,6 +194,12 @@ class RichPrinter:
         self.print_scope_header("Scope")
         for key, val in scope.items():
             self.print_scope_key(key, indent=1)
+            # `print_scope_val` truncates only the value length and does not
+            #  take the length of `key` into account (the key is effectively a
+            #  prefix in the rendered line).
+            #  In v2 or earlier, switch to Group(renderable_key, renderable_val)
+            #  so the crop calculation uses the combined width of key + value for
+            #  correct line wrapping.
             self.print_scope_val(val, scope_width=scope_width)
         self.print_empty_line()
 
