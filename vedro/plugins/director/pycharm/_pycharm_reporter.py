@@ -238,7 +238,7 @@ class PyCharmReporter(PluginConfig):
     no_output: bool = False
     """
     Disable all output from the reporter.
-    
+
     When set to True, no scenario output is printed to the console or IDE.
     TeamCity service messages are still emitted. This option exists for backward compatibility.
     """

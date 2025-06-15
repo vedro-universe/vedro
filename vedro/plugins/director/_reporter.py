@@ -40,4 +40,3 @@ class Reporter(Plugin):
         :raises NotImplementedError: Must be implemented by subclasses.
         """
         raise NotImplementedError()
-
