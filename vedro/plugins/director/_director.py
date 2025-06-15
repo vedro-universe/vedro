@@ -1,4 +1,4 @@
-from typing import Dict, Type, Union, final
+from typing import Dict, Sequence, Type, Union, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParseEvent, ConfigLoadedEvent
@@ -29,10 +29,7 @@ class DirectorPlugin(Plugin):
         if len(self._registered_reporters) == 0:
             return
 
-        if len(self._default_reporters) == 1:
-            default_reporters = self._default_reporters[0]
-        else:
-            default_reporters = "', '".join(self._default_reporters)
+        default_reporters = "', '".join(self._default_reporters) or '<no reporters>'
         help_message = f"Set reporters (default: '{default_reporters}')"
 
         event.arg_parser.add_argument("-r", "--reporters",
@@ -42,12 +39,12 @@ class DirectorPlugin(Plugin):
                                       help=help_message)
         args, *_ = event.arg_parser.parse_known_args()
         for reporter_name in args.reporters:
+            if reporter_name not in self._registered_reporters:  # pragma: no cover
+                raise ValueError(f"Unknown reporter: '{reporter_name}'")
             reporter = self._registered_reporters[reporter_name]
             reporter.on_chosen()
 
     def register(self, name: str, reporter: Reporter) -> None:
-        if len(self._default_reporters) == 0 and len(self._registered_reporters) == 0:
-            self._default_reporters.append(name)
         self._registered_reporters[name] = reporter
 
 
@@ -56,4 +53,4 @@ class Director(PluginConfig):
     description = "Manages and configures reporters for scenario execution"
 
     # List of default reporters to be used if no other reporters are specified
-    default_reporters: List[str] = []
+    default_reporters: Sequence[str] = []

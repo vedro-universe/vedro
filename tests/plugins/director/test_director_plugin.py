@@ -48,8 +48,13 @@ async def test_no_reporters(*, director: DirectorPlugin, dispatcher: Dispatcher)
         "no errors"
 
 
-async def test_default_reporter(*, director: DirectorPlugin, dispatcher: Dispatcher):
+async def test_default_reporter(*, dispatcher: Dispatcher):
     with given:
+        class _Director(Director):
+            default_reporters = ["reporter1"]
+        director = DirectorPlugin(_Director)
+        director.subscribe(dispatcher)
+
         reporter1_ = Mock(Reporter)
         dispatcher.listen(DirectorInitEvent,
                           lambda e: e.director.register("reporter1", reporter1_))
@@ -67,6 +72,32 @@ async def test_default_reporter(*, director: DirectorPlugin, dispatcher: Dispatc
     with then:
         assert reporter1_.mock_calls == [call.on_chosen()]
         assert reporter2_.mock_calls == []
+
+
+async def test_default_reporters(*, dispatcher: Dispatcher):
+    with given:
+        class _Director(Director):
+            default_reporters = ["reporter1", "reporter2"]
+        director = DirectorPlugin(_Director)
+        director.subscribe(dispatcher)
+
+        reporter1_ = Mock(Reporter)
+        dispatcher.listen(DirectorInitEvent,
+                          lambda e: e.director.register("reporter1", reporter1_))
+
+        reporter2_ = Mock(Reporter)
+        dispatcher.listen(DirectorInitEvent,
+                          lambda e: e.director.register("reporter2", reporter2_))
+
+        await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
+        event = ArgParseEvent(ArgumentParser())
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert reporter1_.mock_calls == [call.on_chosen()]
+        assert reporter2_.mock_calls == [call.on_chosen()]
 
 
 async def test_passed_reporters(*, director: DirectorPlugin, dispatcher: Dispatcher):

@@ -34,7 +34,10 @@ def printer_() -> Mock:
 
 @pytest.fixture()
 def director(dispatcher: Dispatcher) -> DirectorPlugin:
-    director = DirectorPlugin(Director)
+    class _Director(Director):
+        default_reporters = ["pycharm"]
+
+    director = DirectorPlugin(_Director)
     director.subscribe(dispatcher)
     return director
 
