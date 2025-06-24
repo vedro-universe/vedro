@@ -1,6 +1,6 @@
 from asyncio import gather
 from pathlib import Path
-from typing import List
+from typing import Callable, List, Union
 
 from .._plugin import Plugin
 from .._virtual_scenario import VirtualScenario
@@ -20,21 +20,24 @@ class MultiProviderScenarioCollector(ScenarioCollector):
     providers are valid and combines their outputs into a single list of VirtualScenario objects.
     """
 
-    def __init__(self, providers: List[ScenarioProvider], module_loader: ModuleLoader) -> None:
+    def __init__(self, providers: List[ScenarioProvider],
+                 module_loader_factory: Callable[[], ModuleLoader]) -> None:
         """
-        Initialize MultiProviderScenarioCollector with providers and a module loader.
+        Initialize MultiProviderScenarioCollector with providers and a module-loader factory.
 
-        :param providers: A list of ScenarioProvider instances used to collect scenarios.
-        :param module_loader: The ModuleLoader used for dynamic module imports.
-        :raises ValueError: If the providers list is empty.
-        :raises TypeError: If any item in the providers list is not a ScenarioProvider.
+        :param providers: A sequence of ScenarioProvider instances used to collect scenarios.
+        :param module_loader_factory: A callable returning a fresh ModuleLoader when invoked.
+        :raises ValueError: If the providers sequence is empty.
+        :raises TypeError: If any item in providers is not a ScenarioProvider.
         """
         self._providers = providers
-        self._module_loader = module_loader
+        self._module_loader_factory = module_loader_factory
         if len(providers) == 0:
             raise ValueError("At least one provider must be specified")
         if not all(isinstance(provider, ScenarioProvider) for provider in providers):
             raise TypeError("All providers must be instances of ScenarioProvider")
+
+        self._cached_module_loader: Union[ModuleLoader, None] = None
 
     @property
     def providers(self) -> List[ScenarioProvider]:
@@ -44,6 +47,22 @@ class MultiProviderScenarioCollector(ScenarioCollector):
         :return: A list of ScenarioProvider instances.
         """
         return self._providers
+
+    @property
+    def _module_loader(self) -> ModuleLoader:
+        """
+        Return the current ModuleLoader, resolving the factory once and caching
+        the result.
+
+        The registry is therefore free to change the registered loader right up
+        until the first scenario collection. After that, the loader is frozen to guarantee
+        consistency during the run.
+
+        :return: The current ModuleLoader instance.
+        """
+        if self._cached_module_loader is None:
+            self._cached_module_loader = self._module_loader_factory()
+        return self._cached_module_loader
 
     async def collect(self, path: Path, *, project_dir: Path) -> List[VirtualScenario]:
         """

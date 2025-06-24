@@ -40,7 +40,7 @@ async def test_collect(tmp_dir: Path, module_loader: ModuleLoader):
         spy = Mock()
         scenarios = [make_vscenario() for _ in range(2)]
         provider = make_provider(scenarios, spy)
-        collector = MultiProviderScenarioCollector([provider], module_loader)
+        collector = MultiProviderScenarioCollector([provider], lambda: module_loader)
 
     with when:
         collected = await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
@@ -62,7 +62,7 @@ async def test_collect_multiple_providers(tmp_dir: Path, module_loader: ModuleLo
         scenarios2 = [make_vscenario()]
         provider2 = make_provider(scenarios2, spy)
 
-        collector = MultiProviderScenarioCollector([provider1, provider2], module_loader)
+        collector = MultiProviderScenarioCollector([provider1, provider2], lambda: module_loader)
 
     with when:
         collected = await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
@@ -78,7 +78,7 @@ async def test_register_provider(tmp_dir: Path, module_loader: ModuleLoader):
     with given:
         provider1 = make_provider([])
         provider2 = make_provider([])
-        collector = MultiProviderScenarioCollector([provider1], module_loader)
+        collector = MultiProviderScenarioCollector([provider1], lambda: module_loader)
 
     with when:
         res = collector.register_provider(provider2, registrant=Mock(wraps=Plugin))
@@ -90,7 +90,7 @@ async def test_register_provider(tmp_dir: Path, module_loader: ModuleLoader):
 
 async def test_init_empty_providers(module_loader: ModuleLoader):
     with when, raises(BaseException) as exc:
-        MultiProviderScenarioCollector([], module_loader)
+        MultiProviderScenarioCollector([], lambda: module_loader)
 
     with then:
         assert exc.type is ValueError
@@ -99,7 +99,7 @@ async def test_init_empty_providers(module_loader: ModuleLoader):
 
 async def test_init_invalid_provider(module_loader: ModuleLoader):
     with when, raises(BaseException) as exc:
-        MultiProviderScenarioCollector([...], module_loader)
+        MultiProviderScenarioCollector([...], lambda: module_loader)
 
     with then:
         assert exc.type is TypeError
@@ -109,7 +109,7 @@ async def test_init_invalid_provider(module_loader: ModuleLoader):
 async def test_collect_provider_exception(tmp_dir: Path, module_loader: ModuleLoader):
     with given:
         provider = make_provider([], spy=Mock(side_effect=RuntimeError("Provider error")))
-        collector = MultiProviderScenarioCollector([provider], module_loader)
+        collector = MultiProviderScenarioCollector([provider], lambda: module_loader)
 
     with when, raises(BaseException) as exc:
         await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
@@ -122,7 +122,7 @@ async def test_collect_provider_exception(tmp_dir: Path, module_loader: ModuleLo
 async def test_collect_invalid_return_type(tmp_dir: Path, module_loader: ModuleLoader):
     with given:
         provider = make_provider(...)  # Invalid return type
-        collector = MultiProviderScenarioCollector([provider], module_loader)
+        collector = MultiProviderScenarioCollector([provider], lambda: module_loader)
 
     with when, raises(BaseException) as exc:
         await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
@@ -135,7 +135,7 @@ async def test_collect_invalid_return_type(tmp_dir: Path, module_loader: ModuleL
 async def test_collect_invalid_scenario_type(tmp_dir: Path, module_loader: ModuleLoader):
     with given:
         provider = make_provider([make_vscenario(), ...])  # Invalid scenario type
-        collector = MultiProviderScenarioCollector([provider], module_loader)
+        collector = MultiProviderScenarioCollector([provider], lambda: module_loader)
 
     with when, raises(BaseException) as exc_info:
         await collector.collect(tmp_dir / "scenarios", project_dir=tmp_dir)
@@ -148,7 +148,7 @@ async def test_collect_invalid_scenario_type(tmp_dir: Path, module_loader: Modul
 async def test_register_invalid_provider(module_loader: ModuleLoader):
     with given:
         provider = make_provider([])
-        collector = MultiProviderScenarioCollector([provider], module_loader)
+        collector = MultiProviderScenarioCollector([provider], lambda: module_loader)
 
     with when, raises(BaseException) as exc:
         collector.register_provider(..., registrant=Mock(wraps=Plugin))

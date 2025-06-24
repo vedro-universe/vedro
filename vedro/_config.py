@@ -99,7 +99,7 @@ class Config(core.Config):
 
         ScenarioCollector = Singleton[ScenarioCollector](lambda: MultiProviderScenarioCollector(
             providers=[ClassBasedScenarioProvider()],
-            module_loader=Config.Registry.ModuleLoader(),
+            module_loader_factory=Config.Registry.ModuleLoader,
         ))
 
         ScenarioOrderer = Factory[ScenarioOrderer](StableScenarioOrderer)
