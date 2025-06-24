@@ -1,3 +1,4 @@
+import re
 from typing import Type, Union, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
@@ -30,6 +31,7 @@ class SlicerPlugin(Plugin):
         self._slicing_strategy = config.slicing_strategy
         self._total: Union[int, None] = None
         self._index: Union[int, None] = None
+        self._slice_raw: Union[str, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
@@ -48,8 +50,12 @@ class SlicerPlugin(Plugin):
         :param event: The ArgParseEvent instance used to add arguments.
         """
         group = event.arg_parser.add_argument_group("Slicer")
-        group.add_argument("--slicer-total", type=int, help="Set total workers")
-        group.add_argument("--slicer-index", type=int, help="Set current worker")
+        group.add_argument("--slicer-total", type=int, help="Total number of workers")
+        group.add_argument("--slicer-index", type=int,
+                           help="Index of the current worker (zero based)")
+        group.add_argument("--slice", dest="slice", metavar="N/M",
+                           help="Specify slice as <index>/<total> (index starts at 1). "
+                                "Mutually exclusive with --slicer-total and --slicer-index")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         """
@@ -58,9 +64,21 @@ class SlicerPlugin(Plugin):
         :param event: The ArgParsedEvent instance containing parsed arguments.
         :raises ValueError: If slicing arguments are missing or invalid.
         """
+        self._slice_raw = event.args.slice
         self._total = event.args.slicer_total
         self._index = event.args.slicer_index
 
+        # Mutually exclusive validation
+        if self._slice_raw is not None and (self._total is not None or self._index is not None):
+            raise ValueError(
+                "`--slice` cannot be used together with `--slicer-total` or `--slicer-index`")
+
+        # Handle --slice
+        if self._slice_raw is not None:
+            self._total, self._index = self._parse_slice(self._slice_raw)
+            return
+
+        # Handle legacy pair --slicer-total / --slicer-index
         if self._total is not None:
             if self._index is None:
                 raise ValueError(
@@ -78,6 +96,25 @@ class SlicerPlugin(Plugin):
                     "`--slicer-index` must be greater than 0 and "
                     f"less than `--slicer-total` ({self._total}), {self._index} given"
                 )
+
+    def _parse_slice(self, raw: str) -> tuple[int, int]:
+        pattern = re.compile(r"^(?P<index>\d+)(?:\s)*/(?:\s)*(?P<total>\d+)$")
+
+        match = pattern.match(raw.strip())
+        if not match:
+            raise ValueError(f"Invalid --slice format: '{raw}'. "
+                             "Expected '<index>/<total>' with positive integers")
+        index = int(match.group("index"))
+        total = int(match.group("total"))
+
+        if total < 1:
+            raise ValueError("`<total>` in --slice must be greater than or equal to 1")
+        if not (1 <= index <= total):
+            raise ValueError("`<index>` in --slice must be greater than or equal to 1 and "
+                             "less than or equal to `<total>`")
+
+        # Convert index to zero based for internal use
+        return total, index - 1
 
     async def on_startup(self, event: StartupEvent) -> None:
         """
