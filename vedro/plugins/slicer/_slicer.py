@@ -98,6 +98,16 @@ class SlicerPlugin(Plugin):
                 )
 
     def _parse_slice(self, raw: str) -> tuple[int, int]:
+        """
+        Parse and validate the slice string in the format "<index>/<total>".
+
+        Converts the 1-based index to a 0-based index internally. Ensures both values
+        are valid positive integers and within expected ranges.
+
+        :param raw: The slice string input in the format "<index>/<total>".
+        :return: A tuple containing total workers and zero-based index of current worker.
+        :raises ValueError: If the input format is invalid or values are out of range.
+        """
         pattern = re.compile(r"^(?P<index>\d+)(?:\s)*/(?:\s)*(?P<total>\d+)$")
 
         match = pattern.match(raw.strip())

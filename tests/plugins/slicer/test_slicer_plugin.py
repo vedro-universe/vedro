@@ -107,7 +107,8 @@ async def test_slicing_all_skipped(total: int, index: int, selected: Set[int], *
 async def test_arg_validation(total: Union[int, None], index: Union[int, None], *,
                               slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
-        event = ArgParsedEvent(Namespace(slicer_total=total, slicer_index=index))
+        namespace = Namespace(slicer_total=total, slicer_index=index, slice=None)
+        event = ArgParsedEvent(namespace)
 
     with when:
         res = await dispatcher.fire(event)
@@ -127,7 +128,8 @@ async def test_arg_validation(total: Union[int, None], index: Union[int, None], 
 async def test_arg_validation_error(total: Union[int, None], index: Union[int, None], error: str,
                                     *, slicer: SlicerPlugin, dispatcher: Dispatcher):
     with given:
-        event = ArgParsedEvent(Namespace(slicer_total=total, slicer_index=index))
+        namespace = Namespace(slicer_total=total, slicer_index=index, slice=None)
+        event = ArgParsedEvent(namespace)
 
     with when, raises(BaseException) as exc:
         await dispatcher.fire(event)
