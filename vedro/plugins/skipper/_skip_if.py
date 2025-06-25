@@ -10,10 +10,11 @@ __all__ = ("skip_if",)
 
 
 T = TypeVar("T", bound=Scenario)
-Decorator = Callable[[Type[T]], Type[T]]
 
 
-def skip_if(cond: Callable[[], bool], reason: Optional[str] = None) -> Decorator[T]:
+def skip_if(
+    cond: Callable[[], bool], reason: Optional[str] = None
+) -> Callable[[Type[T]], Type[T]]:
     """
     Exclude a scenario from execution if a condition evaluates to True.
 
@@ -55,8 +56,8 @@ def skip_if(cond: Callable[[], bool], reason: Optional[str] = None) -> Decorator
         if not isclass(scenario) or not issubclass(scenario, Scenario):
             raise TypeError(_format_skip_if_usage_error(reason))
         if cond():
-            decorator = skip(reason) if reason is not None else skip()  # type: ignore
-            return decorator(scenario)
+            decorator = skip(reason) if reason is not None else skip()
+            return decorator(cast(Type[T], scenario))
         else:
             return cast(Type[T], scenario)
 

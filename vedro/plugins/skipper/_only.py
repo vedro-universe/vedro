@@ -10,7 +10,6 @@ from ._skipper import SkipperPlugin
 __all__ = ("only",)
 
 T = TypeVar("T", bound=Scenario)
-Decorator = Callable[[Type[T]], Type[T]]
 
 
 @overload
@@ -25,7 +24,7 @@ def only(scenario: Type[T]) -> Type[T]:
 
 
 @overload
-def only() -> Decorator[T]:
+def only() -> Callable[[Type[T]], Type[T]]:
     """
     Enable usage as `@only()` to return a decorator.
 
@@ -34,7 +33,7 @@ def only() -> Decorator[T]:
     pass
 
 
-def only(scenario: Union[Type[T], None] = None) -> Union[Type[T], Decorator[T]]:
+def only(scenario: Union[Type[T], None] = None) -> Union[Type[T], Callable[[Type[T]], Type[T]]]:
     """
     Designate a Vedro scenario class to be the only one selected for execution.
 

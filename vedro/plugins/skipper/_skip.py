@@ -11,7 +11,6 @@ __all__ = ("skip",)
 
 
 T = TypeVar("T", bound=Scenario)
-Decorator = Callable[[Type[T]], Type[T]]
 
 
 @overload
@@ -26,7 +25,7 @@ def skip(scenario_or_reason: Type[T]) -> Type[T]:
 
 
 @overload
-def skip() -> Decorator[T]:
+def skip() -> Callable[[Type[T]], Type[T]]:
     """
     Enable usage as `@skip()` to return a decorator.
 
@@ -36,7 +35,7 @@ def skip() -> Decorator[T]:
 
 
 @overload
-def skip(scenario_or_reason: str) -> Decorator[T]:
+def skip(scenario_or_reason: str) -> Callable[[Type[T]], Type[T]]:
     """
     Enable usage as `@skip("reason")` to exclude a scenario with a reason.
 
@@ -46,7 +45,9 @@ def skip(scenario_or_reason: str) -> Decorator[T]:
     pass
 
 
-def skip(scenario_or_reason: Union[Type[T], str, None] = None) -> Union[Type[T], Decorator[T]]:
+def skip(
+    scenario_or_reason: Union[Type[T], str, None] = None
+) -> Union[Type[T], Callable[[Type[T]], Type[T]]]:
     """
     Exclude a scenario class from execution, optionally providing a reason.
 
