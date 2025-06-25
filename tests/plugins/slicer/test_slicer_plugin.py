@@ -137,3 +137,112 @@ async def test_arg_validation_error(total: Union[int, None], index: Union[int, N
     with then:
         assert exc.type is ValueError
         assert str(exc.value) == error
+
+
+@pytest.mark.parametrize(("slice_val", "selected"), [
+    ("1/1", {0, 1, 2, 3}),
+    ("1/2", {0, 3}),
+    ("2/2", {1, 2}),
+    ("1/3", {0}),
+    ("2/3", {2}),
+    ("3/3", {1, 3}),
+])
+async def test_slicing_with_slice_arg(slice_val: str, selected: Set[int], *,
+                                      slicer: SlicerPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, slice=slice_val)
+
+        scenarios = [
+            make_vscenario(),                 # 0
+            make_vscenario(is_skipped=True),  # 1
+            make_vscenario(),                 # 2
+            make_vscenario()                  # 3
+        ]
+        scheduler = Scheduler(scenarios)
+
+        startup_event = StartupEvent(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert list(scheduler.scheduled) == [scenarios[i] for i in selected]
+
+
+@pytest.mark.parametrize(("slice_val", "selected"), [
+    ("1/2", {0, 3, 4}),
+    ("2/2", {1, 2, 5}),
+])
+async def test_slicing_skipped_with_slice_arg(slice_val: str, selected: Set[int], *,
+                                              slicer: SlicerPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, slice=slice_val)
+
+        scenarios = [
+            make_vscenario(),                 # 0
+            make_vscenario(is_skipped=True),  # 1
+            make_vscenario(),                 # 2
+            make_vscenario(is_skipped=True),  # 3
+            make_vscenario(),                 # 4
+            make_vscenario(),                 # 5
+        ]
+        scheduler = Scheduler(scenarios)
+
+        startup_event = StartupEvent(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert list(scheduler.scheduled) == [scenarios[i] for i in selected]
+
+
+@pytest.mark.parametrize(("slice_val", "error"), [
+    ("0/1", "`<index>` in --slice must be greater than or equal to 1 and "
+            "less than or equal to `<total>`"),
+    ("2/1", "`<index>` in --slice must be greater than or equal to 1 and "
+            "less than or equal to `<total>`"),
+    ("1/0", "`<total>` in --slice must be greater than or equal to 1"),
+    ("a/1", "Invalid --slice format: 'a/1'. Expected '<index>/<total>' with positive integers"),
+    ("1/a", "Invalid --slice format: '1/a'. Expected '<index>/<total>' with positive integers"),
+    ("1-1", "Invalid --slice format: '1-1'. Expected '<index>/<total>' with positive integers"),
+    ("/1", "Invalid --slice format: '/1'. Expected '<index>/<total>' with positive integers"),
+    ("1/", "Invalid --slice format: '1/'. Expected '<index>/<total>' with positive integers"),
+])
+async def test_slice_arg_validation_error(slice_val: str, error: str,
+                                          *, slicer: SlicerPlugin, dispatcher: Dispatcher):
+    with given:
+        namespace = Namespace(slicer_total=None, slicer_index=None, slice=slice_val)
+        event = ArgParsedEvent(namespace)
+
+    with when, raises(BaseException) as exc:
+        await dispatcher.fire(event)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value) == error
+
+
+@pytest.mark.parametrize(("slice_val", "total", "index", "error"), [
+    ("1/2", 1, None,
+     "`--slice` cannot be used together with `--slicer-total` or `--slicer-index`"),
+
+    ("1/2", None, 0,
+     "`--slice` cannot be used together with `--slicer-total` or `--slicer-index`"),
+
+    ("1/2", 1, 0,
+     "`--slice` cannot be used together with `--slicer-total` or `--slicer-index`"),
+])
+async def test_slice_mutual_exclusivity(slice_val: str, total: Union[int, None],
+                                        index: Union[int, None], error: str,
+                                        *, slicer: SlicerPlugin, dispatcher: Dispatcher):
+    with given:
+        namespace = Namespace(slicer_total=total, slicer_index=index, slice=slice_val)
+        event = ArgParsedEvent(namespace)
+
+    with when, raises(BaseException) as exc:
+        await dispatcher.fire(event)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value) == error
