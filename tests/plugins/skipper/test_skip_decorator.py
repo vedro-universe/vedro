@@ -47,6 +47,21 @@ def test_skip_called_with_reason():
         assert get_skip_reason_attr(_Scenario) == reason
 
 
+def test_skip_called_with_reason_kwarg():
+    with given:
+        reason = "<reason>"
+
+    with when:
+        @skip(reason=reason)
+        class _Scenario(Scenario):
+            pass
+
+    with then:
+        assert issubclass(_Scenario, Scenario)
+        assert get_skip_attr(_Scenario) is True
+        assert get_skip_reason_attr(_Scenario) == reason
+
+
 def test_skip_not_subclass():
     with when, raises(BaseException) as exc:
         @skip

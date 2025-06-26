@@ -14,11 +14,11 @@ T = TypeVar("T", bound=Scenario)
 
 
 @overload
-def skip(scenario_or_reason: Type[T]) -> Type[T]:
+def skip(reason: Type[T]) -> Type[T]:
     """
     Enable usage as `@skip` to exclude a scenario from execution.
 
-    :param scenario_or_reason: The scenario class to be excluded.
+    :param reason: The scenario class to be excluded.
     :return: The same scenario class, updated with skip metadata.
     """
     pass
@@ -35,19 +35,17 @@ def skip() -> Callable[[Type[T]], Type[T]]:
 
 
 @overload
-def skip(scenario_or_reason: str) -> Callable[[Type[T]], Type[T]]:
+def skip(reason: str) -> Callable[[Type[T]], Type[T]]:
     """
     Enable usage as `@skip("reason")` to exclude a scenario with a reason.
 
-    :param scenario_or_reason: A string describing why the scenario is skipped.
+    :param reason: A string describing why the scenario is skipped.
     :return: A decorator that excludes the scenario and stores the reason.
     """
     pass
 
 
-def skip(
-    scenario_or_reason: Union[Type[T], str, None] = None
-) -> Union[Type[T], Callable[[Type[T]], Type[T]]]:
+def skip(reason: Union[Type[T], str, None] = None) -> Union[Type[T], Callable[[Type[T]], Type[T]]]:
     """
     Exclude a scenario class from execution, optionally providing a reason.
 
@@ -65,8 +63,7 @@ def skip(
         def subject():
             ...
 
-    :param scenario_or_reason: Scenario class to decorate, a reason string,
-                               or None if used as @skip().
+    :param reason: Scenario class to decorate, a reason string, or None if used as @skip().
     :return: Decorated scenario class or a decorator.
     :raises TypeError: If applied to a non-Scenario class.
 
@@ -83,12 +80,12 @@ def skip(
         :raises TypeError: If the class is not a subclass of Scenario.
         """
         if not isclass(scn) or not issubclass(scn, Scenario):
-            raise TypeError(_format_skip_usage_error(scenario_or_reason))
+            raise TypeError(_format_skip_usage_error(reason))
 
         set_scenario_meta(scn, key="skipped", value=True, plugin=SkipperPlugin,
                           fallback_key="__vedro__skipped__")
 
-        if isinstance(reason := scenario_or_reason, str):
+        if isinstance(reason, str):
             set_scenario_meta(scn, key="skip_reason", value=reason, plugin=SkipperPlugin,
                               fallback_key="__vedro__skip_reason__")
 
@@ -96,11 +93,11 @@ def skip(
 
     # When used with or without a reason string (e.g., @skip() or @skip("reason")),
     # return the decorator function for later application.
-    if (scenario_or_reason is None) or isinstance(scenario_or_reason, str):
+    if (reason is None) or isinstance(reason, str):
         return apply_skip
     # When used without parentheses (e.g., @skip),
     # apply the decorator immediately to the provided scenario class.
-    return apply_skip(scenario_or_reason)
+    return apply_skip(reason)
 
 
 def _format_skip_usage_error(maybe_reason: Any) -> str:

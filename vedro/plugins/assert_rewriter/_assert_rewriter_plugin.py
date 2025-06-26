@@ -100,6 +100,9 @@ class AssertRewriterPlugin(Plugin):
         :param event: The argument parsed event containing the parsed arguments.
         """
         self._legacy_assertions = event.args.legacy_assertions
+        # LegacyAssertRewriterLoader is deprecated and will be removed in v2
+        # Since command‑line arguments will no longer be required, this registration
+        # can eventually be moved to on_config_loaded
         self._global_config.Registry.ModuleLoader.register(
             LegacyAssertRewriterLoader if self._legacy_assertions else AssertRewriterLoader,
             self
