@@ -109,7 +109,7 @@ class RunCommand(Command):
             raise Exception(f"SystemExit({e.code}) ⬆")
 
         output_capturer = OutputCapturer(args.capture_output, args.capture_limit)
-        with OutputCapturer().capture() as _:
+        with output_capturer.capture() as _:
             scheduler = self._config.Registry.ScenarioScheduler(scenarios)
             await dispatcher.fire(StartupEvent(scheduler))
 
