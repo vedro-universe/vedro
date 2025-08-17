@@ -22,6 +22,15 @@ class StreamBuffer(io.StringIO):
         super().__init__()
         self._max_size = max_size
 
+    @property
+    def max_size(self) -> Optional[int]:
+        """
+        Get the maximum size of the buffer.
+
+        :return: Maximum size in characters, or None if no limit is set.
+        """
+        return self._max_size
+
     def write(self, s: str) -> int:
         """
         Write a string to the buffer with size limiting.
