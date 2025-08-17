@@ -1,3 +1,4 @@
+import inspect
 import os
 from inspect import iscoroutinefunction
 from types import ModuleType
@@ -103,17 +104,34 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         :param module: The module where the scenario is defined.
         :return: A Scenario class with parameterized initialization.
         """
+        sig = inspect.signature(descriptor.fn)
+        param_names = list(sig.parameters.keys())
+
         def __init__(self, *args: Any, **kwargs: Any) -> None:  # type: ignore
-            self.__args = args
-            self.__kwargs = kwargs
+            # Bind the arguments to parameter names
+            bound_args = sig.bind(*args, **kwargs)
+            bound_args.apply_defaults()
+
+            # Store each parameter as a named attribute
+            for param_name, value in bound_args.arguments.items():
+                setattr(self, param_name, value)
 
         for params in reversed(descriptor.params):
             __init__ = params(__init__)
 
+        if iscoroutinefunction(descriptor.fn):
+            async def do(self):  # type: ignore
+                kwargs = {name: getattr(self, name) for name in param_names}
+                return await descriptor.fn(**kwargs)
+        else:
+            def do(self):  # type: ignore
+                kwargs = {name: getattr(self, name) for name in param_names}
+                return descriptor.fn(**kwargs)
+
         attrs = self._build_common_attrs(descriptor, module)
         attrs.update({
             "__init__": __init__,
-            "do": self._make_do_with_params(descriptor.fn),
+            "do": do,
         })
         scenario_cls = type(self._create_scenario_name(descriptor), (Scenario,), attrs)
 
@@ -178,20 +196,4 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         else:
             def do(self):  # type: ignore
                 return fn()
-            return do
-
-    def _make_do_with_params(self, fn: Any) -> Any:
-        """
-        Wrap the given function into a parameterized 'do' method.
-
-        :param fn: The function to be executed with parameters in the scenario.
-        :return: A method suitable for the 'do' attribute of a parameterized scenario class.
-        """
-        if iscoroutinefunction(fn):
-            async def do(self):  # type: ignore
-                return await fn(*self.__args, **self.__kwargs)
-            return do
-        else:
-            def do(self):  # type: ignore
-                return fn(*self.__args, **self.__kwargs)
             return do
