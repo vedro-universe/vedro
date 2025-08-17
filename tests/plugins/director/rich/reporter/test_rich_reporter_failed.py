@@ -1,9 +1,11 @@
+import sys
 from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
 
 from vedro.core import Dispatcher, ScenarioStatus, StepStatus
+from vedro.core.output_capturer import CapturedOutput
 from vedro.events import ScenarioFailedEvent, ScenarioReportedEvent
 from vedro.plugins.director import RichReporterPlugin
 
@@ -200,4 +202,113 @@ async def test_scenario_failed_verbose_show_timings(dispatcher: Dispatcher,
                                         show_locals=False,
                                         show_internal_calls=True,
                                         show_full_diff=False),
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_failed_with_captured_output(*, dispatcher: Dispatcher,
+                                                    rich_reporter: RichReporterPlugin,
+                                                    printer_: Mock):
+    with given:
+        rich_reporter._show_captured_output = True
+        rich_reporter._show_captured_output_limit = 10
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result().mark_failed()
+        with CapturedOutput() as scn_captured_output:
+            print("Test output from scenario")
+            print("Error output from scenario", file=sys.stderr)
+        scenario_result.set_captured_output(scn_captured_output)
+
+        exc_info = make_exc_info(AssertionError())
+        step_result_failed = make_step_result().mark_failed().set_exc_info(exc_info)
+        with CapturedOutput() as step_captured_output:
+            print("Test output from failed step")
+            print("Error output from failed step", file=sys.stderr)
+        step_result_failed.set_captured_output(step_captured_output)
+        scenario_result.add_step_result(step_result_failed)
+
+        await dispatcher.fire(ScenarioFailedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(aggregated_result.scenario.subject,
+                                        ScenarioStatus.FAILED, elapsed=None, prefix=" "),
+            call.print_scenario_extra_details(
+                [
+                    "stdout: Test outpu...[15 CHARS TRUNCATED]",
+                    "stderr: Error outp...[16 CHARS TRUNCATED]",
+                ],
+                prefix=" " * 3
+            ),
+
+            call.print_step_name(step_result_failed.step_name,
+                                 StepStatus.FAILED, elapsed=None, prefix=" " * 3),
+            call.print_step_extra_details(
+                [
+                    "stdout: Test outpu...[18 CHARS TRUNCATED]",
+                    "stderr: Error outp...[19 CHARS TRUNCATED]",
+                ],
+                prefix=" " * 3
+            ),
+
+            call.print_pretty_exception(exc_info,
+                                        width=100,
+                                        max_frames=8,
+                                        show_locals=False,
+                                        show_internal_calls=True,
+                                        show_full_diff=False)
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_failed_with_captured_output_disable(*, dispatcher: Dispatcher,
+                                                            rich_reporter: RichReporterPlugin,
+                                                            printer_: Mock):
+    with given:
+        # rich_reporter._show_captured_output = False
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result().mark_failed()
+        with CapturedOutput() as scn_captured_output:
+            print("Test output from scenario")
+            print("Error output from scenario", file=sys.stderr)
+        scenario_result.set_captured_output(scn_captured_output)
+
+        exc_info = make_exc_info(AssertionError())
+        step_result_failed = make_step_result().mark_failed().set_exc_info(exc_info)
+        with CapturedOutput() as step_captured_output:
+            print("Test output from failed step")
+            print("Error output from failed step", file=sys.stderr)
+        step_result_failed.set_captured_output(step_captured_output)
+        scenario_result.add_step_result(step_result_failed)
+
+        await dispatcher.fire(ScenarioFailedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(aggregated_result.scenario.subject,
+                                        ScenarioStatus.FAILED, elapsed=None, prefix=" "),
+
+            call.print_step_name(step_result_failed.step_name,
+                                 StepStatus.FAILED, elapsed=None, prefix=" " * 3),
+
+            call.print_pretty_exception(exc_info,
+                                        width=100,
+                                        max_frames=8,
+                                        show_locals=False,
+                                        show_internal_calls=True,
+                                        show_full_diff=False)
         ]

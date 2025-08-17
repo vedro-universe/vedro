@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from .._report import Report
 from ..scenario_scheduler import ScenarioScheduler
@@ -15,7 +16,7 @@ class ScenarioRunner(ABC):
     """
 
     @abstractmethod
-    async def run(self, scheduler: ScenarioScheduler) -> Report:
+    async def run(self, scheduler: ScenarioScheduler, **kwargs: Any) -> Report:
         """
         Execute scenarios provided by the scheduler and return a report.
 
@@ -24,6 +25,7 @@ class ScenarioRunner(ABC):
         aggregating results into the final report.
 
         :param scheduler: The scheduler providing scenarios to execute.
+        :param kwargs: Additional keyword arguments (e.g., output_capturer).
         :return: A report containing the results of all executed scenarios.
         """
         pass

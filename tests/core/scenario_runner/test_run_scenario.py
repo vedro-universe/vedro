@@ -1,3 +1,4 @@
+from os import linesep
 from typing import Type, cast
 from unittest.mock import Mock, call
 
@@ -6,6 +7,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import Event, MonotonicScenarioRunner, ScenarioResult
+from vedro.core.output_capturer import OutputCapturer
 from vedro.core.scenario_runner import Interrupted, ScenarioInterrupted
 from vedro.events import (
     ExceptionRaisedEvent,
@@ -34,6 +36,7 @@ async def test_no_steps_passed(*, runner: MonotonicScenarioRunner, dispatcher_: 
         assert scenario_result.is_passed() is True
         assert isinstance(scenario_result.started_at, float)
         assert isinstance(scenario_result.ended_at, float)
+        assert scenario_result.captured_output is None
 
     with then("events fired"):
         assert dispatcher_.mock_calls == [
@@ -55,6 +58,7 @@ async def test_scenario_skipped(*, runner: MonotonicScenarioRunner, dispatcher_:
         assert scenario_result.is_skipped() is True
         assert scenario_result.started_at is None
         assert scenario_result.ended_at is None
+        assert scenario_result.captured_output is None
 
     with then("step not called"):
         assert step_.mock_calls == []
@@ -77,6 +81,7 @@ async def test_single_step_passed(*, runner: MonotonicScenarioRunner, dispatcher
         assert scenario_result.is_passed() is True
         assert isinstance(scenario_result.started_at, float)
         assert isinstance(scenario_result.ended_at, float)
+        assert scenario_result.captured_output is None
 
     with then("events fired"):
         step_result, = scenario_result.step_results
@@ -101,6 +106,7 @@ async def test_single_step_failed(*, runner: MonotonicScenarioRunner, dispatcher
         assert scenario_result.is_failed() is True
         assert isinstance(scenario_result.started_at, float)
         assert isinstance(scenario_result.ended_at, float)
+        assert scenario_result.captured_output is None
 
     with then("events fired"):
         step_result, = scenario_result.step_results
@@ -264,3 +270,55 @@ async def test_scenario_interrupted(*, runner: MonotonicScenarioRunner,
             call.fire(StepRunEvent),
             call.fire(ScenarioFailedEvent),
         ]
+
+
+async def test_scenario_passed_with_captured_output(*, runner: MonotonicScenarioRunner,
+                                                    dispatcher_: Mock):
+    with given:
+        test_output = "Test output from scenario initialization"
+
+        # Create a side effect function that prints output
+        def scenario_side_effect():
+            print(test_output)
+
+        vstep = make_vstep()
+        vscenario = make_vscenario(steps=[vstep], side_effect=scenario_side_effect)
+
+        output_capturer = OutputCapturer(enabled=True)
+
+    with when:
+        scenario_result = await runner.run_scenario(vscenario, output_capturer=output_capturer)
+
+    with then("scenario_result created with captured output"):
+        assert scenario_result.is_passed() is True
+        assert isinstance(scenario_result.started_at, float)
+        assert isinstance(scenario_result.ended_at, float)
+
+        assert scenario_result.captured_output is not None
+        assert scenario_result.captured_output.stdout.get_value() == f"{test_output}{linesep}"
+
+
+async def test_scenario_skipped_with_captured_output(*, runner: MonotonicScenarioRunner,
+                                                     dispatcher_: Mock):
+    with given:
+        test_output = "Test output from skipped scenario initialization"
+
+        # Create a side effect function that prints output
+        def scenario_side_effect():
+            print(test_output)
+
+        vscenario = make_vscenario(steps=[], is_skipped=True, side_effect=scenario_side_effect)
+
+        # Create output capturer with capturing enabled
+        output_capturer = OutputCapturer(enabled=True)
+
+    with when:
+        scenario_result = await runner.run_scenario(vscenario, output_capturer=output_capturer)
+
+    with then("scenario_result created without captured output"):
+        assert scenario_result.is_skipped() is True
+        assert scenario_result.started_at is None
+        assert scenario_result.ended_at is None
+
+        # Skipped scenarios don't initialize or run, so no output is captured
+        assert scenario_result.captured_output is None

@@ -46,6 +46,8 @@ class RichReporterPlugin(Reporter):
         self._show_paths = config.show_paths
         self._show_steps = config.show_steps
         self._hide_namespaces = config.hide_namespaces
+        self._show_captured_output = config.show_captured_output
+        self._show_captured_output_limit = config.show_captured_output_limit
         self._show_scenario_spinner = config.show_scenario_spinner
         self._show_discovering_spinner = False
         self._show_interrupted_traceback = config.show_interrupted_traceback
@@ -184,7 +186,7 @@ class RichReporterPlugin(Reporter):
         if self._show_scenario_spinner:
             self._printer.show_spinner(f" {event.scenario_result.scenario.subject}")
 
-    def _add_extra_details(self, scenario_result: ScenarioResult) -> None:
+    def _add_scenario_extra_details(self, scenario_result: ScenarioResult) -> None:
         if self._show_skip_reason and scenario_result.is_skipped():
             skip_reason = scenario_result.scenario.skip_reason
             if skip_reason:
@@ -193,11 +195,33 @@ class RichReporterPlugin(Reporter):
         if self._show_paths:
             scenario_result.add_extra_details(f"{scenario_result.scenario.rel_path}")
 
+        if self._show_captured_output:
+            self._add_captured_output(scenario_result)
+            for step_result in scenario_result.step_results:
+                self._add_captured_output(step_result)
+
+    def _add_captured_output(self, result: Union[ScenarioResult, StepResult]) -> None:
+        captured_output = result.captured_output
+        if captured_output:
+            stdout = self._format_captured_output(captured_output.stdout.get_value())
+            if stdout:
+                result.add_extra_details(f"stdout: {stdout}")
+            stderr = self._format_captured_output(captured_output.stderr.get_value())
+            if stderr:
+                result.add_extra_details(f"stderr: {stderr}")
+
+    def _format_captured_output(self, output: str) -> str:
+        output = output.rstrip()
+        if 0 < self._show_captured_output_limit < len(output):
+            truncated = len(output) - self._show_captured_output_limit
+            return f"{output[:self._show_captured_output_limit]}...[{truncated} CHARS TRUNCATED]"
+        return output
+
     def on_scenario_end(self, event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
-        self._add_extra_details(event.scenario_result)
+        self._add_scenario_extra_details(event.scenario_result)
 
     def on_scenario_skipped(self, event: ScenarioSkippedEvent) -> None:
-        self._add_extra_details(event.scenario_result)
+        self._add_scenario_extra_details(event.scenario_result)
         if not self._show_skipped:
             return
         self._print_namespace(event.scenario_result.scenario.namespace)
@@ -388,6 +412,12 @@ class RichReporter(PluginConfig):
 
     # Show status indicator of the current running scenario
     show_scenario_spinner: bool = False
+
+    # Show captured output (stdout/stderr) from scenarios and steps
+    show_captured_output: bool = False
+
+    # Limit the length of captured output to show in the report
+    show_captured_output_limit: int = 40
 
     # Show pretty traceback
     tb_pretty: bool = True

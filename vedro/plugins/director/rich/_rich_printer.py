@@ -1,4 +1,5 @@
 import json
+import sys
 import warnings
 from atexit import register as on_exit
 from os import linesep
@@ -23,7 +24,8 @@ __all__ = ("RichPrinter",)
 
 def make_console() -> Console:
     # Consider setting soft_wrap to False by default in v2
-    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True)
+    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True,
+                   file=sys.stdout)
 
 
 class RichPrinter:
