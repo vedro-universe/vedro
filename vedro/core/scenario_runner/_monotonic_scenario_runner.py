@@ -181,7 +181,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
     async def _run_scenarios(self,
                              scheduler: ScenarioScheduler,
                              report: Report,
-                             output_capturer: OutputCapturer) -> None:
+                             **kwargs: Any) -> None:
         """
         Execute all scenarios provided by the scheduler.
 
@@ -190,9 +190,11 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         :param scheduler: The scheduler providing scenarios to execute.
         :param report: The report to add results to.
-        :param output_capturer: The output capturer for capturing scenario output.
+        :param kwargs: Additional keyword arguments (e.g., output_capturer).
         :raises RunInterrupted: If execution is interrupted by a configured exception.
         """
+        output_capturer = self._get_output_capturer(**kwargs)
+
         scenario_results: List[ScenarioResult] = []
 
         async for scenario in scheduler:
