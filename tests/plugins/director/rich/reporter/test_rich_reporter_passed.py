@@ -241,7 +241,7 @@ async def test_scenario_passed_with_captured_output_and_steps(*, dispatcher: Dis
             call.print_scenario_subject(aggregated_result.scenario.subject,
                                         ScenarioStatus.PASSED, elapsed=None, prefix=" "),
             call.print_step_name(step_result.step_name, StepStatus.PASSED,
-                                elapsed=None, prefix=" " * 3),
+                                 elapsed=None, prefix=" " * 3),
             call.print_step_extra_details(
                 [
                     "stdout: Step execution ...[6 CHARS TRUNCATED]",
