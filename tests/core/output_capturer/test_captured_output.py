@@ -5,17 +5,29 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core.output_capturer import CapturedOutput
+from vedro.core.output_capturer._stream_view import StreamView
 
 
-def test_captured_output_get_value_before_capture():
+def test_captured_output_stdout():
     with given:
         captured = CapturedOutput()
 
     with when:
-        result = captured.get_value()
+        stdout_view = captured.stdout
 
     with then:
-        assert result == ""
+        assert isinstance(stdout_view, StreamView)
+
+
+def test_captured_output_stderr():
+    with given:
+        captured = CapturedOutput()
+
+    with when:
+        stderr_view = captured.stderr
+
+    with then:
+        assert isinstance(stderr_view, StreamView)
 
 
 def test_captured_output_capture_stdout():
@@ -28,7 +40,8 @@ def test_captured_output_capture_stdout():
             print(test_message, end="")
 
     with then:
-        assert captured.get_value() == test_message
+        assert captured.stdout.get_value() == test_message
+        assert captured.stderr.get_value() == ""
 
 
 def test_captured_output_capture_stderr():
@@ -41,10 +54,11 @@ def test_captured_output_capture_stderr():
             print(test_message, file=sys.stderr, end="")
 
     with then:
-        assert captured.get_value() == test_message
+        assert captured.stdout.get_value() == ""
+        assert captured.stderr.get_value() == test_message
 
 
-def test_captured_output_preserve_interleaved_order():
+def test_captured_output_separate_streams():
     with given:
         captured = CapturedOutput()
 
@@ -56,9 +70,14 @@ def test_captured_output_preserve_interleaved_order():
             print("4-stderr", file=sys.stderr)
 
     with then:
-        output = captured.get_value()
-        lines = output.strip().split(linesep)
-        assert lines == ["1-stdout", "2-stderr", "3-stdout", "4-stderr"]
+        stdout_output = captured.stdout.get_value()
+        stderr_output = captured.stderr.get_value()
+
+        stdout_lines = stdout_output.strip().split(linesep)
+        stderr_lines = stderr_output.strip().split(linesep)
+
+        assert stdout_lines == ["1-stdout", "3-stdout"]
+        assert stderr_lines == ["2-stderr", "4-stderr"]
 
 
 def test_captured_output_empty_capture():
@@ -70,21 +89,8 @@ def test_captured_output_empty_capture():
             pass  # No output
 
     with then:
-        assert captured.get_value() == ""
-
-
-def test_captured_output_with_exception_inside_context():
-    with given:
-        captured = CapturedOutput()
-        test_message = "Before exception"
-
-    with when, raises(ValueError):
-        with captured:
-            print(test_message, end="")
-            raise ValueError("Test exception")
-
-    with then:
-        assert captured.get_value() == test_message
+        assert captured.stdout.get_value() == ""
+        assert captured.stderr.get_value() == ""
 
 
 def test_captured_output_context_manager_returns_self():
@@ -99,7 +105,37 @@ def test_captured_output_context_manager_returns_self():
         assert result is captured
 
 
-def test_captured_output_nested_contexts():
+def test_captured_output_stdout_with_exception_inside_context():
+    with given:
+        captured = CapturedOutput()
+        stdout_message = "Before exception stdout"
+
+    with when, raises(ValueError):
+        with captured:
+            print(stdout_message, end="")
+            raise ValueError("Test exception")
+
+    with then:
+        assert captured.stdout.get_value() == stdout_message
+        assert captured.stderr.get_value() == ""
+
+
+def test_captured_output_stderr_with_exception_inside_context():
+    with given:
+        captured = CapturedOutput()
+        stderr_message = "Before exception stderr"
+
+    with when, raises(ValueError):
+        with captured:
+            print(stderr_message, file=sys.stderr, end="")
+            raise ValueError("Test exception")
+
+    with then:
+        assert captured.stdout.get_value() == ""
+        assert captured.stderr.get_value() == stderr_message
+
+
+def test_captured_output_stdout_nested_contexts():
     with given:
         outer_captured = CapturedOutput()
         inner_captured = CapturedOutput()
@@ -112,23 +148,59 @@ def test_captured_output_nested_contexts():
             print("Outer 2")
 
     with then:
-        assert inner_captured.get_value() == f"Inner{linesep}"
-        assert outer_captured.get_value() == f"Outer 1{linesep}Outer 2{linesep}"
+        assert inner_captured.stdout.get_value() == f"Inner{linesep}"
+        assert outer_captured.stdout.get_value() == f"Outer 1{linesep}Outer 2{linesep}"
+
+        assert outer_captured.stderr.get_value() == ""
 
 
-def test_captured_output_after_exit():
+def test_captured_output_stderr_nested_contexts():
+    with given:
+        outer_captured = CapturedOutput()
+        inner_captured = CapturedOutput()
+
+    with when:
+        with outer_captured:
+            print("Outer 1", file=sys.stderr)
+            with inner_captured:
+                print("Inner", file=sys.stderr)
+            print("Outer 2", file=sys.stderr)
+
+    with then:
+        assert inner_captured.stderr.get_value() == f"Inner{linesep}"
+        assert outer_captured.stderr.get_value() == f"Outer 1{linesep}Outer 2{linesep}"
+
+        assert outer_captured.stdout.get_value() == ""
+
+
+def test_captured_output_stdout_after_exit():
     with given:
         captured = CapturedOutput()
 
         with captured:
-            print("Inside context")
+            print("Inside context stdout")
 
     with when:
-        print("Outside context")  # This should not be captured
+        print("Outside context stdout")  # This should not be captured
 
     with then:
-        assert captured.get_value() == f"Inside context{linesep}"
-        assert "Outside context" not in captured.get_value()
+        assert captured.stdout.get_value() == f"Inside context stdout{linesep}"
+        assert captured.stderr.get_value() == ""
+
+
+def test_captured_output_stderr_after_exit():
+    with given:
+        captured = CapturedOutput()
+
+        with captured:
+            print("Inside context stderr", file=sys.stderr)
+
+    with when:
+        print("Outside context stderr", file=sys.stderr)  # This should not be captured
+
+    with then:
+        assert captured.stderr.get_value() == f"Inside context stderr{linesep}"
+        assert captured.stdout.get_value() == ""
 
 
 def test_captured_output_reuse_same_instance():
@@ -136,16 +208,20 @@ def test_captured_output_reuse_same_instance():
         captured = CapturedOutput()
 
         with captured:
-            print("First use")
+            print("First use stdout")
+            print("First use stderr", file=sys.stderr)
 
     with when:
         with captured:
-            print("Second use")
+            print("Second use stdout")
+            print("Second use stderr", file=sys.stderr)
 
     with then:
-        # Both captures should be accumulated in the same buffer
-        output = captured.get_value()
-        assert output == f"First use{linesep}Second use{linesep}"
+        stdout_output = captured.stdout.get_value()
+        assert stdout_output == f"First use stdout{linesep}Second use stdout{linesep}"
+
+        stderr_output = captured.stderr.get_value()
+        assert stderr_output == f"First use stderr{linesep}Second use stderr{linesep}"
 
 
 def test_captured_output_exit_restores_streams():
