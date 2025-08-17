@@ -1,7 +1,7 @@
 from baby_steps import given, then, when
 
 from vedro.core.output_capturer import CapturedOutput, OutputCapturer
-from vedro.core.output_capturer._output_capturer import NoOpCapturedOutput
+from vedro.core.output_capturer._output_capturer import NoCapturedOutput
 
 
 def test_output_capturer_initialization_defaults():
@@ -34,7 +34,7 @@ def test_output_capturer_capture_when_disabled():
         captured = capturer.capture()
 
     with then:
-        assert isinstance(captured, NoOpCapturedOutput)
+        assert isinstance(captured, NoCapturedOutput)
 
 
 def test_output_capturer_capture_when_enabled():
@@ -46,4 +46,4 @@ def test_output_capturer_capture_when_enabled():
 
     with then:
         assert isinstance(captured, CapturedOutput)
-        assert not isinstance(captured, NoOpCapturedOutput)
+        assert not isinstance(captured, NoCapturedOutput)
