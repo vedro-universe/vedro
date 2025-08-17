@@ -211,6 +211,48 @@ async def test_scenario_passed_with_captured_output(*, dispatcher: Dispatcher,
 
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_passed_with_captured_output_and_steps(*, dispatcher: Dispatcher,
+                                                              rich_reporter: RichReporterPlugin,
+                                                              printer_: Mock):
+    with given:
+        rich_reporter._show_captured_output = True
+        rich_reporter._show_captured_output_limit = 15
+        await fire_arg_parsed_event(dispatcher, show_steps=True)
+
+        scenario_result = make_scenario_result().mark_passed()
+
+        step_result = make_step_result().mark_passed()
+        with CapturedOutput() as step_captured:
+            print("Step execution output")
+            print("Step warning", file=sys.stderr)
+        step_result.set_captured_output(step_captured)
+        scenario_result.add_step_result(step_result)
+
+        await dispatcher.fire(ScenarioPassedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(aggregated_result.scenario.subject,
+                                        ScenarioStatus.PASSED, elapsed=None, prefix=" "),
+            call.print_step_name(step_result.step_name, StepStatus.PASSED,
+                                elapsed=None, prefix=" " * 3),
+            call.print_step_extra_details(
+                [
+                    "stdout: Step execution ...[6 CHARS TRUNCATED]",
+                    "stderr: Step warning"
+                ],
+                prefix=" " * 3
+            ),
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_passed_with_captured_output_disabled(*, dispatcher: Dispatcher,
                                                              rich_reporter: RichReporterPlugin,
                                                              printer_: Mock):
