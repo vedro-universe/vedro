@@ -263,7 +263,7 @@ def test_step_result_set_captured_output(*, virtual_step: VirtualStep):
 
     with then:
         assert res == step_result
-        assert step_result.captured_output() == captured_output
+        assert step_result.captured_output == captured_output
 
 
 def test_step_result_get_captured_output(*, virtual_step: VirtualStep):
@@ -273,7 +273,7 @@ def test_step_result_get_captured_output(*, virtual_step: VirtualStep):
         step_result.set_captured_output(captured_output)
 
     with when:
-        result_captured_output = step_result.captured_output()
+        result_captured_output = step_result.captured_output
 
     with then:
         assert result_captured_output == captured_output
@@ -284,7 +284,7 @@ def test_step_result_get_captured_output_none(*, virtual_step: VirtualStep):
         step_result = StepResult(virtual_step)
 
     with when:
-        result_captured_output = step_result.captured_output()
+        result_captured_output = step_result.captured_output
 
     with then:
         assert result_captured_output is None

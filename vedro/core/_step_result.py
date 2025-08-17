@@ -204,6 +204,7 @@ class StepResult:
         self._captured_output = output
         return self
 
+    @property
     def captured_output(self) -> Union[CapturedOutput, None]:
         """
         Retrieve the captured output for the step.
