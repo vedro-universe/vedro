@@ -91,7 +91,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
                     else:
                         step(ref)
                 finally:
-                    step_result.set_captured_output(captured_output)
+                    if output_capturer.enabled:
+                        step_result.set_captured_output(captured_output)
         except:  # noqa: E722
             step_result.set_ended_at(time()).mark_failed()
 
@@ -136,7 +137,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         with output_capturer.capture() as captured_output:
             ref = scenario()
-        scenario_result.set_captured_output(captured_output)
+        if output_capturer.enabled:
+            scenario_result.set_captured_output(captured_output)
         scenario_result.set_scope(ref.__dict__)
 
         for step in scenario.steps:
