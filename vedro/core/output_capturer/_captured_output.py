@@ -19,14 +19,14 @@ class CapturedOutput:
         """
         Initialize a CapturedOutput context manager.
 
-        :param capture_limit: Maximum number of characters to capture.
+        :param capture_limit: Maximum number of characters to capture per stream
+                              (stdout and stderr are limited independently).
                               If None, no limit is applied.
         """
         self._stdout_buffer = StreamBuffer(capture_limit)
         self._stderr_buffer = StreamBuffer(capture_limit)
         # TODO: Consider using SpooledTemporaryFile instead of StreamBuffer for larger outputs
         # that would benefit from disk-based storage rather than in-memory only
-
         self._stdout_context: Optional[redirect_stdout[TextIO]] = None
         self._stderr_context: Optional[redirect_stderr[TextIO]] = None
 

@@ -147,7 +147,8 @@ class RunCommand(Command):
         self._arg_parser.add_argument("--capture-output", "-C", action="store_true", default=False,
                                       help="Capture stdout/stderr from scenarios and steps")
         self._arg_parser.add_argument("--capture-limit", type=int, default=1 * 1024,
-                                      help="Max bytes to capture (default: 1KB, 0 for unlimited)")
+                                      help="Max characters to capture per stream "
+                                           "(default: 1KB, 0 for unlimited)")
 
         # https://github.com/python/cpython/issues/95073
         self._arg_parser.remove_help_action()
