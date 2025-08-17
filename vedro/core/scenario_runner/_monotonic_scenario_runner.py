@@ -32,10 +32,10 @@ __all__ = ("MonotonicScenarioRunner",)
 
 class MonotonicScenarioRunner(ScenarioRunner):
     """
-    Represents a scenario runner that executes scenarios in a monotonic order.
+    A scenario runner that executes scenarios sequentially in a monotonic order.
 
-    This runner is responsible for managing the execution of scenarios and their steps,
-    firing events during the process, and handling interruptions.
+    This runner manages the execution of scenarios and their steps,
+    fires events during the process, and handles interruptions.
     """
 
     def __init__(self, dispatcher: Dispatcher, *,
@@ -43,8 +43,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
         """
         Initialize the MonotonicScenarioRunner.
 
-        :param dispatcher: The dispatcher used to fire events during the execution process.
-        :param interrupt_exceptions: A tuple of exceptions that should interrupt the execution.
+        :param dispatcher: The event dispatcher for firing execution events.
+        :param interrupt_exceptions: Additional exception types that should interrupt execution.
         """
         self._dispatcher = dispatcher
         assert isinstance(interrupt_exceptions, tuple)
@@ -53,11 +53,11 @@ class MonotonicScenarioRunner(ScenarioRunner):
     def _is_interruption(self, exc_info: ExcInfo,
                          exceptions: Tuple[Type[BaseException], ...]) -> bool:
         """
-        Check if the given exception matches one of the interruption exceptions.
+        Check if an exception is an interruption exception.
 
-        :param exc_info: The exception information.
-        :param exceptions: A tuple of exception types to check against.
-        :return: True if the exception matches one of the interruption exceptions, False otherwise.
+        :param exc_info: The exception information to check.
+        :param exceptions: Tuple of exception types to check against.
+        :return: True if the exception is an interruption type, False otherwise.
         """
         for exception in exceptions:
             if isinstance(exc_info.value, exception):
@@ -66,15 +66,16 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
     async def run_step(self, step: VirtualStep, ref: Scenario, **kwargs: Any) -> StepResult:
         """
-        Execute a single step of a scenario.
+        Execute a single step within a scenario.
 
-        This method handles both synchronous and asynchronous steps, fires events
-        during execution, and manages exceptions raised during the step.
+        Handles both synchronous and asynchronous steps, captures output,
+        fires appropriate events, and manages exceptions.
 
-        :param step: The virtual step to be executed.
-        :param ref: The reference to the scenario instance.
+        :param step: The virtual step to execute.
+        :param ref: The scenario instance containing the step context.
+        :param kwargs: Additional keyword arguments (e.g., output_capturer).
         :return: The result of the step execution.
-        :raises StepInterrupted: If the step execution is interrupted.
+        :raises StepInterrupted: If the step is interrupted by a configured exception.
         """
         output_capturer = self._get_output_capturer(**kwargs)
 
@@ -110,14 +111,15 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
     async def run_scenario(self, scenario: VirtualScenario, **kwargs: Any) -> ScenarioResult:
         """
-        Execute a single scenario and its associated steps.
+        Execute a complete scenario including all its steps.
 
-        This method fires events during execution, handles skipped scenarios,
-        and manages interruptions or failures within the scenario.
+        Handles scenario initialization, step execution, output capture,
+        and appropriate event firing for skipped, passed, or failed scenarios.
 
-        :param scenario: The virtual scenario to be executed.
+        :param scenario: The virtual scenario to execute.
+        :param kwargs: Additional keyword arguments (e.g., output_capturer).
         :return: The result of the scenario execution.
-        :raises ScenarioInterrupted: If the scenario execution is interrupted.
+        :raises ScenarioInterrupted: If the scenario is interrupted during execution.
         """
         output_capturer = self._get_output_capturer(**kwargs)
 
@@ -166,14 +168,11 @@ class MonotonicScenarioRunner(ScenarioRunner):
     async def _report_scenario_results(self, scenario_results: List[ScenarioResult],
                                        report: Report, scheduler: ScenarioScheduler) -> None:
         """
-        Report the results of a scenario's executions.
+        Aggregate and report results for a single scenario's multiple executions.
 
-        This method aggregates the results of the scenario's executions and adds
-        them to the report. It also fires a `ScenarioReportedEvent`.
-
-        :param scenario_results: A list of scenario results to report.
-        :param report: The report object to which results are added.
-        :param scheduler: The scheduler used to aggregate the scenario results.
+        :param scenario_results: List of results from multiple executions of the same scenario.
+        :param report: The report to add aggregated results to.
+        :param scheduler: The scheduler used for result aggregation.
         """
         aggregated_result = scheduler.aggregate_results(scenario_results)
         report.add_result(aggregated_result)
@@ -186,11 +185,13 @@ class MonotonicScenarioRunner(ScenarioRunner):
         """
         Execute all scenarios provided by the scheduler.
 
-        This method manages scenario execution, aggregates results, and handles interruptions.
+        Groups results by scenario unique_id and reports them when switching
+        to a different scenario or when execution completes.
 
         :param scheduler: The scheduler providing scenarios to execute.
-        :param report: The report object to which results are added.
-        :raises RunInterrupted: If the execution is interrupted by an exception.
+        :param report: The report to add results to.
+        :param output_capturer: The output capturer for capturing scenario output.
+        :raises RunInterrupted: If execution is interrupted by a configured exception.
         """
         scenario_results: List[ScenarioResult] = []
 
@@ -220,13 +221,14 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
     async def run(self, scheduler: ScenarioScheduler, **kwargs: Any) -> Report:
         """
-        Execute all scenarios and return the final report.
+        Execute all scenarios and generate a final report.
 
-        This method manages the execution of all scenarios provided by the scheduler
-        and handles any interruptions during the process.
+        This is the main entry point for running scenarios. It manages the complete
+        execution lifecycle and handles any interruptions.
 
         :param scheduler: The scheduler providing scenarios to execute.
-        :return: The final report containing all results and any interruption information.
+        :param kwargs: Additional keyword arguments (e.g., output_capturer).
+        :return: A report containing all execution results and any interruption information.
         """
         output_capturer = self._get_output_capturer(**kwargs)
 
@@ -239,4 +241,10 @@ class MonotonicScenarioRunner(ScenarioRunner):
         return report
 
     def _get_output_capturer(self, **kwargs: Any) -> OutputCapturer:
+        """
+        Retrieve or create an OutputCapturer from kwargs.
+
+        :param kwargs: Keyword arguments potentially containing an output_capturer.
+        :return: The OutputCapturer instance.
+        """
         return cast(OutputCapturer, kwargs.get("output_capturer", OutputCapturer()))
