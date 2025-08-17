@@ -116,7 +116,8 @@ class RunCommand(Command):
             runner = self._config.Registry.ScenarioRunner()
             if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
                 # TODO: In v2 add --dry-run argument to RunCommand
-                warnings.warn("Deprecated: custom runners will be removed in v2.0", DeprecationWarning)
+                warnings.warn("Deprecated: custom runners will be removed in v2.0",
+                              DeprecationWarning)
             report = await runner.run(scheduler, output_capturer=output_capturer)
 
             await dispatcher.fire(CleanupEvent(report))

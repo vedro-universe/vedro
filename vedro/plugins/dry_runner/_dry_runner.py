@@ -1,6 +1,6 @@
 import sys
 from time import time
-from typing import List, Tuple, Type
+from typing import Any, List, Tuple, Type
 
 from vedro.core import (
     Dispatcher,
@@ -95,7 +95,7 @@ class DryRunner(ScenarioRunner):
         if len(scenario_results) > 0:
             await self._report_scenario_results(scenario_results, report, scheduler)
 
-    async def run(self, scheduler: ScenarioScheduler) -> Report:
+    async def run(self, scheduler: ScenarioScheduler, **kwargs: Any) -> Report:
         report = Report()
         try:
             await self._run_scenarios(scheduler, report)

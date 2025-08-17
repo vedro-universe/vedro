@@ -1,54 +1,12 @@
-from abc import ABC, abstractmethod
 from contextlib import redirect_stderr, redirect_stdout
-from typing import Any, Optional, TypeVar
+from typing import Any, Optional, TextIO
 
 from ._stream_buffer import StreamBuffer
 
-__all__ = ("CapturedOutput", "BaseCapturedOutput",)
-
-T = TypeVar('T', bound='BaseCapturedOutput')
+__all__ = ("CapturedOutput",)
 
 
-class BaseCapturedOutput(ABC):
-    """
-    Defines the base interface for captured output.
-
-    This abstract base class enforces a consistent API for capturing
-    and retrieving output across different implementations.
-    """
-
-    @abstractmethod
-    def get_value(self) -> str:
-        """
-        Get the captured output value.
-
-        :return: The captured output as a string.
-        """
-        pass
-
-    @abstractmethod
-    def __enter__(self) -> T:
-        """
-        Enter the context manager and begin capturing output.
-
-        :return: The context manager instance itself.
-        """
-        pass
-
-    @abstractmethod
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception],
-                 exc_tb: Optional[Any]) -> None:
-        """
-        Exit the context manager and stop capturing output.
-
-        :param exc_type: Exception type if raised inside the context.
-        :param exc_val: Exception instance if raised inside the context.
-        :param exc_tb: Traceback object if raised inside the context.
-        """
-        pass
-
-
-class CapturedOutput(BaseCapturedOutput):
+class CapturedOutput:
     """
     Captures both stdout and stderr output into a buffer.
 
@@ -66,8 +24,8 @@ class CapturedOutput(BaseCapturedOutput):
         self._buffer = StreamBuffer(capture_limit)
         # TODO: Consider using SpooledTemporaryFile instead of StreamBuffer for larger outputs
         # that would benefit from disk-based storage rather than in-memory only
-        self._stdout_context: Optional[redirect_stdout] = None
-        self._stderr_context: Optional[redirect_stderr] = None
+        self._stdout_context: Optional[redirect_stdout[TextIO]] = None
+        self._stderr_context: Optional[redirect_stderr[TextIO]] = None
 
     def get_value(self) -> str:
         """

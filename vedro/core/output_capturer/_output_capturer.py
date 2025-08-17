@@ -1,11 +1,11 @@
 from typing import Any, Optional
 
-from ._captured_output import BaseCapturedOutput, CapturedOutput
+from ._captured_output import CapturedOutput
 
 __all__ = ("OutputCapturer",)
 
 
-class NoOpCapturedOutput(BaseCapturedOutput):
+class NoOpCapturedOutput(CapturedOutput):
     """
     Provides a no-op implementation of captured output.
 
@@ -78,14 +78,14 @@ class OutputCapturer:
         """
         return self._capture_limit
 
-    def capture(self) -> BaseCapturedOutput:
+    def capture(self) -> CapturedOutput:
         """
         Create a context manager for capturing output.
 
         If capturing is enabled, returns a CapturedOutput instance.
         Otherwise, returns a NoOpCapturedOutput.
 
-        :return: A BaseCapturedOutput instance.
+        :return: A CapturedOutput instance.
         """
         if self._enabled:
             return CapturedOutput(self._capture_limit)
