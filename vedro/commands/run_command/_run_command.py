@@ -131,7 +131,7 @@ class RunCommand(Command):
         Adds command-line arguments including:
         - --project-dir: Root directory of the project
         - --capture-output/-C: Enable output capturing
-        - --capture-limit: Maximum bytes to capture
+        - --capture-limit: Maximum characters to capture
 
         :param dispatcher: Event dispatcher for firing ArgParseEvent and ArgParsedEvent.
         :return: Parsed arguments as a Namespace object.
