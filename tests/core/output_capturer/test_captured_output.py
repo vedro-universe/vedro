@@ -4,8 +4,7 @@ from os import linesep
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.core.output_capturer import CapturedOutput
-from vedro.core.output_capturer._stream_view import StreamView
+from vedro.core.output_capturer import CapturedOutput, StreamView
 
 
 def test_captured_output_stdout():
