@@ -1,7 +1,7 @@
 import os
 import sys
 from time import time
-from typing import List, Tuple, Type
+from typing import Any, List, Tuple, Type, cast
 
 from ..._scenario import Scenario
 from ...events import (
@@ -21,6 +21,7 @@ from .._report import Report
 from .._step_result import StepResult
 from .._virtual_scenario import VirtualScenario
 from .._virtual_step import VirtualStep
+from ..output_capturer import OutputCapturer
 from ..scenario_result import ScenarioResult
 from ..scenario_scheduler import ScenarioScheduler
 from ._interrupted import Interrupted, RunInterrupted, ScenarioInterrupted, StepInterrupted
@@ -63,7 +64,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
                 return True
         return False
 
-    async def run_step(self, step: VirtualStep, ref: Scenario) -> StepResult:
+    async def run_step(self, step: VirtualStep, ref: Scenario, **kwargs: Any) -> StepResult:
         """
         Execute a single step of a scenario.
 
@@ -75,15 +76,21 @@ class MonotonicScenarioRunner(ScenarioRunner):
         :return: The result of the step execution.
         :raises StepInterrupted: If the step execution is interrupted.
         """
+        output_capturer = self._get_output_capturer(**kwargs)
+
         step_result = StepResult(step)
 
         await self._dispatcher.fire(StepRunEvent(step_result))
         step_result.set_started_at(time())
         try:
-            if step.is_coro():
-                await step(ref)
-            else:
-                step(ref)
+            with output_capturer.capture() as captured_output:
+                try:
+                    if step.is_coro():
+                        await step(ref)
+                    else:
+                        step(ref)
+                finally:
+                    step_result.set_captured_output(captured_output)
         except:  # noqa: E722
             step_result.set_ended_at(time()).mark_failed()
 
@@ -101,7 +108,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         return step_result
 
-    async def run_scenario(self, scenario: VirtualScenario) -> ScenarioResult:
+    async def run_scenario(self, scenario: VirtualScenario, **kwargs: Any) -> ScenarioResult:
         """
         Execute a single scenario and its associated steps.
 
@@ -112,6 +119,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
         :return: The result of the scenario execution.
         :raises ScenarioInterrupted: If the scenario execution is interrupted.
         """
+        output_capturer = self._get_output_capturer(**kwargs)
+
         scenario_result = ScenarioResult(scenario)
 
         if scenario.is_skipped():
@@ -123,12 +132,14 @@ class MonotonicScenarioRunner(ScenarioRunner):
         await self._dispatcher.fire(ScenarioRunEvent(scenario_result))
         scenario_result.set_started_at(time())
 
-        ref = scenario()
+        with output_capturer.capture() as captured_output:
+            ref = scenario()
+        scenario_result.set_captured_output(captured_output)
         scenario_result.set_scope(ref.__dict__)
 
         for step in scenario.steps:
             try:
-                step_result = await self.run_step(step, ref)
+                step_result = await self.run_step(step, ref, output_capturer=output_capturer)
             except self._interrupt_exceptions as e:
                 if isinstance(e, StepInterrupted):
                     scenario_result.add_step_result(e.step_result)
@@ -168,7 +179,10 @@ class MonotonicScenarioRunner(ScenarioRunner):
         report.add_result(aggregated_result)
         await self._dispatcher.fire(ScenarioReportedEvent(aggregated_result))
 
-    async def _run_scenarios(self, scheduler: ScenarioScheduler, report: Report) -> None:
+    async def _run_scenarios(self,
+                             scheduler: ScenarioScheduler,
+                             report: Report,
+                             output_capturer: OutputCapturer) -> None:
         """
         Execute all scenarios provided by the scheduler.
 
@@ -187,7 +201,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
                 scenario_results = []
 
             try:
-                scenario_result = await self.run_scenario(scenario)
+                scenario_result = await self.run_scenario(scenario,
+                                                          output_capturer=output_capturer)
             except self._interrupt_exceptions as e:
                 if isinstance(e, ScenarioInterrupted):
                     scenario_results.append(e.scenario_result)
@@ -203,9 +218,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
         if len(scenario_results) > 0:
             await self._report_scenario_results(scenario_results, report, scheduler)
 
-    # In v2, add *args and **kwargs to the method signature to allow future extensibility
-    # without breaking changes.
-    async def run(self, scheduler: ScenarioScheduler) -> Report:
+    async def run(self, scheduler: ScenarioScheduler, **kwargs: Any) -> Report:
         """
         Execute all scenarios and return the final report.
 
@@ -215,10 +228,15 @@ class MonotonicScenarioRunner(ScenarioRunner):
         :param scheduler: The scheduler providing scenarios to execute.
         :return: The final report containing all results and any interruption information.
         """
+        output_capturer = self._get_output_capturer(**kwargs)
+
         report = Report()
         try:
-            await self._run_scenarios(scheduler, report)
+            await self._run_scenarios(scheduler, report, output_capturer=output_capturer)
         except self._interrupt_exceptions as e:
             exc_info = e.exc_info if isinstance(e, RunInterrupted) else ExcInfo(*sys.exc_info())
             report.set_interrupted(exc_info)
         return report
+
+    def _get_output_capturer(self, **kwargs: Any) -> OutputCapturer:
+        return cast(OutputCapturer, kwargs.get("output_capturer", OutputCapturer()))

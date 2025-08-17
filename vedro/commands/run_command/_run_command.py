@@ -8,6 +8,7 @@ from typing import Callable, Type, Union
 from vedro import Config
 from vedro.core import Config as BaseConfig
 from vedro.core import Dispatcher, MonotonicScenarioRunner
+from vedro.core.output_capturer import OutputCapturer
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -98,15 +99,20 @@ class RunCommand(Command):
         except SystemExit as e:
             raise Exception(f"SystemExit({e.code}) ⬆")
 
-        scheduler = self._config.Registry.ScenarioScheduler(scenarios)
-        await dispatcher.fire(StartupEvent(scheduler))
+        output_capturer = OutputCapturer(args.capture_output, args.capture_limit)
+        with OutputCapturer().capture() as _:
+            scheduler = self._config.Registry.ScenarioScheduler(scenarios)
+            await dispatcher.fire(StartupEvent(scheduler))
 
-        runner = self._config.Registry.ScenarioRunner()
-        if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
-            warnings.warn("Deprecated: custom runners will be removed in v2.0", DeprecationWarning)
-        report = await runner.run(scheduler)
+            runner = self._config.Registry.ScenarioRunner()
+            if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
+                # TODO: In v2 add --dry-run argument to RunCommand
+                warnings.warn("Deprecated: custom runners will be removed in v2.0", DeprecationWarning)
+            report = await runner.run(scheduler, output_capturer=output_capturer)
 
-        await dispatcher.fire(CleanupEvent(report))
+            await dispatcher.fire(CleanupEvent(report))
+        # In v2 RunCommand will handle report.interrupted and exit codes itself.
+        # At that point, captured output should also be added to the Report.
 
     async def _parse_args(self, dispatcher: Dispatcher) -> Namespace:
         """
@@ -126,6 +132,11 @@ class RunCommand(Command):
         self._arg_parser.add_argument("--project-dir", type=Path,
                                       default=self._config.project_dir,
                                       help=help_message)
+
+        self._arg_parser.add_argument("--capture-output", "-C", action="store_true", default=False,
+                                      help="Capture stdout/stderr from scenarios and steps")
+        self._arg_parser.add_argument("--capture-limit", type=int, default=1 * 1024,
+                                      help="Max bytes to capture (default: 1KB, 0 for unlimited)")
 
         # https://github.com/python/cpython/issues/95073
         self._arg_parser.remove_help_action()

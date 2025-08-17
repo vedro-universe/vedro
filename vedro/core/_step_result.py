@@ -4,6 +4,7 @@ from typing import Any, List, Union
 from ._artifacts import Artifact
 from ._exc_info import ExcInfo
 from ._virtual_step import VirtualStep
+from .output_capturer import CapturedOutput
 
 __all__ = ("StepResult", "StepStatus",)
 
@@ -52,6 +53,7 @@ class StepResult:
         self._exc_info: Union[ExcInfo, None] = None
         self._artifacts: List[Artifact] = []
         self._extra_details: List[str] = []
+        self._captured_output: Union[CapturedOutput, None] = None
 
     @property
     def step(self) -> VirtualStep:
@@ -191,6 +193,24 @@ class StepResult:
         """
         self._exc_info = exc_info
         return self
+
+    def set_captured_output(self, output: CapturedOutput) -> "StepResult":
+        """
+        Set the captured output for the step.
+
+        :param output: The CapturedOutput instance containing captured stdout/stderr.
+        :return: The StepResult instance for chaining.
+        """
+        self._captured_output = output
+        return self
+
+    def captured_output(self) -> Union[CapturedOutput, None]:
+        """
+        Retrieve the captured output for the step.
+
+        :return: The CapturedOutput instance, or None if no output was captured.
+        """
+        return self._captured_output
 
     def attach(self, artifact: Artifact) -> None:
         """
