@@ -2,6 +2,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from typing import Any, Optional, TextIO
 
 from ._stream_buffer import StreamBuffer
+from ._stream_view import StreamView
 
 __all__ = ("CapturedOutput",)
 
@@ -21,19 +22,31 @@ class CapturedOutput:
         :param capture_limit: Maximum number of characters to capture.
                               If None, no limit is applied.
         """
-        self._buffer = StreamBuffer(capture_limit)
+        self._stdout_buffer = StreamBuffer(capture_limit)
+        self._stderr_buffer = StreamBuffer(capture_limit)
         # TODO: Consider using SpooledTemporaryFile instead of StreamBuffer for larger outputs
         # that would benefit from disk-based storage rather than in-memory only
+
         self._stdout_context: Optional[redirect_stdout[TextIO]] = None
         self._stderr_context: Optional[redirect_stderr[TextIO]] = None
 
-    def get_value(self) -> str:
+    @property
+    def stdout(self) -> StreamView:
         """
-        Get the captured output from the buffer.
+        Get a read-only view of the captured stdout.
 
-        :return: The captured output as a string.
+        :return: A StreamView instance for stdout.
         """
-        return self._buffer.get_value()
+        return StreamView(self._stdout_buffer)
+
+    @property
+    def stderr(self) -> StreamView:
+        """
+        Get a read-only view of the captured stderr.
+
+        :return: A StreamView instance for stderr.
+        """
+        return StreamView(self._stderr_buffer)
 
     def __enter__(self) -> "CapturedOutput":
         """
@@ -41,8 +54,8 @@ class CapturedOutput:
 
         :return: The CapturedOutput instance.
         """
-        self._stdout_context = redirect_stdout(self._buffer)
-        self._stderr_context = redirect_stderr(self._buffer)
+        self._stdout_context = redirect_stdout(self._stdout_buffer)
+        self._stderr_context = redirect_stderr(self._stderr_buffer)
         self._stdout_context.__enter__()
         self._stderr_context.__enter__()
         return self

@@ -1,6 +1,8 @@
 from typing import Any, Optional
 
 from ._captured_output import CapturedOutput
+from ._stream_buffer import StreamBuffer
+from ._stream_view import StreamView
 
 __all__ = ("OutputCapturer",)
 
@@ -13,13 +15,33 @@ class NoOpCapturedOutput(CapturedOutput):
     output capture is disabled.
     """
 
-    def get_value(self) -> str:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
-        Get an empty string, since no capture occurs.
+        Initialize a NoOpCapturedOutput with an empty buffer.
 
-        :return: An empty string.
+        :param args: Positional arguments (ignored).
+        :param kwargs: Keyword arguments (ignored).
         """
-        return ""
+        # Don't call super().__init__ to avoid creating buffers
+        self._stream_view = StreamView(StreamBuffer())
+
+    @property
+    def stdout(self) -> StreamView:
+        """
+        Get a stream view for stdout that always returns empty content.
+
+        :return: A StreamView instance with an empty buffer.
+        """
+        return self._stream_view
+
+    @property
+    def stderr(self) -> StreamView:
+        """
+        Get a stream view for stderr that always returns empty content.
+
+        :return: A StreamView instance with an empty buffer.
+        """
+        return self._stream_view
 
     def __enter__(self) -> "NoOpCapturedOutput":
         """
