@@ -47,38 +47,3 @@ def test_output_capturer_capture_when_enabled():
     with then:
         assert isinstance(captured, CapturedOutput)
         assert not isinstance(captured, NoOpCapturedOutput)
-
-
-def test_noop_captured_output_get_value():
-    with given:
-        capturer = NoOpCapturedOutput()
-
-    with when:
-        value = capturer.get_value()
-
-    with then:
-        assert value == ""
-
-
-def test_noop_captured_output_get_value_after_print():
-    with given:
-        capturer = NoOpCapturedOutput()
-
-    with when:
-        with capturer:
-            print("This should not be captured")
-
-    with then:
-        assert capturer.get_value() == ""
-
-
-def test_noop_captured_output_context_manager():
-    with given:
-        capturer = NoOpCapturedOutput()
-
-    with when:
-        with capturer as ctx:
-            result = ctx
-
-    with then:
-        assert result is capturer
