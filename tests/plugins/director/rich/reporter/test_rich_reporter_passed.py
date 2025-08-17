@@ -1,9 +1,11 @@
+import sys
 from unittest.mock import Mock, call
 
 import pytest
 from baby_steps import given, then, when
 
 from vedro.core import AggregatedResult, Dispatcher, ScenarioStatus, StepStatus
+from vedro.core.output_capturer import CapturedOutput
 from vedro.events import ScenarioPassedEvent, ScenarioReportedEvent, ScenarioRunEvent
 from vedro.plugins.director import RichReporterPlugin
 
@@ -167,4 +169,72 @@ async def test_scenario_passed_aggregated_result(*, dispatcher: Dispatcher, prin
                                         prefix=" │\n ├─[2/2] "),
 
             call.print_empty_line(),
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_passed_with_captured_output(*, dispatcher: Dispatcher,
+                                                    rich_reporter: RichReporterPlugin,
+                                                    printer_: Mock):
+    with given:
+        rich_reporter._show_captured_output = True
+        rich_reporter._show_captured_output_limit = 10
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result().mark_passed()
+
+        with CapturedOutput() as captured_output:
+            print("Test output from scenario")
+            print("Error output from scenario", file=sys.stderr)
+        scenario_result.set_captured_output(captured_output)
+
+        await dispatcher.fire(ScenarioPassedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(aggregated_result.scenario.subject,
+                                        ScenarioStatus.PASSED, elapsed=None, prefix=" "),
+            call.print_scenario_extra_details(
+                [
+                    "stdout: Test outpu...[15 CHARS TRUNCATED]",
+                    "stderr: Error outp...[16 CHARS TRUNCATED]"
+                ],
+                prefix=" " * 3
+            )
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_passed_with_captured_output_disabled(*, dispatcher: Dispatcher,
+                                                             rich_reporter: RichReporterPlugin,
+                                                             printer_: Mock):
+    with given:
+        # rich_reporter._show_captured_output = False
+        await fire_arg_parsed_event(dispatcher)
+
+        scenario_result = make_scenario_result().mark_passed()
+
+        with CapturedOutput() as captured_output:
+            print("Test output from scenario")
+            print("Error output from scenario", file=sys.stderr)
+        scenario_result.set_captured_output(captured_output)
+
+        await dispatcher.fire(ScenarioPassedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(aggregated_result.scenario.subject,
+                                        ScenarioStatus.PASSED, elapsed=None, prefix=" "),
         ]
