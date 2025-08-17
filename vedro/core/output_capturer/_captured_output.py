@@ -56,7 +56,7 @@ class CapturedOutput:
         :param exc_val: Exception instance if raised inside the context.
         :param exc_tb: Traceback object if raised inside the context.
         """
-        if self._stdout_context:
+        if self._stdout_context:  # pragma: no branch
             self._stdout_context.__exit__(exc_type, exc_val, exc_tb)
-        if self._stderr_context:
+        if self._stderr_context:  # pragma: no branch
             self._stderr_context.__exit__(exc_type, exc_val, exc_tb)
