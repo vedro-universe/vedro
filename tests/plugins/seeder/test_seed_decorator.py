@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from baby_steps import given, then, when
 
@@ -17,14 +15,16 @@ CUSTOM_SEED = "custom-seed"
 
 async def test_seed_decorator_on_scenario_class(*, dispatcher: Dispatcher):
     with given:
-        @seed(CUSTOM_SEED)
         class CustomScenario(Scenario):
-            __file__ = Path("custom_scenario.py").absolute()
+            pass
 
     with when:
-        seed_value = get_scenario_meta(CustomScenario, key="seed", plugin=SeederPlugin)
+        res = seed(CUSTOM_SEED)(CustomScenario)
 
     with then:
+        assert res == CustomScenario
+
+        seed_value = get_scenario_meta(CustomScenario, key="seed", plugin=SeederPlugin)
         assert seed_value == CUSTOM_SEED
 
 
