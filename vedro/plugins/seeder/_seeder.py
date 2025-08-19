@@ -1,3 +1,4 @@
+import base64
 import string
 import sys
 import uuid
@@ -74,7 +75,10 @@ class SeederPlugin(Plugin):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         """
-        Handle the event after arguments have been parsed, processing seed options.
+        Handle the event after arguments have been parsed, initializing the seed configuration.
+
+        Sets the initial seed (either from command line or generates one), updates configuration
+        flags, and seeds the random generator with the initial seed.
 
         :param event: The ArgParsedEvent instance containing parsed arguments.
         """
@@ -88,9 +92,11 @@ class SeederPlugin(Plugin):
         """
         Handle the event when a scenario starts running, setting a scenario-specific seed.
 
-        If configured to show seeds, adds the seed used for the scenario to the scenario result.
+        Generates a unique seed for the scenario based on the initial seed, scenario ID, and
+        execution index. If configured to show seeds, adds the seed to the scenario's extra
+                         details.
 
-        :param event: The ScenarioRunEvent instance.
+        :param event: The ScenarioRunEvent instance containing scenario and result information.
         """
         assert self._initial_seed is not None  # for type checker
 
@@ -103,16 +109,16 @@ class SeederPlugin(Plugin):
 
         if self._show_seeds:
             seed_repr = self._get_seed_repr(seed)
-            event.scenario_result.add_extra_details(f"seed: {seed_repr[:8]}..{seed_repr[-8:]}")
+            event.scenario_result.add_extra_details(f"seed: {seed_repr}")
 
     def on_cleanup(self, event: CleanupEvent) -> None:
         """
         Handle the cleanup event, adding the initial seed to the summary report.
 
-        If any scenarios were executed, the initial seed used during the test run is added
-        to the report's summary.
+        If any scenarios were executed during the test run, adds the initial seed
+        to the report summary for reproducibility.
 
-        :param event: The CleanupEvent instance.
+        :param event: The CleanupEvent instance containing the test report.
         """
         if (event.report.passed + event.report.failed) > 0:
             assert self._initial_seed is not None  # for type checker
@@ -120,10 +126,13 @@ class SeederPlugin(Plugin):
 
     def _get_seed_repr(self, seed: str) -> str:
         """
-        Return a representation of the seed, ensuring that it only contains allowed characters.
+        Return a safe representation of the seed for display purposes.
 
-        :param seed: The seed string.
-        :return: A safe representation of the seed.
+        If the seed contains only alphanumeric characters, hyphens, and underscores,
+        returns it as-is. Otherwise, returns a quoted representation.
+
+        :param seed: The seed string to represent.
+        :return: A display-safe representation of the seed string.
         """
         alphabet = set(string.ascii_letters + string.digits + "-_")
         for char in seed:
@@ -131,27 +140,42 @@ class SeederPlugin(Plugin):
                 return f"{seed!r}"
         return f"{seed}"
 
+    def _format_seed(self, source: str) -> str:
+        """
+        Hash and format a source string into a readable seed format.
+
+        Uses BLAKE2b hashing to create a deterministic, compact seed string
+        formatted as "xxxx-xxxxx-xxx" in lowercase base32 encoding.
+
+        :param source: The string to hash and format.
+        :return: A formatted seed string in the pattern "xxxx-xxxxx-xxx".
+        """
+        hash_bytes = blake2b(source.encode(), digest_size=8).digest()
+        seed = base64.b32encode(hash_bytes).decode('ascii').rstrip('=')
+        return f"{seed[:4]}-{seed[4:9]}-{seed[9:]}".lower()
+
     def _gen_initial_seed(self) -> str:
         """
-        Generate an initial seed based on a new UUID.
+        Generate a random initial seed based on a new UUID.
 
-        :return: A new UUID string used as the initial seed.
+        :return: A formatted seed string derived from a random UUID.
         """
-        return str(uuid.uuid4())
+        return self._format_seed(str(uuid.uuid4()))
 
     def _create_seed(self, initial_seed: str, scenario_id: str, index: int) -> str:
         """
-        Create a unique seed for a scenario based on the initial seed, scenario ID, and index.
+        Create a deterministic seed for a specific scenario execution.
 
-        Uses the BLAKE2b hashing algorithm to generate a deterministic seed.
+        Combines the initial seed, scenario ID, and execution index to generate
+        a unique, reproducible seed for each scenario run.
 
         :param initial_seed: The initial seed set for the entire test run.
-        :param scenario_id: The unique ID of the scenario.
-        :param index: The index of the scenario execution.
-        :return: A hashed seed string.
+        :param scenario_id: The unique identifier of the scenario.
+        :param index: The execution index (1 for fixed seed, incremental otherwise).
+        :return: A formatted seed string unique to this scenario execution.
         """
-        seed = f"{initial_seed}//{scenario_id}//{index}"
-        return blake2b(seed.encode()).hexdigest()
+        seed_input = f"{initial_seed}//{scenario_id}//{index}"
+        return self._format_seed(seed_input)
 
 
 class Seeder(PluginConfig):
