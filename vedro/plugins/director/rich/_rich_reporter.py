@@ -55,6 +55,7 @@ class RichReporterPlugin(Reporter):
         self._show_full_diff = config.show_full_diff
         self._v2_verbosity = config.v2_verbosity
         self._ring_bell = config.ring_bell
+        self._no_color = config.no_color
         self._namespace: Union[str, None] = None
         self._tb_filter: Union[TracebackFilter, None] = None
 
@@ -129,6 +130,10 @@ class RichReporterPlugin(Reporter):
                            default=self._ring_bell,
                            dest="ring_bell",
                            help="Trigger a 'bell' sound at the end of scenario execution")
+        group.add_argument("--no-color",
+                           action="store_true",
+                           default=self._no_color,
+                           help="Disable colored output")
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         self._verbosity = event.args.verbose
@@ -149,6 +154,7 @@ class RichReporterPlugin(Reporter):
         self._tb_show_internal_calls = event.args.tb_show_internal_calls
         self._tb_show_locals = event.args.tb_show_locals
         self._ring_bell = event.args.ring_bell
+        self._no_color = event.args.no_color
 
         if self._tb_max_frames < 4:
             raise ValueError("RichReporter: `tb_max_frames` must be >= 4")
@@ -166,6 +172,9 @@ class RichReporterPlugin(Reporter):
 
         if self._show_discovering_spinner:
             self._printer.show_spinner("Discovering scenarios...")
+
+        if self._no_color:
+            self._printer.console.no_color = True
 
         if not self._tb_show_internal_calls:
             self._tb_suppress_modules = tuple(self._tb_suppress_modules) + (vedro,)
@@ -455,6 +464,9 @@ class RichReporter(PluginConfig):
     # Show full diff in assertion errors
     # Available if `tb_pretty` is True
     show_full_diff: bool = False
+
+    # Disable colored output
+    no_color: bool = False
 
     # Enable new verbose levels
     v2_verbosity: bool = True
