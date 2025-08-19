@@ -94,9 +94,9 @@ class SeederPlugin(Plugin):
         """
         Handle the event when a scenario starts running, setting a scenario-specific seed.
 
-        Generates a unique seed for the scenario based on the initial seed, scenario ID, and
-        execution index. If configured to show seeds, adds the seed to the scenario's extra
-                         details.
+        Uses a custom seed if one was set via the @seed decorator, otherwise generates a unique
+        seed based on the initial seed, scenario ID, and execution index. If configured to show
+        seeds, adds the seed to the scenario's extra details.
 
         :param event: The ScenarioRunEvent instance containing scenario and result information.
         """
