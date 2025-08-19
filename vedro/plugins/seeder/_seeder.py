@@ -5,6 +5,8 @@ import uuid
 from hashlib import blake2b
 from typing import Dict, Type, Union, final
 
+from niltype import Nil
+
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, CleanupEvent, ScenarioRunEvent
 
@@ -104,7 +106,11 @@ class SeederPlugin(Plugin):
         self._history[unique_id] = self._history.get(unique_id, 0) + 1
 
         index = 1 if self._use_fixed_seed else self._history[unique_id]
-        seed = self._create_seed(self._initial_seed, unique_id, index)
+        custom_seed = event.scenario_result.scenario.get_meta("seed", plugin=self)
+        if custom_seed is not Nil:
+            seed = str(custom_seed)
+        else:
+            seed = self._create_seed(self._initial_seed, unique_id, index)
         self._random.set_seed(seed)
 
         if self._show_seeds:
