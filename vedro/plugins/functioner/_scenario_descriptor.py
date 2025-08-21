@@ -1,4 +1,4 @@
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Tuple, Union
 
 __all__ = ("ScenarioDescriptor",)
 
@@ -63,3 +63,14 @@ class ScenarioDescriptor:
         :return: A tuple containing parameter sets for scenario instantiation.
         """
         return self._params
+
+    @property
+    def lineno(self) -> Union[int, None]:
+        """
+        Get the line number where the scenario was defined.
+
+        :return: The line number or None if not available.
+        """
+        if hasattr(self._fn, "__code__"):
+            return getattr(self._fn.__code__, "co_firstlineno", None)
+        return None

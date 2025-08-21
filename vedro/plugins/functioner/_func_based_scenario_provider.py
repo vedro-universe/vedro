@@ -151,6 +151,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         return {
             "__module__": module.__name__,
             "__file__": self._create_module_path(module),
+            "__lineno__": descriptor.lineno,
             "__doc__": descriptor.fn.__doc__,
             "subject": self._create_subject(descriptor),
         }

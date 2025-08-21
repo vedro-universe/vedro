@@ -28,7 +28,7 @@ async def test_func_scenario_detected(fn_def: str, is_coro: bool, *,
             {fn_def} create_user():
                 """Create a user scenario."""
                 pass
-        '''))
+        ''').strip())
 
     with when:
         scenarios = await provider.provide(scenario_source)
@@ -44,6 +44,7 @@ async def test_func_scenario_detected(fn_def: str, is_coro: bool, *,
         assert scenario.doc == "Create a user scenario."
         assert scenario.template_index is None
         assert scenario.template_total is None
+        assert scenario.lineno == 2
 
         assert scenario.path == scenario_source.path
         assert scenario.rel_path == scenario_source.rel_path
@@ -66,7 +67,7 @@ async def test_parametrized_func_scenarios(provider: ScenarioProvider,
             def create_user(user_id):
                 """Create a user scenario."""
                 pass
-        '''))
+        ''').strip())
 
     with when:
         scenarios = await provider.provide(scenario_source)
@@ -81,6 +82,7 @@ async def test_parametrized_func_scenarios(provider: ScenarioProvider,
             assert scenario.doc == "Create a user scenario."
             assert scenario.template_index == idx
             assert scenario.template_total == 2
+            assert scenario.lineno == 2
 
             assert scenario.path == scenario_source.path
             assert scenario.rel_path == scenario_source.rel_path
