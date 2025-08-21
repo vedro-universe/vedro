@@ -202,7 +202,10 @@ class RichReporterPlugin(Reporter):
                 scenario_result.add_extra_details(f"{skip_reason}")
 
         if self._show_paths:
-            scenario_result.add_extra_details(f"{scenario_result.scenario.rel_path}")
+            path = f"{scenario_result.scenario.rel_path}"
+            if scenario_result.scenario.lineno:
+                path += f":{scenario_result.scenario.lineno}"
+            scenario_result.add_extra_details(path)
 
         if self._show_captured_output:
             self._add_captured_output(scenario_result)

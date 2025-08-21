@@ -99,7 +99,7 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
             call.print_scenario_subject(aggregated_result.scenario.subject,
                                         ScenarioStatus.FAILED, elapsed=None, prefix=" "),
             call.print_scenario_extra_details(
-                [f"{scenario_result.scenario.path.name}"],
+                [f"{scenario_result.scenario.rel_path}:{scenario_result.scenario.lineno}"],
                 prefix=" " * 3
             ),
 

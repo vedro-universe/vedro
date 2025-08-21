@@ -202,7 +202,9 @@ async def test_scenario_skipped_show_paths(*, dispatcher: Dispatcher):
         await dispatcher.fire(event)
 
     with then:
-        assert scenario_result.extra_details == [f"{scenario_result.scenario.path.name}"]
+        rel_path = scenario_result.scenario.rel_path
+        lineno = scenario_result.scenario.lineno
+        assert scenario_result.extra_details == [f"{rel_path}:{lineno}"]
 
 
 async def test_scenario_skipped_show_reason(*, dispatcher: Dispatcher,

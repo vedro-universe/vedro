@@ -78,10 +78,11 @@ async def test_scenario_passed_show_paths(*, dispatcher: Dispatcher, printer_: M
 
     with then:
         subject = aggregated_result.scenario.subject
+        rel_path = scenario_result.scenario.rel_path
+        lineno = scenario_result.scenario.lineno
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.PASSED, elapsed=None, prefix=" "),
-            call.print_scenario_extra_details([f"{scenario_result.scenario.path.name}"],
-                                              prefix=" " * 3)
+            call.print_scenario_extra_details([f"{rel_path}:{lineno}"], prefix=" " * 3)
         ]
 
 
