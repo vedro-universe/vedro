@@ -7,17 +7,17 @@ from ._stream_view import StreamView
 __all__ = ("OutputCapturer",)
 
 
-class NoCapturedOutput(CapturedOutput):
+class NoOpCapturedOutput(CapturedOutput):
     """
-    Provides a no-op implementation of captured output.
+    No-operation implementation of CapturedOutput that doesn't capture any output.
 
-    This class does not capture any output and is used when
-    output capture is disabled.
+    This class is used when output capture is disabled, providing
+    the same interface without performing any actual capture operations.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
-        Initialize a NoCapturedOutput with an empty buffer.
+        Initialize a NoOpCapturedOutput with an empty buffer.
 
         :param args: Positional arguments (ignored).
         :param kwargs: Keyword arguments (ignored).
@@ -43,11 +43,11 @@ class NoCapturedOutput(CapturedOutput):
         """
         return self._stream_view
 
-    def __enter__(self) -> "NoCapturedOutput":
+    def __enter__(self) -> "NoOpCapturedOutput":
         """
         Enter the no-op context.
 
-        :return: The NoCapturedOutput instance.
+        :return: The NoOpCapturedOutput instance.
         """
         return self
 
@@ -111,4 +111,4 @@ class OutputCapturer:
         """
         if self._enabled:
             return CapturedOutput(self._capture_limit)
-        return NoCapturedOutput()
+        return NoOpCapturedOutput()
