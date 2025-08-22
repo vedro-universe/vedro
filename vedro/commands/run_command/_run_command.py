@@ -165,7 +165,7 @@ class RunCommand(Command):
                                            "(default: 1KB, 0 for unlimited)")
         self._arg_parser.add_argument("--vedro-debug", action="store_true", default=False,
                                       help="Enable debug mode (shows full tracebacks "
-                                            "without filtering)")
+                                           "without filtering)")
 
         # Temporarily remove help action to avoid issues with plugin argument registration
         # See: https://github.com/python/cpython/issues/95073
