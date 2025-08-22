@@ -7,7 +7,7 @@ import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.plugins.director.rich.utils import TracebackFilter
+from vedro.core.exc_info import TracebackFilter
 
 from ._utils import create_call_stack, get_frames_info, run_module_function, tmp_dir
 
