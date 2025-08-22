@@ -42,6 +42,7 @@ from vedro.core import (
     ScenarioScheduler,
     Singleton,
 )
+from vedro.core.exc_info import TracebackFilter, TracebackFilterType
 from vedro.core.scenario_collector import (
     ClassBasedScenarioProvider,
     MultiProviderScenarioCollector,
@@ -119,6 +120,12 @@ class Config(core.Config):
             dispatcher=Config.Registry.Dispatcher(),
             interrupt_exceptions=(KeyboardInterrupt, SystemExit, CancelledError),
         ))
+
+        # `TracebackFilter` is used to filter out unnecessary traceback entries
+        # from the output, making it cleaner and more focused on relevant information.
+        # If the --vedro-debug flag is set, the filter will be disabled (replaced with
+        # a filter that does nothing, showing the full traceback)
+        TracebackFilter = Factory[TracebackFilterType](TracebackFilter)
 
     class Plugins(core.Config.Plugins):
         """

@@ -2,13 +2,12 @@ import sys
 
 from baby_steps import given, then, when
 
-from vedro.core.output_capturer import StreamView
-from vedro.core.output_capturer._output_capturer import NoCapturedOutput
+from vedro.core.output_capturer import NoOpCapturedOutput, StreamView
 
 
-def test_no_captured_output_stdout():
+def test_noop_captured_output_stdout():
     with given:
-        captured_output = NoCapturedOutput()
+        captured_output = NoOpCapturedOutput()
 
     with when:
         stdout_view = captured_output.stdout
@@ -18,9 +17,9 @@ def test_no_captured_output_stdout():
         assert stdout_view.get_value() == ""
 
 
-def test_no_captured_output_stderr():
+def test_noop_captured_output_stderr():
     with given:
-        capturer = NoCapturedOutput()
+        capturer = NoOpCapturedOutput()
 
     with when:
         stderr_view = capturer.stderr
@@ -30,9 +29,9 @@ def test_no_captured_output_stderr():
         assert stderr_view.get_value() == ""
 
 
-def test_no_captured_output_stdout_after_print():
+def test_noop_captured_output_stdout_after_print():
     with given:
-        capturer = NoCapturedOutput()
+        capturer = NoOpCapturedOutput()
 
     with when:
         with capturer:
@@ -43,9 +42,9 @@ def test_no_captured_output_stdout_after_print():
         assert capturer.stderr.get_value() == ""
 
 
-def test_no_captured_output_stderr_after_print():
+def test_noop_captured_output_stderr_after_print():
     with given:
-        capturer = NoCapturedOutput()
+        capturer = NoOpCapturedOutput()
 
     with when:
         with capturer:
@@ -56,9 +55,9 @@ def test_no_captured_output_stderr_after_print():
         assert capturer.stderr.get_value() == ""
 
 
-def test_no_captured_output_context_manager():
+def test_noop_captured_output_context_manager():
     with given:
-        capturer = NoCapturedOutput()
+        capturer = NoOpCapturedOutput()
 
     with when:
         with capturer as ctx:

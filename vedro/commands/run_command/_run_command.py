@@ -7,7 +7,8 @@ from typing import Callable, Type, Union
 
 from vedro import Config
 from vedro.core import Config as BaseConfig
-from vedro.core import Dispatcher, MonotonicScenarioRunner
+from vedro.core import Dispatcher, MonotonicScenarioRunner, Plugin, PluginConfig
+from vedro.core.exc_info import NoOpTracebackFilter
 from vedro.core.output_capturer import OutputCapturer
 from vedro.events import (
     ArgParsedEvent,
@@ -35,6 +36,18 @@ PluginRegistrarFactory = Union[
     Type[PluginRegistrar],
     Callable[[], PluginRegistrar]
 ]
+
+
+class _CorePlugin(Plugin):
+    """
+    Internal plugin used by the core framework to register components.
+
+    This allows the core framework to register components (like NoOpTracebackFilter)
+    in the same registry system that external plugins use, ensuring consistent
+    behavior and preventing conflicts. The underscore prefix indicates this is
+    for internal use only.
+    """
+    pass
 
 
 class RunCommand(Command):
@@ -132,6 +145,7 @@ class RunCommand(Command):
         - --project-dir: Root directory of the project
         - --capture-output/-C: Enable output capturing
         - --capture-limit: Maximum characters to capture
+        - --vedro-debug: Enable debug mode
 
         :param dispatcher: Event dispatcher for firing ArgParseEvent and ArgParsedEvent.
         :return: Parsed arguments as a Namespace object.
@@ -149,13 +163,24 @@ class RunCommand(Command):
         self._arg_parser.add_argument("--capture-limit", type=int, default=1 * 1024,
                                       help="Max characters to capture per stream "
                                            "(default: 1KB, 0 for unlimited)")
+        self._arg_parser.add_argument("--vedro-debug", action="store_true", default=False,
+                                      help="Enable debug mode (shows full tracebacks "
+                                           "without filtering)")
 
-        # https://github.com/python/cpython/issues/95073
+        # Temporarily remove help action to avoid issues with plugin argument registration
+        # See: https://github.com/python/cpython/issues/95073
         self._arg_parser.remove_help_action()
         await dispatcher.fire(ArgParseEvent(self._arg_parser))
         self._arg_parser.add_help_action()
 
         args = self._arg_parser.parse_args()
+
+        # Register no-op traceback filter if debug mode is enabled
+        # Must be done before firing ArgParsedEvent so plugins can use the correct configuration
+        if args.vedro_debug:
+            self._config.Registry.TracebackFilter.register(NoOpTracebackFilter,
+                                                           _CorePlugin(PluginConfig))
+
         await dispatcher.fire(ArgParsedEvent(args))
 
         return args

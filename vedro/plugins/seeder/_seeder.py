@@ -61,19 +61,17 @@ class SeederPlugin(Plugin):
 
         :param event: The ArgParseEvent instance.
         """
-        event.arg_parser.add_argument("--seed", type=str, nargs="?", help="Set seed")
+        group = event.arg_parser.add_argument_group("Seeder")
+
+        group.add_argument("--seed", type=str, nargs="?", help="Set seed")
 
         help_msg = "Use the same seed when a scenario is run multiple times in the same execution"
-        event.arg_parser.add_argument("--fixed-seed",
-                                      action="store_true",
-                                      default=self._use_fixed_seed,
-                                      help=help_msg)
+        group.add_argument("--fixed-seed", action="store_true", default=self._use_fixed_seed,
+                           help=help_msg)
 
         help_msg = "Show concrete seeds for each scenario run"
-        event.arg_parser.add_argument("--show-seeds",
-                                      action="store_true",
-                                      default=self._show_seeds,
-                                      help=help_msg)
+        group.add_argument("--show-seeds", action="store_true", default=self._show_seeds,
+                           help=help_msg)
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         """
