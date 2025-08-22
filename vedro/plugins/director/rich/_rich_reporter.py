@@ -3,11 +3,13 @@ from types import ModuleType
 from typing import Callable, Tuple, Type, Union, final
 
 import vedro
-from vedro.core import Dispatcher, ExcInfo, PluginConfig, ScenarioResult, StepResult
+from vedro.core import ConfigType, Dispatcher, ExcInfo, PluginConfig, ScenarioResult, StepResult
+from vedro.core.exc_info import TracebackFilter
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
     CleanupEvent,
+    ConfigLoadedEvent,
     ScenarioFailedEvent,
     ScenarioPassedEvent,
     ScenarioReportedEvent,
@@ -19,7 +21,6 @@ from vedro.plugins.director._director_init_event import DirectorInitEvent
 from vedro.plugins.director._reporter import Reporter
 
 from ._rich_printer import RichPrinter
-from .utils import TracebackFilter
 
 __all__ = ("RichReporterPlugin", "RichReporter",)
 
@@ -57,11 +58,13 @@ class RichReporterPlugin(Reporter):
         self._ring_bell = config.ring_bell
         self._no_color = config.no_color
         self._namespace: Union[str, None] = None
+        self._global_config: Union[ConfigType, None] = None
         self._tb_filter: Union[TracebackFilter, None] = None
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
-        dispatcher.listen(DirectorInitEvent, lambda e: e.director.register("rich", self))
+        dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
+                  .listen(DirectorInitEvent, lambda e: e.director.register("rich", self))
 
     def on_chosen(self) -> None:
         assert isinstance(self._dispatcher, Dispatcher)
@@ -75,6 +78,14 @@ class RichReporterPlugin(Reporter):
                         .listen(ScenarioSkippedEvent, self.on_scenario_skipped) \
                         .listen(ScenarioReportedEvent, self.on_scenario_reported) \
                         .listen(CleanupEvent, self.on_cleanup)
+
+    def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
+        """
+        Handle the event when the configuration is loaded.
+
+        :param event: The ConfigLoadedEvent instance containing the configuration.
+        """
+        self._global_config = event.config
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         group = event.arg_parser.add_argument_group("Rich Reporter")
@@ -180,8 +191,11 @@ class RichReporterPlugin(Reporter):
             self._tb_suppress_modules = tuple(self._tb_suppress_modules) + (vedro,)
         else:
             self._tb_suppress_modules = tuple(self._tb_suppress_modules)
+
+        assert self._global_config  # for type checker
+        tb_filter_factory = self._global_config.Registry.TracebackFilter
         try:
-            self._tb_filter = TracebackFilter(self._tb_suppress_modules)
+            self._tb_filter = tb_filter_factory(self._tb_suppress_modules)
         except (AttributeError, TypeError):
             raise ValueError("RichReporter: `tb_suppress_modules` must be a tuple of modules")
 
@@ -240,7 +254,7 @@ class RichReporterPlugin(Reporter):
 
     def _print_exception(self, exc_info: ExcInfo) -> None:
         if self._tb_suppress_modules:
-            assert self._tb_filter
+            assert self._tb_filter  # for type checker
             traceback = self._tb_filter.filter_tb(exc_info.traceback)
             exc_info = ExcInfo(exc_info.type, exc_info.value, traceback)
 
