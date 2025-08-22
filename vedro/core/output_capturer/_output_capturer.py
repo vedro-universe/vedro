@@ -1,66 +1,8 @@
-from typing import Any, Optional
+from typing import Optional
 
-from ._captured_output import CapturedOutput
-from ._stream_buffer import StreamBuffer
-from ._stream_view import StreamView
+from ._captured_output import CapturedOutput, NoOpCapturedOutput
 
 __all__ = ("OutputCapturer",)
-
-
-class NoOpCapturedOutput(CapturedOutput):
-    """
-    No-operation implementation of CapturedOutput that doesn't capture any output.
-
-    This class is used when output capture is disabled, providing
-    the same interface without performing any actual capture operations.
-    """
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Initialize a NoOpCapturedOutput with an empty buffer.
-
-        :param args: Positional arguments (ignored).
-        :param kwargs: Keyword arguments (ignored).
-        """
-        # Don't call super().__init__ to avoid creating buffers
-        self._stream_view = StreamView(StreamBuffer())
-
-    @property
-    def stdout(self) -> StreamView:
-        """
-        Get a stream view for stdout that always returns empty content.
-
-        :return: A StreamView instance with an empty buffer.
-        """
-        return self._stream_view
-
-    @property
-    def stderr(self) -> StreamView:
-        """
-        Get a stream view for stderr that always returns empty content.
-
-        :return: A StreamView instance with an empty buffer.
-        """
-        return self._stream_view
-
-    def __enter__(self) -> "NoOpCapturedOutput":
-        """
-        Enter the no-op context.
-
-        :return: The NoOpCapturedOutput instance.
-        """
-        return self
-
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception],
-                 exc_tb: Optional[Any]) -> None:
-        """
-        Exit the no-op context. Does nothing.
-
-        :param exc_type: Exception type if raised inside the context.
-        :param exc_val: Exception instance if raised inside the context.
-        :param exc_tb: Traceback object if raised inside the context.
-        """
-        pass
 
 
 class OutputCapturer:

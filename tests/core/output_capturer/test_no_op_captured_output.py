@@ -2,8 +2,7 @@ import sys
 
 from baby_steps import given, then, when
 
-from vedro.core.output_capturer import StreamView
-from vedro.core.output_capturer._output_capturer import NoOpCapturedOutput
+from vedro.core.output_capturer import NoOpCapturedOutput, StreamView
 
 
 def test_no_op_captured_output_stdout():
