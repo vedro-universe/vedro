@@ -39,6 +39,14 @@ PluginRegistrarFactory = Union[
 
 
 class _CorePlugin(Plugin):
+    """
+    Internal plugin used by the core framework to register components.
+
+    This allows the core framework to register components (like NoOpTracebackFilter)
+    in the same registry system that external plugins use, ensuring consistent
+    behavior and preventing conflicts. The underscore prefix indicates this is
+    for internal use only.
+    """
     pass
 
 
@@ -137,6 +145,7 @@ class RunCommand(Command):
         - --project-dir: Root directory of the project
         - --capture-output/-C: Enable output capturing
         - --capture-limit: Maximum characters to capture
+        - --vedro-debug: Enable debug mode
 
         :param dispatcher: Event dispatcher for firing ArgParseEvent and ArgParsedEvent.
         :return: Parsed arguments as a Namespace object.
