@@ -127,6 +127,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
         scenario_result = ScenarioResult(scenario)
 
         if scenario.is_skipped():
+            # In v2, consider firing ScenarioRunEvent before ScenarioSkippedEvent
+            # for consistency
             scenario_result.mark_skipped()
             await self._dispatcher.fire(ScenarioSkippedEvent(scenario_result))
             return scenario_result
