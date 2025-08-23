@@ -1,5 +1,5 @@
 import re
-from typing import Type, Union, final
+from typing import Type, Union, final, Tuple
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
@@ -97,7 +97,7 @@ class SlicerPlugin(Plugin):
                     f"less than `--slicer-total` ({self._total}), {self._index} given"
                 )
 
-    def _parse_slice(self, raw: str) -> tuple[int, int]:
+    def _parse_slice(self, raw: str) -> Tuple[int, int]:
         """
         Parse and validate the slice string in the format "<index>/<total>".
 
