@@ -142,6 +142,9 @@ class Config(core.Config):
         class RichReporter(director.RichReporter):
             enabled = True
 
+        class JsonReporter(director.JsonReporter):
+            enabled = True
+
         class SilentReporter(director.SilentReporter):
             enabled = True
 
