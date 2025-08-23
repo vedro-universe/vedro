@@ -21,6 +21,7 @@ class Report:
         """
         Initialize a Report instance with default values.
         """
+        self._preamble: List[str] = []
         self._summary: List[str] = []
         self._started_at: Union[float, None] = None
         self._ended_at: Union[float, None] = None
@@ -95,6 +96,10 @@ class Report:
         return self._skipped
 
     @property
+    def preamble(self) -> List[str]:
+        return self._preamble[:]
+
+    @property
     def summary(self) -> List[str]:
         """
         Retrieve the summary information for the report.
@@ -140,6 +145,9 @@ class Report:
             if self.ended_at is None:
                 self._ended_at = result.ended_at
             self._ended_at = max(cast(float, self._ended_at), result.ended_at)
+
+    def add_preamble(self, line: str) -> None:
+        self._preamble.append(line)
 
     def add_summary(self, summary: str) -> None:
         """
