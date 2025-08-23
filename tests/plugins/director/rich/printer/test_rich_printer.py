@@ -1,3 +1,4 @@
+from os import linesep
 from traceback import format_exception
 from typing import Dict, Union
 from unittest.mock import Mock, call
@@ -65,6 +66,33 @@ def test_print_namespace(*, printer: RichPrinter, console_: Mock):
 def test_print_scenario_subject(status: ScenarioStatus, symbol: str, color: str, prefix: str, *,
                                 printer: RichPrinter, console_: Mock):
     with given:
+        subject = "<subject>"
+
+    with when:
+        printer.print_scenario_subject(subject, status, prefix=prefix)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(prefix, end=""),
+            call.out(f"{symbol} {subject}", style=Style(color=color)),
+        ]
+
+
+@pytest.mark.parametrize(("status", "symbol", "color"), [
+    (ScenarioStatus.PASSED, "+", "green"),
+    (ScenarioStatus.FAILED, "x", "red"),
+    (ScenarioStatus.SKIPPED, "o", "grey70"),
+])
+@pytest.mark.parametrize("prefix", ["", "---"])
+def test_print_scenario_subject_ascii_encoding(status: ScenarioStatus,
+                                               symbol: str,
+                                               color: str,
+                                               prefix: str,
+                                               *,
+                                               printer: RichPrinter,
+                                               console_: Mock):
+    with given:
+        console_.encoding = "ascii"
         subject = "<subject>"
 
     with when:
@@ -158,6 +186,27 @@ def test_print_step_extra_details(prefix: str, *, printer: RichPrinter, console_
 def test_print_step_name(status: StepStatus, symbol: str, color: str, prefix: str, *,
                          printer: RichPrinter, console_: Mock):
     with given:
+        name = "<step>"
+
+    with when:
+        printer.print_step_name(name, status, prefix=prefix)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(prefix, end=""),
+            call.out(f"{symbol} {name}", style=Style(color=color)),
+        ]
+
+
+@pytest.mark.parametrize(("status", "symbol", "color"), [
+    (StepStatus.PASSED, "+", "green"),
+    (StepStatus.FAILED, "x", "red"),
+])
+@pytest.mark.parametrize("prefix", ["", "---"])
+def test_print_step_name_ascii_encoding(status: StepStatus, symbol: str, color: str, prefix: str,
+                                        *, printer: RichPrinter, console_: Mock):
+    with given:
+        console_.encoding = "ascii"
         name = "<step>"
 
     with when:
@@ -557,16 +606,42 @@ def test_pretty_print_renderable_with_concrete_width(*, printer: RichPrinter, co
         ]
 
 
+def test_print_report_preamble(*, printer: RichPrinter, console_: Mock):
+    with given:
+        summary = ["line1", "line2"]
+        prefix = ">>"
+
+    with when:
+        printer.print_report_preamble(summary)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(f"{prefix} line1{linesep}{prefix} line2", style=Style(color="grey70"))
+        ]
+
+
+def test_print_report_preamble_empty(*, printer: RichPrinter, console_: Mock):
+    with given:
+        summary = []
+
+    with when:
+        printer.print_report_preamble(summary)
+
+    with then:
+        assert console_.mock_calls == []
+
+
 def test_print_report_summary(*, printer: RichPrinter, console_: Mock):
     with given:
         summary = ["line1", "line2"]
+        prefix = "#"
 
     with when:
         printer.print_report_summary(summary)
 
     with then:
         assert console_.mock_calls == [
-            call.out("# line1\n# line2", style=Style(color="grey70"))
+            call.out(f"{prefix} line1{linesep}{prefix} line2", style=Style(color="grey70"))
         ]
 
 

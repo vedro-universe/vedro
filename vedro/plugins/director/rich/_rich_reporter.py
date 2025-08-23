@@ -202,6 +202,7 @@ class RichReporterPlugin(Reporter):
     def on_startup(self, event: StartupEvent) -> None:
         if self._show_discovering_spinner:
             self._printer.hide_spinner()
+        self._printer.print_report_preamble(event.report.preamble)
         self._printer.print_header()
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:

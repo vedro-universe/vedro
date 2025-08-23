@@ -8,7 +8,13 @@ from typing import Dict, Type, Union, final
 from niltype import Nil
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
-from vedro.events import ArgParsedEvent, ArgParseEvent, CleanupEvent, ScenarioRunEvent
+from vedro.events import (
+    ArgParsedEvent,
+    ArgParseEvent,
+    CleanupEvent,
+    ScenarioRunEvent,
+    StartupEvent,
+)
 
 from ._random import RandomGenerator, StandardRandomGenerator
 
@@ -36,9 +42,11 @@ class SeederPlugin(Plugin):
         """
         super().__init__(config)
         self._random = random
+        self._show_seed_preamble = config.show_seed_preamble
         self._use_fixed_seed = config.use_fixed_seed
         self._show_seeds = config.show_seeds
         self._initial_seed: Union[str, None] = None
+        self._custom_seed = False
         self._history: Dict[str, int] = {}
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -49,6 +57,7 @@ class SeederPlugin(Plugin):
         """
         dispatcher.listen(ArgParseEvent, self.on_arg_parse) \
                   .listen(ArgParsedEvent, self.on_arg_parsed, priority=-sys.maxsize - 1) \
+                  .listen(StartupEvent, self.on_startup) \
                   .listen(ScenarioRunEvent, self.on_scenario_run) \
                   .listen(CleanupEvent, self.on_cleanup)
 
@@ -83,10 +92,28 @@ class SeederPlugin(Plugin):
         :param event: The ArgParsedEvent instance containing parsed arguments.
         """
         self._initial_seed = event.args.seed or self._gen_initial_seed()
+        self._custom_seed = event.args.seed is not None
         self._use_fixed_seed = event.args.fixed_seed
         self._show_seeds = event.args.show_seeds
 
         self._random.set_seed(self._initial_seed)
+
+    def on_startup(self, event: StartupEvent) -> None:
+        """
+        Handle the startup event, adding the initial seed to the pre-run preamble.
+
+        Adds the initial seed to the report preamble only when this feature is enabled
+        and the seed was not explicitly provided via command-line arguments. This makes
+        the seed visible at the top of the run output for reproducibility.
+
+        :param event: The StartupEvent instance.
+        """
+        if not self._show_seed_preamble:
+            return
+
+        if not self._custom_seed:
+            assert self._initial_seed is not None  # for type checker
+            event.report.add_preamble("seed: " + self._get_seed_repr(self._initial_seed))
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         """
@@ -192,6 +219,9 @@ class Seeder(PluginConfig):
 
     plugin = SeederPlugin
     description = "Sets seeds for deterministic random behavior in scenarios"
+
+    # Show the initial seed in the pre-run preamble
+    show_seed_preamble: bool = True
 
     # Use the same seed when a scenario is run multiple times in the same execution
     use_fixed_seed: bool = False

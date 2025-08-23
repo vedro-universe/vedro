@@ -7,7 +7,7 @@ from typing import Callable, Type, Union
 
 from vedro import Config
 from vedro.core import Config as BaseConfig
-from vedro.core import Dispatcher, MonotonicScenarioRunner, Plugin, PluginConfig
+from vedro.core import Dispatcher, MonotonicScenarioRunner, Plugin, PluginConfig, Report
 from vedro.core.exc_info import NoOpTracebackFilter
 from vedro.core.output_capturer import OutputCapturer
 from vedro.events import (
@@ -123,14 +123,17 @@ class RunCommand(Command):
 
         output_capturer = OutputCapturer(args.capture_output, args.capture_limit)
         with output_capturer.capture() as _:
+            report = Report()
+
             scheduler = self._config.Registry.ScenarioScheduler(scenarios)
-            await dispatcher.fire(StartupEvent(scheduler))
+            await dispatcher.fire(StartupEvent(scheduler, report=report))
 
             runner = self._config.Registry.ScenarioRunner()
             if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
                 # TODO: In v2 add --dry-run argument to RunCommand
                 warnings.warn("Deprecated: custom runners will be removed in v2.0",
                               DeprecationWarning)
+            # TODO: In v2 return nothing from runner.run()
             report = await runner.run(scheduler, output_capturer=output_capturer)
 
             await dispatcher.fire(CleanupEvent(report))

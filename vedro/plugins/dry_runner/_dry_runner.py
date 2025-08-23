@@ -96,10 +96,13 @@ class DryRunner(ScenarioRunner):
             await self._report_scenario_results(scenario_results, report, scheduler)
 
     async def run(self, scheduler: ScenarioScheduler, **kwargs: Any) -> Report:
-        report = Report()
+        report = kwargs.get("report", Report())
+        assert isinstance(report, Report)
+
         try:
             await self._run_scenarios(scheduler, report)
         except self._interrupt_exceptions:
             exc_info = ExcInfo(*sys.exc_info())
             report.set_interrupted(exc_info)
+
         return report
