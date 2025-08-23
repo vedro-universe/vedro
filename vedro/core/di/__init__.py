@@ -3,7 +3,8 @@ from typing import Any, Callable, Generic, Type, TypeVar, Union
 
 from .._plugin import Plugin
 
-__all__ = ("Container", "Factory", "Singleton", "FactoryType", "ConflictError")
+__all__ = ("Container", "Factory", "Singleton",
+           "FactoryType", "ConflictError")
 
 F = TypeVar("F")
 FactoryType = Union[Type[F], Callable[..., F]]
@@ -165,6 +166,62 @@ class Singleton(Container[T]):
 
         self._resolver = resolver
         self._registrant = registrant
+
+    def resolve(self, *args: Any, **kwargs: Any) -> T:
+        """
+        Resolve and return the singleton instance of type `T`.
+
+        If the singleton instance has not been created yet, it will be created
+        using the resolver. Subsequent calls will return the same instance.
+
+        :param args: Positional arguments to pass to the resolver.
+        :param kwargs: Keyword arguments to pass to the resolver.
+        :return: The singleton instance of type `T`.
+        """
+        if self._singleton is None:
+            self._singleton = self._resolver(*args, **kwargs)
+        return self._singleton
+
+
+class ImmutableSingleton(Container[T]):
+    """
+    An immutable singleton container that prevents any resolver registration.
+
+    This container type is initialized with a resolver that cannot be changed.
+    Any attempt to register a new resolver will raise a ConflictError.
+    The same instance is returned on each resolution.
+    """
+
+    def __init__(self, resolver: FactoryType[T]) -> None:
+        """
+        Initialize the immutable singleton container with the given resolver.
+
+        :param resolver: A callable or type used to create objects of type `T`.
+        """
+        super().__init__(resolver)
+        self._singleton: Union[None, T] = None
+
+    def register(self, resolver: FactoryType[T], registrant: Plugin) -> None:
+        """
+        Prevent registration of any resolver.
+
+        :param resolver: A callable or type (ignored).
+        :param registrant: The plugin attempting to register the resolver.
+        :raises ConflictError: Always raised to indicate immutability.
+        """
+        assert isinstance(registrant, Plugin)
+        raise self._make_immutable_error(registrant)
+
+    def _make_immutable_error(self, registrant: Plugin) -> ConflictError:
+        """
+        Create an error for attempting to modify an immutable container.
+
+        :param registrant: The plugin attempting to register the resolver.
+        :return: A `ConflictError` indicating the container is immutable.
+        """
+        type_ = self.__orig_class__.__args__[0]  # type: ignore
+        return ConflictError(f"{registrant} is trying to register {type_.__name__}, "
+                             f"but this container is immutable and cannot be modified")
 
     def resolve(self, *args: Any, **kwargs: Any) -> T:
         """

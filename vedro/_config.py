@@ -84,6 +84,7 @@ class Config(core.Config):
         such as the scenario finder, loader, scheduler, and runner.
         """
 
+        # TODO: Change to ImmutableSingleton in v2
         Dispatcher = Singleton[Dispatcher](Dispatcher)
 
         ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
@@ -97,6 +98,7 @@ class Config(core.Config):
             module_loader=Config.Registry.ModuleLoader(),
         ))
 
+        # TODO: Change to ImmutableSingleton in v2
         ScenarioCollector = Singleton[ScenarioCollector](lambda: MultiProviderScenarioCollector(
             providers=[ClassBasedScenarioProvider()],
             module_loader_factory=Config.Registry.ModuleLoader,
