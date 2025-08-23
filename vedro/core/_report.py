@@ -97,6 +97,11 @@ class Report:
 
     @property
     def preamble(self) -> List[str]:
+        """
+        Retrieve the preamble lines for the report.
+
+        :return: A shallow copy of the preamble list.
+        """
         return self._preamble[:]
 
     @property
@@ -147,6 +152,11 @@ class Report:
             self._ended_at = max(cast(float, self._ended_at), result.ended_at)
 
     def add_preamble(self, line: str) -> None:
+        """
+        Add a line to the report preamble.
+
+        :param line: A string to append to the preamble list.
+        """
         self._preamble.append(line)
 
     def add_summary(self, summary: str) -> None:
