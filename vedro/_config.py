@@ -25,7 +25,6 @@ import vedro.plugins.tip_adviser as tip_adviser
 from vedro.config import computed
 from vedro.core import (
     Dispatcher,
-    Factory,
     ModuleFileLoader,
     ModuleLoader,
     MonotonicScenarioRunner,
@@ -40,8 +39,8 @@ from vedro.core import (
     ScenarioOrderer,
     ScenarioRunner,
     ScenarioScheduler,
-    Singleton,
 )
+from vedro.core.di import Factory, Singleton
 from vedro.core.exc_info import TracebackFilter, TracebackFilterType
 from vedro.core.scenario_collector import (
     ClassBasedScenarioProvider,
