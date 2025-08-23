@@ -223,10 +223,10 @@ class PyCharmReporter(PluginConfig):
 
     show_internal_calls: bool = False
     """
-   Show internal calls in the traceback output.
+    Show internal calls in the traceback output.
 
-   When enabled, traceback output includes frames from the framework's core internals.
-   """
+    When enabled, traceback output includes frames from the framework's core internals.
+    """
 
     show_skipped: bool = True
     """
