@@ -102,3 +102,28 @@ def test_proxy_params():
         assert getattr(scenarios[0], "__label__") == "label1"
         assert issubclass(scenarios[1], Scenario)
         assert getattr(scenarios[1], "__label__") == "label2"
+
+
+def test_params_on_class():
+    with when, pytest.raises(BaseException) as exc:
+        @params(200)
+        class _Scenario(Scenario):
+            pass
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value).startswith(
+            "Decorator @params can only be applied to functions or methods, got"
+        )
+
+
+def test_params_on_non_callable():
+    with when, pytest.raises(BaseException) as exc:
+        some_value = "not a function"
+        params(200)(some_value)
+
+    with then:
+        assert exc.type is TypeError
+        assert str(exc.value).startswith(
+            "Decorator @params can only be applied to functions or methods, got"
+        )
