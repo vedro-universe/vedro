@@ -253,13 +253,15 @@ class RichPrinter:
     def print_report_preamble(self, preamble: List[str]) -> None:
         if len(preamble) == 0:
             return
-        text = ": " + f"{linesep}: ".join(preamble)
+        prefix = ">>"
+        text = f"{prefix} " + f"{linesep}{prefix} ".join(preamble)
         self._console.out(text, style=Style(color="grey70"))
 
     def print_report_summary(self, summary: List[str]) -> None:
         if len(summary) == 0:
             return
-        text = "# " + f"{linesep}# ".join(summary)
+        prefix = "#"
+        text = f"{prefix} " + f"{linesep}{prefix} ".join(summary)
         self._console.out(text, style=Style(color="grey70"))
 
     def format_elapsed(self, elapsed: float) -> str:
