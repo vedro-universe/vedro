@@ -100,4 +100,7 @@ def _format_only_usage_error() -> str:
         "    @scenario[only]()",
         "    def subject():",
         "        ...",
+        "",
+        "View usage guide:",
+        "https://vedro.io/docs/basics/selecting-and-ignoring#selecting-one-and-only-scenario",
     ])
