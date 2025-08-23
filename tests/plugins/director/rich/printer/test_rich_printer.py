@@ -557,6 +557,30 @@ def test_pretty_print_renderable_with_concrete_width(*, printer: RichPrinter, co
         ]
 
 
+def test_print_report_preamble(*, printer: RichPrinter, console_: Mock):
+    with given:
+        summary = ["line1", "line2"]
+
+    with when:
+        printer.print_report_preamble(summary)
+
+    with then:
+        assert console_.mock_calls == [
+            call.out(": line1\n: line2", style=Style(color="grey70"))
+        ]
+
+
+def test_print_report_preamble_empty(*, printer: RichPrinter, console_: Mock):
+    with given:
+        summary = []
+
+    with when:
+        printer.print_report_preamble(summary)
+
+    with then:
+        assert console_.mock_calls == []
+
+
 def test_print_report_summary(*, printer: RichPrinter, console_: Mock):
     with given:
         summary = ["line1", "line2"]

@@ -232,6 +232,12 @@ class RichPrinter:
         if show_traceback:
             self.print_exception(exc_info)
 
+    def print_report_preamble(self, preamble: List[str]) -> None:
+        if len(preamble) == 0:
+            return
+        text = ": " + f"{linesep}: ".join(preamble)
+        self._console.out(text, style=Style(color="grey70"))
+
     def print_report_summary(self, summary: List[str]) -> None:
         if len(summary) == 0:
             return
