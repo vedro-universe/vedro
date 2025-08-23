@@ -1,5 +1,5 @@
 import re
-from typing import Type, Union, final, Tuple
+from typing import Tuple, Type, Union, final
 
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
