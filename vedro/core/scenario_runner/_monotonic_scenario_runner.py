@@ -238,6 +238,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
         """
         output_capturer = self._get_output_capturer(**kwargs)
         report = kwargs.get("report", Report())
+        assert isinstance(report, Report)
 
         try:
             await self._run_scenarios(scheduler, report, output_capturer=output_capturer)

@@ -1,7 +1,7 @@
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, cast
 
 from ..core._event import Event
 from ..core._exc_info import ExcInfo
@@ -156,7 +156,7 @@ class StartupEvent(Event):
 
         :return: The test execution report.
         """
-        return self._report
+        return cast(Report, self._report)
 
     @property
     def scenarios(self) -> List[VirtualScenario]:
@@ -174,7 +174,7 @@ class StartupEvent(Event):
 
         :return: A string describing the event.
         """
-        return f"{self.__class__.__name__}({self._scheduler!r})"
+        return f"{self.__class__.__name__}({self._scheduler!r}, report={self._report!r})"
 
 
 class _ScenarioEvent(Event):
