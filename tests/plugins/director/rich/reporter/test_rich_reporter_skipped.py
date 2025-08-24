@@ -107,10 +107,11 @@ async def test_scenario_skipped_show_paths(dispatcher: Dispatcher, printer_: Moc
 
     with then:
         subject = aggregated_result.scenario.subject
+        rel_path = scenario_result.scenario.rel_path
+        lineno = scenario_result.scenario.lineno
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.SKIPPED, elapsed=None, prefix=" "),
-            call.print_scenario_extra_details([f"{scenario_result.scenario.path.name}"],
-                                              prefix=" " * 3)
+            call.print_scenario_extra_details([f"{rel_path}:{lineno}"], prefix=" " * 3)
         ]
 
 
@@ -134,10 +135,12 @@ async def test_scenario_skipped_with_reason_and_paths(*, dispatcher: Dispatcher,
 
     with then:
         subject = aggregated_result.scenario.subject
+        rel_path = scenario_result.scenario.rel_path
+        lineno = scenario_result.scenario.lineno
         assert printer_.mock_calls == [
             call.print_scenario_subject(subject, ScenarioStatus.SKIPPED, elapsed=None, prefix=" "),
             call.print_scenario_extra_details(
-                [f"{reason}", f"{scenario_result.scenario.path.name}"],
+                [f"{reason}", f"{rel_path}:{lineno}"],
                 prefix=" " * 3
             )
         ]

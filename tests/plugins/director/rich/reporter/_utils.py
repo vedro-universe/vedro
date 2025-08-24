@@ -37,7 +37,10 @@ def printer_() -> Mock:
 
 @pytest.fixture()
 def director(dispatcher: Dispatcher) -> DirectorPlugin:
-    director = DirectorPlugin(Director)
+    class _Director(Director):
+        default_reporters = ["rich"]
+
+    director = DirectorPlugin(_Director)
     director.subscribe(dispatcher)
     return director
 
@@ -61,6 +64,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 hide_namespaces: bool = RichReporter_.hide_namespaces,
                                 tb_show_internal_calls: bool = True,
                                 tb_show_locals: bool = RichReporter_.tb_show_locals,
+                                no_color: bool = RichReporter_.no_color,
                                 ring_bell: bool = RichReporter_.ring_bell) -> None:
     await dispatcher.fire(ConfigLoadedEvent(Path(), Config))
 
@@ -77,6 +81,7 @@ async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                           hide_namespaces=hide_namespaces,
                           tb_show_internal_calls=tb_show_internal_calls,
                           tb_show_locals=tb_show_locals,
+                          no_color=no_color,
                           ring_bell=ring_bell)
     arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)

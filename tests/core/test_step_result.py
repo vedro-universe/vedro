@@ -7,6 +7,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import ExcInfo, MemoryArtifact, StepResult, StepStatus, VirtualStep
+from vedro.core.output_capturer import CapturedOutput
 
 
 @pytest.fixture()
@@ -250,3 +251,40 @@ def test_step_result_get_extra_details(*, virtual_step: VirtualStep):
 
     with then:
         assert extra_details == ["<extra-detail-1>", "<extra-detail-2>"]
+
+
+def test_step_result_set_captured_output(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+        captured_output = CapturedOutput()
+
+    with when:
+        res = step_result.set_captured_output(captured_output)
+
+    with then:
+        assert res == step_result
+        assert step_result.captured_output == captured_output
+
+
+def test_step_result_get_captured_output(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+        captured_output = CapturedOutput()
+        step_result.set_captured_output(captured_output)
+
+    with when:
+        result_captured_output = step_result.captured_output
+
+    with then:
+        assert result_captured_output == captured_output
+
+
+def test_step_result_get_captured_output_none(*, virtual_step: VirtualStep):
+    with given:
+        step_result = StepResult(virtual_step)
+
+    with when:
+        result_captured_output = step_result.captured_output
+
+    with then:
+        assert result_captured_output is None

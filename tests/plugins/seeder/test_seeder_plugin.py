@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 from baby_steps import given, then, when
 
+from vedro import seed
 from vedro.core import Dispatcher
 from vedro.core import MonotonicScenarioScheduler as Scheduler
 from vedro.core import Report, ScenarioResult
@@ -26,14 +27,12 @@ __all__ = ("dispatcher", "seeder")  # fixtures
 
 SEED_INITIAL = "17b81c91"
 RAND_DISCOVERED = [
-    [18047, 912055, 192748],
-    [167430, 692919, 345483],
-    [429020, 174720, 28870],
+    [735076, 894332, 454659],
+    [821604, 234953, 290267],
 ]
 RAND_SCHEDULED = [
-    [18047, 912055, 192748],
-    [167430, 692919, 345483],
-    [429020, 174720, 28870],
+    [735076, 894332, 454659],
+    [821604, 234953, 290267],
 ]
 
 
@@ -53,7 +52,9 @@ async def test_no_seed(*, dispatcher: Dispatcher):
 
     with then:
         assert random_.mock_calls == [
-            call.set_seed(str(patched.return_value))
+            call.set_seed(
+                seeder._format_seed(str(patched.return_value))
+            )
         ]
 
 
@@ -295,4 +296,73 @@ async def test_show_seeds(*, seeder: SeederPlugin, dispatcher: Dispatcher):
         await dispatcher.fire(event)
 
     with then:
-        assert scenario_result.extra_details == ["seed: 75fc9f22..3b0238c4"]
+        assert scenario_result.extra_details == ["seed: tbv2-kcvqg-bip6"]
+
+
+async def test_show_seeds_custom(*, seeder: SeederPlugin, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL, show_seeds=True)
+
+        custom_seed = "em5i-xzqjv-dsey"
+        vscenario = make_vscenario("scenario-1.py", decorators=[seed(custom_seed)])
+        scheduler = Scheduler(scenarios=[vscenario])
+        await fire_startup_event(dispatcher, scheduler)
+
+        scenario_result = ScenarioResult(vscenario)
+        event = ScenarioRunEvent(scenario_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert scenario_result.extra_details == [f"seed: {custom_seed}"]
+
+
+async def test_show_preamble_default_seed(*, seeder: SeederPlugin, dispatcher: Dispatcher):
+    with given:
+        with patch("uuid.uuid4", return_value=uuid4()) as patched:
+            await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        startup_event = StartupEvent(Scheduler([]), report=report)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        expected = seeder._format_seed(str(patched.return_value))
+        assert report.preamble == [f"seed: {expected}"]
+
+
+@pytest.mark.usefixtures(seeder.__name__)
+async def test_dont_show_preamble_with_custom_seed(*, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
+
+        report = Report()
+        startup_event = StartupEvent(Scheduler([]), report=report)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert report.preamble == []
+
+
+async def test_dont_show_preamble_when_disabled(*, dispatcher: Dispatcher):
+    with given:
+        class SeederNoPreamble(Seeder):
+            show_seed_preamble = False
+        seeder = SeederPlugin(SeederNoPreamble)
+        seeder.subscribe(dispatcher)
+
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        startup_event = StartupEvent(Scheduler([]), report=report)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert report.preamble == []

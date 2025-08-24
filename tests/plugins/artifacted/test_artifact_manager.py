@@ -56,7 +56,7 @@ def test_cleanup_artifacts_os_error(exc_type: Type[Exception], *,
 
     with when, \
          patch_rmtree(exc_type()) as mock, \
-         raises(Exception) as exc:
+         raises(BaseException) as exc:
         artifact_manager.cleanup_artifacts()
 
     with then:
@@ -91,7 +91,7 @@ def test_save_memory_artifact_os_error(exc_type: Type[Exception], exc_msg: str, 
 
     with when, \
          patch_write_bytes(exc_type()) as mock, \
-         raises(Exception) as exc:
+         raises(BaseException) as exc:
         artifact_manager.save_artifact(artifact, artifacts_dir)
 
     with then:
@@ -135,7 +135,7 @@ def test_save_file_artifact_os_error(exc_type: Type[Exception], exc_msg: str, *,
 
     with when, \
          patch_copy2(exc_type()) as mock, \
-         raises(Exception) as exc:
+         raises(BaseException) as exc:
         artifact_manager.save_artifact(artifact, artifacts_dir)
 
     with then:
@@ -160,7 +160,7 @@ def test_save_artifact_directory_mkdir_failure(exc_type: Type[Exception], *,
 
     with when, \
          patch_mkdir(exc_type()) as mock, \
-         raises(Exception) as exc:
+         raises(BaseException) as exc:
         artifact_manager.save_artifact(artifact, artifacts_dir)
 
     with then:

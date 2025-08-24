@@ -174,6 +174,41 @@ def test_eq_with_diff_results():
         assert res is True
 
 
+def test_preamble_default():
+    with given:
+        report = Report()
+
+    with when:
+        res = report.preamble
+
+    with then:
+        assert res == []
+
+
+def test_add_preamble():
+    with given:
+        report = Report()
+
+    with when:
+        res = report.add_preamble("preamble")
+
+    with then:
+        assert res is None
+
+
+def test_get_preamble():
+    with given:
+        report = Report()
+        preamble = "<preamble>"
+        report.add_preamble(preamble)
+
+    with when:
+        res = report.preamble
+
+    with then:
+        assert res == [preamble]
+
+
 def test_summary_default():
     with given:
         report = Report()

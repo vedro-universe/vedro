@@ -52,9 +52,16 @@ async def main() -> None:
     arg_parser = ArgumentParser("vedro", formatter_class=formatter, add_help=False,
                                 allow_abbrev=False, description="documentation: vedro.io/docs")
 
+    arg_parser.add_argument("--version", action="store_true", help="Show vedro version")
+
     commands = {"run", "version", "plugin"}
     arg_parser.add_argument("command", nargs="?", help=f"Command to run {{{', '.join(commands)}}}")
     args, unknown_args = arg_parser.parse_known_args()
+
+    # Handle --version flag
+    if args.version:
+        args.command = "version"
+        unknown_args = []
 
     # backward compatibility
     # vedro <args> -> vedro run <args>

@@ -24,11 +24,13 @@ class _Meta(type):
                 module = namespace.get("__module__", "")
                 raise TypeError(f"Subclassing is restricted <{module}.{name}>")
 
-        frame = inspect.currentframe()
-        try:
-            lineno = frame.f_back.f_lineno if frame and frame.f_back else None
-        finally:
-            del frame
+        lineno = namespace.get("__lineno__", None)
+        if lineno is None:
+            frame = inspect.currentframe()
+            try:
+                lineno = frame.f_back.f_lineno if frame and frame.f_back else None
+            finally:
+                del frame
         namespace["__vedro__lineno__"] = lineno
 
         cls_constructor = namespace.get("__init__")
@@ -73,6 +75,7 @@ class _Meta(type):
         return created
 
 
+# In v2, consider moving this class to `vedro.core.scenario_provider`
 class Scenario(metaclass=_Meta):
     subject: str
 

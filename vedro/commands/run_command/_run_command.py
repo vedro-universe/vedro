@@ -7,7 +7,9 @@ from typing import Callable, Type, Union
 
 from vedro import Config
 from vedro.core import Config as BaseConfig
-from vedro.core import Dispatcher, MonotonicScenarioRunner
+from vedro.core import Dispatcher, MonotonicScenarioRunner, Plugin, PluginConfig, Report
+from vedro.core.exc_info import NoOpTracebackFilter
+from vedro.core.output_capturer import OutputCapturer
 from vedro.events import (
     ArgParsedEvent,
     ArgParseEvent,
@@ -36,12 +38,28 @@ PluginRegistrarFactory = Union[
 ]
 
 
+class _CorePlugin(Plugin):
+    """
+    Internal plugin used by the core framework to register components.
+
+    This allows the core framework to register components (like NoOpTracebackFilter)
+    in the same registry system that external plugins use, ensuring consistent
+    behavior and preventing conflicts. The underscore prefix indicates this is
+    for internal use only.
+    """
+    pass
+
+
 class RunCommand(Command):
     """
-    Implements the 'run' command for Vedro.
+    Implements the 'run' command for the Vedro testing framework.
 
-    This command handles the lifecycle of running scenarios, including configuration
-    validation, plugin registration, scenario discovery, execution, and reporting.
+    This command orchestrates the complete test execution lifecycle including:
+    - Configuration validation
+    - Plugin registration
+    - Test scenario discovery
+    - Test execution
+    - Report generation
     """
 
     def __init__(self, config: Type[Config], arg_parser: CommandArgumentParser, *,
@@ -50,10 +68,10 @@ class RunCommand(Command):
         """
         Initialize the RunCommand.
 
-        :param config: The configuration class for Vedro.
-        :param arg_parser: The argument parser for parsing command-line arguments.
-        :param config_validator_factory: Factory for creating a `ConfigValidator` instance.
-        :param plugin_registrar_factory: Factory for creating a `PluginRegistrar` instance.
+        :param config: The Vedro configuration class.
+        :param arg_parser: Command-line argument parser.
+        :param config_validator_factory: Factory for creating a ConfigValidator instance.
+        :param plugin_registrar_factory: Factory for creating a PluginRegistrar instance.
         """
         super().__init__(config, arg_parser)
         self._config_validator = config_validator_factory(config)
@@ -65,13 +83,18 @@ class RunCommand(Command):
 
     async def run(self) -> None:
         """
-        Execute the 'run' command.
+        Execute the 'run' command lifecycle.
 
-        This method validates the configuration, registers plugins, discovers scenarios,
-        executes scenarios, and generates the report. It also fires various events during
-        the lifecycle.
+        Performs the following steps:
+        1. Validates configuration
+        2. Registers plugins with the dispatcher
+        3. Fires ConfigLoadedEvent
+        4. Parses command-line arguments
+        5. Discovers test scenarios
+        6. Executes scenarios with output capturing
+        7. Generates and processes the test report
 
-        :raises Exception: If a `SystemExit` exception is encountered during discovery.
+        :raises Exception: If a SystemExit is raised during scenario discovery.
         """
         # TODO: move config validation to somewhere else in v2
         # (e.g. to the ConfigLoader)
@@ -98,27 +121,38 @@ class RunCommand(Command):
         except SystemExit as e:
             raise Exception(f"SystemExit({e.code}) ⬆")
 
-        scheduler = self._config.Registry.ScenarioScheduler(scenarios)
-        await dispatcher.fire(StartupEvent(scheduler))
+        output_capturer = OutputCapturer(args.capture_output, args.capture_limit)
+        with output_capturer.capture() as _:
+            report = Report()
 
-        runner = self._config.Registry.ScenarioRunner()
-        if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
-            warnings.warn("Deprecated: custom runners will be removed in v2.0", DeprecationWarning)
-        report = await runner.run(scheduler)
+            scheduler = self._config.Registry.ScenarioScheduler(scenarios)
+            await dispatcher.fire(StartupEvent(scheduler, report=report))
 
-        await dispatcher.fire(CleanupEvent(report))
+            runner = self._config.Registry.ScenarioRunner()
+            if not isinstance(runner, (MonotonicScenarioRunner, DryRunner)):
+                # TODO: In v2 add --dry-run argument to RunCommand
+                warnings.warn("Deprecated: custom runners will be removed in v2.0",
+                              DeprecationWarning)
+            # TODO: In v2 return nothing from runner.run()
+            report = await runner.run(scheduler, output_capturer=output_capturer)
+
+            await dispatcher.fire(CleanupEvent(report))
+        # In v2 RunCommand will handle report.interrupted and exit codes itself.
+        # At that point, captured output should also be added to the Report.
 
     async def _parse_args(self, dispatcher: Dispatcher) -> Namespace:
         """
-        Parse command-line arguments and fire corresponding dispatcher events.
+        Parse command-line arguments and fire corresponding events.
 
-        Adds the `--project-dir` argument, fires the `ArgParseEvent`, parses
-        the arguments, and then fires the `ArgParsedEvent`.
+        Adds command-line arguments including:
+        - --project-dir: Root directory of the project
+        - --capture-output/-C: Enable output capturing
+        - --capture-limit: Maximum characters to capture
+        - --vedro-debug: Enable debug mode
 
-        :param dispatcher: The dispatcher to fire events.
-        :return: The parsed arguments as a `Namespace` object.
+        :param dispatcher: Event dispatcher for firing ArgParseEvent and ArgParsedEvent.
+        :return: Parsed arguments as a Namespace object.
         """
-
         # Avoid unrecognized arguments error
         help_message = ("Specify the root directory of the project, used as a reference point for "
                         "relative paths and file operations. "
@@ -127,26 +161,43 @@ class RunCommand(Command):
                                       default=self._config.project_dir,
                                       help=help_message)
 
-        # https://github.com/python/cpython/issues/95073
+        self._arg_parser.add_argument("--capture-output", "-C", action="store_true", default=False,
+                                      help="Capture stdout/stderr from scenarios and steps")
+        self._arg_parser.add_argument("--capture-limit", type=int, default=1 * 1024,
+                                      help="Max characters to capture per stream "
+                                           "(default: 1KB, 0 for unlimited)")
+        self._arg_parser.add_argument("--vedro-debug", action="store_true", default=False,
+                                      help="Enable debug mode (shows full tracebacks "
+                                           "without filtering)")
+
+        # Temporarily remove help action to avoid issues with plugin argument registration
+        # See: https://github.com/python/cpython/issues/95073
         self._arg_parser.remove_help_action()
         await dispatcher.fire(ArgParseEvent(self._arg_parser))
         self._arg_parser.add_help_action()
 
         args = self._arg_parser.parse_args()
+
+        # Register no-op traceback filter if debug mode is enabled
+        # Must be done before firing ArgParsedEvent so plugins can use the correct configuration
+        if args.vedro_debug:
+            self._config.Registry.TracebackFilter.register(NoOpTracebackFilter,
+                                                           _CorePlugin(PluginConfig))
+
         await dispatcher.fire(ArgParsedEvent(args))
 
         return args
 
     def _get_start_dir(self, args: Namespace) -> Path:
         """
-        Determine the starting directory for discovering scenarios.
+        Determine the starting directory for scenario discovery.
 
-        Resolves the starting directory based on the parsed arguments, ensuring
-        it is a valid directory inside the project directory.
+        Resolves the starting directory based on command-line arguments,
+        ensuring it exists within the project directory boundaries.
 
-        :param args: Parsed command-line arguments.
-        :return: The resolved starting directory.
-        :raises ValueError: If the starting directory is outside the project directory.
+        :param args: Parsed command-line arguments containing file_or_dir paths.
+        :return: Resolved absolute path to the starting directory.
+        :raises ValueError: If the resolved directory is outside the project directory.
         """
         file_or_dir = getattr(args, "file_or_dir", [])
         # Note: `args.file_or_dir` is an argument that is registered by the core Skipper plugin.
@@ -174,12 +225,14 @@ class RunCommand(Command):
 
     def _normalize_path(self, file_or_dir: str) -> str:
         """
-        Normalize the provided path and handle backward compatibility.
+        Normalize a file or directory path to an absolute path.
 
-        Ensures the path is absolute and adjusts it based on legacy rules if necessary.
+        Handles backward compatibility by prepending "scenarios/" when:
+        1. The default_scenarios_dir is <project_dir>/scenarios
+        2. The original path doesn't exist but "scenarios/<path>" does
 
-        :param file_or_dir: The path to normalize.
-        :return: The normalized absolute path.
+        :param file_or_dir: Path string to normalize (relative or absolute).
+        :return: Normalized absolute path string.
         """
         path = os.path.normpath(file_or_dir)
         if os.path.isabs(path):

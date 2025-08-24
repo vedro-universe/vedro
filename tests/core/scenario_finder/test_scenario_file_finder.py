@@ -18,7 +18,7 @@ async def test_scenario_file_finder(tmp_path: Path):
         (tmp_path / "scenario1.py"),
         (tmp_path / "scenario2.py"),
         (tmp_path / "folder1" / "scenario3.py"),
-        (tmp_path / "folder1" / "__pychache__" / "scenario3.pyc"),
+        (tmp_path / "folder1" / "__pycache__" / "scenario3.pyc"),
         (tmp_path / "folder2" / "__init__.py"),
         (tmp_path / "folder2" / "scenario4.py"),
         (tmp_path / "folder2" / "scenario5.py"),
@@ -62,7 +62,7 @@ async def test_scenario_file_finder_with_dir_filter(tmp_path: Path):
         (tmp_path / "folder2" / "__init__.py"),
     ]
     _create_file_tree(subtree + [
-        (tmp_path / "folder1" / "__pychache__" / "scenario3.pyc"),
+        (tmp_path / "folder1" / "__pycache__" / "scenario3.pyc"),
     ])
 
     finder = ScenarioFileFinder(dir_filter=DunderFilter())

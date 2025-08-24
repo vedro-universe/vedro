@@ -1,5 +1,4 @@
 from ._artifacts import Artifact, FileArtifact, MemoryArtifact
-from ._container import Container, Factory, FactoryType, Singleton
 from ._dispatcher import Dispatcher, Subscriber
 from ._event import Event
 from ._exc_info import ExcInfo
@@ -12,7 +11,14 @@ from ._step_result import StepResult, StepStatus
 from ._virtual_scenario import VirtualScenario
 from ._virtual_step import VirtualStep
 from .config_loader import Config, ConfigFileLoader, ConfigLoader, ConfigType, Section
+from .di import Container, Factory, FactoryType, Singleton  # remove re-export in v2
 from .module_loader import ModuleFileLoader, ModuleLoader
+from .scenario_collector import (
+    MultiProviderScenarioCollector,
+    ScenarioCollector,
+    ScenarioProvider,
+    ScenarioSource,
+)
 from .scenario_discoverer import MultiScenarioDiscoverer, ScenarioDiscoverer
 from .scenario_orderer import ScenarioOrderer
 from .scenario_result import AggregatedResult, ScenarioResult, ScenarioStatus
@@ -28,4 +34,5 @@ __all__ = ("Dispatcher", "Subscriber", "Event", "ExcInfo", "Plugin", "PluginConf
            "ModuleLoader", "ModuleFileLoader", "Artifact", "MemoryArtifact", "FileArtifact",
            "ScenarioScheduler", "MonotonicScenarioScheduler", "FactoryType",
            "Container", "Factory", "Singleton", "ScenarioOrderer", "get_scenario_meta",
-           "set_scenario_meta",)
+           "ScenarioCollector", "ScenarioProvider", "ScenarioSource",
+           "MultiProviderScenarioCollector", "set_scenario_meta",)

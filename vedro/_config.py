@@ -8,6 +8,7 @@ import vedro.plugins.deferrer as deferrer
 import vedro.plugins.director as director
 import vedro.plugins.dry_runner as dry_runner
 import vedro.plugins.ensurer as ensurer
+import vedro.plugins.functioner as functioner
 import vedro.plugins.interrupter as interrupter
 import vedro.plugins.last_failed as last_failed
 import vedro.plugins.orderer as orderer
@@ -21,9 +22,9 @@ import vedro.plugins.tagger as tagger
 import vedro.plugins.temp_keeper as temp_keeper
 import vedro.plugins.terminator as terminator
 import vedro.plugins.tip_adviser as tip_adviser
+from vedro.config import computed
 from vedro.core import (
     Dispatcher,
-    Factory,
     ModuleFileLoader,
     ModuleLoader,
     MonotonicScenarioRunner,
@@ -38,9 +39,14 @@ from vedro.core import (
     ScenarioOrderer,
     ScenarioRunner,
     ScenarioScheduler,
-    Singleton,
 )
-from vedro.core.config_loader import computed
+from vedro.core.di import Factory, FrozenSingleton, Singleton
+from vedro.core.exc_info import TracebackFilter, TracebackFilterType
+from vedro.core.scenario_collector import (
+    ClassBasedScenarioProvider,
+    MultiProviderScenarioCollector,
+    ScenarioCollector,
+)
 from vedro.core.scenario_finder.scenario_file_finder import (
     AnyFilter,
     DunderFilter,
@@ -78,7 +84,15 @@ class Config(core.Config):
         such as the scenario finder, loader, scheduler, and runner.
         """
 
-        Dispatcher = Singleton[Dispatcher](Dispatcher)
+        # FrozenSingleton is used for Dispatcher to prevent runtime modifications.
+        # While plugins can normally replace component implementations during events,
+        # the Dispatcher itself must be created before any events can be fired
+        # (including ConfigLoadedEvent, which is the first opportunity for plugins
+        # to register replacements). This creates a circular dependency: the framework needs
+        # a Dispatcher to fire events that would allow replacing the Dispatcher.
+        # Therefore, if you need to use a custom Dispatcher implementation,
+        # you must override it statically in your vedro.cfg.py configuration file.
+        Dispatcher = FrozenSingleton[Dispatcher](Dispatcher)
 
         ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
 
@@ -91,11 +105,18 @@ class Config(core.Config):
             module_loader=Config.Registry.ModuleLoader(),
         ))
 
+        ScenarioCollector = Singleton[ScenarioCollector](
+            lambda: MultiProviderScenarioCollector(
+                providers=[ClassBasedScenarioProvider()],
+                module_loader_factory=Config.Registry.ModuleLoader,
+            )
+        )
+
         ScenarioOrderer = Factory[ScenarioOrderer](StableScenarioOrderer)
 
         ScenarioDiscoverer = Factory[ScenarioDiscoverer](lambda: MultiScenarioDiscoverer(
             finder=Config.Registry.ScenarioFinder(),
-            loader=Config.Registry.ScenarioLoader(),
+            loader=Config.Registry.ScenarioCollector(),
             orderer=Config.Registry.ScenarioOrderer(),
         ))
 
@@ -109,6 +130,12 @@ class Config(core.Config):
             interrupt_exceptions=(KeyboardInterrupt, SystemExit, CancelledError),
         ))
 
+        # `TracebackFilter` is used to filter out unnecessary traceback entries
+        # from the output, making it cleaner and more focused on relevant information.
+        # If the --vedro-debug flag is set, the filter will be disabled (replaced with
+        # a filter that does nothing, showing the full traceback)
+        TracebackFilter = Factory[TracebackFilterType](TracebackFilter)
+
     class Plugins(core.Config.Plugins):
         """
         Configuration for enabling and disabling plugins.
@@ -119,31 +146,19 @@ class Config(core.Config):
 
         class Director(director.Director):
             enabled = True
+            default_reporters = ["rich"]
 
         class RichReporter(director.RichReporter):
             enabled = True
 
-            @computed
-            def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-                # Temporarily commented out due to issue
-                # https://github.com/vedro-universe/vedro/issues/123 until
-                # https://github.com/vedro-universe/vedro/pull/83 is merged
-                # return [Config.Plugins.Director]
-                return []
-
         class SilentReporter(director.SilentReporter):
             enabled = True
-
-            # @computed
-            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-            #     return [Config.Plugins.Director]
 
         class PyCharmReporter(director.PyCharmReporter):
             enabled = True
 
-            # @computed
-            # def depends_on(cls) -> Sequence[Type[PluginConfig]]:
-            #     return [Config.Plugins.Director]
+        class Functioner(functioner.Functioner):
+            enabled = True
 
         class TempKeeper(temp_keeper.TempKeeper):
             enabled = True

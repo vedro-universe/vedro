@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
@@ -24,8 +23,7 @@ class CustomConfig(Config):
             pass
 
 
-@pytest.mark.usefixtures(tmp_dir.__name__)
-async def test_run_command_without_scenarios(arg_parser: ArgumentParser):
+async def test_run_command_without_scenarios(tmp_dir: Path, arg_parser: ArgumentParser):
     with given:
         class CustomConfigProject(CustomConfig):
             project_dir = tmp_dir

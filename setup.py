@@ -13,7 +13,7 @@ def find_dev_required():
 
 setup(
     name="vedro",
-    version="1.13.5",
+    version="1.14.3",
     description="Pragmatic Testing Framework",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -33,10 +33,10 @@ setup(
     },
     install_requires=find_required(),
     tests_require=find_dev_required(),
+    # https://devguide.python.org/versions/
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

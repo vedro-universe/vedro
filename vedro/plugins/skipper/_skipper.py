@@ -88,7 +88,7 @@ class SkipperPlugin(Plugin):
             assert self._global_config is not None  # for type checking
             self._global_config.Registry.ScenarioDiscoverer.register(lambda: ScenarioDiscoverer(
                 finder=self._global_config.Registry.ScenarioFinder(),
-                loader=self._global_config.Registry.ScenarioLoader(),
+                loader=self._global_config.Registry.ScenarioCollector(),
                 orderer=self._global_config.Registry.ScenarioOrderer(),
                 selected_paths=self.__get_selected_paths(),
             ), self)

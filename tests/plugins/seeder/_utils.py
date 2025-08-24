@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from random import random
-from typing import List, Optional
+from typing import Any, Callable, List, Optional
 
 import pytest
 
@@ -25,9 +25,14 @@ def seeder(dispatcher: Dispatcher) -> SeederPlugin:
     return seeder
 
 
-def make_vscenario(filename: str = "scenario.py", *, is_skipped: bool = False) -> VirtualScenario:
+def make_vscenario(filename: str = "scenario.py", *, is_skipped: bool = False,
+                   decorators: Optional[List[Callable[..., Any]]] = None) -> VirtualScenario:
     class _Scenario(Scenario):
         __file__ = Path(filename).absolute()
+
+    if decorators:
+        for decorator in decorators:
+            _Scenario = decorator(_Scenario)
 
     vscenario = VirtualScenario(_Scenario, steps=[])
     if is_skipped:
