@@ -103,5 +103,7 @@ class TipAdviser(PluginConfig):
     plugin = TipAdviserPlugin
     description = "Provides random tips based on Vedro command-line arguments"
 
-    # If True, the plugin will display tips at the end of the test run
     show_tips: bool = True
+    """
+    If True, the plugin will display tips at the end of the test run.
+    """

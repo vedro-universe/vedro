@@ -97,10 +97,16 @@ class TempKeeper(PluginConfig):
     plugin = TempKeeperPlugin
     description = "Manages temporary directories and files"
 
-    # Root directory for storing temporary files and directories.
-    # (!) This directory is deleted at the start of each run.
     tmp_dir: Path = Path(".vedro/tmp/")
+    """
+    Root directory for storing temporary files and directories.
 
-    # Whether to clean up the temporary directory at the start of each run.
-    # Can be overridden via CLI using `--no-tmp-cleanup`.
+    (!) This directory is deleted at the start of each run.
+    """
+
     cleanup_tmp: bool = True
+    """
+    Whether to clean up the temporary directory at the start of each run.
+
+    Can be overridden via CLI using `--no-tmp-cleanup`.
+    """
