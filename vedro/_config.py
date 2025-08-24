@@ -84,6 +84,14 @@ class Config(core.Config):
         such as the scenario finder, loader, scheduler, and runner.
         """
 
+        # FrozenSingleton is used for Dispatcher to prevent runtime modifications.
+        # While plugins can normally replace component implementations during events,
+        # the Dispatcher itself must be created before any events can be fired
+        # (including ConfigLoadedEvent, which is the first opportunity for plugins
+        # to register replacements). This creates a circular dependency: the framework needs
+        # a Dispatcher to fire events that would allow replacing the Dispatcher.
+        # Therefore, if you need to use a custom Dispatcher implementation,
+        # you must override it statically in your vedro.cfg.py configuration file.
         Dispatcher = FrozenSingleton[Dispatcher](Dispatcher)
 
         ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
