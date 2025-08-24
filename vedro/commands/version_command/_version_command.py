@@ -1,4 +1,5 @@
-from typing import Callable, Type
+import sys
+from typing import Any, Callable, Type
 
 from rich.console import Console
 from rich.style import Style
@@ -12,15 +13,17 @@ from .._command import Command
 __all__ = ("VersionCommand",)
 
 
-def make_console() -> Console:
+def make_console(**kwargs: Any) -> Console:
     """
     Create and configure a Rich Console instance.
 
     The console is used for outputting text in the terminal.
 
+    :param kwargs: Additional keyword arguments to customize the Console.
     :return: A `Console` instance with specific configurations.
     """
-    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True)
+    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True,
+                   file=sys.stdout, **kwargs)
 
 
 class VersionCommand(Command):
@@ -49,5 +52,11 @@ class VersionCommand(Command):
         This method parses the command-line arguments and outputs the current version
         of Vedro to the console.
         """
-        self._arg_parser.parse_args()
+        self._arg_parser.add_argument("--no-color", action="store_true",
+                                      help="Disable colored output")
+        args = self._arg_parser.parse_args()
+
+        if args.no_color:
+            self._console.no_color = True
+
         self._console.print(f"Vedro {vedro.__version__}", style=Style(color="blue"))
