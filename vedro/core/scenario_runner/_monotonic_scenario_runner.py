@@ -233,12 +233,13 @@ class MonotonicScenarioRunner(ScenarioRunner):
         execution lifecycle and handles any interruptions.
 
         :param scheduler: The scheduler providing scenarios to execute.
-        :param kwargs: Additional keyword arguments (e.g., output_capturer).
+        :param kwargs: Additional keyword arguments (e.g., reporter, output_capturer).
         :return: A report containing all execution results and any interruption information.
         """
         output_capturer = self._get_output_capturer(**kwargs)
+        report = kwargs.get("report", Report())
+        assert isinstance(report, Report)
 
-        report = Report()
         try:
             await self._run_scenarios(scheduler, report, output_capturer=output_capturer)
         except self._interrupt_exceptions as e:

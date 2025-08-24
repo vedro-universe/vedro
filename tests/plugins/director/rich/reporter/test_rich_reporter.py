@@ -64,7 +64,28 @@ async def test_startup(*, dispatcher: Dispatcher, printer_: Mock):
 
     with then:
         assert printer_.mock_calls == [
-            call.print_header()
+            call.print_report_preamble([]),
+            call.print_header(),
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_startup_with_preamble(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        report.add_preamble("<preamble>")
+        scheduler = ScenarioScheduler([])
+        event = StartupEvent(scheduler, report=report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_report_preamble(["<preamble>"]),
+            call.print_header(),
         ]
 
 

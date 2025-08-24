@@ -5,6 +5,19 @@ from typing import Callable, Sequence, Union
 __all__ = ("TracebackFilter", "NoOpTracebackFilter", "TracebackFilterType",)
 
 
+# NOTE FOR PLUGIN DEVELOPERS:
+# Do not instantiate TracebackFilter directly. Always use Config.Registry.TracebackFilter instead.
+# The registry may replace the default filter (for example, with a no-op filter in debug mode),
+# so using it ensures all plugins respect the global configuration and behave consistently.
+#
+# Example:
+# class CustomPlugin(Plugin):
+#     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
+#         self._global_config = event.config
+#
+#     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
+#         tb_filter_factory = self._global_config.Registry.TracebackFilter
+#         tb_filter = tb_filter_factory(modules=[...])
 class TracebackFilter:
     """
     Filters traceback objects to exclude frames from specified modules.

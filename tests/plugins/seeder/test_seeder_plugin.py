@@ -316,3 +316,53 @@ async def test_show_seeds_custom(*, seeder: SeederPlugin, dispatcher: Dispatcher
 
     with then:
         assert scenario_result.extra_details == [f"seed: {custom_seed}"]
+
+
+async def test_show_preamble_default_seed(*, seeder: SeederPlugin, dispatcher: Dispatcher):
+    with given:
+        with patch("uuid.uuid4", return_value=uuid4()) as patched:
+            await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        startup_event = StartupEvent(Scheduler([]), report=report)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        expected = seeder._format_seed(str(patched.return_value))
+        assert report.preamble == [f"seed: {expected}"]
+
+
+@pytest.mark.usefixtures(seeder.__name__)
+async def test_dont_show_preamble_with_custom_seed(*, dispatcher: Dispatcher):
+    with given:
+        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
+
+        report = Report()
+        startup_event = StartupEvent(Scheduler([]), report=report)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert report.preamble == []
+
+
+async def test_dont_show_preamble_when_disabled(*, dispatcher: Dispatcher):
+    with given:
+        class SeederNoPreamble(Seeder):
+            show_seed_preamble = False
+        seeder = SeederPlugin(SeederNoPreamble)
+        seeder.subscribe(dispatcher)
+
+        await fire_arg_parsed_event(dispatcher)
+
+        report = Report()
+        startup_event = StartupEvent(Scheduler([]), report=report)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert report.preamble == []

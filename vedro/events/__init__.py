@@ -1,7 +1,7 @@
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import List
+from typing import Any, List, cast
 
 from ..core._event import Event
 from ..core._exc_info import ExcInfo
@@ -130,13 +130,15 @@ class StartupEvent(Event):
     This event provides access to the scenario scheduler.
     """
 
-    def __init__(self, scheduler: ScenarioScheduler) -> None:
+    def __init__(self, scheduler: ScenarioScheduler, **kwargs: Any) -> None:
         """
         Initialize the StartupEvent.
 
         :param scheduler: The scheduler used to manage scenarios.
         """
         self._scheduler = scheduler
+        # TODO: in v2 add `report` as a required argument
+        self._report = kwargs.get("report", Report())  # backward compatibility
 
     @property
     def scheduler(self) -> ScenarioScheduler:
@@ -146,6 +148,15 @@ class StartupEvent(Event):
         :return: The scenario scheduler instance.
         """
         return self._scheduler
+
+    @property
+    def report(self) -> Report:
+        """
+        Get the report associated with the startup event.
+
+        :return: The test execution report.
+        """
+        return cast(Report, self._report)
 
     @property
     def scenarios(self) -> List[VirtualScenario]:
@@ -163,7 +174,7 @@ class StartupEvent(Event):
 
         :return: A string describing the event.
         """
-        return f"{self.__class__.__name__}({self._scheduler!r})"
+        return f"{self.__class__.__name__}({self._scheduler!r}, report={self._report!r})"
 
 
 class _ScenarioEvent(Event):
