@@ -40,7 +40,7 @@ from vedro.core import (
     ScenarioRunner,
     ScenarioScheduler,
 )
-from vedro.core.di import Factory, Singleton, FrozenSingleton
+from vedro.core.di import Factory, FrozenSingleton, Singleton
 from vedro.core.exc_info import TracebackFilter, TracebackFilterType
 from vedro.core.scenario_collector import (
     ClassBasedScenarioProvider,

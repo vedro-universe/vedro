@@ -185,7 +185,7 @@ class Singleton(Container[T]):
 
 class FrozenSingleton(Container[T]):
     """
-    An immutable singleton container that prevents any resolver registration.
+    A frozen singleton container that prevents any resolver registration.
 
     This container type is initialized with a resolver that cannot be changed.
     Any attempt to register a new resolver will raise a ConflictError.
@@ -194,7 +194,7 @@ class FrozenSingleton(Container[T]):
 
     def __init__(self, resolver: FactoryType[T]) -> None:
         """
-        Initialize the immutable singleton container with the given resolver.
+        Initialize the frozen singleton container with the given resolver.
 
         :param resolver: A callable or type used to create objects of type `T`.
         """
@@ -207,21 +207,21 @@ class FrozenSingleton(Container[T]):
 
         :param resolver: A callable or type (ignored).
         :param registrant: The plugin attempting to register the resolver.
-        :raises ConflictError: Always raised to indicate immutability.
+        :raises ConflictError: Always raised to indicate the container is frozen.
         """
         assert isinstance(registrant, Plugin)
-        raise self._make_immutable_error(registrant)
+        raise self._make_frozen_error(registrant)
 
-    def _make_immutable_error(self, registrant: Plugin) -> ConflictError:
+    def _make_frozen_error(self, registrant: Plugin) -> ConflictError:
         """
-        Create an error for attempting to modify an immutable container.
+        Create an error for attempting to modify a frozen container.
 
         :param registrant: The plugin attempting to register the resolver.
-        :return: A `ConflictError` indicating the container is immutable.
+        :return: A `ConflictError` indicating the container is frozen.
         """
         type_ = self.__orig_class__.__args__[0]  # type: ignore
         return ConflictError(f"{registrant} is trying to register {type_.__name__}, "
-                             f"but this container is immutable and cannot be modified")
+                             f"but this container is frozen and cannot be modified")
 
     def resolve(self, *args: Any, **kwargs: Any) -> T:
         """

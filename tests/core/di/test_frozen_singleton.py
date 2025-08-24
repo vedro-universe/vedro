@@ -20,7 +20,7 @@ def test_frozen_singleton_register(*, plugin: Plugin):
         assert exc.type is ConflictError
         assert str(exc.value) == (
             "Plugin(PluginConfig) is trying to register BaseClass, "
-            "but this container is immutable and cannot be modified"
+            "but this container is frozen and cannot be modified"
         )
 
 
