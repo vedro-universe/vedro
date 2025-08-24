@@ -2,16 +2,16 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core import Plugin
-from vedro.core.di import ConflictError, ImmutableSingleton
+from vedro.core.di import ConflictError, FrozenSingleton
 
 from ._utils import BaseClass, DerivedClass, plugin
 
 __all__ = ("plugin",)  # fixtures
 
 
-def test_immutable_singleton_register(*, plugin: Plugin):
+def test_frozen_singleton_register(*, plugin: Plugin):
     with given:
-        singleton = ImmutableSingleton[BaseClass](DerivedClass)
+        singleton = FrozenSingleton[BaseClass](DerivedClass)
 
     with when, raises(Exception) as exc:
         singleton.register(lambda: DerivedClass(), plugin)
@@ -24,9 +24,9 @@ def test_immutable_singleton_register(*, plugin: Plugin):
         )
 
 
-def test_immutable_singleton_resolve():
+def test_frozen_singleton_resolve():
     with given:
-        singleton = ImmutableSingleton[BaseClass](DerivedClass)
+        singleton = FrozenSingleton[BaseClass](DerivedClass)
 
     with when:
         res = singleton.resolve()
@@ -35,9 +35,9 @@ def test_immutable_singleton_resolve():
         assert isinstance(res, DerivedClass)
 
 
-def test_immutable_singleton_call():
+def test_frozen_singleton_call():
     with given:
-        singleton = ImmutableSingleton[BaseClass](DerivedClass)
+        singleton = FrozenSingleton[BaseClass](DerivedClass)
 
     with when:
         res = singleton()
@@ -46,9 +46,9 @@ def test_immutable_singleton_call():
         assert isinstance(res, DerivedClass)
 
 
-def test_immutable_singleton_resolve_twice():
+def test_frozen_singleton_resolve_twice():
     with given:
-        singleton = ImmutableSingleton[BaseClass](DerivedClass)
+        singleton = FrozenSingleton[BaseClass](DerivedClass)
         resolved = singleton.resolve()
 
     with when:
@@ -59,12 +59,12 @@ def test_immutable_singleton_resolve_twice():
         assert res == resolved
 
 
-def test_immutable_singleton_repr():
+def test_frozen_singleton_repr():
     with given:
-        singleton = ImmutableSingleton[BaseClass](DerivedClass)
+        singleton = FrozenSingleton[BaseClass](DerivedClass)
 
     with when:
         res = repr(singleton)
 
     with then:
-        assert res == f"ImmutableSingleton({DerivedClass!r})"
+        assert res == f"FrozenSingleton({DerivedClass!r})"

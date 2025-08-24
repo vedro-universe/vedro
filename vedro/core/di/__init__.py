@@ -3,7 +3,7 @@ from typing import Any, Callable, Generic, Type, TypeVar, Union
 
 from .._plugin import Plugin
 
-__all__ = ("Container", "Factory", "Singleton",
+__all__ = ("Container", "Factory", "Singleton", "FrozenSingleton",
            "FactoryType", "ConflictError")
 
 F = TypeVar("F")
@@ -183,7 +183,7 @@ class Singleton(Container[T]):
         return self._singleton
 
 
-class ImmutableSingleton(Container[T]):
+class FrozenSingleton(Container[T]):
     """
     An immutable singleton container that prevents any resolver registration.
 
