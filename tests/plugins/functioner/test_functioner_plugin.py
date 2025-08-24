@@ -22,7 +22,7 @@ def plugin(dispatcher: Dispatcher) -> FunctionerPlugin:
 
 
 @pytest.mark.usefixtures(plugin.__name__)
-async def test_register_scenario_collector(dispatcher: Dispatcher):
+async def test_register_scenario_provider(dispatcher: Dispatcher):
     with given:
         class TestConfig(Config):
             class Registry(Config.Registry):
