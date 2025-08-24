@@ -1,12 +1,21 @@
 from hashlib import blake2b
-from inspect import BoundArguments
+from inspect import BoundArguments, getdoc
 from pathlib import Path
-from typing import Any, List, Optional, Type, Union, cast
+from typing import Any, List
+from typing import Optional
+from typing import Optional as Maybe
+from typing import Type, TypeVar, Union, cast, overload
+
+from niltype import Nil, Nilable, NilType
 
 from .._scenario import Scenario
+from ._plugin import Plugin
+from ._scenario_meta import get_scenario_meta, set_scenario_meta
 from ._virtual_step import VirtualStep
 
 __all__ = ("VirtualScenario", "ScenarioInitError",)
+
+T = TypeVar("T")
 
 
 class ScenarioInitError(Exception):
@@ -42,6 +51,15 @@ class VirtualScenario:
         self._path = Path(getattr(orig_scenario, "__file__", "."))
         self._is_skipped = False
         self._skip_reason: Union[str, None] = None
+
+    @property
+    def doc(self) -> Maybe[str]:
+        """
+        Get the docstring of the original scenario.
+
+        :return: The docstring of the original scenario or None if not available.
+        """
+        return getdoc(self._orig_scenario)
 
     @property
     def steps(self) -> List[VirtualStep]:
@@ -163,6 +181,15 @@ class VirtualScenario:
         parts = self.rel_path.parts[1:-1]
         return str(Path(*parts)) if parts else ""
 
+    @property
+    def lineno(self) -> Union[int, None]:
+        """
+        Get the line number where the scenario class is defined.
+
+        :return: An integer representing the line number, or None if not available.
+        """
+        return getattr(self._orig_scenario, "__vedro__lineno__", None)
+
     def skip(self, reason: Optional[str] = None) -> None:
         """
         Mark the scenario as skipped with an optional reason.
@@ -189,6 +216,56 @@ class VirtualScenario:
         :return: A boolean indicating if the scenario is skipped.
         """
         return self._is_skipped
+
+    def set_meta(self, key: str, value: Any, *, plugin: Plugin,
+                 fallback_key: Optional[str] = None) -> None:
+        """
+        Set metadata for the associated scenario.
+
+        This method sets a metadata key-value pair for the original scenario
+        wrapped by this VirtualScenario, scoped to the specified plugin.
+        Optionally, a fallback key can be set for backward compatibility.
+
+        :param key: The metadata key to set. Must be a valid Python identifier.
+        :param value: The metadata value to set.
+        :param plugin: The plugin instance to scope the metadata under.
+        :param fallback_key: Optional. A fallback attribute name for backward compatibility.
+        """
+        set_scenario_meta(self._orig_scenario, key, value,
+                          plugin=plugin,
+                          fallback_key=fallback_key)
+
+    @overload
+    def get_meta(self, key: str, *, plugin: Plugin, default: T,
+                 fallback_key: Optional[str] = None) -> T:  # pragma: no cover
+        ...  # When default is provided, return T
+
+    @overload
+    def get_meta(self, key: str, *, plugin: Plugin, default: NilType = Nil,
+                 fallback_key: Optional[str] = None) -> NilType:  # pragma: no cover
+        ...  # When default is not provided, return NilType
+
+    def get_meta(self, key: str, *, plugin: Plugin, default: Nilable[T] = Nil,
+                 fallback_key: Optional[str] = None) -> Union[T, NilType]:
+        """
+        Retrieve metadata for the associated scenario.
+
+        This method retrieves the metadata value associated with the specified key,
+        scoped to the given plugin, from the original scenario wrapped by this VirtualScenario.
+        If the metadata is not found, it returns the provided default value or Nil.
+        Optionally, a fallback key can be checked for backward compatibility.
+
+        :param key: The metadata key to retrieve. Must be a valid Python identifier.
+        :param plugin: The plugin instance the metadata is scoped under.
+        :param default: The default value to return if the metadata is not found. Defaults to Nil.
+        :param fallback_key: Optional. A fallback attribute name for backward compatibility.
+        :return: The metadata value if found, the fallback attribute value,
+                 or the default if not found.
+        """
+        return get_scenario_meta(self._orig_scenario, key,
+                                 default=default,
+                                 plugin=plugin,
+                                 fallback_key=fallback_key)
 
     def __call__(self) -> Scenario:
         """

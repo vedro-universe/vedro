@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Union
 from vedro.core._artifacts import Artifact
 from vedro.core._step_result import StepResult
 from vedro.core._virtual_scenario import VirtualScenario
+from vedro.core.output_capturer import CapturedOutput
 
 from ._scenario_status import ScenarioStatus
 
@@ -35,6 +36,7 @@ class ScenarioResult:
         self._scope: Union[ScopeType, None] = None
         self._artifacts: List[Artifact] = []
         self._extra_details: List[str] = []
+        self._captured_output: Union[CapturedOutput, None] = None
 
     @property
     def scenario(self) -> VirtualScenario:
@@ -204,6 +206,25 @@ class ScenarioResult:
         if self._scope is None:
             return {}
         return self._scope
+
+    def set_captured_output(self, output: CapturedOutput) -> "ScenarioResult":
+        """
+        Set the captured output for the scenario.
+
+        :param output: The CapturedOutput instance containing captured stdout/stderr.
+        :return: The ScenarioResult instance for chaining.
+        """
+        self._captured_output = output
+        return self
+
+    @property
+    def captured_output(self) -> Union[CapturedOutput, None]:
+        """
+        Retrieve the captured output for the scenario.
+
+        :return: The CapturedOutput instance, or None if no output was captured.
+        """
+        return self._captured_output
 
     def attach(self, artifact: Artifact) -> None:
         """

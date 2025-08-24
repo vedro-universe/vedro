@@ -5,36 +5,43 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/vedro?style=flat-square)](https://pypi.python.org/pypi/vedro/)
 [![Python Version](https://img.shields.io/pypi/pyversions/vedro.svg?style=flat-square)](https://pypi.python.org/pypi/vedro/)
 
+**Pragmatic, general‑purpose testing framework for Python**, designed with readability, speed, and a delightful developer experience in mind. Vedro pairs a clear, scenario‑style syntax with a lightweight, pluggable core, allowing you to simplify or customize your workflow exactly as needed.
+
 ## Installation
 
-```shell
-$ pip3 install vedro
-```
-
-## Usage
-
-```python
-# ./scenarios/decode_base64_encoded_string.py
-import base64
-import vedro
-
-class Scenario(vedro.Scenario):
-    subject = "decode base64 encoded string"
-
-    def given(self):
-        self.encoded = "YmFuYW5h"
-
-    def when(self):
-        self.decoded = base64.b64decode(self.encoded)
-
-    def then(self):
-        assert self.decoded == b"banana"
-```
+<details open>
+<summary>pip</summary>
+<p>
 
 ```shell
-$ vedro run
+$ pip install vedro
 ```
+
+</p>
+</details>
+
+<details>
+<summary>uv</summary>
+<p>
+
+```shell
+$ uv add vedro
+```
+
+</p>
+</details>
+
+<details>
+<summary>poetry</summary>
+<p>
+
+```shell
+$ poetry add vedro
+```
+
+</p>
+</details>
 
 ## Documentation
 
-🚀 [vedro.io](https://vedro.io/docs/quick-start)
+Looking for quick‑start guides, tutorials, and plugins? Visit the official docs: [vedro.io](https://vedro.io).

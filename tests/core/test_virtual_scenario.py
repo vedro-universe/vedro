@@ -9,7 +9,7 @@ from baby_steps import given, then, when
 from pytest import raises
 
 from vedro import Scenario
-from vedro.core import VirtualScenario, VirtualStep
+from vedro.core import Plugin, PluginConfig, VirtualScenario, VirtualStep
 from vedro.core._virtual_scenario import ScenarioInitError
 
 
@@ -195,13 +195,13 @@ def test_virtual_scenario_init(*, scenario_: Type[Scenario]):
         scenario_.side_effect = (exception,)
         virtual_scenario = VirtualScenario(scenario_, [])
 
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         virtual_scenario()
 
     with then:
-        assert exc_info.type is ScenarioInitError
-        assert str(exc_info.value) == ('Can\'t initialize scenario "scenario" '
-                                       f'at "scenarios/scenario.py" ({exception!r})')
+        assert exc.type is ScenarioInitError
+        assert str(exc.value) == ('Can\'t initialize scenario "scenario" '
+                                  f'at "scenarios/scenario.py" ({exception!r})')
 
 
 def test_virtual_scenario_repr(*, scenario_: Type[Scenario], method_: MethodType):
@@ -270,3 +270,124 @@ def test_virtual_scenario_not_eq_with_steps(*, scenario_: Type[Scenario], method
 
     with then:
         assert res is False
+
+
+def test_set_meta():
+    with given:
+        class CustomPlugin(Plugin):
+            pass
+
+        plugin = CustomPlugin(PluginConfig)
+
+        class CustomScenario(Scenario):
+            pass
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        res = virtual_scenario.set_meta("key", "value", plugin=plugin)
+
+    with then:
+        assert res is None
+
+
+def test_get_meta():
+    with given:
+        class CustomPlugin(Plugin):
+            pass
+
+        plugin = CustomPlugin(PluginConfig)
+
+        class CustomScenario(Scenario):
+            pass
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+        virtual_scenario.set_meta("key", "value", plugin=plugin)
+
+    with when:
+        value = virtual_scenario.get_meta("key", plugin=plugin)
+
+    with then:
+        assert value == "value"
+
+
+def test_virtual_scenario_doc():
+    with given:
+        class CustomScenario(Scenario):
+            """My scenario docstring"""
+            pass
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        doc = virtual_scenario.doc
+
+    with then:
+        assert doc == "My scenario docstring"
+
+
+def test_virtual_scenario_doc_multiline():
+    with given:
+        class CustomScenario(Scenario):
+            """
+            First line
+            Second line
+            """
+        vs = VirtualScenario(CustomScenario, [])
+
+    with when:
+        doc = vs.doc
+
+    with then:
+        # `inspect.getdoc` strips indentation & leading blank
+        assert doc == "First line\nSecond line"
+
+
+def test_virtual_scenario_doc_when_absent():
+    with given:
+        class CustomScenario(Scenario):
+            pass  # no docstring here
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        doc = virtual_scenario.doc
+
+    with then:
+        assert doc is None
+
+
+def test_virtual_scenario_lineno(*, scenario_: Type[Scenario]):
+    with given:
+        scenario_.__vedro__lineno__ = 42
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        lineno = virtual_scenario.lineno
+
+    with then:
+        assert lineno == 42
+
+
+def test_virtual_scenario_no_lineno(*, scenario_: Type[Scenario]):
+    with given:
+        # __vedro__lineno__ attribute is not set
+        virtual_scenario = VirtualScenario(scenario_, [])
+
+    with when:
+        lineno = virtual_scenario.lineno
+
+    with then:
+        assert lineno is None
+
+
+def test_virtual_template_lineno(*, template_: Type[Scenario]):
+    with given:
+        template_.__vedro__lineno__ = 42
+        virtual_scenario = VirtualScenario(template_, [])
+
+    with when:
+        lineno = virtual_scenario.lineno
+
+    with then:
+        assert lineno == 42

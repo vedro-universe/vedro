@@ -11,7 +11,9 @@ from vedro.plugins.director.rich import RichPrinter
 
 @pytest.fixture()
 def console_() -> Mock:
-    return Mock(Console, size=ConsoleDimensions(80, 25))
+    mock = Mock(Console, size=ConsoleDimensions(80, 25))
+    mock.encoding = "utf-8"
+    return mock
 
 
 @pytest.fixture()

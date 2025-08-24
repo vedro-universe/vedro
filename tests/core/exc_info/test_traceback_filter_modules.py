@@ -8,7 +8,7 @@ from pathlib import Path
 from baby_steps import given, then, when
 from pytest import raises
 
-from vedro.plugins.director.rich.utils import TracebackFilter
+from vedro.core.exc_info import TracebackFilter
 
 from ._utils import create_call_stack, get_frames_info, run_module_function, tmp_dir
 
@@ -69,7 +69,7 @@ def test_resolve_path_missing_file_attr():
     with given:
         traceback_filter = TracebackFilter(modules=[])
 
-    with when, raises(Exception) as exc:
+    with when, raises(BaseException) as exc:
         traceback_filter.resolve_module_path(sys)
 
     with then:

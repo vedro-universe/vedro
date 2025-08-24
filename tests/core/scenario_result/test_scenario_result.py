@@ -17,6 +17,7 @@ from vedro.core import (
     VirtualScenario,
     VirtualStep,
 )
+from vedro.core.output_capturer import CapturedOutput
 
 
 def make_scenario_path(path: str = "", name: str = "scenario.py") -> Path:
@@ -357,3 +358,40 @@ def test_scenario_result_get_extra_details(*, virtual_scenario: VirtualScenario)
 
     with then:
         assert extra_details == ["<extra-detail-1>", "<extra-detail-2>"]
+
+
+def test_scenario_result_set_captured_output(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        captured_output = CapturedOutput()
+
+    with when:
+        res = scenario_result.set_captured_output(captured_output)
+
+    with then:
+        assert res == scenario_result
+        assert scenario_result.captured_output == captured_output
+
+
+def test_scenario_result_get_captured_output(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+        captured_output = CapturedOutput()
+        scenario_result.set_captured_output(captured_output)
+
+    with when:
+        result_captured_output = scenario_result.captured_output
+
+    with then:
+        assert result_captured_output == captured_output
+
+
+def test_scenario_result_get_captured_output_none(*, virtual_scenario: VirtualScenario):
+    with given:
+        scenario_result = ScenarioResult(virtual_scenario)
+
+    with when:
+        result_captured_output = scenario_result.captured_output
+
+    with then:
+        assert result_captured_output is None

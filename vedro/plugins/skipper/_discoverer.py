@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Union
 
 from vedro.core import ScenarioFinder, ScenarioLoader, ScenarioOrderer, VirtualScenario
+from vedro.core.scenario_collector import ScenarioCollector
 from vedro.core.scenario_discoverer import ScenarioDiscoverer, create_vscenario
 
 __all__ = ("SelectiveScenarioDiscoverer",)
@@ -17,7 +18,10 @@ class SelectiveScenarioDiscoverer(ScenarioDiscoverer):
     """
 
     def __init__(self,
-                 finder: ScenarioFinder, loader: ScenarioLoader, orderer: ScenarioOrderer, *,
+                 finder: ScenarioFinder,
+                 loader: Union[ScenarioLoader, ScenarioCollector],
+                 orderer: ScenarioOrderer,
+                 *,
                  selected_paths: Optional[Set[Path]] = None) -> None:
         """
         Initialize the SelectiveScenarioDiscoverer with required components.
@@ -53,9 +57,17 @@ class SelectiveScenarioDiscoverer(ScenarioDiscoverer):
         async for path in self._finder.find(root):
             if not self._is_path_selected(path):
                 continue
-            loaded = await self._loader.load(path)
-            for scn in loaded:
-                scenarios.append(create_vscenario(scn, project_dir=project_dir))
+
+            # Backward compatibility
+            if isinstance(self._loader, ScenarioCollector):
+                loaded_vscenarios = await self._loader.collect(path, project_dir=project_dir)
+                scenarios.extend(loaded_vscenarios)
+            else:
+                rel_path = path.relative_to(project_dir) if path.is_absolute() else path
+                loaded_scenarios = await self._loader.load(rel_path)
+                for scn in loaded_scenarios:
+                    scenarios.append(create_vscenario(scn, project_dir=project_dir))
+
         return await self._orderer.sort(scenarios)
 
     def _is_path_selected(self, path: Path) -> bool:

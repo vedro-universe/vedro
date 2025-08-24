@@ -98,13 +98,15 @@ def test_startup_event():
     with given:
         scenarios = []
         scheduler = MonotonicScenarioScheduler(scenarios)
+        report = Report()
 
     with when:
-        event = StartupEvent(scheduler)
+        event = StartupEvent(scheduler, report=report)
 
     with then:
         assert list(event.scheduler.discovered) == scenarios
-        assert repr(event) == f"StartupEvent({scheduler!r})"
+        assert event.report == report
+        assert repr(event) == f"StartupEvent({scheduler!r}, report={report!r})"
 
 
 def test_scenario_run_event():

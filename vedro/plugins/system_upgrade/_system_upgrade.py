@@ -129,6 +129,7 @@ class SystemUpgradePlugin(Plugin):
             if not self._is_up_to_date(self._cur_version, self._latest_version):
                 event.report.add_summary(
                     f"(!) Vedro update available: {self._cur_version} → {self._latest_version}"
+                    " | https://vedro.io/changelog"
                 )
 
     def _send_request(self, url: str, *, headers: Dict[str, str], timeout: float) -> Any:

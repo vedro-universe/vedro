@@ -47,9 +47,14 @@ def make_vstep(callable: Callable[..., Any] = None, *, name: Optional[str] = Non
 
 
 def make_vscenario(steps: Optional[List[VirtualStep]] = None, *,
-                   is_skipped: bool = False) -> VirtualScenario:
+                   is_skipped: bool = False,
+                   side_effect: Optional[Callable] = None) -> VirtualScenario:
     class _Scenario(Scenario):
         __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
+
+        if side_effect:
+            def __init__(self):
+                side_effect()
 
     vsenario = VirtualScenario(_Scenario, steps=steps or [])
     if is_skipped:

@@ -35,9 +35,11 @@ def make_vscenario(*, is_skipped: bool = False) -> VirtualScenario:
 
 async def fire_arg_parsed_event(dispatcher: Dispatcher, *,
                                 total: Union[int, None] = None,
-                                index: Union[int, None] = None) -> None:
+                                index: Union[int, None] = None,
+                                slice: Union[str, None] = None) -> None:
     arg_parse_event = ArgParseEvent(ArgumentParser())
     await dispatcher.fire(arg_parse_event)
 
-    arg_parsed_event = ArgParsedEvent(Namespace(slicer_total=total, slicer_index=index))
+    namespace = Namespace(slicer_total=total, slicer_index=index, slice=slice)
+    arg_parsed_event = ArgParsedEvent(namespace)
     await dispatcher.fire(arg_parsed_event)

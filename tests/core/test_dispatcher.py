@@ -185,12 +185,12 @@ def test_dispatcher_listen_invalid_event_type(*, dispatcher: Dispatcher):
         class CustomEvent:
             pass
 
-    with when, raises(TypeError) as exc_info:
+    with when, raises(BaseException) as exc:
         dispatcher.listen(CustomEvent, lambda e: None)
 
     with then:
-        assert type(exc_info.value) is TypeError
-        assert str(exc_info.value) == "Event must be a subclass of 'vedro.events.Event'"
+        assert type(exc.value) is TypeError
+        assert str(exc.value) == "Event must be a subclass of 'vedro.events.Event'"
 
 
 def test_event_handler_comparison():
@@ -209,9 +209,9 @@ def test_event_handler_comparison_invalid_type():
     with given:
         handler = EventHandler(priority=0, registered_at=-1, handler=lambda e: None)
 
-    with when, raises(TypeError) as exc_info:
+    with when, raises(BaseException) as exc:
         handler < 5
 
     with then:
-        assert type(exc_info.value) is TypeError
-        assert str(exc_info.value) == "Other must be an instance of EventHandler"
+        assert type(exc.value) is TypeError
+        assert str(exc.value) == "Other must be an instance of EventHandler"

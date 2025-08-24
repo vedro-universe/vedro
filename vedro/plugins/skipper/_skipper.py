@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, List, Optional, Set, Type, Union, cast, final
+from typing import List, Optional, Set, Type, Union, final
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent, StartupEvent
@@ -83,7 +83,7 @@ class SkipperPlugin(Plugin):
             assert self._global_config is not None  # for type checking
             self._global_config.Registry.ScenarioDiscoverer.register(lambda: ScenarioDiscoverer(
                 finder=self._global_config.Registry.ScenarioFinder(),
-                loader=self._global_config.Registry.ScenarioLoader(),
+                loader=self._global_config.Registry.ScenarioCollector(),
                 orderer=self._global_config.Registry.ScenarioOrderer(),
                 selected_paths=self.__get_selected_paths(),
             ), self)
@@ -123,25 +123,17 @@ class SkipperPlugin(Plugin):
 
         return os.path.abspath(path)
 
-    def _get_scenario_attr(self, scenario: VirtualScenario, name: str, default_value: Any) -> Any:
-        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if template and hasattr(template, name):
-            return getattr(template, name)
-        return getattr(scenario._orig_scenario, name, default_value)
+    def _is_scenario_special(self, scenario: VirtualScenario) -> bool:
+        return scenario.get_meta("only", default=False, plugin=self,
+                                 fallback_key="__vedro__only__")
 
     def _is_scenario_skipped(self, scenario: VirtualScenario) -> bool:
-        attr_name = "__vedro__skipped__"
-        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if template and hasattr(template, attr_name):
-            return bool(getattr(template, attr_name))
-        return getattr(scenario._orig_scenario, attr_name, False)
+        return scenario.get_meta("skipped", default=False, plugin=self,
+                                 fallback_key="__vedro__skipped__")
 
-    def _is_scenario_special(self, scenario: VirtualScenario) -> bool:
-        attr_name = "__vedro__only__"
-        template = getattr(scenario._orig_scenario, "__vedro__template__", None)
-        if template and hasattr(template, attr_name):
-            return bool(getattr(template, attr_name))
-        return getattr(scenario._orig_scenario, attr_name, False)
+    def _get_skip_reason(self, scenario: VirtualScenario) -> Union[str, None]:
+        return scenario.get_meta("skip_reason", default=None, plugin=self,
+                                 fallback_key="__vedro__skip_reason__")
 
     def _is_match_scenario(self, path: _CompositePath, scenario: VirtualScenario) -> bool:
         if os.path.commonpath([path.file_path, scenario.path]) != path.file_path:
@@ -178,10 +170,6 @@ class SkipperPlugin(Plugin):
             return True
 
         return False
-
-    def _get_skip_reason(self, scenario: VirtualScenario) -> Union[str, None]:
-        skip_reason = self._get_scenario_attr(scenario, "__vedro__skip_reason__", None)
-        return cast(Union[str, None], skip_reason)
 
     async def on_startup(self, event: StartupEvent) -> None:
         special_scenarios = set()

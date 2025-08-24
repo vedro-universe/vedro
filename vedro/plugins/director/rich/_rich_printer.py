@@ -1,4 +1,5 @@
 import json
+import sys
 import warnings
 from atexit import register as on_exit
 from os import linesep
@@ -22,7 +23,9 @@ __all__ = ("RichPrinter",)
 
 
 def make_console() -> Console:
-    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True)
+    # Consider setting soft_wrap to False by default in v2
+    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True,
+                   file=sys.stdout)
 
 
 class RichPrinter:
@@ -36,6 +39,7 @@ class RichPrinter:
         self._pretty_diff_factory = pretty_diff_factory
         self._scenario_spinner: Union[Status, None] = None
         self._traceback_filter = TracebackFilter(modules=[vedro])
+        self._use_unicode: Union[bool, None] = None
 
     @property
     def console(self) -> Console:
@@ -51,13 +55,16 @@ class RichPrinter:
     def print_scenario_subject(self, subject: str, status: ScenarioStatus, *,
                                elapsed: Optional[float] = None, prefix: str = "") -> None:
         if status == ScenarioStatus.PASSED:
-            subject = f"✔ {subject}"
+            symbol = self._get_symbol(status)
+            subject = f"{symbol} {subject}"
             style = Style(color="green")
         elif status == ScenarioStatus.FAILED:
-            subject = f"✗ {subject}"
+            symbol = self._get_symbol(status)
+            subject = f"{symbol} {subject}"
             style = Style(color="red")
         elif status == ScenarioStatus.SKIPPED:
-            subject = f"○ {subject}"
+            symbol = self._get_symbol(status)
+            subject = f"{symbol} {subject}"
             style = Style(color="grey70")
         else:
             return
@@ -83,11 +90,16 @@ class RichPrinter:
 
     def print_step_name(self, name: str, status: StepStatus, *,
                         elapsed: Optional[float] = None, prefix: str = "") -> None:
+        if " " not in name:
+            name = name.replace("_", " ")
+
         if status == StepStatus.PASSED:
-            name = f"✔ {name}"
+            symbol = self._get_symbol(status)
+            name = f"{symbol} {name}"
             style = Style(color="green")
         elif status == StepStatus.FAILED:
-            name = f"✗ {name}"
+            symbol = self._get_symbol(status)
+            name = f"{symbol} {name}"
             style = Style(color="red")
         else:
             return
@@ -98,6 +110,18 @@ class RichPrinter:
             self._console.out(f" ({self.format_elapsed(elapsed)})", style=Style(color="grey50"))
         else:
             self._console.out(name, style=style)
+
+    def _get_symbol(self, status: Union[ScenarioStatus, StepStatus]) -> str:
+        if self._use_unicode is None:
+            encoding = getattr(self._console, "encoding", "") or ""
+            self._use_unicode = encoding.lower().startswith("utf")
+
+        symbols = {
+            "PASSED": "✔" if self._use_unicode else "+",
+            "FAILED": "✗" if self._use_unicode else "x",
+            "SKIPPED": "○" if self._use_unicode else "o",
+        }
+        return symbols.get(status.value, "?")
 
     def print_exception(self, exc_info: ExcInfo, *,
                         max_frames: int = 8, show_internal_calls: bool = False) -> None:
@@ -176,7 +200,7 @@ class RichPrinter:
             if width > 0:
                 self._console.print(smth, width=width, overflow="ellipsis", no_wrap=True)
             else:
-                self._console.print(smth)
+                self._console.print(smth, soft_wrap=False)
         else:
             if width > 0:
                 self._console.print(
@@ -190,6 +214,12 @@ class RichPrinter:
         self.print_scope_header("Scope")
         for key, val in scope.items():
             self.print_scope_key(key, indent=1)
+            # `print_scope_val` truncates only the value length and does not
+            #  take the length of `key` into account (the key is effectively a
+            #  prefix in the rendered line).
+            #  In v2 or earlier, switch to Group(renderable_key, renderable_val)
+            #  so the crop calculation uses the combined width of key + value for
+            #  correct line wrapping.
             self.print_scope_val(val, scope_width=scope_width)
         self.print_empty_line()
 
@@ -220,10 +250,18 @@ class RichPrinter:
         if show_traceback:
             self.print_exception(exc_info)
 
+    def print_report_preamble(self, preamble: List[str]) -> None:
+        if len(preamble) == 0:
+            return
+        prefix = ">>"
+        text = f"{prefix} " + f"{linesep}{prefix} ".join(preamble)
+        self._console.out(text, style=Style(color="grey70"))
+
     def print_report_summary(self, summary: List[str]) -> None:
         if len(summary) == 0:
             return
-        text = "# " + f"{linesep}# ".join(summary)
+        prefix = "#"
+        text = f"{prefix} " + f"{linesep}{prefix} ".join(summary)
         self._console.out(text, style=Style(color="grey70"))
 
     def format_elapsed(self, elapsed: float) -> str:

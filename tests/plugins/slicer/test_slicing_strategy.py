@@ -12,11 +12,11 @@ from ._utils import make_vscenario
 
 
 def test_base_slicing_strategy_abstract():
-    with when, raises(BaseException) as exc_info:
+    with when, raises(BaseException) as exc:
         BaseSlicingStrategy(total=2, index=0)
 
     with then:
-        assert exc_info.type is TypeError
+        assert exc.type is TypeError
 
 
 @pytest.mark.parametrize(("total", "index", "current_index", "expected"), [
