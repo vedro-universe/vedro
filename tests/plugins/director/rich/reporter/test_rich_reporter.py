@@ -84,7 +84,10 @@ async def test_startup_with_preamble(*, dispatcher: Dispatcher, printer_: Mock):
 
     with then:
         assert printer_.mock_calls == [
-            call.print_report_preamble(["<preamble>", "discovered: 0 | scheduled: 0 | skipped: 0"]),
+            call.print_report_preamble([
+                "<preamble>",
+                "discovered: 0 | scheduled: 0 | skipped: 0"
+            ]),
             call.print_header(),
         ]
 
