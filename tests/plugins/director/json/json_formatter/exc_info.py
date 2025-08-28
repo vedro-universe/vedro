@@ -13,9 +13,7 @@ def format_exc_info():
         tb_filter = TracebackFilter(modules=[])
         formatter = make_json_formatter(tb_filter=tb_filter)
 
-        tmp_dir = generate_call_chain_modules([
-            ("main.py", "main"),
-        ])
+        tmp_dir = generate_call_chain_modules([("main.py", "main")])
         exc_info = execute_and_capture_exception(tmp_dir / "main.py", "main")
 
     with when:

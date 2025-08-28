@@ -23,7 +23,8 @@ from vedro.core import (
 )
 
 __all__ = ("make_vscenario", "make_scenario_result", "make_step_result",
-           "make_passed_scenario_result", "make_failed_scenario_result",)
+           "make_passed_scenario_result", "make_failed_scenario_result",
+           "make_passed_step_result", "make_failed_step_result")
 
 
 def make_vscenario() -> VirtualScenario:
@@ -99,3 +100,19 @@ def make_step_result(vstep: Optional[VirtualStep] = None, *,
         step_result.set_ended_at(ended_at)
 
     return step_result
+
+
+def make_passed_step_result(vstep: Optional[VirtualStep] = None, *,
+                            started_at: Optional[float] = None,
+                            ended_at: Optional[float] = None
+                            ) -> StepResult:
+    return make_step_result(vstep, status=StepStatus.PASSED,
+                            started_at=started_at, ended_at=ended_at)
+
+
+def make_failed_step_result(vstep: Optional[VirtualStep] = None, *,
+                            started_at: Optional[float] = None,
+                            ended_at: Optional[float] = None
+                            ) -> StepResult:
+    return make_step_result(vstep, status=StepStatus.FAILED,
+                            started_at=started_at, ended_at=ended_at)
