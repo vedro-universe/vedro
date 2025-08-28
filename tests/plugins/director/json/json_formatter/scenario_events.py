@@ -36,6 +36,33 @@ def format_run_scenario_event():
 
 
 @scenario
+def format_run_scenario_event_with_rich_output():
+    with given:
+        formatter = make_json_formatter()
+        scenario_result = make_scenario_result(vscenario := make_vscenario())
+        rich_output = "running scenario output"
+
+    with when:
+        event = formatter.format_scenario_run_event(scenario_result, rich_output=rich_output)
+
+    with then:
+        assert event == {
+            "event": "scenario_run",
+            "timestamp": format_ts(formatter.time_fn()),
+            "scenario": {
+                "id": vscenario.unique_id,
+                "subject": vscenario.subject,
+                "path": str(vscenario.path),
+                "lineno": vscenario.lineno,
+                "status": ScenarioStatus.PENDING.value,
+                "elapsed": 0,
+                "skip_reason": None,
+            },
+            "rich_output": rich_output
+        }
+
+
+@scenario
 def format_scenario_passed_event():
     with given:
         formatter = make_json_formatter()
@@ -83,7 +110,7 @@ def format_scenario_passed_event_with_rich_output():
                 "elapsed": format_ts(scenario_result.elapsed),
                 "skip_reason": None,
             },
-            "rich_output": "passed scenario output"
+            "rich_output": rich_output
         }
 
 
@@ -136,4 +163,85 @@ def format_scenario_failed_event_with_rich_output():
                 "skip_reason": None,
             },
             "rich_output": "failed scenario output"
+        }
+
+
+@scenario
+def format_scenario_skipped_event():
+    with given:
+        formatter = make_json_formatter()
+        scenario_result = make_scenario_result(status=ScenarioStatus.SKIPPED)
+
+    with when:
+        event = formatter.format_scenario_skipped_event(scenario_result)
+
+    with then:
+        assert event == {
+            "event": "scenario_skipped",
+            "timestamp": format_ts(formatter.time_fn()),
+            "scenario": {
+                "id": scenario_result.scenario.unique_id,
+                "subject": scenario_result.scenario.subject,
+                "path": str(scenario_result.scenario.path),
+                "lineno": scenario_result.scenario.lineno,
+                "status": ScenarioStatus.SKIPPED.value,
+                "elapsed": format_ts(scenario_result.elapsed),
+                "skip_reason": None,
+            }
+        }
+
+
+@scenario
+def format_scenario_skipped_event_with_rich_output():
+    with given:
+        formatter = make_json_formatter()
+        scenario_result = make_scenario_result(status=ScenarioStatus.SKIPPED,
+                                               started_at=1.5, ended_at=2.0)
+        rich_output = "skipped scenario output"
+
+    with when:
+        event = formatter.format_scenario_skipped_event(scenario_result, rich_output=rich_output)
+
+    with then:
+        assert event == {
+            "event": "scenario_skipped",
+            "timestamp": format_ts(formatter.time_fn()),
+            "scenario": {
+                "id": scenario_result.scenario.unique_id,
+                "subject": scenario_result.scenario.subject,
+                "path": str(scenario_result.scenario.path),
+                "lineno": scenario_result.scenario.lineno,
+                "status": ScenarioStatus.SKIPPED.value,
+                "elapsed": format_ts(scenario_result.elapsed),
+                "skip_reason": None,
+            },
+            "rich_output": rich_output
+        }
+
+
+@scenario
+def format_scenario_skipped_event_with_skip_reason():
+    with given:
+        formatter = make_json_formatter()
+
+        vscenario = make_vscenario()
+        vscenario.skip(skip_reason := "<reason>")
+        scenario_result = make_scenario_result(vscenario, status=ScenarioStatus.SKIPPED)
+
+    with when:
+        event = formatter.format_scenario_skipped_event(scenario_result)
+
+    with then:
+        assert event == {
+            "event": "scenario_skipped",
+            "timestamp": format_ts(formatter.time_fn()),
+            "scenario": {
+                "id": scenario_result.scenario.unique_id,
+                "subject": scenario_result.scenario.subject,
+                "path": str(scenario_result.scenario.path),
+                "lineno": scenario_result.scenario.lineno,
+                "status": ScenarioStatus.SKIPPED.value,
+                "elapsed": format_ts(scenario_result.elapsed),
+                "skip_reason": skip_reason,
+            }
         }

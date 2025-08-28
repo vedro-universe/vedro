@@ -10,7 +10,7 @@ from vedro.core import AggregatedResult, ScenarioStatus, StepStatus
 from vedro.core.exc_info import TracebackFilter
 
 from ._helpers import format_ts, make_json_formatter
-from .tb_helpers import execute_and_capture_exception, generate_call_chain_modules
+from ._tb_helpers import execute_and_capture_exception, generate_call_chain_modules
 
 
 @scenario
@@ -43,8 +43,7 @@ def format_scenario_reported_event():
 @scenario
 def format_scenario_reported_event_with_steps():
     with given:
-        tb_filter = TracebackFilter(modules=[])
-        formatter = make_json_formatter(tb_filter=tb_filter)
+        formatter = make_json_formatter(TracebackFilter(modules=[]))
 
         scenario_result = make_failed_scenario_result()
 
@@ -94,4 +93,34 @@ def format_scenario_reported_event_with_steps():
                     },
                 }
             ],
+        }
+
+
+@scenario
+def format_scenario_reported_event_with_rich_output():
+    with given:
+        formatter = make_json_formatter()
+        scenario_result = make_failed_scenario_result()
+        aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
+        rich_output = "reported scenario output"
+
+    with when:
+        event = formatter.format_scenario_reported_event(aggregated_result,
+                                                         rich_output=rich_output)
+
+    with then:
+        assert event == {
+            "event": "scenario_reported",
+            "timestamp": format_ts(formatter.time_fn()),
+            "scenario": {
+                "id": aggregated_result.scenario.unique_id,
+                "subject": aggregated_result.scenario.subject,
+                "path": str(aggregated_result.scenario.path),
+                "lineno": aggregated_result.scenario.lineno,
+                "status": ScenarioStatus.FAILED.value,
+                "elapsed": format_ts(aggregated_result.elapsed),
+                "skip_reason": None,
+            },
+            "steps": [],
+            "rich_output": rich_output
         }
