@@ -32,7 +32,7 @@ jobs:
     - name: Lint
       run: make lint
     - name: Test
-      run: make coverage
+      run: make test coverage
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
