@@ -3,7 +3,15 @@ from types import ModuleType
 from typing import Callable, Tuple, Type, Union, final
 
 import vedro
-from vedro.core import ConfigType, Dispatcher, ExcInfo, PluginConfig, ScenarioResult, StepResult
+from vedro.core import (
+    ConfigType,
+    Dispatcher,
+    ExcInfo,
+    PluginConfig,
+    ScenarioResult,
+    ScenarioScheduler,
+    StepResult,
+)
 from vedro.core.exc_info import TracebackFilter
 from vedro.events import (
     ArgParsedEvent,
@@ -39,6 +47,7 @@ class RichReporterPlugin(Reporter):
         self._tb_max_frames = config.tb_max_frames
         self._tb_width = config.tb_width
         self._tb_suppress_modules = config.tb_suppress_modules
+        self._show_discovery_stats = config.show_discovery_stats
         self._show_scenario_extras = config.show_scenario_extras
         self._show_step_extras = config.show_step_extras
         self._show_skipped = config.show_skipped
@@ -202,8 +211,32 @@ class RichReporterPlugin(Reporter):
     def on_startup(self, event: StartupEvent) -> None:
         if self._show_discovering_spinner:
             self._printer.hide_spinner()
+
+        if self._show_discovery_stats:
+            discovered, scheduled, skipped = self._calculate_discovery_stats(event.scheduler)
+            event.report.add_preamble(
+                f"discovered: {discovered} | scheduled: {scheduled} | skipped: {skipped}"
+            )
+
         self._printer.print_report_preamble(event.report.preamble)
         self._printer.print_header()
+
+    def _calculate_discovery_stats(self, scheduler: ScenarioScheduler) -> Tuple[int, int, int]:
+        """
+        Calculate discovery statistics from the scheduler.
+
+        :param scheduler: The Scheduler instance containing scenario information.
+        :return: A tuple of (discovered, scheduled, skipped) counts.
+        """
+        discovered = sum(1 for _ in scheduler.discovered)
+        scheduled = 0
+        skipped = 0
+        for scenario in scheduler.scheduled:
+            scheduled += 1
+            if scenario.is_skipped():
+                skipped += 1
+
+        return discovered, scheduled, skipped
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         self._print_namespace(event.scenario_result.scenario.namespace)
@@ -410,6 +443,11 @@ class RichReporterPlugin(Reporter):
 class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
     description = "Enhanced, customizable scenario reporting with rich output"
+
+    show_discovery_stats: bool = True
+    """
+    Show discovery statistics in the preamble (discovered, scheduled, skipped counts).
+    """
 
     show_scenario_extras: bool = True
     """
