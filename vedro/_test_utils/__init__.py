@@ -1,3 +1,13 @@
+"""
+Test utilities for Vedro plugins.
+
+This module provides helper functions to easily test Vedro plugins.
+
+WARNING: This is an experimental module. The API and implementation can change
+in any way without notice until it becomes stable. Use at your own risk in
+production code.
+"""
+
 from pathlib import Path
 from time import monotonic_ns
 from typing import Optional
