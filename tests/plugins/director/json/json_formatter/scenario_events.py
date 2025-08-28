@@ -5,58 +5,9 @@ from vedro._test_utils import (
     make_scenario_result,
     make_vscenario,
 )
-from vedro.core import Report, ScenarioStatus
+from vedro.core import ScenarioStatus
 
 from ._helpers import format_ts, make_json_formatter
-
-
-@scenario
-def format_startup_event():
-    with given:
-        formatter = make_json_formatter()
-        discovered, scheduled, skipped = 10, 8, 2
-
-    with when:
-        event = formatter.format_startup_event(discovered=discovered,
-                                               scheduled=scheduled,
-                                               skipped=skipped)
-
-    with then:
-        assert event == {
-            "event": "startup",
-            "timestamp": format_ts(formatter.time_fn()),
-            "scenarios": {
-                "discovered": 10,
-                "scheduled": 8,
-                "skipped": 2,
-            }
-        }
-
-
-@scenario
-def format_startup_event_with_rich_output():
-    with given:
-        formatter = make_json_formatter()
-        discovered, scheduled, skipped = 5, 5, 0
-        rich_output = "rich"
-
-    with when:
-        event = formatter.format_startup_event(discovered=discovered,
-                                               scheduled=scheduled,
-                                               skipped=skipped,
-                                               rich_output=rich_output)
-
-    with then:
-        assert event == {
-            "event": "startup",
-            "timestamp": format_ts(formatter.time_fn()),
-            "scenarios": {
-                "discovered": 5,
-                "scheduled": 5,
-                "skipped": 0,
-            },
-            "rich_output": "rich"
-        }
 
 
 @scenario
@@ -80,30 +31,6 @@ def format_run_scenario_event():
                 "status": ScenarioStatus.PENDING.value,
                 "elapsed": 0,
                 "skip_reason": None,
-            }
-        }
-
-
-@scenario
-def format_cleanup_event():
-    with given:
-        formatter = make_json_formatter()
-        report = Report()
-
-    with when:
-        event = formatter.format_cleanup_event(report)
-
-    with then:
-        assert event == {
-            "event": "cleanup",
-            "timestamp": format_ts(formatter.time_fn()),
-            "report": {
-                "total": 0,
-                "passed": 0,
-                "failed": 0,
-                "skipped": 0,
-                "elapsed": 0,
-                "interrupted": None,
             }
         }
 
