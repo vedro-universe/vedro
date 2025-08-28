@@ -30,21 +30,47 @@ TimeFunction = Callable[[], float]
 
 
 class JsonFormatter:
+    """
+    Formatter for converting test execution events and results to JSON-compatible dictionaries.
+
+    This class provides methods to format various test lifecycle events (startup, scenario
+    execution, cleanup) into structured dictionaries that can be easily serialized to JSON.
+    It handles scenario results, step results, exception information, and timing data.
+    """
+
     def __init__(self, traceback_filter: TracebackFilter, *,
                  time_fn: TimeFunction = time) -> None:
+        """
+        Initialize the JSON formatter.
+
+        :param traceback_filter: Filter for processing exception tracebacks.
+        :param time_fn: Function to get current timestamp (defaults to time.time).
+                        Useful for testing with controlled time values.
+        """
         self._tb_filter = traceback_filter
         self._time_fn = time_fn
 
     @property
     def tb_filter(self) -> TracebackFilter:
+        """Get the traceback filter used for processing exceptions."""
         return self._tb_filter
 
     @property
     def time_fn(self) -> TimeFunction:
+        """Get the time function used for generating timestamps."""
         return self._time_fn
 
     def format_startup_event(self, discovered: int, scheduled: int, skipped: int,
                              rich_output: Optional[str] = None) -> StartupEventDict:
+        """
+        Format the test suite startup event.
+
+        :param discovered: Number of scenarios discovered.
+        :param scheduled: Number of scenarios scheduled for execution.
+        :param skipped: Number of scenarios skipped.
+        :param rich_output: Optional rich output content to include.
+        :return: Dictionary containing formatted startup event data.
+        """
         event = {
             "event": "startup",
             "timestamp": self._format_timestamp(self._time_fn()),
@@ -60,6 +86,13 @@ class JsonFormatter:
 
     def format_scenario_run_event(self, scenario_result: ScenarioResult,
                                   rich_output: Optional[str] = None) -> ScenarioEventDict:
+        """
+        Format a scenario run event (scenario has started executing).
+
+        :param scenario_result: The scenario result object.
+        :param rich_output: Optional rich output content to include.
+        :return: Dictionary containing formatted scenario run event data.
+        """
         event = {
             "event": "scenario_run",
             "timestamp": self._format_timestamp(self._time_fn()),
@@ -75,6 +108,13 @@ class JsonFormatter:
 
     def format_scenario_passed_event(self, scenario_result: ScenarioResult,
                                      rich_output: Optional[str] = None) -> ScenarioEventDict:
+        """
+        Format a scenario passed event.
+
+        :param scenario_result: The scenario result object for the passed scenario.
+        :param rich_output: Optional rich output content to include.
+        :return: Dictionary containing formatted scenario passed event data.
+        """
         event = {
             "event": "scenario_passed",
             "timestamp": self._format_timestamp(self._time_fn()),
@@ -90,6 +130,13 @@ class JsonFormatter:
 
     def format_scenario_failed_event(self, scenario_result: ScenarioResult,
                                      rich_output: Optional[str] = None) -> ScenarioEventDict:
+        """
+        Format a scenario failed event.
+
+        :param scenario_result: The scenario result object for the failed scenario.
+        :param rich_output: Optional rich output content to include.
+        :return: Dictionary containing formatted scenario failed event data.
+        """
         event = {
             "event": "scenario_failed",
             "timestamp": self._format_timestamp(self._time_fn()),
@@ -105,6 +152,13 @@ class JsonFormatter:
 
     def format_scenario_skipped_event(self, scenario_result: ScenarioResult,
                                       rich_output: Optional[str] = None) -> ScenarioEventDict:
+        """
+        Format a scenario skipped event.
+
+        :param scenario_result: The scenario result object for the skipped scenario.
+        :param rich_output: Optional rich output content to include.
+        :return: Dictionary containing formatted scenario skipped event data.
+        """
         event = {
             "event": "scenario_skipped",
             "timestamp": self._format_timestamp(self._time_fn()),
@@ -122,6 +176,15 @@ class JsonFormatter:
                                        aggregated_result: AggregatedResult,
                                        rich_output: Optional[str] = None
                                        ) -> ScenarioReportedEventDict:
+        """
+        Format a scenario reported event with detailed step information.
+
+        This event includes complete scenario execution details including all step results.
+
+        :param aggregated_result: The aggregated result containing scenario and step data.
+        :param rich_output: Optional rich output content to include.
+        :return: Dictionary containing formatted scenario reported event data with steps.
+        """
         event = {
             "event": "scenario_reported",
             "timestamp": self._format_timestamp(self._time_fn()),
@@ -138,6 +201,13 @@ class JsonFormatter:
 
     def format_cleanup_event(self, report: Report,
                              rich_output: Optional[str] = None) -> CleanupEventDict:
+        """
+        Format the test suite cleanup event with final report summary.
+
+        :param report: The final test report containing execution summary.
+        :param rich_output: Optional rich output content to include.
+        :return: Dictionary containing formatted cleanup event data with report summary.
+        """
         interrupted = None
         if report.interrupted:
             interrupted = self.format_exc_info(report.interrupted)
@@ -161,6 +231,14 @@ class JsonFormatter:
                         scenario: VirtualScenario,
                         status: ScenarioStatus,
                         elapsed: float) -> ScenarioDict:
+        """
+        Format scenario information into a dictionary.
+
+        :param scenario: The virtual scenario object.
+        :param status: The execution status of the scenario.
+        :param elapsed: Time elapsed during scenario execution in seconds.
+        :return: Dictionary containing formatted scenario data.
+        """
         return {
             "id": scenario.unique_id,
             "subject": scenario.subject,
@@ -172,6 +250,12 @@ class JsonFormatter:
         }
 
     def _format_steps(self, step_results: List[StepResult]) -> List[StepDict]:
+        """
+        Format a list of step results into dictionaries.
+
+        :param step_results: List of step result objects.
+        :return: List of dictionaries containing formatted step data.
+        """
         steps = []
         for step_result in step_results:
             error = None
@@ -186,14 +270,35 @@ class JsonFormatter:
         return cast(List[StepDict], steps)
 
     def _format_timestamp(self, timestamp: Union[float, None]) -> Union[int, None]:
+        """
+        Convert timestamp from seconds to milliseconds.
+
+        :param timestamp: Timestamp in seconds (float) or None.
+        :return: Timestamp in milliseconds (int) or None.
+        """
         if timestamp is None:
             return None
         return int(timestamp * 1000)
 
     def _format_elapsed(self, elapsed: float) -> int:
+        """
+        Convert elapsed time from seconds to milliseconds.
+
+        :param elapsed: Elapsed time in seconds.
+        :return: Elapsed time in milliseconds.
+        """
         return int(elapsed * 1000)
 
     def format_exc_info(self, exc_info: ExcInfo) -> Union[ExcInfoDict, None]:
+        """
+        Format exception information into a dictionary.
+
+        Extracts the exception type, message, and location (file and line number)
+        from the traceback.
+
+        :param exc_info: Exception information object containing type, value, and traceback.
+        :return: Dictionary containing formatted exception data.
+        """
         file, lineno = self._get_traceback_lineno(exc_info.traceback)
         return cast(ExcInfoDict, {
             "type": exc_info.type.__name__,
@@ -203,6 +308,12 @@ class JsonFormatter:
         })
 
     def _get_traceback_lineno(self, traceback: TracebackType) -> TracebackLineInfo:
+        """
+        Extract file path and line number from the last frame of a traceback.
+
+        :param traceback: The traceback object to analyze.
+        :return: Tuple of (file_path, line_number) from the last traceback frame.
+        """
         tb = self._tb_filter.filter_tb(traceback)
 
         while tb.tb_next is not None:
