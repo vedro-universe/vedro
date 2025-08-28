@@ -31,7 +31,7 @@ def format_startup_event_with_rich_output():
     with given:
         formatter = make_json_formatter()
         discovered, scheduled, skipped = 5, 5, 0
-        rich_output = "rich"
+        rich_output = "preamble output"
 
     with when:
         event = formatter.format_startup_event(discovered=discovered,
@@ -48,5 +48,5 @@ def format_startup_event_with_rich_output():
                 "scheduled": 5,
                 "skipped": 0,
             },
-            "rich_output": "rich"
+            "rich_output": rich_output
         }

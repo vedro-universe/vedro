@@ -138,6 +138,9 @@ class JsonFormatter:
 
     def format_cleanup_event(self, report: Report,
                              rich_output: Optional[str] = None) -> CleanupEventDict:
+        interrupted = None
+        if report.interrupted:
+            interrupted = self.format_exc_info(report.interrupted)
         event = {
             "event": "cleanup",
             "timestamp": self._format_timestamp(self._time_fn()),
@@ -147,7 +150,7 @@ class JsonFormatter:
                 "failed": report.failed,
                 "skipped": report.skipped,
                 "elapsed": self._format_elapsed(report.elapsed),
-                "interrupted": self.format_exc_info(report.interrupted),
+                "interrupted": interrupted,
             }
         }
         if rich_output:
@@ -171,11 +174,14 @@ class JsonFormatter:
     def _format_steps(self, step_results: List[StepResult]) -> List[StepDict]:
         steps = []
         for step_result in step_results:
+            error = None
+            if step_result.exc_info is not None:
+                error = self.format_exc_info(step_result.exc_info)
             steps.append({
                 "name": step_result.step.name,
                 "status": step_result.status.value,
                 "elapsed": self._format_elapsed(step_result.elapsed),
-                "error": self.format_exc_info(step_result.exc_info),
+                "error": error,
             })
         return cast(List[StepDict], steps)
 
@@ -187,14 +193,8 @@ class JsonFormatter:
     def _format_elapsed(self, elapsed: float) -> int:
         return int(elapsed * 1000)
 
-    def format_exc_info(self, exc_info: Union[ExcInfo, None]) -> Union[ExcInfoDict, None]:
-        if exc_info is None:
-            return None
-
-        file, lineno = None, None
-        if exc_info.traceback is not None:
-            file, lineno = self._get_traceback_lineno(exc_info.traceback)
-
+    def format_exc_info(self, exc_info: ExcInfo) -> Union[ExcInfoDict, None]:
+        file, lineno = self._get_traceback_lineno(exc_info.traceback)
         return cast(ExcInfoDict, {
             "type": exc_info.type.__name__,
             "message": str(exc_info.value),
