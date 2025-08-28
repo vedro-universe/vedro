@@ -158,5 +158,7 @@ class Slicer(PluginConfig):
     plugin = SlicerPlugin
     description = "Provides a way to distribute scenarios among multiple workers"
 
-    # The slicing strategy used to distribute scenarios
     slicing_strategy: SlicingStrategyType = SkipAdjustedSlicingStrategy
+    """
+    The slicing strategy used to distribute scenarios.
+    """

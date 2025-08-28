@@ -10,6 +10,7 @@ from .commands import CommandArgumentParser
 from .commands.plugin_command import PluginCommand
 from .commands.run_command import RunCommand
 from .commands.version_command import VersionCommand
+from .commands.version_command._version_command import make_console
 from .core import ConfigFileLoader
 
 
@@ -81,7 +82,8 @@ async def main() -> None:
 
     elif args.command == "version":
         parser = arg_parser_factory("vedro version")
-        await VersionCommand(config, parser).run()
+        console_factory = partial(make_console, no_color=True) if args.version else make_console
+        await VersionCommand(config, parser, console_factory=console_factory).run()
 
     elif args.command in ("plugin", "plugins"):
         parser = arg_parser_factory("vedro plugin")

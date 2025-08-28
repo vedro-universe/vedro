@@ -354,20 +354,32 @@ class Artifacted(PluginConfig):
     plugin = ArtifactedPlugin
     description = "Manages artifacts for step and scenario results"
 
-    # Enable or disable saving artifacts to the file system.
-    # If False, artifacts will not be saved, and `artifacts_dir` cannot be specified.
     save_artifacts: bool = True
+    """
+    Enable or disable saving artifacts to the file system.
 
-    # Directory path where artifacts will be saved.
-    # This option is only applicable if `save_artifacts` is set to True.
-    # If unspecified, the default directory is ".vedro/artifacts/".
+    If False, artifacts will not be saved, and `artifacts_dir` cannot be specified.
+    """
+
     artifacts_dir: Path = Path(".vedro/artifacts/")
+    """
+    Directory path where artifacts will be saved.
 
-    # Enable or disable adding artifact details to scenario and step extras.
-    # This option is only applicable if `save_artifacts` is set to True.
-    # If `save_artifacts` is False and this is True, a ValueError will be raised.
+    This option is only applicable if `save_artifacts` is set to True.
+    If unspecified, the default directory is ".vedro/artifacts/".
+    """
+
     add_artifact_details: bool = True
+    """
+    Enable or disable adding artifact details to scenario and step extras.
 
-    # Enable or disable cleanup of the artifacts directory before starting the test run.
-    # If True, the artifacts directory will be removed at the start of the test run.
+    This option is only applicable if `save_artifacts` is set to True.
+    If `save_artifacts` is False and this is True, a ValueError will be raised.
+    """
+
     cleanup_artifacts_dir: bool = True
+    """
+    Enable or disable cleanup of the artifacts directory before starting the test run.
+
+    If True, the artifacts directory will be removed at the start of the test run.
+    """

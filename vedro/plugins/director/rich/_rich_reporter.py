@@ -3,7 +3,15 @@ from types import ModuleType
 from typing import Callable, Tuple, Type, Union, final
 
 import vedro
-from vedro.core import ConfigType, Dispatcher, ExcInfo, PluginConfig, ScenarioResult, StepResult
+from vedro.core import (
+    ConfigType,
+    Dispatcher,
+    ExcInfo,
+    PluginConfig,
+    ScenarioResult,
+    ScenarioScheduler,
+    StepResult,
+)
 from vedro.core.exc_info import TracebackFilter
 from vedro.events import (
     ArgParsedEvent,
@@ -39,6 +47,7 @@ class RichReporterPlugin(Reporter):
         self._tb_max_frames = config.tb_max_frames
         self._tb_width = config.tb_width
         self._tb_suppress_modules = config.tb_suppress_modules
+        self._show_discovery_stats = config.show_discovery_stats
         self._show_scenario_extras = config.show_scenario_extras
         self._show_step_extras = config.show_step_extras
         self._show_skipped = config.show_skipped
@@ -202,8 +211,32 @@ class RichReporterPlugin(Reporter):
     def on_startup(self, event: StartupEvent) -> None:
         if self._show_discovering_spinner:
             self._printer.hide_spinner()
+
+        if self._show_discovery_stats:
+            discovered, scheduled, skipped = self._calculate_discovery_stats(event.scheduler)
+            event.report.add_preamble(
+                f"discovered: {discovered} | scheduled: {scheduled} | skipped: {skipped}"
+            )
+
         self._printer.print_report_preamble(event.report.preamble)
         self._printer.print_header()
+
+    def _calculate_discovery_stats(self, scheduler: ScenarioScheduler) -> Tuple[int, int, int]:
+        """
+        Calculate discovery statistics from the scheduler.
+
+        :param scheduler: The Scheduler instance containing scenario information.
+        :return: A tuple of (discovered, scheduled, skipped) counts.
+        """
+        discovered = sum(1 for _ in scheduler.discovered)
+        scheduled = 0
+        skipped = 0
+        for scenario in scheduler.scheduled:
+            scheduled += 1
+            if scenario.is_skipped():
+                skipped += 1
+
+        return discovered, scheduled, skipped
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         self._print_namespace(event.scenario_result.scenario.namespace)
@@ -411,84 +444,144 @@ class RichReporter(PluginConfig):
     plugin = RichReporterPlugin
     description = "Enhanced, customizable scenario reporting with rich output"
 
-    # Show scenario extra details
+    show_discovery_stats: bool = True
+    """
+    Show discovery statistics in the preamble (discovered, scheduled, skipped counts).
+    """
+
     show_scenario_extras: bool = True
+    """
+    Show scenario extra details.
+    """
 
-    # Show step extra details
     show_step_extras: bool = True
+    """
+    Show step extra details.
+    """
 
-    # Show skipped scenarios
     show_skipped: bool = True
+    """
+    Show skipped scenarios.
+    """
 
-    # Show reason of skipped scenarios
-    # Available if `show_scenario_extras` and `show_skipped` is True
     show_skip_reason: bool = True
+    """
+    Show reason of skipped scenarios.
 
-    # Show the elapsed time of each scenario
+    Available if `show_scenario_extras` and `show_skipped` is True.
+    """
+
     show_timings: bool = False
+    """
+    Show the elapsed time of each scenario.
+    """
 
-    # Show the relative path of each executed scenario (passed, failed, or skipped)
-    # Available if `show_scenario_extras` is True
     show_paths: bool = False
+    """
+    Show the relative path of each executed scenario (passed, failed, or skipped).
 
-    # Show scenario step names
+    Available if `show_scenario_extras` is True.
+    """
+
     show_steps: bool = False
+    """
+    Show scenario step names.
+    """
 
-    # Don't show scenario namespaces
     hide_namespaces: bool = False
+    """
+    Don't show scenario namespaces.
+    """
 
-    # Show status indicator of the current running scenario
     show_scenario_spinner: bool = False
+    """
+    Show status indicator of the current running scenario.
+    """
 
-    # Show captured output (stdout/stderr) from scenarios and steps
     show_captured_output: bool = False
+    """
+    Show captured output (stdout/stderr) from scenarios and steps.
+    """
 
-    # Limit the length of captured output to show in the report
     show_captured_output_limit: int = 40
+    """
+    Limit the length of captured output to show in the report.
+    """
 
-    # Show pretty traceback
     tb_pretty: bool = True
+    """
+    Show pretty traceback.
+    """
 
-    # Show internal calls in the traceback output
     tb_show_internal_calls: bool = False
+    """
+    Show internal calls in the traceback output.
+    """
 
-    # Show local variables in the traceback output
-    # Available if `tb_pretty` is True
     tb_show_locals: bool = False
+    """
+    Show local variables in the traceback output.
 
-    # Set the width of the traceback output
-    # If None, terminal width will be used
-    # Available if `tb_pretty` is True
+    Available if `tb_pretty` is True.
+    """
+
     tb_width: Union[int, None] = 100
+    """
+    Set the width of the traceback output.
 
-    # Max stack trace entries to show (min=4)
+    If None, terminal width will be used.
+    Available if `tb_pretty` is True.
+    """
+
     tb_max_frames: int = 8
+    """
+    Max stack trace entries to show (min=4).
+    """
 
-    # Suppress modules in the traceback output
     tb_suppress_modules: Tuple[Union[str, ModuleType], ...] = ()
+    """
+    Suppress modules in the traceback output.
+    """
 
-    # Truncate lines in Scope based on scope_width value.
-    # If scope_width is None, lines are truncated to the terminal's width.
-    # If scope_width is -1, lines aren't truncated.
-    # Otherwise, lines are truncated to the given length.
     scope_width: Union[int, None] = -1
+    """
+    Truncate lines in Scope based on scope_width value.
 
-    # Show traceback if the execution is interrupted
+    If scope_width is None, lines are truncated to the terminal's width.
+    If scope_width is -1, lines aren't truncated.
+    Otherwise, lines are truncated to the given length.
+    """
+
     show_interrupted_traceback: bool = False
+    """
+    Show traceback if the execution is interrupted.
+    """
 
-    # Show a snapshot of crucial variables (Scope) when a test scenario fails
     show_scope: bool = False
+    """
+    Show a snapshot of crucial variables (Scope) when a test scenario fails.
+    """
 
-    # Show full diff in assertion errors
-    # Available if `tb_pretty` is True
     show_full_diff: bool = False
+    """
+    Show full diff in assertion errors.
 
-    # Disable colored output
+    Available if `tb_pretty` is True.
+    """
+
     no_color: bool = False
+    """
+    Disable colored output.
+    """
 
-    # Enable new verbose levels
     v2_verbosity: bool = True
+    """
+    Enable new verbose levels.
+    """
 
-    # Trigger a 'bell' sound at the end of scenario execution
-    # (if supported by the terminal)
     ring_bell: bool = False
+    """
+    Trigger a 'bell' sound at the end of scenario execution.
+
+    (if supported by the terminal)
+    """

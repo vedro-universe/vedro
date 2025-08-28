@@ -254,5 +254,7 @@ class Repeater(PluginConfig):
     plugin = RepeaterPlugin
     description = "Repeat scenarios a specified number of times"
 
-    # Scheduler that will be used to create aggregated result for repeated scenarios
     scheduler_factory: Type[ScenarioScheduler] = RepeaterScenarioScheduler
+    """
+    Scheduler that will be used to create aggregated result for repeated scenarios.
+    """
