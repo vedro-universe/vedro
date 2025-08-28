@@ -1,10 +1,11 @@
 from time import time
 from types import TracebackType
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import Callable, List, Optional, Tuple, Union, cast
 
 from vedro.core import (
     AggregatedResult,
     ExcInfo,
+    Report,
     ScenarioResult,
     ScenarioStatus,
     StepResult,
@@ -25,17 +26,28 @@ from ._event_types import (
 __all__ = ("JsonFormatter",)
 
 TracebackLineInfo = Tuple[Union[str, None], Union[int, None]]
+TimeFunction = Callable[[], float]
 
 
 class JsonFormatter:
-    def __init__(self, traceback_filter: TracebackFilter) -> None:
+    def __init__(self, traceback_filter: TracebackFilter, *,
+                 time_fn: TimeFunction = time) -> None:
         self._tb_filter = traceback_filter
+        self._time_fn = time_fn
+
+    @property
+    def tb_filter(self) -> TracebackFilter:
+        return self._tb_filter
+
+    @property
+    def time_fn(self) -> TimeFunction:
+        return self._time_fn
 
     def format_startup_event(self, discovered: int, scheduled: int, skipped: int,
                              rich_output: Optional[str] = None) -> StartupEventDict:
         event = {
             "event": "startup",
-            "timestamp": self._format_timestamp(time()),
+            "timestamp": self._format_timestamp(self._time_fn()),
             "scenarios": {
                 "discovered": discovered,
                 "scheduled": scheduled,
@@ -50,7 +62,7 @@ class JsonFormatter:
                                   rich_output: Optional[str] = None) -> ScenarioEventDict:
         event = {
             "event": "scenario_run",
-            "timestamp": self._format_timestamp(time()),
+            "timestamp": self._format_timestamp(self._time_fn()),
             "scenario": self.format_scenario(
                 scenario_result.scenario,
                 scenario_result.status,
@@ -65,7 +77,7 @@ class JsonFormatter:
                                      rich_output: Optional[str] = None) -> ScenarioEventDict:
         event = {
             "event": "scenario_passed",
-            "timestamp": self._format_timestamp(time()),
+            "timestamp": self._format_timestamp(self._time_fn()),
             "scenario": self.format_scenario(
                 scenario_result.scenario,
                 scenario_result.status,
@@ -80,7 +92,7 @@ class JsonFormatter:
                                      rich_output: Optional[str] = None) -> ScenarioEventDict:
         event = {
             "event": "scenario_failed",
-            "timestamp": self._format_timestamp(time()),
+            "timestamp": self._format_timestamp(self._time_fn()),
             "scenario": self.format_scenario(
                 scenario_result.scenario,
                 scenario_result.status,
@@ -95,7 +107,7 @@ class JsonFormatter:
                                       rich_output: Optional[str] = None) -> ScenarioEventDict:
         event = {
             "event": "scenario_skipped",
-            "timestamp": self._format_timestamp(time()),
+            "timestamp": self._format_timestamp(self._time_fn()),
             "scenario": self.format_scenario(
                 scenario_result.scenario,
                 scenario_result.status,
@@ -112,7 +124,7 @@ class JsonFormatter:
                                        ) -> ScenarioReportedEventDict:
         event = {
             "event": "scenario_reported",
-            "timestamp": self._format_timestamp(time()),
+            "timestamp": self._format_timestamp(self._time_fn()),
             "scenario": self.format_scenario(
                 aggregated_result.scenario,
                 aggregated_result.status,
@@ -124,11 +136,11 @@ class JsonFormatter:
             event["rich_output"] = rich_output
         return cast(ScenarioReportedEventDict, event)
 
-    def format_cleanup_event(self, report: Any,
+    def format_cleanup_event(self, report: Report,
                              rich_output: Optional[str] = None) -> CleanupEventDict:
         event = {
             "event": "cleanup",
-            "timestamp": self._format_timestamp(time()),
+            "timestamp": self._format_timestamp(self._time_fn()),
             "report": {
                 "total": report.total,
                 "passed": report.passed,
