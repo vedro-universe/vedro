@@ -69,7 +69,6 @@ else:
 
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
 def test_proxy_param():
-    print("test_proxy_param")
     with when:
         class ProxyParamScenario(Scenario):
             @params_decorator((label("label"), tag("tag")), ("Bob",), {})
