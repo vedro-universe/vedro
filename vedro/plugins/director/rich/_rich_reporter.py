@@ -214,9 +214,15 @@ class RichReporterPlugin(Reporter):
 
         if self._show_discovery_stats:
             discovered, scheduled, skipped = self._calculate_discovery_stats(event.scheduler)
-            event.report.add_preamble(
-                f"discovered: {discovered} | scheduled: {scheduled} | skipped: {skipped}"
-            )
+            ignored = discovered - scheduled
+            discovery_stats = f"running: {scheduled-skipped} of {discovered} scenarios"
+            if skipped > 0 and ignored > 0:
+                discovery_stats += f" ({skipped} skipped, {ignored} ignored)"
+            elif skipped > 0:
+                discovery_stats += f" ({skipped} skipped)"
+            elif ignored > 0:
+                discovery_stats += f" ({ignored} ignored)"
+            event.report.add_preamble(discovery_stats)
 
         self._printer.print_report_preamble(event.report.preamble)
         self._printer.print_header()
