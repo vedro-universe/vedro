@@ -46,7 +46,7 @@ def compact_serializer(event: EventDict) -> str:
 class JsonReporterPlugin(Reporter):
     def __init__(self, config: Type["JsonReporter"], *,
                  formatter_factory: JsonFormatterFactory = JsonFormatter,
-                 json_serializer: JsonSerializerFactory = pretty_serializer) -> None:
+                 json_serializer: JsonSerializerFactory = compact_serializer) -> None:
         super().__init__(config)
         self._rich_config = config.RichReporter
         self._formatter_factory = formatter_factory
@@ -180,7 +180,7 @@ class JsonReporter(PluginConfig):
     description = ""
 
     class RichReporter(rich_reporter.RichReporter):
-        enabled = True
+        enabled = False
         hide_namespaces = True
         show_timings = True
         show_captured_output = True
