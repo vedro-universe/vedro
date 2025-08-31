@@ -10,10 +10,13 @@ production code.
 
 from pathlib import Path
 from time import monotonic_ns
-from typing import Optional
+from typing import List, Optional
 
 from vedro import Scenario
 from vedro.core import (
+    AggregatedResult,
+    Dispatcher,
+    Report,
     ScenarioResult,
     ScenarioStatus,
     StepResult,
@@ -21,10 +24,26 @@ from vedro.core import (
     VirtualScenario,
     VirtualStep,
 )
+from vedro.core.scenario_scheduler import MonotonicScenarioScheduler, ScenarioScheduler
+from vedro.events import (
+    CleanupEvent,
+    ScenarioFailedEvent,
+    ScenarioPassedEvent,
+    ScenarioReportedEvent,
+    ScenarioRunEvent,
+    ScenarioSkippedEvent,
+    StartupEvent,
+)
 
 __all__ = ("make_vscenario", "make_scenario_result", "make_step_result",
            "make_passed_scenario_result", "make_failed_scenario_result",
-           "make_passed_step_result", "make_failed_step_result")
+           "make_passed_step_result", "make_failed_step_result",
+           "make_skipped_scenario_result", "make_aggregated_result",
+           "make_dispatcher", "make_scenario_scheduler",
+           "make_startup_event", "make_scenario_run_event",
+           "make_scenario_passed_event", "make_scenario_failed_event",
+           "make_scenario_skipped_event", "make_scenario_reported_event",
+           "make_cleanup_event",)
 
 
 def make_vscenario() -> VirtualScenario:
@@ -68,12 +87,31 @@ def make_passed_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
                                 started_at=started_at, ended_at=ended_at)
 
 
+# step_results: list[StepResult] = []
 def make_failed_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
                                 started_at: Optional[float] = None,
                                 ended_at: Optional[float] = None
                                 ) -> ScenarioResult:
     return make_scenario_result(vscenario, status=ScenarioStatus.FAILED,
                                 started_at=started_at, ended_at=ended_at)
+
+
+def make_skipped_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
+                                 started_at: Optional[float] = None,
+                                 ended_at: Optional[float] = None
+                                 ) -> ScenarioResult:
+    if vscenario is None:
+        vscenario = make_vscenario()
+        vscenario.skip()
+    return make_scenario_result(vscenario, status=ScenarioStatus.SKIPPED,
+                                started_at=started_at, ended_at=ended_at)
+
+
+# list
+def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> AggregatedResult:
+    if scenario_result is None:
+        scenario_result = make_scenario_result()
+    return AggregatedResult.from_existing(scenario_result, [scenario_result])
 
 
 def make_step_result(vstep: Optional[VirtualStep] = None, *,
@@ -116,3 +154,61 @@ def make_failed_step_result(vstep: Optional[VirtualStep] = None, *,
                             ) -> StepResult:
     return make_step_result(vstep, status=StepStatus.FAILED,
                             started_at=started_at, ended_at=ended_at)
+
+
+def make_dispatcher() -> Dispatcher:
+    return Dispatcher()
+
+
+def make_scenario_scheduler(scenarios: Optional[List[VirtualScenario]] = None
+                            ) -> ScenarioScheduler:
+    if scenarios is None:
+        scenarios = []
+    return MonotonicScenarioScheduler(scenarios=scenarios)
+
+
+def make_startup_event(scheduler: Optional[ScenarioScheduler] = None) -> StartupEvent:
+    if scheduler is None:
+        scheduler = make_scenario_scheduler()
+    return StartupEvent(scheduler)
+
+
+def make_scenario_run_event(scenario_result: Optional[ScenarioResult] = None
+                            ) -> ScenarioRunEvent:
+    if scenario_result is None:
+        scenario_result = make_scenario_result()
+    return ScenarioRunEvent(scenario_result)
+
+
+def make_scenario_passed_event(scenario_result: Optional[ScenarioResult] = None
+                               ) -> ScenarioPassedEvent:
+    if scenario_result is None:
+        scenario_result = make_passed_scenario_result()
+    return ScenarioPassedEvent(scenario_result)
+
+
+def make_scenario_failed_event(scenario_result: Optional[ScenarioResult] = None
+                               ) -> ScenarioFailedEvent:
+    if scenario_result is None:
+        scenario_result = make_failed_scenario_result()
+    return ScenarioFailedEvent(scenario_result)
+
+
+def make_scenario_skipped_event(scenario_result: Optional[ScenarioResult] = None
+                                ) -> ScenarioSkippedEvent:
+    if scenario_result is None:
+        scenario_result = make_skipped_scenario_result()
+    return ScenarioSkippedEvent(scenario_result)
+
+
+def make_scenario_reported_event(aggregated_result: Optional[AggregatedResult] = None
+                                 ) -> ScenarioReportedEvent:
+    if aggregated_result is None:
+        aggregated_result = make_aggregated_result()
+    return ScenarioReportedEvent(aggregated_result)
+
+
+def make_cleanup_event(report: Optional[Report] = None) -> CleanupEvent:
+    if report is None:
+        report = Report()
+    return CleanupEvent(report)
