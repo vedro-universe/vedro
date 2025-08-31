@@ -41,7 +41,7 @@ def dispatcher() -> Dispatcher:
 
 @pytest.fixture()
 def sleep_() -> SleepType:
-    return AsyncMock(spec=asyncio.sleep)
+    return AsyncMock(spec_set=asyncio.sleep)
 
 
 @pytest.fixture()
@@ -58,7 +58,7 @@ def scheduler() -> Scheduler:
 
 @pytest.fixture()
 def scheduler_() -> Scheduler:
-    return Mock(spec=Scheduler)
+    return Mock(spec_set=Scheduler)
 
 
 def make_vscenario() -> VirtualScenario:

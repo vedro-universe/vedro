@@ -11,11 +11,11 @@ __all__ = ("make_tb_filter", "make_time_fn", "make_json_formatter",
 
 
 def make_tb_filter() -> TracebackFilter:
-    return Mock(spec=TracebackFilter)
+    return Mock(spec_set=TracebackFilter)
 
 
 def make_time_fn() -> TimeFunction:
-    return Mock(spec=TimeFunction, return_value=monotonic())
+    return Mock(spec_set=TimeFunction, return_value=monotonic())
 
 
 def make_json_formatter(tb_filter: Optional[TracebackFilter] = None,

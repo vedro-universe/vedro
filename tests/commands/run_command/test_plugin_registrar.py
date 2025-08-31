@@ -17,7 +17,7 @@ def registrar() -> PluginRegistrar:
 
 @pytest.fixture()
 def dispatcher_() -> Dispatcher:
-    return MagicMock(spec=Dispatcher)
+    return MagicMock(spec_set=Dispatcher)
 
 
 class CustomPlugin(Plugin):
