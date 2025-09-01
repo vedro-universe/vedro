@@ -10,12 +10,14 @@ production code.
 
 from pathlib import Path
 from time import monotonic_ns
-from typing import List, Optional
+from types import ModuleType
+from typing import List, Optional, Sequence, Union
 
 from vedro import Scenario
 from vedro.core import (
     AggregatedResult,
     Dispatcher,
+    ExcInfo,
     Report,
     ScenarioResult,
     ScenarioStatus,
@@ -24,6 +26,7 @@ from vedro.core import (
     VirtualScenario,
     VirtualStep,
 )
+from vedro.core.exc_info import TracebackFilter
 from vedro.core.scenario_scheduler import MonotonicScenarioScheduler, ScenarioScheduler
 from vedro.events import (
     CleanupEvent,
@@ -35,15 +38,21 @@ from vedro.events import (
     StartupEvent,
 )
 
-__all__ = ("make_vscenario", "make_scenario_result", "make_step_result",
+__all__ = ("make_vscenario", "make_dispatcher", "make_tb_filter", "make_report",
+           "make_scenario_scheduler", "make_scenario_result",
            "make_passed_scenario_result", "make_failed_scenario_result",
-           "make_passed_step_result", "make_failed_step_result",
            "make_skipped_scenario_result", "make_aggregated_result",
-           "make_dispatcher", "make_scenario_scheduler",
+           "make_step_result", "make_passed_step_result", "make_failed_step_result",
            "make_startup_event", "make_scenario_run_event",
            "make_scenario_passed_event", "make_scenario_failed_event",
            "make_scenario_skipped_event", "make_scenario_reported_event",
            "make_cleanup_event",)
+
+# core
+
+
+def make_dispatcher() -> Dispatcher:
+    return Dispatcher()
 
 
 def make_vscenario() -> VirtualScenario:
@@ -53,10 +62,34 @@ def make_vscenario() -> VirtualScenario:
     return VirtualScenario(_Scenario, steps=[])
 
 
+def make_scenario_scheduler(scenarios: Optional[List[VirtualScenario]] = None
+                            ) -> ScenarioScheduler:
+    if scenarios is None:
+        scenarios = []
+    return MonotonicScenarioScheduler(scenarios=scenarios)
+
+
+def make_tb_filter(modules: Optional[Sequence[Union[str, ModuleType]]] = None) -> TracebackFilter:
+    if modules is None:
+        modules = []
+    return TracebackFilter(modules=modules)
+
+
+def make_report(*, interrupted: Optional[ExcInfo] = None) -> Report:
+    report = Report()
+    if interrupted is not None:
+        report.set_interrupted(interrupted)
+    return report
+
+
+# scenario result
+
+
 def make_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
                          status: ScenarioStatus = ScenarioStatus.PENDING,
                          started_at: Optional[float] = None,
-                         ended_at: Optional[float] = None
+                         ended_at: Optional[float] = None,
+                         step_results: Optional[List[StepResult]] = None
                          ) -> ScenarioResult:
     if vscenario is None:
         vscenario = make_vscenario()
@@ -76,43 +109,53 @@ def make_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
     if ended_at is not None:
         scenario_result.set_ended_at(ended_at)
 
+    if step_results is not None:
+        for step_result in step_results:
+            scenario_result.add_step_result(step_result)
+
     return scenario_result
 
 
 def make_passed_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
                                 started_at: Optional[float] = None,
-                                ended_at: Optional[float] = None
+                                ended_at: Optional[float] = None,
+                                step_results: Optional[List[StepResult]] = None
                                 ) -> ScenarioResult:
     return make_scenario_result(vscenario, status=ScenarioStatus.PASSED,
-                                started_at=started_at, ended_at=ended_at)
+                                started_at=started_at, ended_at=ended_at,
+                                step_results=step_results)
 
 
-# step_results: list[StepResult] = []
 def make_failed_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
                                 started_at: Optional[float] = None,
-                                ended_at: Optional[float] = None
+                                ended_at: Optional[float] = None,
+                                step_results: Optional[List[StepResult]] = None
                                 ) -> ScenarioResult:
     return make_scenario_result(vscenario, status=ScenarioStatus.FAILED,
-                                started_at=started_at, ended_at=ended_at)
+                                started_at=started_at, ended_at=ended_at,
+                                step_results=step_results)
 
 
 def make_skipped_scenario_result(vscenario: Optional[VirtualScenario] = None, *,
                                  started_at: Optional[float] = None,
-                                 ended_at: Optional[float] = None
+                                 ended_at: Optional[float] = None,
+                                 step_results: Optional[List[StepResult]] = None
                                  ) -> ScenarioResult:
     if vscenario is None:
         vscenario = make_vscenario()
         vscenario.skip()
     return make_scenario_result(vscenario, status=ScenarioStatus.SKIPPED,
-                                started_at=started_at, ended_at=ended_at)
+                                started_at=started_at, ended_at=ended_at,
+                                step_results=step_results)
 
 
-# list
 def make_aggregated_result(scenario_result: Optional[ScenarioResult] = None) -> AggregatedResult:
     if scenario_result is None:
         scenario_result = make_scenario_result()
     return AggregatedResult.from_existing(scenario_result, [scenario_result])
 
+
+# step results
 
 def make_step_result(vstep: Optional[VirtualStep] = None, *,
                      status: StepStatus = StepStatus.PENDING,
@@ -156,16 +199,7 @@ def make_failed_step_result(vstep: Optional[VirtualStep] = None, *,
                             started_at=started_at, ended_at=ended_at)
 
 
-def make_dispatcher() -> Dispatcher:
-    return Dispatcher()
-
-
-def make_scenario_scheduler(scenarios: Optional[List[VirtualScenario]] = None
-                            ) -> ScenarioScheduler:
-    if scenarios is None:
-        scenarios = []
-    return MonotonicScenarioScheduler(scenarios=scenarios)
-
+# events
 
 def make_startup_event(scheduler: Optional[ScenarioScheduler] = None) -> StartupEvent:
     if scheduler is None:
@@ -210,5 +244,5 @@ def make_scenario_reported_event(aggregated_result: Optional[AggregatedResult] =
 
 def make_cleanup_event(report: Optional[Report] = None) -> CleanupEvent:
     if report is None:
-        report = Report()
+        report = make_report()
     return CleanupEvent(report)

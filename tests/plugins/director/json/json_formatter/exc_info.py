@@ -1,7 +1,6 @@
 from traceback import extract_tb
 
 from vedro import given, scenario, then, when
-from vedro.core.exc_info import TracebackFilter
 
 from ._helpers import make_json_formatter
 from ._tb_helpers import execute_and_capture_exception, generate_call_chain_modules
@@ -10,7 +9,7 @@ from ._tb_helpers import execute_and_capture_exception, generate_call_chain_modu
 @scenario
 def format_exc_info():
     with given:
-        formatter = make_json_formatter(TracebackFilter(modules=[]))
+        formatter = make_json_formatter()
 
         tmp_dir = generate_call_chain_modules([("main.py", "main")])
         exc_info = execute_and_capture_exception(tmp_dir / "main.py", "main")

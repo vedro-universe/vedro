@@ -1,21 +1,17 @@
-from time import monotonic
+from time import time
 from typing import Optional
 from unittest.mock import Mock
 
+from vedro._test_utils import make_tb_filter
 from vedro.core.exc_info import TracebackFilter
 from vedro.plugins.director.json import JsonFormatter
 from vedro.plugins.director.json._json_formatter import TimeFunction
 
-__all__ = ("make_tb_filter", "make_time_fn", "make_json_formatter",
-           "format_ts",)
-
-
-def make_tb_filter() -> TracebackFilter:
-    return Mock(spec_set=TracebackFilter)
+__all__ = ("make_json_formatter", "format_ts",)
 
 
 def make_time_fn() -> TimeFunction:
-    return Mock(spec_set=TimeFunction, return_value=monotonic())
+    return Mock(spec_set=TimeFunction, return_value=time())
 
 
 def make_json_formatter(tb_filter: Optional[TracebackFilter] = None,
@@ -27,5 +23,5 @@ def make_json_formatter(tb_filter: Optional[TracebackFilter] = None,
     return JsonFormatter(tb_filter, time_fn=time_fn)
 
 
-def format_ts(time: float) -> int:
-    return int(time * 1000)
+def format_ts(ts: float) -> int:
+    return int(ts * 1000)

@@ -2,12 +2,12 @@ from traceback import extract_tb
 
 from vedro import given, scenario, then, when
 from vedro._test_utils import (
+    make_aggregated_result,
     make_failed_scenario_result,
     make_passed_step_result,
     make_step_result,
 )
-from vedro.core import AggregatedResult, ScenarioStatus, StepStatus
-from vedro.core.exc_info import TracebackFilter
+from vedro.core import ScenarioStatus, StepStatus
 
 from ._helpers import format_ts, make_json_formatter
 from ._tb_helpers import execute_and_capture_exception, generate_call_chain_modules
@@ -17,8 +17,7 @@ from ._tb_helpers import execute_and_capture_exception, generate_call_chain_modu
 def format_scenario_reported_event():
     with given:
         formatter = make_json_formatter()
-        scenario_result = make_failed_scenario_result()
-        aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
+        aggregated_result = make_aggregated_result(make_failed_scenario_result())
 
     with when:
         event = formatter.format_scenario_reported_event(aggregated_result)
@@ -43,19 +42,20 @@ def format_scenario_reported_event():
 @scenario
 def format_scenario_reported_event_with_steps():
     with given:
-        formatter = make_json_formatter(TracebackFilter(modules=[]))
-
-        scenario_result = make_failed_scenario_result()
+        formatter = make_json_formatter()
 
         passed_step_result = make_passed_step_result()
-        scenario_result.add_step_result(passed_step_result)
 
         tmp_dir = generate_call_chain_modules([("main.py", "main")])
         exc_info = execute_and_capture_exception(tmp_dir / "main.py", "main")
         failed_step_result = make_step_result(status=StepStatus.FAILED).set_exc_info(exc_info)
-        scenario_result.add_step_result(failed_step_result)
 
-        aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
+        aggregated_result = make_aggregated_result(
+            make_failed_scenario_result(step_results=[
+                passed_step_result,
+                failed_step_result
+            ])
+        )
 
     with when:
         event = formatter.format_scenario_reported_event(aggregated_result)
@@ -100,8 +100,7 @@ def format_scenario_reported_event_with_steps():
 def format_scenario_reported_event_with_rich_output():
     with given:
         formatter = make_json_formatter()
-        scenario_result = make_failed_scenario_result()
-        aggregated_result = AggregatedResult.from_existing(scenario_result, [scenario_result])
+        aggregated_result = make_aggregated_result(make_failed_scenario_result())
         rich_output = "reported scenario output"
 
     with when:

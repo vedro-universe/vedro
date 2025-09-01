@@ -1,7 +1,7 @@
 from traceback import extract_tb
 
 from vedro import given, scenario, then, when
-from vedro.core import Report
+from vedro._test_utils import make_report
 from vedro.core.exc_info import TracebackFilter
 
 from ._helpers import format_ts, make_json_formatter
@@ -12,7 +12,7 @@ from ._tb_helpers import execute_and_capture_exception, generate_call_chain_modu
 def format_cleanup_event():
     with given:
         formatter = make_json_formatter()
-        report = Report()
+        report = make_report()
 
     with when:
         event = formatter.format_cleanup_event(report)
@@ -36,7 +36,7 @@ def format_cleanup_event():
 def format_cleanup_event_with_rich_output():
     with given:
         formatter = make_json_formatter()
-        report = Report()
+        report = make_report()
         rich_output = "cleanup summary output"
 
     with when:
@@ -66,8 +66,7 @@ def format_cleanup_event_with_interrupted():
         tmp_dir = generate_call_chain_modules([("main.py", "main")])
         exc_info = execute_and_capture_exception(tmp_dir / "main.py", "main")
 
-        report = Report()
-        report.set_interrupted(exc_info)
+        report = make_report(interrupted=exc_info)
 
     with when:
         event = formatter.format_cleanup_event(report)
