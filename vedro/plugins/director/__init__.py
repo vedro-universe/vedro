@@ -1,6 +1,7 @@
 from ._director import Director, DirectorPlugin
 from ._director_init_event import DirectorInitEvent
 from ._reporter import Reporter
+from .json import JsonReporter, JsonReporterPlugin
 from .pycharm import PyCharmReporter, PyCharmReporterPlugin
 from .rich import RichReporter, RichReporterPlugin
 from .silent import SilentReporter, SilentReporterPlugin
@@ -8,4 +9,5 @@ from .silent import SilentReporter, SilentReporterPlugin
 __all__ = ("Director", "DirectorPlugin", "DirectorInitEvent", "Reporter",
            "RichReporter", "RichReporterPlugin",
            "SilentReporter", "SilentReporterPlugin",
-           "PyCharmReporter", "PyCharmReporterPlugin",)
+           "PyCharmReporter", "PyCharmReporterPlugin",
+           "JsonReporter", "JsonReporterPlugin",)

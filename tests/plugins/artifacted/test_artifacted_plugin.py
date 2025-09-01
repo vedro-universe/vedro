@@ -44,7 +44,7 @@ async def test_arg_parsed_event_with_artifacts_dir_created(*, dispatcher: Dispat
                                                            project_dir: Path,
                                                            artifacts_dir: Path):
     with given:
-        artifact_manager_ = Mock(spec=ArtifactManager)
+        artifact_manager_ = Mock(spec_set=ArtifactManager)
         make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
 
         await fire_config_loaded_event(dispatcher, project_dir)
@@ -156,7 +156,7 @@ async def test_step_end_event_attaches_artifacts(event_class, *, dispatcher: Dis
 async def test_scenario_reported_event_saves_scenario_artifacts(*, dispatcher: Dispatcher,
                                                                 project_dir: Path):
     with given:
-        artifact_manager_ = Mock(spec=ArtifactManager)
+        artifact_manager_ = Mock(spec_set=ArtifactManager)
         make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
 
         await fire_config_loaded_event(dispatcher, project_dir)
@@ -193,7 +193,7 @@ async def test_scenario_reported_event_saves_scenario_artifacts(*, dispatcher: D
 async def test_scenario_reported_event_saves_step_artifacts(*, dispatcher: Dispatcher,
                                                             project_dir: Path):
     with given:
-        artifact_manager_ = Mock(spec=ArtifactManager)
+        artifact_manager_ = Mock(spec_set=ArtifactManager)
         make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
 
         await fire_config_loaded_event(dispatcher, project_dir)
@@ -232,7 +232,7 @@ async def test_scenario_reported_event_saves_step_artifacts(*, dispatcher: Dispa
 
 async def test_cleanup_event_saves_global_artifacts(*, dispatcher: Dispatcher, project_dir: Path):
     with given:
-        artifact_manager_ = Mock(spec=ArtifactManager)
+        artifact_manager_ = Mock(spec_set=ArtifactManager)
         make_artifacted_plugin(artifact_manager_).subscribe(dispatcher)
 
         await fire_config_loaded_event(dispatcher, project_dir)

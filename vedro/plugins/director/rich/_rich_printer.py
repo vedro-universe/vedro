@@ -22,10 +22,17 @@ from .utils import TracebackFilter
 __all__ = ("RichPrinter",)
 
 
-def make_console() -> Console:
-    # Consider setting soft_wrap to False by default in v2
-    return Console(highlight=False, force_terminal=True, markup=False, soft_wrap=True,
-                   file=sys.stdout)
+def make_console(**kwargs: Any) -> Console:
+    # Merge defaults with kwargs to allow overrides without TypeError
+    options = {
+        "highlight": False,
+        "force_terminal": True,
+        "markup": False,
+        "soft_wrap": True,  # TODO: Consider setting soft_wrap to False by default in v2
+        "file": sys.stdout,
+        **kwargs
+    }
+    return Console(**options)
 
 
 class RichPrinter:
