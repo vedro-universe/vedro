@@ -1,4 +1,4 @@
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 __all__ = ("ScenarioDescriptor",)
 
@@ -14,7 +14,8 @@ class ScenarioDescriptor:
 
     def __init__(self, fn: Callable[..., Any],
                  decorators: Tuple[Callable[..., Any], ...] = (),
-                 params: Tuple[Any, ...] = ()) -> None:
+                 params: Tuple[Any, ...] = (),
+                 subject: Optional[str] = None) -> None:
         """
         Initialize the ScenarioDescriptor with a function, decorators, and parameters.
 
@@ -23,10 +24,13 @@ class ScenarioDescriptor:
                            Defaults to an empty tuple.
         :param params: A tuple of parameter sets to use for parameterized scenarios.
                        Defaults to an empty tuple.
+        :param subject: An optional custom human-readable subject for the scenario.
+                        If not provided, it will be generated from the function name.
         """
         self._fn = fn
         self._decorators = decorators
         self._params = params
+        self._subject = subject
 
     @property
     def name(self) -> str:
@@ -63,6 +67,15 @@ class ScenarioDescriptor:
         :return: A tuple containing parameter sets for scenario instantiation.
         """
         return self._params
+
+    @property
+    def subject(self) -> Optional[str]:
+        """
+        Get the custom subject for the scenario.
+
+        :return: The custom subject string or None if not provided.
+        """
+        return self._subject
 
     @property
     def lineno(self) -> Union[int, None]:

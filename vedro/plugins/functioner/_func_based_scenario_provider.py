@@ -46,9 +46,11 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         """
         loaded = []
         for name, val in module.__dict__.items():
-            if not name.startswith("_") and isinstance(val, ScenarioDescriptor):
-                scenarios = self._build_vedro_scenarios(val, module)
-                loaded.extend(scenarios)
+            # Skip private names except for "_" which can be used for anonymous functions
+            if isinstance(val, ScenarioDescriptor):
+                if name == "_" or not name.startswith("_"):
+                    scenarios = self._build_vedro_scenarios(val, module)
+                    loaded.extend(scenarios)
         return loaded
 
     def _build_vedro_scenarios(self, descriptor: ScenarioDescriptor,
@@ -167,11 +169,15 @@ class FuncBasedScenarioProvider(ScenarioProvider):
 
     def _create_subject(self, descriptor: ScenarioDescriptor) -> str:
         """
-        Generate the subject string used in the scenario based on the descriptor name.
+        Generate the subject string used in the scenario based on the descriptor.
 
-        :param descriptor: The descriptor containing the original scenario name.
+        If the descriptor has a custom subject, use it. Otherwise, generate from the function name.
+
+        :param descriptor: The descriptor containing the scenario metadata.
         :return: A human-readable string subject for the scenario.
         """
+        if descriptor.subject is not None:
+            return descriptor.subject
         return descriptor.name.replace("_", " ")
 
     def _create_module_path(self, module: ModuleType) -> str:
