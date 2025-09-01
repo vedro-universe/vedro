@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from io import StringIO
 from typing import Any, Optional
 from unittest.mock import Mock, call
 
@@ -49,7 +50,10 @@ def make_json_reporter(formatter_factory: JsonFormatterFactory) -> JsonReporterP
         class RichReporter(JsonReporter.RichReporter):
             enabled = False
 
-    return JsonReporterPlugin(_JsonReporter, formatter_factory=formatter_factory)
+    output = StringIO()
+    reporter = JsonReporterPlugin(_JsonReporter, formatter_factory=formatter_factory,
+                                  output=output)
+    return reporter
 
 
 def make_director_plugin(dispatcher: Dispatcher) -> DirectorPlugin:

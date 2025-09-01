@@ -3,7 +3,7 @@ import sys
 from functools import partial
 from io import StringIO
 from os import linesep
-from typing import Callable, Optional, Tuple, Type, Union, final
+from typing import Callable, Optional, TextIO, Tuple, Type, Union, final
 
 import vedro
 import vedro.plugins.director.rich as rich_reporter
@@ -46,13 +46,22 @@ def compact_serializer(event: EventDict) -> str:
 class JsonReporterPlugin(Reporter):
     def __init__(self, config: Type["JsonReporter"], *,
                  formatter_factory: JsonFormatterFactory = JsonFormatter,
-                 json_serializer: JsonSerializerFactory = compact_serializer) -> None:
+                 json_serializer: JsonSerializerFactory = compact_serializer,
+                 output: Optional[TextIO] = None) -> None:
+        """
+        Initialize the JsonReporterPlugin.
+
+        :param config: The configuration class for the reporter.
+        :param formatter_factory: Factory for creating JSON formatter instances.
+        :param json_serializer: Function to serialize events to JSON strings.
+        :param output: The output stream for JSON events. Defaults to sys.stdout.
+        """
         super().__init__(config)
         self._rich_config = config.RichReporter
         self._formatter_factory = formatter_factory
         self._formatter_inst: Union[JsonFormatter, None] = None
         self._json_serializer = json_serializer
-        self._output = sys.stdout
+        self._output = output if (output is not None) else sys.stdout
         self._buffer: Union[StringIO, None] = None
         self._global_config: Union[ConfigType, None] = None
 
