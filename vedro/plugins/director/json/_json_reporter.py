@@ -186,7 +186,7 @@ class JsonReporterPlugin(Reporter):
 
 class JsonReporter(PluginConfig):
     plugin = JsonReporterPlugin
-    description = ""
+    description = "Outputs test results as JSON events for machine-readable reporting"
 
     class RichReporter(rich_reporter.RichReporter):
         enabled = False
