@@ -477,7 +477,7 @@ class RichReporter(PluginConfig):
     Available if `show_scenario_extras` and `show_skipped` is True.
     """
 
-    show_timings: bool = False
+    show_timings: bool = True
     """
     Show the elapsed time of each scenario.
     """
