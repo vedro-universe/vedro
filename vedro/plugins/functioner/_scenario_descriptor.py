@@ -1,10 +1,8 @@
-from enum import Enum
-from typing import Any, Callable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
+
+from vedro._scenario import TagsType
 
 __all__ = ("ScenarioDescriptor",)
-
-Tag = Union[str, Enum]
-Tags = Union[List[Tag], Tuple[Tag, ...], Set[Tag]]
 
 
 class ScenarioDescriptor:
@@ -20,7 +18,7 @@ class ScenarioDescriptor:
                  decorators: Tuple[Callable[..., Any], ...] = (),
                  params: Tuple[Any, ...] = (),
                  subject: Optional[str] = None,
-                 tags: Tags = ()) -> None:
+                 tags: TagsType = ()) -> None:
         """
         Initialize the ScenarioDescriptor with a function, decorators, and parameters.
 
@@ -86,7 +84,7 @@ class ScenarioDescriptor:
         return self._subject
 
     @property
-    def tags(self) -> Tags:
+    def tags(self) -> TagsType:
         """
         Get the tags associated with the scenario.
 

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Set, Tuple, Union
 
 from .core._meta_data import MetaData
 
-__all__ = ("Scenario",)
+__all__ = ("Scenario", "TagType", "TagsType",)
 
 
 class _Meta(type):
@@ -76,14 +76,14 @@ class _Meta(type):
         return created
 
 
-Tag = Union[str, Enum]
-Tags = Union[List[Tag], Tuple[Tag, ...], Set[Tag]]
+TagType = Union[str, Enum]
+TagsType = Union[List[TagType], Tuple[TagType, ...], Set[TagType]]
 
 
 # In v2, consider moving this class to `vedro.core.scenario_provider`
 class Scenario(metaclass=_Meta):
     subject: str
-    tags: Tags = ()
+    tags: TagsType = ()
 
     def __repr__(self) -> str:
         return "<Scenario>"

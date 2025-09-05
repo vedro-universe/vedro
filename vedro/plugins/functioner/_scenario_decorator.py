@@ -1,12 +1,10 @@
-from enum import Enum
-from typing import Any, Callable, List, Optional, Sequence, Set, Tuple, Union, overload
+from typing import Any, Callable, Optional, Sequence, Tuple, Union, overload
+
+from vedro._scenario import TagsType
 
 from ._scenario_descriptor import ScenarioDescriptor
 
 __all__ = ("scenario", "ScenarioDecorator",)
-
-Tag = Union[str, Enum]
-Tags = Union[List[Tag], Tuple[Tag, ...], Set[Tag]]
 
 
 class ScenarioDecorator:
@@ -20,7 +18,7 @@ class ScenarioDecorator:
     def __init__(self, decorators: Tuple[Callable[..., Any], ...] = (),
                  params: Tuple[Any, ...] = (),
                  subject: Optional[str] = None,
-                 tags: Tags = ()) -> None:
+                 tags: TagsType = ()) -> None:
         """
         Initialize the scenario decorator with optional decorators, parameters, subject, and tags.
 
