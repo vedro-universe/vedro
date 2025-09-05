@@ -1,8 +1,12 @@
-from typing import Any, Callable, Optional, Sequence, Tuple, Union, overload
+from enum import Enum
+from typing import Any, Callable, List, Optional, Sequence, Set, Tuple, Union, overload
 
 from ._scenario_descriptor import ScenarioDescriptor
 
 __all__ = ("scenario", "ScenarioDecorator",)
+
+Tag = Union[str, Enum]
+Tags = Union[List[Tag], Tuple[Tag, ...], Set[Tag]]
 
 
 class ScenarioDecorator:
@@ -10,27 +14,26 @@ class ScenarioDecorator:
     Implements a flexible decorator for defining Vedro scenarios.
 
     This class allows optional chaining of decorators and parameter sets using
-    both decorator syntax and callable invocation. It supports three primary usages:
-
-    1. As a plain decorator: `@scenario`
-    2. With parameters: `@scenario(params)`
-    3. With additional class decorators: `@scenario[decorator]`
-    4. With custom subject: `@scenario("subject")` or `@scenario(subject="subject")`
+    both decorator syntax and callable invocation.
     """
 
     def __init__(self, decorators: Tuple[Callable[..., Any], ...] = (),
                  params: Tuple[Any, ...] = (),
-                 subject: Optional[str] = None) -> None:
+                 subject: Optional[str] = None,
+                 tags: Tags = ()) -> None:
         """
-        Initialize the scenario decorator with optional decorators, parameters, and subject.
+        Initialize the scenario decorator with optional decorators, parameters, subject, and tags.
 
         :param decorators: A tuple of decorators to apply to the scenario class. Defaults to empty.
         :param params: A tuple of parameter sets for scenario parameterization. Defaults to empty.
         :param subject: An optional custom human-readable subject for the scenario.
+        :param tags: Tags to associate with the scenario. Can be a list, tuple, or set
+                     of strings or Enums. Defaults to an empty tuple.
         """
         self._decorators = decorators
         self._params = params
         self._subject = subject
+        self._tags = tags
 
     @overload
     def __call__(self) -> "ScenarioDecorator":
@@ -92,42 +95,10 @@ class ScenarioDecorator:
         """
         ...
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Union[ScenarioDescriptor, "ScenarioDecorator"]:
-        """
-        Dispatch the call to either wrap a function, set subject, or set parameterization.
-
-        :return: A ScenarioDescriptor if a function is passed, or a ScenarioDecorator otherwise.
-        """
-        # Handle keyword-only subject argument
-        if "subject" in kwargs:
-            subject = kwargs["subject"]
-            return ScenarioDecorator(self._decorators, self._params, subject)
-
-        # Handle no arguments: @scenario()
-        if len(args) == 0:
-            return self
-
-        first_arg = args[0]
-        second_arg = args[1] if len(args) > 1 else None
-
-        # Handle function decoration: @scenario directly on function
-        if callable(first_arg):
-            return ScenarioDescriptor(first_arg, self._decorators, self._params, self._subject)
-
-        # Handle string as subject
-        if isinstance(first_arg, str):
-            # If second argument is provided, it should be params
-            if second_arg is not None:
-                return ScenarioDecorator(self._decorators, tuple(second_arg), first_arg)
-            # Otherwise, just set the subject
-            return ScenarioDecorator(self._decorators, self._params, first_arg)
-
-        # Handle sequence as params (backward compatibility)
-        if isinstance(first_arg, (list, tuple)):
-            return ScenarioDecorator(self._decorators, tuple(first_arg), self._subject)
-
-        # Default fallback
-        return self
+    def __call__(self,
+                 *args: Any,
+                 **kwargs: Any) -> Union[ScenarioDescriptor, "ScenarioDecorator"]:
+        raise NotImplementedError()
 
     def __getitem__(self, item: Any) -> "ScenarioDecorator":
         """
@@ -137,7 +108,7 @@ class ScenarioDecorator:
         :return: A new ScenarioDecorator instance with the specified decorators.
         """
         decorators = item if isinstance(item, tuple) else (item,)
-        return ScenarioDecorator(decorators, self._params, self._subject)
+        return ScenarioDecorator(decorators, self._params, self._subject, self._tags)
 
 
 scenario = ScenarioDecorator()

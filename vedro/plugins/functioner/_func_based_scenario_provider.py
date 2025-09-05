@@ -46,9 +46,8 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         """
         loaded = []
         for name, val in module.__dict__.items():
-            # Skip private names except for "_" which can be used for anonymous functions
             if isinstance(val, ScenarioDescriptor):
-                if name == "_" or not name.startswith("_"):
+                if not name.startswith("_"):
                     scenarios = self._build_vedro_scenarios(val, module)
                     loaded.extend(scenarios)
         return loaded

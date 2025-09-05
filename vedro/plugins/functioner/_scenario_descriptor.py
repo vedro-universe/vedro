@@ -1,6 +1,10 @@
-from typing import Any, Callable, Optional, Tuple, Union
+from enum import Enum
+from typing import Any, Callable, List, Optional, Set, Tuple, Union
 
 __all__ = ("ScenarioDescriptor",)
+
+Tag = Union[str, Enum]
+Tags = Union[List[Tag], Tuple[Tag, ...], Set[Tag]]
 
 
 class ScenarioDescriptor:
@@ -15,7 +19,8 @@ class ScenarioDescriptor:
     def __init__(self, fn: Callable[..., Any],
                  decorators: Tuple[Callable[..., Any], ...] = (),
                  params: Tuple[Any, ...] = (),
-                 subject: Optional[str] = None) -> None:
+                 subject: Optional[str] = None,
+                 tags: Tags = ()) -> None:
         """
         Initialize the ScenarioDescriptor with a function, decorators, and parameters.
 
@@ -26,11 +31,14 @@ class ScenarioDescriptor:
                        Defaults to an empty tuple.
         :param subject: An optional custom human-readable subject for the scenario.
                         If not provided, it will be generated from the function name.
+        :param tags: Tags to associate with the scenario. Can be a list, tuple, or set
+                     of strings or Enums. Defaults to an empty tuple.
         """
         self._fn = fn
         self._decorators = decorators
         self._params = params
         self._subject = subject
+        self._tags = tags
 
     @property
     def name(self) -> str:
@@ -76,6 +84,15 @@ class ScenarioDescriptor:
         :return: The custom subject string or None if not provided.
         """
         return self._subject
+
+    @property
+    def tags(self) -> Tags:
+        """
+        Get the tags associated with the scenario.
+
+        :return: The tags as a list, tuple, or set of strings or Enums.
+        """
+        return self._tags
 
     @property
     def lineno(self) -> Union[int, None]:
