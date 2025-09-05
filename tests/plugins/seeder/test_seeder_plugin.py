@@ -318,8 +318,14 @@ async def test_show_seeds_custom(*, seeder: SeederPlugin, dispatcher: Dispatcher
         assert scenario_result.extra_details == [f"seed: {custom_seed}"]
 
 
-async def test_show_preamble_default_seed(*, seeder: SeederPlugin, dispatcher: Dispatcher):
+async def test_show_preamble_when_enabled(*, dispatcher: Dispatcher):
     with given:
+        class SeederPreamble(Seeder):
+            show_seed_preamble = True
+
+        seeder = SeederPlugin(SeederPreamble)
+        seeder.subscribe(dispatcher)
+
         with patch("uuid.uuid4", return_value=uuid4()) as patched:
             await fire_arg_parsed_event(dispatcher)
 
@@ -332,21 +338,6 @@ async def test_show_preamble_default_seed(*, seeder: SeederPlugin, dispatcher: D
     with then:
         expected = seeder._format_seed(str(patched.return_value))
         assert report.preamble == [f"seed: {expected}"]
-
-
-@pytest.mark.usefixtures(seeder.__name__)
-async def test_dont_show_preamble_with_custom_seed(*, dispatcher: Dispatcher):
-    with given:
-        await fire_arg_parsed_event(dispatcher, seed=SEED_INITIAL)
-
-        report = Report()
-        startup_event = StartupEvent(Scheduler([]), report=report)
-
-    with when:
-        await dispatcher.fire(startup_event)
-
-    with then:
-        assert report.preamble == []
 
 
 async def test_dont_show_preamble_when_disabled(*, dispatcher: Dispatcher):

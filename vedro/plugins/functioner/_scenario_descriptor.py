@@ -1,4 +1,6 @@
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
+
+from vedro._scenario import TagsType
 
 __all__ = ("ScenarioDescriptor",)
 
@@ -14,7 +16,9 @@ class ScenarioDescriptor:
 
     def __init__(self, fn: Callable[..., Any],
                  decorators: Tuple[Callable[..., Any], ...] = (),
-                 params: Tuple[Any, ...] = ()) -> None:
+                 params: Tuple[Any, ...] = (),
+                 subject: Optional[str] = None,
+                 tags: TagsType = ()) -> None:
         """
         Initialize the ScenarioDescriptor with a function, decorators, and parameters.
 
@@ -23,10 +27,16 @@ class ScenarioDescriptor:
                            Defaults to an empty tuple.
         :param params: A tuple of parameter sets to use for parameterized scenarios.
                        Defaults to an empty tuple.
+        :param subject: An optional custom human-readable subject for the scenario.
+                        If not provided, it will be generated from the function name.
+        :param tags: Tags to associate with the scenario. Can be a list, tuple, or set
+                     of strings or Enums. Defaults to an empty tuple.
         """
         self._fn = fn
         self._decorators = decorators
         self._params = params
+        self._subject = subject
+        self._tags = tags
 
     @property
     def name(self) -> str:
@@ -63,6 +73,24 @@ class ScenarioDescriptor:
         :return: A tuple containing parameter sets for scenario instantiation.
         """
         return self._params
+
+    @property
+    def subject(self) -> Optional[str]:
+        """
+        Get the custom subject for the scenario.
+
+        :return: The custom subject string or None if not provided.
+        """
+        return self._subject
+
+    @property
+    def tags(self) -> TagsType:
+        """
+        Get the tags associated with the scenario.
+
+        :return: The tags as a list, tuple, or set of strings or Enums.
+        """
+        return self._tags
 
     @property
     def lineno(self) -> Union[int, None]:

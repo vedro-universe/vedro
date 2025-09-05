@@ -1,4 +1,6 @@
-from typing import Any, Callable, Sequence, Tuple, Union, overload
+from typing import Any, Callable, Optional, Sequence, Tuple, Union, overload
+
+from vedro._scenario import TagsType
 
 from ._scenario_descriptor import ScenarioDescriptor
 
@@ -10,26 +12,29 @@ class ScenarioDecorator:
     Implements a flexible decorator for defining Vedro scenarios.
 
     This class allows optional chaining of decorators and parameter sets using
-    both decorator syntax and callable invocation. It supports three primary usages:
-
-    1. As a plain decorator: `@scenario`
-    2. With parameters: `@scenario(params)`
-    3. With additional class decorators: `@scenario[decorator]`
+    both decorator syntax and callable invocation.
     """
 
     def __init__(self, decorators: Tuple[Callable[..., Any], ...] = (),
-                 params: Tuple[Any, ...] = ()) -> None:
+                 params: Tuple[Any, ...] = (),
+                 subject: Optional[str] = None,
+                 tags: TagsType = ()) -> None:
         """
-        Initialize the scenario decorator with optional decorators and parameters.
+        Initialize the scenario decorator with optional decorators, parameters, subject, and tags.
 
         :param decorators: A tuple of decorators to apply to the scenario class. Defaults to empty.
         :param params: A tuple of parameter sets for scenario parameterization. Defaults to empty.
+        :param subject: An optional custom human-readable subject for the scenario.
+        :param tags: Tags to associate with the scenario. Can be a list, tuple, or set
+                     of strings or Enums. Defaults to an empty tuple.
         """
         self._decorators = decorators
         self._params = params
+        self._subject = subject
+        self._tags = tags
 
     @overload
-    def __call__(self, /) -> "ScenarioDecorator":
+    def __call__(self) -> "ScenarioDecorator":
         """
         Enable usage as `@scenario()`.
 
@@ -38,43 +43,60 @@ class ScenarioDecorator:
         ...
 
     @overload
-    def __call__(self, /,
-                 fn_or_params: Callable[..., Any]) -> ScenarioDescriptor:
+    def __call__(self, fn: Callable[..., Any], /) -> ScenarioDescriptor:
         """
         Enable usage as `@scenario` directly on a function.
 
-        :param fn_or_params: The function to decorate as a scenario.
+        :param fn: The function to decorate as a scenario.
         :return: A ScenarioDescriptor representing the scenario.
         """
         ...
 
     @overload
-    def __call__(self, /,
-                 fn_or_params: Sequence[Any]) -> "ScenarioDecorator":
+    def __call__(self, subject: str, /) -> "ScenarioDecorator":
+        """
+        Enable usage as `@scenario("subject")` to set custom subject.
+
+        :param subject: A custom human-readable subject for the scenario.
+        :return: A new ScenarioDecorator with subject applied.
+        """
+        ...
+
+    @overload
+    def __call__(self, params: Sequence[Any], /) -> "ScenarioDecorator":
         """
         Enable usage as `@scenario(params)` to set parameterization.
 
-        :param fn_or_params: A sequence of parameter sets for the scenario.
+        :param params: A sequence of parameter sets for the scenario.
         :return: A new ScenarioDecorator with parameters applied.
         """
         ...
 
-    def __call__(self, /,
-                 fn_or_params: Union[Sequence[Any], Callable[..., Any], None] = None
-                 ) -> Union[ScenarioDescriptor, "ScenarioDecorator"]:
+    @overload
+    def __call__(self, subject: str, params: Sequence[Any], /) -> "ScenarioDecorator":
         """
-        Dispatch the call to either wrap a function or set parameterization.
+        Enable usage as `@scenario("subject", params)` to set both subject and params.
 
-        :param fn_or_params: Can be a callable function, a sequence of parameters, or None.
-        :return: A ScenarioDescriptor if a function is passed, or a ScenarioDecorator otherwise.
+        :param subject: A custom human-readable subject for the scenario.
+        :param params: A sequence of parameter sets for the scenario.
+        :return: A new ScenarioDecorator with subject and parameters applied.
         """
-        if fn_or_params is None:
-            return self
+        ...
 
-        if callable(fn_or_params):
-            return ScenarioDescriptor(fn_or_params, self._decorators, self._params)
+    @overload
+    def __call__(self, *, subject: str) -> "ScenarioDecorator":
+        """
+        Enable usage as `@scenario(subject="subject")` with keyword argument.
 
-        return ScenarioDecorator(self._decorators, tuple(fn_or_params))
+        :param subject: A custom human-readable subject for the scenario.
+        :return: A new ScenarioDecorator with subject applied.
+        """
+        ...
+
+    def __call__(self,
+                 *args: Any,
+                 **kwargs: Any) -> Union[ScenarioDescriptor, "ScenarioDecorator"]:
+        raise NotImplementedError()
 
     def __getitem__(self, item: Any) -> "ScenarioDecorator":
         """
@@ -84,7 +106,7 @@ class ScenarioDecorator:
         :return: A new ScenarioDecorator instance with the specified decorators.
         """
         decorators = item if isinstance(item, tuple) else (item,)
-        return ScenarioDecorator(decorators)
+        return ScenarioDecorator(decorators, self._params, self._subject, self._tags)
 
 
 scenario = ScenarioDecorator()

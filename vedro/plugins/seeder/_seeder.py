@@ -111,9 +111,8 @@ class SeederPlugin(Plugin):
         if not self._show_seed_preamble:
             return
 
-        if not self._custom_seed:
-            assert self._initial_seed is not None  # for type checker
-            event.report.add_preamble("seed: " + self._get_seed_repr(self._initial_seed))
+        assert self._initial_seed is not None  # for type checker
+        event.report.add_preamble("seed: " + self._get_seed_repr(self._initial_seed))
 
     def on_scenario_run(self, event: ScenarioRunEvent) -> None:
         """
@@ -220,7 +219,7 @@ class Seeder(PluginConfig):
     plugin = SeederPlugin
     description = "Sets seeds for deterministic random behavior in scenarios"
 
-    show_seed_preamble: bool = True
+    show_seed_preamble: bool = False
     """
     Show the initial seed in the pre-run preamble.
     """
