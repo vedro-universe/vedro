@@ -40,6 +40,15 @@ async def test_seed_decorator_type_error():
         assert f"@seed({CUSTOM_SEED!r})" in str(exc_info.value)
 
 
+async def test_seed_decorator_type_error_non_string():
+    with when, pytest.raises(Exception) as exc_info:
+        seed(123)
+
+    with then:
+        assert exc_info.type is TypeError
+        assert str(exc_info.value) == "seed_value must be a string, got int"
+
+
 async def test_seed_decorator_on_function():
     with given:
         def fn():

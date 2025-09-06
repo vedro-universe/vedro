@@ -1,7 +1,14 @@
 import asyncio
-from typing import Any, Callable, Coroutine, Type, Union, final
+from typing import Any, Callable, Coroutine, Optional, Type, Union, final
 
-from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig, ScenarioScheduler
+from vedro.core import (
+    ConfigType,
+    Dispatcher,
+    Plugin,
+    PluginConfig,
+    ScenarioScheduler,
+    VirtualScenario,
+)
 from vedro.core.scenario_runner import Interrupted
 from vedro.events import (
     ArgParsedEvent,
@@ -15,6 +22,7 @@ from vedro.events import (
     StartupEvent,
 )
 
+from ._repeat import _repeat_queue
 from ._scheduler import RepeaterScenarioScheduler
 
 __all__ = ("Repeater", "RepeaterPlugin", "RepeaterExecutionInterrupted",)
@@ -59,13 +67,15 @@ class RepeaterPlugin(Plugin):
         super().__init__(config)
         self._scheduler_factory = config.scheduler_factory
         self._sleep = sleep
-        self._repeats: int = 1
-        self._repeats_delay: float = 0.0
+        self._repeats: Optional[int] = None
+        self._repeats_delay: Optional[float] = None
         self._fail_fast: bool = False
         self._global_config: Union[ConfigType, None] = None
         self._scheduler: Union[ScenarioScheduler, None] = None
         self._repeat_scenario_id: Union[str, None] = None
         self._failed_count: int = 0
+        self._has_decorator_repeats: bool = False
+        self._has_cli_repeats: bool = False
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
@@ -78,14 +88,14 @@ class RepeaterPlugin(Plugin):
         :param dispatcher: The event dispatcher to register listeners on.
         """
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
-                  .listen(ArgParseEvent, self.on_arg_parse) \
-                  .listen(ArgParsedEvent, self.on_arg_parsed) \
-                  .listen(StartupEvent, self.on_startup) \
-                  .listen(ScenarioRunEvent, self.on_scenario_execute) \
-                  .listen(ScenarioSkippedEvent, self.on_scenario_execute) \
-                  .listen(ScenarioPassedEvent, self.on_scenario_end) \
-                  .listen(ScenarioFailedEvent, self.on_scenario_end) \
-                  .listen(CleanupEvent, self.on_cleanup)
+            .listen(ArgParseEvent, self.on_arg_parse) \
+            .listen(ArgParsedEvent, self.on_arg_parsed) \
+            .listen(StartupEvent, self.on_startup) \
+            .listen(ScenarioRunEvent, self.on_scenario_execute) \
+            .listen(ScenarioSkippedEvent, self.on_scenario_execute) \
+            .listen(ScenarioPassedEvent, self.on_scenario_end) \
+            .listen(ScenarioFailedEvent, self.on_scenario_end) \
+            .listen(CleanupEvent, self.on_cleanup)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         """
@@ -131,17 +141,21 @@ class RepeaterPlugin(Plugin):
         self._repeats_delay = event.args.repeats_delay
         self._fail_fast = event.args.fail_fast_on_repeat
 
-        if self._repeats < 1:
+        if (self._repeats is not None) and (self._repeats < 1):
             raise ValueError("--repeats must be >= 1")
 
-        if self._repeats_delay < 0.0:
-            raise ValueError("--repeats-delay must be >= 0.0")
+        if self._repeats_delay is not None:
+            if self._repeats_delay < 0.0:
+                raise ValueError("--repeats-delay must be >= 0.0")
+            if self._repeats is None:
+                raise ValueError("--repeats-delay must be used with --repeats")
 
-        if (self._repeats_delay > 0.0) and (self._repeats <= 1):
-            raise ValueError("--repeats-delay must be used with --repeats > 1")
+        if len(_repeat_queue) > 0:
+            self._has_decorator_repeats = True
+            _repeat_queue.clear()
 
-        if self._fail_fast and (self._repeats <= 1):
-            raise ValueError("--fail-fast-on-repeat must be used with --repeats > 1")
+        if (self._repeats is not None) and (self._repeats > 1):
+            self._has_cli_repeats = True
 
         if self._is_repeating_enabled():
             assert self._global_config is not None  # for type checking
@@ -173,12 +187,19 @@ class RepeaterPlugin(Plugin):
         if not self._is_repeating_enabled():
             return
 
+        scenario = event.scenario_result.scenario
+        repeats = self._get_repeats(scenario)
+        if (repeats is None) or (repeats <= 1):
+            return
+
         if self._fail_fast and (self._failed_count > 0):
             raise RepeaterExecutionInterrupted("Stop repeating scenarios after the first failure")
 
-        scenario = event.scenario_result.scenario
-        if (self._repeat_scenario_id == scenario.unique_id) and (self._repeats_delay > 0.0):
-            await self._sleep(self._repeats_delay)
+        repeats_delay = self._get_repeats_delay(scenario)
+        if (repeats_delay is None) or (repeats_delay <= 0.0):
+            return
+        if self._repeat_scenario_id == scenario.unique_id:
+            await self._sleep(repeats_delay)
 
     async def on_scenario_end(self,
                               event: Union[ScenarioPassedEvent, ScenarioFailedEvent]) -> None:
@@ -193,13 +214,17 @@ class RepeaterPlugin(Plugin):
         """
         if not self._is_repeating_enabled():
             return
-        assert isinstance(self._scheduler, ScenarioScheduler)  # for type checking
 
         scenario = event.scenario_result.scenario
+        repeats = self._get_repeats(scenario)
+        if (repeats is None) or (repeats <= 1):
+            return
+
+        assert isinstance(self._scheduler, ScenarioScheduler)  # for type checking
         if scenario.unique_id != self._repeat_scenario_id:
             self._repeat_scenario_id = scenario.unique_id
             self._failed_count = 1 if event.scenario_result.is_failed() else 0
-            for _ in range(self._repeats - 1):
+            for _ in range(repeats - 1):
                 self._scheduler.schedule(scenario)
         else:
             if event.scenario_result.is_failed():
@@ -214,34 +239,38 @@ class RepeaterPlugin(Plugin):
 
         :param event: The CleanupEvent signaling the end of execution.
         """
-        if not self._is_repeating_enabled():
-            return
+        if self._has_cli_repeats and self._has_decorator_repeats:
+            # Case 3: Both --repeats and @repeat provided
+            message = f"repeated x{self._repeats}"
+            if self._repeats_delay is not None:
+                message += f" with delay {self._repeats_delay!r}s"
+            message += " (with per-scenario overrides)"
+        elif self._has_cli_repeats:
+            # Case 1: Only --repeats provided
+            message = f"repeated x{self._repeats}"
+            if self._repeats_delay is not None:
+                message += f" with delay {self._repeats_delay!r}s"
+        elif self._has_decorator_repeats:
+            # Case 2: Only @repeat provided
+            message = "repeated (using @repeat decorators)"
+        else:
+            message = ""
 
-        if not event.report.interrupted:
-            message = self._get_summary_message()
+        if not event.report.interrupted and message != "":
             event.report.add_summary(message)
 
     def _is_repeating_enabled(self) -> bool:
-        """
-        Check if scenario repetition is enabled.
+        return self._has_cli_repeats or self._has_decorator_repeats
 
-        :return: True if repetitions are enabled, False otherwise.
-        """
-        return self._repeats > 1
+    def _get_repeats(self, scenario: VirtualScenario) -> Union[int, None]:
+        repeats = scenario.get_meta("repeats", default=None, plugin=self)
+        if repeats is not None:
+            self._has_decorator_repeats = True
+            return repeats
+        return self._repeats
 
-    def _get_summary_message(self) -> str:
-        """
-        Generate a summary message for the repetition process.
-
-        This method returns a string summarizing the repetition settings,
-        including the number of repetitions and any delays applied.
-
-        :return: A string summarizing the repetition process.
-        """
-        message = f"repeated x{self._repeats}"
-        if self._repeats_delay > 0.0:
-            message += f" with delay {self._repeats_delay!r}s"
-        return message
+    def _get_repeats_delay(self, scenario: VirtualScenario) -> Union[float, int, None]:
+        return scenario.get_meta("repeats_delay", default=self._repeats_delay, plugin=self)
 
 
 class Repeater(PluginConfig):

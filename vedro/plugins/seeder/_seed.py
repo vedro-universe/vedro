@@ -36,6 +36,9 @@ def seed(seed_value: str) -> Callable[[Type[T]], Type[T]]:
     :return: A decorator that applies the seed configuration to the scenario.
     :raises TypeError: If used on a non-Scenario class.
     """
+    if not isinstance(seed_value, str):
+        raise TypeError(f"seed_value must be a string, got {type(seed_value).__name__}")
+
     def apply_seed(scn: Type[T]) -> Type[T]:
         """
         Apply seed metadata to the scenario for deterministic random behavior.
