@@ -127,7 +127,7 @@ async def test_subject_positional(provider: ScenarioProvider, scenario_source: S
     with then:
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
-        assert scenarios[0].name == "_"
+        assert scenarios[0].name == "create_user"
         assert get_scenario_tags(scenarios[0]) == ()
 
 
@@ -147,7 +147,7 @@ async def test_subject_keyword(provider: ScenarioProvider, scenario_source: Scen
     with then:
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
-        assert scenarios[0].name == "_"
+        assert scenarios[0].name == "create_user"
         assert get_scenario_tags(scenarios[0]) == ()
 
 
@@ -195,7 +195,7 @@ async def test_subject_params_both_positional(provider: ScenarioProvider,
         assert len(scenarios) == 2
         for idx, scn in enumerate(scenarios, start=1):
             assert scn.subject == "create user"
-            assert scn.name == "_"
+            assert scn.name == "create_user"
             assert scn.template_index == idx
             assert scn.template_total == 2
             assert scn._orig_scenario.tags == ()
@@ -222,7 +222,7 @@ async def test_subject_positional_cases_keyword(provider: ScenarioProvider,
         assert len(scenarios) == 2
         for idx, scn in enumerate(scenarios, start=1):
             assert scn.subject == "create user"
-            assert scn.name == "_"
+            assert scn.name == "create_user"
             assert scn.template_index == idx
             assert scn.template_total == 2
             assert scn._orig_scenario.tags == ()
@@ -245,7 +245,7 @@ async def test_subject_positional_tags_keyword(provider: ScenarioProvider,
     with then:
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
-        assert scenarios[0].name == "_"
+        assert scenarios[0].name == "create_user"
         assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
 
 
@@ -270,7 +270,7 @@ async def test_subject_cases_both_keywords(provider: ScenarioProvider,
         assert len(scenarios) == 2
         for idx, scn in enumerate(scenarios, start=1):
             assert scn.subject == "create user"
-            assert scn.name == "_"
+            assert scn.name == "create_user"
             assert scn.template_index == idx
             assert scn.template_total == 2
             assert scn._orig_scenario.tags == ()
@@ -293,7 +293,7 @@ async def test_subject_tags_both_keywords(provider: ScenarioProvider,
     with then:
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
-        assert scenarios[0].name == "_"
+        assert scenarios[0].name == "create_user"
         assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
 
 
@@ -363,7 +363,7 @@ async def test_subject_params_positional_tags_keyword(provider: ScenarioProvider
     with then:
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
-        assert scenarios[0].name == "_"
+        assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
         assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
@@ -386,7 +386,7 @@ async def test_subject_positional_cases_tags_keywords(provider: ScenarioProvider
     with then:
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
-        assert scenarios[0].name == "_"
+        assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
         assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
@@ -409,7 +409,7 @@ async def test_subject_cases_tags_all_keywords(provider: ScenarioProvider,
     with then:
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
-        assert scenarios[0].name == "_"
+        assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
         assert get_scenario_tags(scenarios[0]) == {"API"}
@@ -460,7 +460,10 @@ async def test_duplicate_function_name_error(provider: ScenarioProvider,
 
     with then:
         assert exc.type is DuplicateScenarioError
-        assert str(exc.value) == "..."
+        assert str(exc.value) == (
+            "Duplicate scenario function 'create_user' found. "
+            "Each scenario function must have a unique name."
+        )
 
 
 async def test_duplicate_subject_for_anonymous_functions(provider: ScenarioProvider,
@@ -484,7 +487,10 @@ async def test_duplicate_subject_for_anonymous_functions(provider: ScenarioProvi
 
     with then:
         assert exc.type is DuplicateScenarioError
-        assert str(exc.value) == "..."
+        assert str(exc.value) == (
+            "Duplicate scenario with subject 'update user' found. "
+            "Each anonymous scenario must have a unique subject."
+        )
 
 
 async def test_anonymous_function_without_subject(provider: ScenarioProvider,
@@ -504,4 +510,7 @@ async def test_anonymous_function_without_subject(provider: ScenarioProvider,
 
     with then:
         assert exc.type is DuplicateScenarioError
-        assert str(exc.value) == "..."
+        assert str(exc.value) == (
+            "Anonymous scenario function '_' requires a subject. "
+            "Use @scenario('subject') to provide one."
+        )
