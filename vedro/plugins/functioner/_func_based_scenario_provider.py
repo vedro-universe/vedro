@@ -155,6 +155,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
             "__lineno__": descriptor.lineno,
             "__doc__": descriptor.fn.__doc__,
             "subject": self._create_subject(descriptor),
+            "tags": descriptor.tags,
         }
 
     def _create_scenario_name(self, descriptor: ScenarioDescriptor) -> str:
