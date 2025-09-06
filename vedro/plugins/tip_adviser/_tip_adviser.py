@@ -47,7 +47,7 @@ class TipAdviserPlugin(Plugin):
 
         :param event: The ArgParsedEvent instance containing parsed arguments.
         """
-        self._repeats = event.args.repeats if hasattr(event.args, 'repeats') else 1
+        self._repeats = event.args.repeats if getattr(event.args, 'repeats', None) else 1
         self._fail_fast = event.args.fail_fast if hasattr(event.args, 'fail_fast') else False
         self._fixed_seed = event.args.fixed_seed if hasattr(event.args, 'fixed_seed') else False
 
