@@ -1,9 +1,11 @@
 from textwrap import dedent
 
 from baby_steps import given, then, when
+from pytest import raises
 
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
+from vedro.plugins.functioner._errors import DuplicateScenarioError
 
 from ._utils import get_scenario_tags, module_loader, provider, scenario_source, tmp_dir
 
@@ -411,3 +413,95 @@ async def test_subject_cases_tags_all_keywords(provider: ScenarioProvider,
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
         assert get_scenario_tags(scenarios[0]) == {"API"}
+
+
+# Additional edge cases
+
+
+async def test_subject_overrides_function_name(provider: ScenarioProvider,
+                                               scenario_source: ScenarioSource):
+    with given:
+        scenario_source.path.write_text(dedent('''
+            from vedro import scenario
+
+            @scenario("create user")
+            def create_user_with_name():
+                pass
+        ''').strip())
+
+    with when:
+        scenarios = await provider.provide(scenario_source)
+
+    with then:
+        assert len(scenarios) == 1
+        assert scenarios[0].subject == "create user"
+        assert scenarios[0].name == "create_user"
+        assert get_scenario_tags(scenarios[0]) == ()
+
+
+async def test_duplicate_function_name_error(provider: ScenarioProvider,
+                                             scenario_source: ScenarioSource):
+    with given:
+        scenario_source.path.write_text(dedent('''
+            from vedro import scenario
+
+            @scenario
+            def create_user():
+                pass
+
+            @scenario
+            def create_user():
+                pass
+        ''').strip())
+
+    with when:
+        with raises(BaseException) as exc:
+            await provider.provide(scenario_source)
+
+    with then:
+        assert exc.type is DuplicateScenarioError
+        assert str(exc.value) == "..."
+
+
+async def test_duplicate_subject_for_anonymous_functions(provider: ScenarioProvider,
+                                                         scenario_source: ScenarioSource):
+    with given:
+        scenario_source.path.write_text(dedent('''
+            from vedro import scenario
+            
+            @scenario("update user")
+            def _():
+                pass
+
+            @scenario("update user")
+            def _():
+                pass
+        ''').strip())
+
+    with when:
+        with raises(BaseException) as exc:
+            await provider.provide(scenario_source)
+
+    with then:
+        assert exc.type is DuplicateScenarioError
+        assert str(exc.value) == "..."
+
+
+async def test_anonymous_function_without_subject(provider: ScenarioProvider,
+                                                  scenario_source: ScenarioSource):
+    with given:
+        scenario_source.path.write_text(dedent('''
+            from vedro import scenario
+
+            @scenario
+            def _():
+                pass
+        ''').strip())
+
+    with when:
+        with raises(BaseException) as exc:
+            await provider.provide(scenario_source)
+
+    with then:
+        assert exc.type is DuplicateScenarioError
+        assert str(exc.value) == "..."
