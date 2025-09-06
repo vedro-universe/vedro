@@ -17,6 +17,7 @@ class ScenarioDescriptor:
     def __init__(self, fn: Callable[..., Any],
                  decorators: Tuple[Callable[..., Any], ...] = (),
                  params: Tuple[Any, ...] = (),
+                 name: Optional[str] = None,
                  subject: Optional[str] = None,
                  tags: TagsType = ()) -> None:
         """
@@ -27,6 +28,7 @@ class ScenarioDescriptor:
                            Defaults to an empty tuple.
         :param params: A tuple of parameter sets to use for parameterized scenarios.
                        Defaults to an empty tuple.
+        :param name: Optional generated name for the scenario. If not provided, uses fn.__name__.
         :param subject: An optional custom human-readable subject for the scenario.
                         If not provided, it will be generated from the function name.
         :param tags: Tags to associate with the scenario. Can be a list, tuple, or set
@@ -35,6 +37,7 @@ class ScenarioDescriptor:
         self._fn = fn
         self._decorators = decorators
         self._params = params
+        self._name = name or fn.__name__
         self._subject = subject
         self._tags = tags
 
@@ -45,7 +48,7 @@ class ScenarioDescriptor:
 
         :return: The name of the function as a string.
         """
-        return self._fn.__name__
+        return self._name
 
     @property
     def fn(self) -> Callable[..., Any]:
