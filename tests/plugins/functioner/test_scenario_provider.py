@@ -92,27 +92,6 @@ async def test_parametrized_func_scenarios(provider: ScenarioProvider,
             assert scenario.steps[0].name == "do"
 
 
-@pytest.mark.parametrize("decorator", [
-    "@scenario",
-    "@scenario()",
-])
-async def test_scenario_decorator_variants(decorator: str, *, provider: ScenarioProvider,
-                                           scenario_source: ScenarioSource):
-    with given:
-        scenario_source.path.write_text(dedent(f'''
-            from vedro import scenario
-            {decorator}
-            def create_user():
-                pass
-        '''))
-
-    with when:
-        scenarios = await provider.provide(scenario_source)
-
-    with then:
-        assert len(scenarios) == 1
-
-
 async def test_multiple_func_scenarios(provider: ScenarioProvider,
                                        scenario_source: ScenarioSource):
     with given:

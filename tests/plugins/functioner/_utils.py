@@ -3,11 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from vedro.core import ModuleFileLoader, ModuleLoader
+from vedro import TagsType
+from vedro.core import ModuleFileLoader, ModuleLoader, VirtualScenario
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
 
-__all__ = ("tmp_dir", "provider", "module_loader", "scenario_source",)
+__all__ = ("tmp_dir", "provider", "module_loader", "scenario_source", "get_scenario_tags",)
 
 
 @pytest.fixture()
@@ -37,3 +38,7 @@ def scenario_source(tmp_dir: Path, module_loader: ModuleLoader) -> ScenarioSourc
     project_dir = tmp_dir
     path = project_dir / "scenarios" / "scenario.py"
     return ScenarioSource(path, project_dir, module_loader)
+
+
+def get_scenario_tags(scenario: VirtualScenario) -> TagsType:
+    return getattr(scenario._orig_scenario, "tags", ())  # type: ignore
