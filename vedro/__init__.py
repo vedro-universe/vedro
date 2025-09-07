@@ -6,7 +6,7 @@ from ._config import Config, computed
 from ._context import context
 from ._interface import Interface
 from ._main import main
-from ._params import params
+from ._params import CasesType, params
 from ._scenario import Scenario, TagsType, TagType
 from ._version import version
 from .plugins.artifacted import (
@@ -26,11 +26,12 @@ from .plugins.skipper import only, skip, skip_if
 from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
 
 __version__ = version
-__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params", "catched",
-           "scenario", "given", "when", "then", "ensure", "context", "defer", "defer_global",
-           "create_tmp_dir", "create_tmp_file", "attach_artifact", "attach_scenario_artifact",
-           "attach_step_artifact", "attach_global_artifact", "seed", "Config", "computed",
-           "MemoryArtifact", "FileArtifact", "Artifact", "TagType", "TagsType",)
+__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params", "CasesType",
+           "catched", "scenario", "given", "when", "then", "ensure", "context",
+           "defer", "defer_global", "create_tmp_dir", "create_tmp_file", "attach_artifact",
+           "attach_scenario_artifact", "attach_step_artifact", "attach_global_artifact",
+           "seed", "Config", "computed", "MemoryArtifact", "FileArtifact", "Artifact",
+           "TagType", "TagsType",)
 
 
 def run(*, plugins: Any = None) -> None:

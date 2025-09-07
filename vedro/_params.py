@@ -1,9 +1,9 @@
 from functools import wraps
 from inspect import isfunction, ismethod
 from os import linesep
-from typing import TYPE_CHECKING, Any, Callable, Tuple, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, List, Tuple, TypeVar, Union, cast
 
-__all__ = ("params",)
+__all__ = ("params", "CasesType",)
 
 F = TypeVar("F", bound=Callable[..., Any])
 ItemType = Union[
@@ -149,7 +149,7 @@ else:  # pragma: no cover
         to ensure correct usage and type inference.
         """
 
-        def __call__(self, *args: Any, **kwargs: Any) -> Callable[[_T], _T]:
+        def __call__(self, *args: Any, **kwargs: Any) -> Params:
             """
             Apply parameters to a function during static type checking.
 
@@ -157,15 +157,21 @@ else:  # pragma: no cover
             :param kwargs: Keyword arguments for the parameterized test.
             :return: A callable representing the parameterized function.
             """
-            return cast(Callable[[_T], _T], ...)
+            return cast(Params, ...)
 
-        def __getitem__(self, item: ItemType[F]) -> Callable[..., Callable[[_T], _T]]:
+        def __getitem__(self, item: ItemType[F]) -> Callable[..., Params]:
             """
             Create a wrapped parameterized instance with decorators during static type checking.
 
             :param item: A single decorator or a tuple of decorators to be applied.
             :return: A callable that creates a parameterized function.
             """
-            return cast(Callable[..., Callable[[_T], _T]], ...)
+            return cast(Callable[..., Params], ...)
 
     params = TypedParams()
+
+
+CasesType = Union[
+    List[Params],
+    Tuple[Params, ...]
+]
