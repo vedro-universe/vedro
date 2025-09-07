@@ -1,8 +1,8 @@
 import inspect
-from enum import Enum
 from functools import partialmethod
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Dict, Tuple
 
+from ._tags import TagType, TagsType
 from .core._meta_data import MetaData
 
 __all__ = ("Scenario", "TagType", "TagsType",)
@@ -74,10 +74,6 @@ class _Meta(type):
             cls_globals[cls_name] = cls
 
         return created
-
-
-TagType = Union[str, Enum]
-TagsType = Union[List[TagType], Tuple[TagType, ...], Set[TagType]]
 
 
 # In v2, consider moving this class to `vedro.core.scenario_provider`

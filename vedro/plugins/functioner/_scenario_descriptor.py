@@ -1,7 +1,7 @@
 from typing import Any, Callable, Optional, Tuple, Union
 
 from vedro._params import CasesType
-from vedro._scenario import TagsType
+from vedro._tags import TagsType
 
 __all__ = ("ScenarioDescriptor",)
 

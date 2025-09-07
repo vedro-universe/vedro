@@ -1,7 +1,7 @@
 from typing import Any, Callable, Optional, Tuple, Union, overload
 
 from vedro._params import CasesType
-from vedro._scenario import TagsType
+from vedro._tags import TagsType
 
 from ._errors import DuplicateScenarioError
 from ._sanitize_identifier import sanitize_identifier
