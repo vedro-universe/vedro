@@ -2,7 +2,7 @@ import inspect
 from functools import partialmethod
 from typing import Any, Dict, Tuple
 
-from ._tags import TagType, TagsType
+from ._tags import TagsType, TagType
 from .core._meta_data import MetaData
 
 __all__ = ("Scenario", "TagType", "TagsType",)
