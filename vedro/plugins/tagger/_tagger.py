@@ -8,11 +8,7 @@ from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 from ._tag_matcher import TagMatcher
 from .logic_tag_matcher import LogicTagMatcher
 
-__all__ = ("Tagger", "TaggerPlugin", "get_scenario_tags",)
-
-
-def get_scenario_tags(scenario: VirtualScenario) -> TagsType:
-    return cast(TagsType, getattr(scenario._orig_scenario, "tags", ()))
+__all__ = ("Tagger", "TaggerPlugin",)
 
 
 @final
@@ -83,7 +79,7 @@ class TaggerPlugin(Plugin):
         """
 
         # TODO: In v2, consider moving the 'tags' attribute directly into the Scenario class
-        orig_tags = get_scenario_tags(scenario)
+        orig_tags = scenario.tags
         # TagsType is list, tuple, or set
         if not isinstance(orig_tags, (list, tuple, set)):
             raise TypeError(f"Scenario '{scenario.unique_id}' tags must be a list, tuple or set, "

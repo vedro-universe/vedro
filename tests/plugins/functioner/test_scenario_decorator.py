@@ -6,7 +6,6 @@ from pytest import raises
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
 from vedro.plugins.functioner._errors import DuplicateScenarioError
-from vedro.plugins.tagger import get_scenario_tags
 
 from ._utils import module_loader, provider, scenario_source, tmp_dir
 
@@ -32,7 +31,7 @@ async def test_direct_decoration(provider: ScenarioProvider, scenario_source: Sc
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == ()
+        assert scenarios[0].tags == ()
 
 
 async def test_empty_call(provider: ScenarioProvider, scenario_source: ScenarioSource):
@@ -52,7 +51,7 @@ async def test_empty_call(provider: ScenarioProvider, scenario_source: ScenarioS
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == ()
+        assert scenarios[0].tags == ()
 
 
 # Single argument patterns
@@ -129,7 +128,7 @@ async def test_subject_positional(provider: ScenarioProvider, scenario_source: S
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == ()
+        assert scenarios[0].tags == ()
 
 
 async def test_subject_keyword(provider: ScenarioProvider, scenario_source: ScenarioSource):
@@ -149,7 +148,7 @@ async def test_subject_keyword(provider: ScenarioProvider, scenario_source: Scen
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == ()
+        assert scenarios[0].tags == ()
 
 
 async def test_tags_only_keyword(provider: ScenarioProvider, scenario_source: ScenarioSource):
@@ -169,7 +168,7 @@ async def test_tags_only_keyword(provider: ScenarioProvider, scenario_source: Sc
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
+        assert scenarios[0].tags == {"API", "P0"}
 
 
 # Two argument patterns
@@ -247,7 +246,7 @@ async def test_subject_positional_tags_keyword(provider: ScenarioProvider,
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
+        assert scenarios[0].tags == {"API", "P0"}
 
 
 async def test_subject_cases_both_keywords(provider: ScenarioProvider,
@@ -295,7 +294,7 @@ async def test_subject_tags_both_keywords(provider: ScenarioProvider,
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
+        assert scenarios[0].tags == {"API", "P0"}
 
 
 async def test_cases_tags_both_keywords(provider: ScenarioProvider,
@@ -318,7 +317,7 @@ async def test_cases_tags_both_keywords(provider: ScenarioProvider,
         assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
-        assert get_scenario_tags(scenarios[0]) == {"API"}
+        assert scenarios[0].tags == {"API"}
 
 
 async def test_params_positional_tags_keyword(provider: ScenarioProvider,
@@ -341,7 +340,7 @@ async def test_params_positional_tags_keyword(provider: ScenarioProvider,
         assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
-        assert get_scenario_tags(scenarios[0]) == {"API"}
+        assert scenarios[0].tags == {"API"}
 
 
 # Three argument patterns
@@ -367,7 +366,7 @@ async def test_subject_params_positional_tags_keyword(provider: ScenarioProvider
         assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
-        assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
+        assert scenarios[0].tags == {"API", "P0"}
 
 
 async def test_subject_positional_cases_tags_keywords(provider: ScenarioProvider,
@@ -390,7 +389,7 @@ async def test_subject_positional_cases_tags_keywords(provider: ScenarioProvider
         assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
-        assert get_scenario_tags(scenarios[0]) == {"API", "P0"}
+        assert scenarios[0].tags == {"API", "P0"}
 
 
 async def test_subject_cases_tags_all_keywords(provider: ScenarioProvider,
@@ -413,7 +412,7 @@ async def test_subject_cases_tags_all_keywords(provider: ScenarioProvider,
         assert scenarios[0].name == "create_user"
         assert scenarios[0].template_index == 1
         assert scenarios[0].template_total == 1
-        assert get_scenario_tags(scenarios[0]) == {"API"}
+        assert scenarios[0].tags == {"API"}
 
 
 # Additional edge cases
@@ -437,7 +436,7 @@ async def test_subject_overrides_function_name(provider: ScenarioProvider,
         assert len(scenarios) == 1
         assert scenarios[0].subject == "create user"
         assert scenarios[0].name == "create_user"
-        assert get_scenario_tags(scenarios[0]) == ()
+        assert scenarios[0].tags == ()
 
 
 async def test_duplicate_function_name_error(provider: ScenarioProvider,

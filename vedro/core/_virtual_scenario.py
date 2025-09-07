@@ -9,6 +9,7 @@ from typing import Type, TypeVar, Union, cast, overload
 from niltype import Nil, Nilable, NilType
 
 from .._scenario import Scenario
+from .._tags import TagsType
 from ._plugin import Plugin
 from ._scenario_meta import get_scenario_meta, set_scenario_meta
 from ._virtual_step import VirtualStep
@@ -216,6 +217,18 @@ class VirtualScenario:
         :return: A boolean indicating if the scenario is skipped.
         """
         return self._is_skipped
+
+    @property
+    def tags(self) -> TagsType:
+        """
+        Get the tags associated with the scenario.
+
+        Tags can be used to categorize, filter, or label scenarios with specific
+        attributes. Each tag can be either a string or an Enum value.
+
+        :return: A collection of tags associated with the scenario.
+        """
+        return cast(TagsType, getattr(self._orig_scenario, "tags", ()))
 
     def set_meta(self, key: str, value: Any, *, plugin: Plugin,
                  fallback_key: Optional[str] = None) -> None:
