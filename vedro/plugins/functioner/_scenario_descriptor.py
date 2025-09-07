@@ -99,4 +99,4 @@ class ScenarioDescriptor:
         """
         if hasattr(self._fn, "__code__"):
             return getattr(self._fn.__code__, "co_firstlineno", None)
-        return None
+        return None  # pragma: no cover
