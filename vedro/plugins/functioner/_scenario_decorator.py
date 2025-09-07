@@ -64,7 +64,7 @@ class ScenarioDecorator:
             # Don't allow additional arguments when decorating a function directly
             if len(args) > 1 or len(kwargs) > 0:
                 raise TypeError(
-                    f"scenario() takes 1 positional argument when decorating a function "
+                    f"@scenario() takes 1 positional argument when decorating a function "
                     f"but {len(args)} were given with {len(kwargs)} keyword arguments"
                 )
             return self._create_descriptor(fn)
@@ -86,9 +86,9 @@ class ScenarioDecorator:
         :param kwargs: Keyword arguments passed to the decorator
         :return: A tuple of (subject, cases, tags)
         """
-        subject = self._subject
-        cases = self._cases
-        tags = self._tags
+        subject: Union[str, None] = None
+        cases: CasesType = ()
+        tags: TagsType = ()
 
         # Track what was set from positional arguments
         subject_from_args = False
@@ -129,7 +129,7 @@ class ScenarioDecorator:
             cases_from_args = True
         else:
             raise TypeError(
-                f"scenario() takes at most 2 positional arguments ({len(args)} given)"
+                f"@scenario() takes at most 2 positional arguments ({len(args)} given)"
             )
 
         # Handle keyword arguments
@@ -165,18 +165,12 @@ class ScenarioDecorator:
         unexpected = set(kwargs.keys()) - allowed_kwargs
         if unexpected:
             raise TypeError(
-                f"scenario() got unexpected keyword argument(s): {', '.join(sorted(unexpected))}"
+                f"@scenario() got unexpected keyword argument(s): {', '.join(sorted(unexpected))}"
             )
 
         return subject, cases, tags
 
     def _create_descriptor(self, fn: Callable[..., Any]) -> ScenarioDescriptor:
-        """
-        Create a ScenarioDescriptor from a function.
-
-        :param fn: The function to create a descriptor for
-        :return: A ScenarioDescriptor instance
-        """
         if fn.__name__ == "_" and not self._subject:
             raise DuplicateScenarioError(
                 "Anonymous scenario function '_' requires a subject. "
