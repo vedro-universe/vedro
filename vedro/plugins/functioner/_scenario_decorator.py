@@ -3,6 +3,7 @@ from typing import Any, Callable, Optional, Tuple, Union, overload
 from vedro._params import CasesType
 from vedro._scenario import TagsType
 
+from ._errors import DuplicateScenarioError
 from ._sanitize_identifier import sanitize_identifier
 from ._scenario_descriptor import ScenarioDescriptor
 
@@ -176,25 +177,40 @@ class ScenarioDecorator:
         :param fn: The function to create a descriptor for
         :return: A ScenarioDescriptor instance
         """
-        # Generate name from subject if subject is provided
-        name = None
+        if fn.__name__ == "_" and not self._subject:
+            raise DuplicateScenarioError(
+                "Anonymous scenario function '_' requires a subject. "
+                "Use @scenario('subject') to provide one."
+            )
+
         if self._subject:
-            name = self._create_scenario_name(self._subject)
+            descriptor_name = self._create_scenario_name(self._subject)
+        else:
+            descriptor_name = fn.__name__
 
         descriptor = ScenarioDescriptor(
             fn=fn,
             decorators=self._decorators,
             cases=self._cases,
             subject=self._subject,
-            name=name,
+            name=descriptor_name,
             tags=self._tags,
         )
 
-        # Register the descriptor in the function's module globals
-        # This allows the scenario provider to find it
         if hasattr(fn, '__globals__'):
-            # Use the generated name if available, otherwise use function name
-            descriptor_name = name if name else fn.__name__
+            existing = fn.__globals__.get(descriptor_name)
+            if (existing is not None) and isinstance(existing, ScenarioDescriptor):
+                if self._subject:
+                    raise DuplicateScenarioError(
+                        f"Duplicate scenario with subject '{self._subject}' found. "
+                        "Each anonymous scenario must have a unique subject."
+                    )
+                else:
+                    raise DuplicateScenarioError(
+                        f"Duplicate scenario function '{descriptor_name}' found. "
+                        "Each scenario function must have a unique name."
+                    )
+
             fn.__globals__[descriptor_name] = descriptor
 
         return descriptor
