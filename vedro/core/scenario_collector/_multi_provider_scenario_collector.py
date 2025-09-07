@@ -82,13 +82,15 @@ class MultiProviderScenarioCollector(ScenarioCollector):
 
         scenarios = []
         for res in results:
-            if isinstance(res, Exception):
+            if isinstance(res, BaseException):
                 raise res
             if not isinstance(res, list):
-                raise TypeError("Provider must return a list of VirtualScenario")
+                raise TypeError(f"Provider must return a list of VirtualScenario, "
+                                f"got {type(res).__name__} instead")
             for scn in res:
                 if not isinstance(scn, VirtualScenario):
-                    raise TypeError("Each item in the list must be a VirtualScenario")
+                    raise TypeError(f"Each item in the list must be a VirtualScenario, "
+                                    f"got {type(scn).__name__} instead")
                 scenarios.append(scn)
         return scenarios
 
