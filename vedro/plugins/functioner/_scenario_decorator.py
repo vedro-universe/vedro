@@ -57,12 +57,18 @@ class ScenarioDecorator:
     def __call__(self,
                  *args: Any,
                  **kwargs: Any) -> Union[ScenarioDescriptor, "ScenarioDecorator"]:
+        # If first argument is a callable, it's a direct decoration
         if len(args) > 0 and callable(args[0]):
             fn = args[0]
+            # Don't allow additional arguments when decorating a function directly
             if len(args) > 1 or len(kwargs) > 0:
-                raise TypeError("<message>")
+                raise TypeError(
+                    f"scenario() takes 1 positional argument when decorating a function "
+                    f"but {len(args)} were given with {len(kwargs)} keyword arguments"
+                )
             return self._create_descriptor(fn)
 
+        # Otherwise, parse arguments to create a new decorator
         subject, cases, tags = self._parse_args(args, kwargs)
         return ScenarioDecorator(
             decorators=self._decorators,
@@ -72,21 +78,134 @@ class ScenarioDecorator:
         )
 
     def _parse_args(self, args: Any, kwargs: Any) -> Tuple[Union[str, None], CasesType, TagsType]:
-        ...
-        return None, (), ()
+        """
+        Parse arguments to extract subject, cases, and tags.
+
+        :param args: Positional arguments passed to the decorator
+        :param kwargs: Keyword arguments passed to the decorator
+        :return: A tuple of (subject, cases, tags)
+        """
+        subject = self._subject
+        cases = self._cases
+        tags = self._tags
+
+        # Track what was set from positional arguments
+        subject_from_args = False
+        cases_from_args = False
+
+        # Handle positional arguments
+        if len(args) == 0:
+            # No positional args, check kwargs
+            pass
+        elif len(args) == 1:
+            # Single positional arg could be subject (str) or cases (list/tuple)
+            if isinstance(args[0], str):
+                subject = args[0]
+                subject_from_args = True
+            elif isinstance(args[0], (list, tuple)):
+                cases = args[0]
+                cases_from_args = True
+            else:
+                raise TypeError(
+                    f"First positional argument must be either str (subject) or "
+                    f"list/tuple (cases), got {type(args[0]).__name__}"
+                )
+        elif len(args) == 2:
+            # Two positional args: subject and cases
+            if not isinstance(args[0], str):
+                raise TypeError(
+                    f"When providing two positional arguments, first must be str (subject), "
+                    f"got {type(args[0]).__name__}"
+                )
+            if not isinstance(args[1], (list, tuple)):
+                raise TypeError(
+                    f"When providing two positional arguments, second must be list or "
+                    f"tuple (cases), got {type(args[1]).__name__}"
+                )
+            subject = args[0]
+            cases = args[1]
+            subject_from_args = True
+            cases_from_args = True
+        else:
+            raise TypeError(
+                f"scenario() takes at most 2 positional arguments ({len(args)} given)"
+            )
+
+        # Handle keyword arguments
+        if 'subject' in kwargs:
+            if subject_from_args:
+                raise TypeError("Got multiple values for argument 'subject'")
+            subject = kwargs['subject']
+            if subject is not None and not isinstance(subject, str):
+                raise TypeError(
+                    f"subject must be str or None, got {type(subject).__name__}"
+                )
+
+        if 'cases' in kwargs:
+            if cases_from_args:
+                raise TypeError("Got multiple values for argument 'cases'")
+            cases = kwargs['cases']
+            # CasesType is list or tuple
+            if not isinstance(cases, (list, tuple)):
+                raise TypeError(
+                    f"cases must be list or tuple, got {type(cases).__name__}"
+                )
+
+        if 'tags' in kwargs:
+            tags = kwargs['tags']
+            # TagsType is list, tuple, or set
+            if not isinstance(tags, (list, tuple, set)):
+                raise TypeError(
+                    f"tags must be list, tuple, or set, got {type(tags).__name__}"
+                )
+
+        # Check for unexpected keyword arguments
+        allowed_kwargs = {'subject', 'cases', 'tags'}
+        unexpected = set(kwargs.keys()) - allowed_kwargs
+        if unexpected:
+            raise TypeError(
+                f"scenario() got unexpected keyword argument(s): {', '.join(sorted(unexpected))}"
+            )
+
+        return subject, cases, tags
 
     def _create_descriptor(self, fn: Callable[..., Any]) -> ScenarioDescriptor:
+        """
+        Create a ScenarioDescriptor from a function.
+
+        :param fn: The function to create a descriptor for
+        :return: A ScenarioDescriptor instance
+        """
+        # Generate name from subject if subject is provided
+        name = None
+        if self._subject:
+            name = self._create_scenario_name(self._subject)
+
         descriptor = ScenarioDescriptor(
             fn=fn,
             decorators=self._decorators,
             cases=self._cases,
             subject=self._subject,
+            name=name,
             tags=self._tags,
         )
-        ...
+
+        # Register the descriptor in the function's module globals
+        # This allows the scenario provider to find it
+        if hasattr(fn, '__globals__'):
+            # Use the generated name if available, otherwise use function name
+            descriptor_name = name if name else fn.__name__
+            fn.__globals__[descriptor_name] = descriptor
+
         return descriptor
 
     def _create_scenario_name(self, subject: str) -> str:
+        """
+        Create a valid Python identifier from a subject string.
+
+        :param subject: The human-readable subject string
+        :return: A valid Python identifier
+        """
         return sanitize_identifier(subject, prefix="scenario")
 
     def __getitem__(self, item: Any) -> "ScenarioDecorator":

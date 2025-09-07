@@ -1,9 +1,8 @@
 import keyword
 import re
+from typing import List
 
 __all__ = ("sanitize_identifier",)
-
-from typing import List
 
 
 def sanitize_identifier(s: str, *, prefix: str = "fn") -> str:
