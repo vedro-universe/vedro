@@ -171,7 +171,7 @@ class ScenarioDecorator:
         return subject, cases, tags
 
     def _create_descriptor(self, fn: Callable[..., Any]) -> ScenarioDescriptor:
-        if fn.__name__ == "_" and not self._subject:
+        if self._is_anonymous_function(fn) and not self._subject:
             raise DuplicateScenarioError(
                 "Anonymous scenario function '_' requires a subject. "
                 "Use @scenario('subject') to provide one."
@@ -204,10 +204,19 @@ class ScenarioDecorator:
                     "Each scenario function must have a unique name."
                 )
 
-        if fn.__name__ == "_" and self._subject:
+        if self._is_anonymous_function(fn) and self._subject:
             fn.__globals__[descriptor_name] = descriptor
 
         return descriptor
+
+    def _is_anonymous_function(self, fn: Callable[..., Any]) -> bool:
+        """
+        Check if the function is anonymous (named '_').
+
+        :param fn: The function to check
+        :return: True if the function name is '_', False otherwise
+        """
+        return fn.__name__ == "_"
 
     def _create_scenario_name(self, subject: str) -> str:
         """
