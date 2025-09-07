@@ -6,8 +6,9 @@ from pytest import raises
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
 from vedro.plugins.functioner._errors import DuplicateScenarioError
+from vedro.plugins.tagger import get_scenario_tags
 
-from ._utils import get_scenario_tags, module_loader, provider, scenario_source, tmp_dir
+from ._utils import module_loader, provider, scenario_source, tmp_dir
 
 __all__ = ("tmp_dir", "provider", "module_loader", "scenario_source",)  # fixtures
 

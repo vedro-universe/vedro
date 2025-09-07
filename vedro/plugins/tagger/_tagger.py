@@ -1,13 +1,18 @@
 from enum import Enum
-from typing import Any, Callable, Type, Union, final
+from typing import Any, Callable, Type, Union, cast, final
 
+from vedro._scenario import TagsType
 from vedro.core import Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 
 from ._tag_matcher import TagMatcher
 from .logic_tag_matcher import LogicTagMatcher
 
-__all__ = ("Tagger", "TaggerPlugin",)
+__all__ = ("Tagger", "TaggerPlugin", "get_scenario_tags",)
+
+
+def get_scenario_tags(scenario: VirtualScenario) -> TagsType:
+    return cast(TagsType, getattr(scenario._orig_scenario, "tags", ()))
 
 
 @final
@@ -78,7 +83,7 @@ class TaggerPlugin(Plugin):
         """
 
         # TODO: In v2, consider moving the 'tags' attribute directly into the Scenario class
-        orig_tags = getattr(scenario._orig_scenario, "tags", ())
+        orig_tags = get_scenario_tags(scenario)
         if not isinstance(orig_tags, (list, tuple, set)):
             raise TypeError(f"Scenario '{scenario.unique_id}' tags must be a list, tuple or set, "
                             f"got {type(orig_tags)}")
@@ -87,7 +92,7 @@ class TaggerPlugin(Plugin):
             if isinstance(tag, Enum):
                 tag = tag.value
             try:
-                validate(tag)
+                validate(tag)  # type: ignore
             except Exception as e:
                 raise ValueError(f"Scenario '{scenario.unique_id}' tag '{tag}' is not valid ({e})")
             else:
