@@ -61,14 +61,14 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         :param module: The module in which the scenario is defined.
         :return: A list of Scenario classes, one for each parameterization if applicable.
         """
-        if len(descriptor.params) == 0:
+        if len(descriptor.cases) == 0:
             scenario_cls = self._build_vedro_scenario(descriptor, module)
             return [scenario_cls]
 
-        scenario_cls = self._build_vedro_scenario_with_params(descriptor, module)
+        scenario_cls = self._build_vedro_scenario_with_cases(descriptor, module)
 
         scenarios = []
-        for idx, _ in enumerate(descriptor.params, start=1):
+        for idx, _ in enumerate(descriptor.cases, start=1):
             scn_name = f"{self._create_scenario_name(descriptor)}_{idx}_VedroScenario"
             scenarios.append(
                 # This is a temporary and dirty workaround; to be revisited after the v2 release
@@ -96,8 +96,8 @@ class FuncBasedScenarioProvider(ScenarioProvider):
             scenario_cls = decorator(scenario_cls)
         return scenario_cls
 
-    def _build_vedro_scenario_with_params(self, descriptor: ScenarioDescriptor,
-                                          module: ModuleType) -> Type[Scenario]:
+    def _build_vedro_scenario_with_cases(self, descriptor: ScenarioDescriptor,
+                                         module: ModuleType) -> Type[Scenario]:
         """
         Build a Scenario class that supports parameterization.
 
@@ -117,7 +117,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
             for param_name, value in bound_args.arguments.items():
                 setattr(self, param_name, value)
 
-        for params in reversed(descriptor.params):
+        for params in reversed(descriptor.cases):
             __init__ = params(__init__)
 
         if iscoroutinefunction(descriptor.fn):

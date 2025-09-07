@@ -1,6 +1,7 @@
 from typing import Any, Callable, Optional, Tuple, Union
 
 from vedro._scenario import TagsType
+from vedro._params import CasesType
 
 __all__ = ("ScenarioDescriptor",)
 
@@ -16,7 +17,7 @@ class ScenarioDescriptor:
 
     def __init__(self, fn: Callable[..., Any],
                  decorators: Tuple[Callable[..., Any], ...] = (),
-                 params: Tuple[Any, ...] = (),
+                 cases: CasesType = (),
                  subject: Optional[str] = None,
                  name: Optional[str] = None,
                  tags: TagsType = ()) -> None:
@@ -26,8 +27,7 @@ class ScenarioDescriptor:
         :param fn: The function defining the scenario logic.
         :param decorators: A tuple of decorators to apply to the scenario class.
                            Defaults to an empty tuple.
-        :param params: A tuple of parameter sets to use for parameterized scenarios.
-                       Defaults to an empty tuple.
+        :param cases: A tuple of ... Defaults to an empty tuple.
         :param subject: An optional custom human-readable subject for the scenario.
                         If not provided, it will be generated from the function name.
         :param name: Optional generated name for the scenario. If not provided, uses fn.__name__.
@@ -36,7 +36,7 @@ class ScenarioDescriptor:
         """
         self._fn = fn
         self._decorators = decorators
-        self._params = params
+        self._cases = cases
         self._name = name or fn.__name__
         self._subject = subject
         self._tags = tags
@@ -69,13 +69,8 @@ class ScenarioDescriptor:
         return self._decorators
 
     @property
-    def params(self) -> Tuple[Any, ...]:
-        """
-        Get the parameter sets associated with the scenario.
-
-        :return: A tuple containing parameter sets for scenario instantiation.
-        """
-        return self._params
+    def cases(self) -> CasesType:
+        return self._cases
 
     @property
     def subject(self) -> Optional[str]:
