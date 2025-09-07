@@ -1,7 +1,6 @@
 from enum import Enum
-from typing import Any, Callable, Type, Union, cast, final
+from typing import Any, Callable, Type, Union, final
 
-from vedro._tags import TagsType
 from vedro.core import Dispatcher, Plugin, PluginConfig, VirtualScenario
 from vedro.events import ArgParsedEvent, ArgParseEvent, StartupEvent
 

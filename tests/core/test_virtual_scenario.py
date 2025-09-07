@@ -391,3 +391,32 @@ def test_virtual_template_lineno(*, template_: Type[Scenario]):
 
     with then:
         assert lineno == 42
+
+
+def test_virtual_scenario_tags_default_empty():
+    with given:
+        class CustomScenario(Scenario):
+            # No tags attribute defined
+            pass
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        tags = virtual_scenario.tags
+
+    with then:
+        assert tags == ()
+
+
+def test_virtual_scenario_with_tags():
+    with given:
+        class CustomScenario(Scenario):
+            tags = {"API", "P0", "smoke"}
+
+        virtual_scenario = VirtualScenario(CustomScenario, [])
+
+    with when:
+        tags = virtual_scenario.tags
+
+    with then:
+        assert tags == {"API", "P0", "smoke"}
