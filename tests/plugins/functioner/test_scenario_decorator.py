@@ -58,8 +58,8 @@ async def test_empty_call(provider: ScenarioProvider, scenario_source: ScenarioS
 # Single argument patterns
 
 
-async def test_parameterization_positional(provider: ScenarioProvider, 
-                                          scenario_source: ScenarioSource):
+async def test_parameterization_positional(provider: ScenarioProvider,
+                                           scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -86,7 +86,7 @@ async def test_parameterization_positional(provider: ScenarioProvider,
 
 
 async def test_parameterization_keyword(provider: ScenarioProvider,
-                                       scenario_source: ScenarioSource):
+                                        scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -203,7 +203,7 @@ async def test_subject_params_both_positional(provider: ScenarioProvider,
 
 
 async def test_subject_positional_cases_keyword(provider: ScenarioProvider,
-                                               scenario_source: ScenarioSource):
+                                                scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -230,7 +230,7 @@ async def test_subject_positional_cases_keyword(provider: ScenarioProvider,
 
 
 async def test_subject_positional_tags_keyword(provider: ScenarioProvider,
-                                              scenario_source: ScenarioSource):
+                                               scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -251,7 +251,7 @@ async def test_subject_positional_tags_keyword(provider: ScenarioProvider,
 
 
 async def test_subject_cases_both_keywords(provider: ScenarioProvider,
-                                          scenario_source: ScenarioSource):
+                                           scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -278,7 +278,7 @@ async def test_subject_cases_both_keywords(provider: ScenarioProvider,
 
 
 async def test_subject_tags_both_keywords(provider: ScenarioProvider,
-                                         scenario_source: ScenarioSource):
+                                          scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -299,7 +299,7 @@ async def test_subject_tags_both_keywords(provider: ScenarioProvider,
 
 
 async def test_cases_tags_both_keywords(provider: ScenarioProvider,
-                                       scenario_source: ScenarioSource):
+                                        scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -322,7 +322,7 @@ async def test_cases_tags_both_keywords(provider: ScenarioProvider,
 
 
 async def test_params_positional_tags_keyword(provider: ScenarioProvider,
-                                             scenario_source: ScenarioSource):
+                                              scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -394,7 +394,7 @@ async def test_subject_positional_cases_tags_keywords(provider: ScenarioProvider
 
 
 async def test_subject_cases_tags_all_keywords(provider: ScenarioProvider,
-                                              scenario_source: ScenarioSource):
+                                               scenario_source: ScenarioSource):
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario, params
@@ -472,7 +472,7 @@ async def test_duplicate_subject_for_anonymous_functions(provider: ScenarioProvi
     with given:
         scenario_source.path.write_text(dedent('''
             from vedro import scenario
-            
+
             @scenario("update user")
             def _():
                 pass

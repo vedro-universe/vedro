@@ -3,8 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from vedro import TagsType
-from vedro.core import ModuleFileLoader, ModuleLoader, VirtualScenario
+from vedro.core import ModuleFileLoader, ModuleLoader
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
 
