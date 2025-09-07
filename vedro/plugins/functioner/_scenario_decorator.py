@@ -197,20 +197,20 @@ class ScenarioDecorator:
             tags=self._tags,
         )
 
-        if hasattr(fn, '__globals__'):
-            existing = fn.__globals__.get(descriptor_name)
-            if (existing is not None) and isinstance(existing, ScenarioDescriptor):
-                if self._subject:
-                    raise DuplicateScenarioError(
-                        f"Duplicate scenario with subject '{self._subject}' found. "
-                        "Each anonymous scenario must have a unique subject."
-                    )
-                else:
-                    raise DuplicateScenarioError(
-                        f"Duplicate scenario function '{descriptor_name}' found. "
-                        "Each scenario function must have a unique name."
-                    )
+        existing = fn.__globals__.get(descriptor_name)
+        if (existing is not None) and isinstance(existing, ScenarioDescriptor):
+            if self._subject:
+                raise DuplicateScenarioError(
+                    f"Duplicate scenario with subject '{self._subject}' found. "
+                    "Each anonymous scenario must have a unique subject."
+                )
+            else:
+                raise DuplicateScenarioError(
+                    f"Duplicate scenario function '{descriptor_name}' found. "
+                    "Each scenario function must have a unique name."
+                )
 
+        if fn.__name__ == "_" and self._subject:
             fn.__globals__[descriptor_name] = descriptor
 
         return descriptor
