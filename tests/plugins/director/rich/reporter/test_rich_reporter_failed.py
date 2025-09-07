@@ -118,6 +118,52 @@ async def test_scenario_failed_show_paths(dispatcher: Dispatcher, printer_: Mock
 
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_failed_show_ids(dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, show_ids=True)
+
+        scenario_result = make_scenario_result().mark_failed()
+
+        step_result_passed = make_step_result().mark_passed()
+        scenario_result.add_step_result(step_result_passed)
+
+        exc_info = make_exc_info(AssertionError())
+        step_result_failed = make_step_result().mark_failed().set_exc_info(exc_info)
+        scenario_result.add_step_result(step_result_failed)
+
+        await dispatcher.fire(ScenarioFailedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        unique_id = scenario_result.scenario.unique_id
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(aggregated_result.scenario.subject,
+                                        ScenarioStatus.FAILED, elapsed=None, prefix=" "),
+            call.print_scenario_extra_details(
+                [f"id: {unique_id}"],
+                prefix=" " * 3
+            ),
+
+            call.print_step_name(step_result_passed.step_name,
+                                 StepStatus.PASSED, elapsed=None, prefix=" " * 3),
+            call.print_step_name(step_result_failed.step_name,
+                                 StepStatus.FAILED, elapsed=None, prefix=" " * 3),
+
+            call.print_pretty_exception(exc_info,
+                                        width=100,
+                                        max_frames=8,
+                                        show_locals=False,
+                                        show_internal_calls=True,
+                                        show_full_diff=False)
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_failed_verbose(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, verbose=1)
