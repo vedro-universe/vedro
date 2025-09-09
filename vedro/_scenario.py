@@ -25,8 +25,9 @@ class _Meta(type):
                 module = namespace.get("__module__", "")
                 raise TypeError(f"Subclassing is restricted <{module}.{name}>")
 
-        lineno = namespace.get("__lineno__", None)
-        if lineno is None:
+        if "__lineno__" in namespace:
+            lineno = namespace["__lineno__"]
+        else:
             frame = inspect.currentframe()
             try:
                 lineno = frame.f_back.f_lineno if frame and frame.f_back else None
