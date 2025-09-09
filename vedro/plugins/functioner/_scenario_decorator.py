@@ -1,3 +1,4 @@
+from inspect import iscoroutinefunction, isfunction
 from typing import Any, Callable, Optional, Tuple, Union, overload
 
 from vedro._params import CasesType
@@ -49,6 +50,7 @@ class ScenarioDecorator:
                  tags: TagsType = ()) -> "ScenarioDecorator":
         ...
 
+    # TODO: Remove this overload in v2 to simplify arg parsing (kept for backward compatibility)
     @overload
     def __call__(self, cases: CasesType = (), *,
                  subject: str = "",
@@ -101,7 +103,7 @@ class ScenarioDecorator:
         elif len(args) == 1:
             # Single positional arg could be subject (str) or cases (list/tuple)
             if isinstance(args[0], str):
-                subject = args[0]
+                subject = args[0].strip()
                 subject_from_args = True
             elif isinstance(args[0], (list, tuple)):
                 cases = args[0]
@@ -123,7 +125,7 @@ class ScenarioDecorator:
                     f"When providing two positional arguments, second must be list or "
                     f"tuple (cases), got {type(args[1]).__name__}"
                 )
-            subject = args[0]
+            subject = args[0].strip()
             cases = args[1]
             subject_from_args = True
             cases_from_args = True
@@ -137,10 +139,11 @@ class ScenarioDecorator:
             if subject_from_args:
                 raise TypeError("Got multiple values for argument 'subject'")
             subject = kwargs['subject']
-            if subject is not None and not isinstance(subject, str):
+            if (subject is None) or (not isinstance(subject, str)):
                 raise TypeError(
-                    f"subject must be str or None, got {type(subject).__name__}"
+                    f"subject must be str, got {type(subject).__name__}"
                 )
+            subject = subject.strip()
 
         if 'cases' in kwargs:
             if cases_from_args:
@@ -171,6 +174,16 @@ class ScenarioDecorator:
         return subject, cases, tags
 
     def _create_descriptor(self, fn: Callable[..., Any]) -> ScenarioDescriptor:
+        if not (isfunction(fn) or iscoroutinefunction(fn)):
+            raise TypeError("@scenario can only be applied to regular functions")
+
+        if not hasattr(fn, "__globals__"):  # pragma: no cover
+            raise TypeError(
+                f"@scenario can only be applied to regular functions or async functions. "
+                f"Got '{type(fn).__name__}' instead. "
+                f"Make sure you're decorating a function defined with 'def' or 'async def'."
+            )
+
         if self._is_anonymous_function(fn) and not self._subject:
             raise DuplicateScenarioError(
                 "Anonymous scenario function '_' requires a subject. "
@@ -205,19 +218,18 @@ class ScenarioDecorator:
                 )
 
         if self._is_anonymous_function(fn) and self._subject:
+            # This is a temporary and dirty workaround; to be revisited after the v2 release
             fn.__globals__[descriptor_name] = descriptor
 
         return descriptor
 
     def _is_anonymous_function(self, fn: Callable[..., Any]) -> bool:
-        """
-        Check if the function is anonymous (named '_').
+        try:
+            return fn.__name__ == "_"
+        except AttributeError:
+            return True
 
-        :param fn: The function to check
-        :return: True if the function name is '_', False otherwise
-        """
-        return fn.__name__ == "_"
-
+    # (!) Do not rely on this function's behavior, it may change even in a minor version
     def _create_scenario_name(self, subject: str) -> str:
         """
         Create a valid Python identifier from a subject string.

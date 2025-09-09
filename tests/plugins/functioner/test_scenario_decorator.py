@@ -425,6 +425,9 @@ async def test_subject_overrides_function_name(provider: ScenarioProvider,
             @scenario("create user")
             def create_user_with_name():
                 pass
+
+            # Access the function to ensure object with name 'create_user_with_name' still exists
+            print(create_user_with_name)
         ''').strip())
 
     with when:
