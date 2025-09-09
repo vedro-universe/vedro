@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple
 
 from vedro._params import CasesType
 from vedro._tags import TagsType

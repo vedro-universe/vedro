@@ -9,6 +9,7 @@ from vedro._scenario import Scenario
 from vedro.core import VirtualScenario
 from vedro.core.scenario_collector import ScenarioProvider, ScenarioSource
 from vedro.core.scenario_discoverer import create_vscenario
+
 from ._scenario_descriptor import ScenarioDescriptor
 
 __all__ = ("FuncBasedScenarioProvider",)
@@ -177,7 +178,8 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         """
         Generate the subject string used in the scenario based on the descriptor.
 
-        If the descriptor has a custom subject, use it. Otherwise, generate it from the function name.
+        If the descriptor has a custom subject, use it. Otherwise, generate it from the
+        function name.
 
         :param descriptor: The descriptor containing the scenario metadata.
         :return: A human-readable string subject for the scenario.
