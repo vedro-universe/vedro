@@ -198,7 +198,8 @@ class ScenarioDecorator:
         :param fn: The function to convert into a scenario descriptor.
         :return: A ScenarioDescriptor instance.
         :raises TypeError: If fn is not a regular function or async function.
-        :raises DuplicateScenarioError: If anonymous function without subject or conflicts exist.
+        :raises DuplicateScenarioError: If an anonymous function is used without a subject or
+                                        naming conflicts exist.
         :raises FunctionShadowingError: If the scenario would shadow an existing non-scenario
                                         function.
         """
