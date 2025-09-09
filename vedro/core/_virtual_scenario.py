@@ -189,6 +189,8 @@ class VirtualScenario:
 
         :return: An integer representing the line number, or None if not available.
         """
+        # TODO: Consider adding line_start/line_end in v2 for complete range tracking
+        # Currently only tracks the start line due to Python runtime limitations
         return getattr(self._orig_scenario, "__vedro__lineno__", None)
 
     def skip(self, reason: Optional[str] = None) -> None:
