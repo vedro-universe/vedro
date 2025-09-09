@@ -27,7 +27,8 @@ class ScenarioDescriptor:
         :param fn: The function defining the scenario logic.
         :param decorators: A tuple of decorators to apply to the scenario class.
                            Defaults to an empty tuple.
-        :param cases: A tuple of ... Defaults to an empty tuple.
+        :param cases: A tuple of parameter sets for parameterized scenarios. Each element
+                      should be a callable that provides parameters. Defaults to an empty tuple.
         :param subject: An optional custom human-readable subject for the scenario.
                         If not provided, it will be generated from the function name.
         :param name: Optional generated name for the scenario. If not provided, uses fn.__name__.

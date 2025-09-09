@@ -27,7 +27,8 @@ class ScenarioDecorator:
         Initialize the scenario decorator with optional decorators, parameters, subject, and tags.
 
         :param decorators: A tuple of decorators to apply to the scenario class. Defaults to empty.
-        :param cases: A tuple of ... Defaults to empty.
+        :param cases: A tuple of parameter sets for parameterized scenarios. Each element
+                      should be a callable that provides parameters. Defaults to empty.
         :param subject: An optional custom human-readable subject for the scenario.
         :param tags: Tags to associate with the scenario. Can be a list, tuple, or set
                      of strings or Enums. Defaults to an empty tuple.
@@ -60,6 +61,23 @@ class ScenarioDecorator:
     def __call__(self,
                  *args: Any,
                  **kwargs: Any) -> Union[ScenarioDescriptor, "ScenarioDecorator"]:
+        """
+        Make the decorator callable, supporting multiple usage patterns.
+
+        This method enables flexible usage of the @scenario decorator:
+        - @scenario - Direct decoration without arguments
+        - @scenario(fn) - Direct decoration of a function
+        - @scenario(subject) - Decoration with a custom subject string
+        - @scenario(cases) - Decoration with parameter cases (backward compatibility)
+        - @scenario(subject, cases) - Decoration with both subject and cases
+        - @scenario(subject=..., cases=..., tags=...) - Keyword arguments
+
+        :param args: Variable positional arguments
+        :param kwargs: Variable keyword arguments
+        :return: Either a ScenarioDescriptor (when decorating a function directly)
+                 or a new ScenarioDecorator instance (when configuring parameters)
+        :raises TypeError: If arguments don't match any valid pattern
+        """
         # If first argument is a callable, it's a direct decoration
         if len(args) > 0 and callable(args[0]):
             fn = args[0]
@@ -181,6 +199,8 @@ class ScenarioDecorator:
         :return: A ScenarioDescriptor instance.
         :raises TypeError: If fn is not a regular function or async function.
         :raises DuplicateScenarioError: If anonymous function without subject or conflicts exist.
+        :raises FunctionShadowingError: If the scenario would shadow an existing non-scenario
+                                        function.
         """
         if not (isfunction(fn) or iscoroutinefunction(fn)):
             raise TypeError("@scenario can only be applied to regular functions")
