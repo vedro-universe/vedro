@@ -5,7 +5,7 @@ from pytest import raises
 
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
-from vedro.plugins.functioner._errors import DuplicateScenarioError
+from vedro.plugins.functioner._errors import DuplicateScenarioError, FunctionShadowingError
 
 from ._utils import module_loader, provider, scenario_source, tmp_dir
 
@@ -144,18 +144,19 @@ async def test_shadowing_decorated_function(provider: ScenarioProvider,
 
             @scenario()
             def update_user():
-                pass  # Can't call update_user() here as it would be shadowed
-
-            # This will fail because update_user is now a ScenarioDescriptor, not callable
-            print(update_user())
+                pass
         ''').strip())
 
     with when, raises(BaseException) as exc:
         await provider.provide(scenario_source)
 
     with then:
-        assert exc.type is TypeError
-        assert str(exc.value) == "'ScenarioDescriptor' object is not callable"
+        assert exc.type is FunctionShadowingError
+        assert str(exc.value) == (
+            "Cannot create scenario 'update_user' because it would shadow "
+            "an existing function with the same name. "
+            "Rename the scenario function or the existing function."
+        )
 
 
 async def test_anonymous_function_overwrites_sanitized_name(provider: ScenarioProvider,
@@ -165,23 +166,23 @@ async def test_anonymous_function_overwrites_sanitized_name(provider: ScenarioPr
             from vedro import scenario
 
             def update_user():
-                return "original"
+                print("User updated")
 
             @scenario("update user")
             def _():
                 pass
-
-            # update_user is now overwritten with ScenarioDescriptor
-            # because "update user" sanitizes to "update_user"
-            print(update_user())  # This will fail
         ''').strip())
 
     with when, raises(BaseException) as exc:
         await provider.provide(scenario_source)
 
     with then:
-        assert exc.type is TypeError
-        assert str(exc.value) == "'ScenarioDescriptor' object is not callable"
+        assert exc.type is FunctionShadowingError
+        assert str(exc.value) == (
+            "Cannot create scenario with subject 'update user' because it would "
+            "shadow existing function 'update_user'. "
+            "Use a different subject or rename the existing function."
+        )
 
 
 async def test_function_starting_with_underscore_without_subject(provider: ScenarioProvider,

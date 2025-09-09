@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Tuple, Union, overload
 from vedro._params import CasesType
 from vedro._tags import TagsType
 
-from ._errors import DuplicateScenarioError
+from ._errors import DuplicateScenarioError, FunctionShadowingError
 from ._sanitize_identifier import sanitize_identifier
 from ._scenario_descriptor import ScenarioDescriptor
 
@@ -205,6 +205,8 @@ class ScenarioDecorator:
         )
 
         existing = fn.__globals__.get(descriptor_name)
+
+        # Check for duplicate ScenarioDescriptor
         if (existing is not None) and isinstance(existing, ScenarioDescriptor):
             if self._subject:
                 raise DuplicateScenarioError(
@@ -215,6 +217,23 @@ class ScenarioDecorator:
                 raise DuplicateScenarioError(
                     f"Duplicate scenario function '{descriptor_name}' found. "
                     "Each scenario function must have a unique name."
+                )
+
+        # Check for function shadowing - when a non-ScenarioDescriptor exists with the same name
+        if (existing is not None) and not isinstance(existing, ScenarioDescriptor):
+            if self._is_anonymous_function(fn) and self._subject:
+                # Anonymous function with subject that would shadow an existing function
+                raise FunctionShadowingError(
+                    f"Cannot create scenario with subject '{self._subject}' because it would "
+                    f"shadow existing function '{descriptor_name}'. "
+                    f"Use a different subject or rename the existing function."
+                )
+            elif not self._is_anonymous_function(fn):
+                # Regular function that shadows an existing non-scenario function
+                raise FunctionShadowingError(
+                    f"Cannot create scenario '{descriptor_name}' because it would shadow "
+                    f"an existing function with the same name. "
+                    f"Rename the scenario function or the existing function."
                 )
 
         if self._is_anonymous_function(fn) and self._subject:
