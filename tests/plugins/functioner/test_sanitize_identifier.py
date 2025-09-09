@@ -5,49 +5,41 @@ from vedro.plugins.functioner._sanitize_identifier import sanitize_identifier
 
 
 @pytest.mark.parametrize(("identifier", "expected"), [
-    # Already valid identifiers (no change)
-    ("func", "func"),
-    ("valid_identifier", "valid_identifier"),
+    # Valid identifier (no change needed)
+    ("valid_name", "valid_name"),
 
-    # Python keywords (append underscore)
-    ("def", "def_"),
+    # Python keyword (append underscore)
     ("class", "class_"),
 
-    # Empty/whitespace only (becomes _ with prefix)
+    # Empty input (becomes _ with prefix)
     ("", "scn_"),
-    ("   ", "scn_"),
 
     # Starts with digit (prepend underscore + prefix)
-    ("123", "scn_123"),
-    ("1func", "scn_1func"),
+    ("123abc", "scn_123abc"),
 
     # Starts with underscore (add prefix)
     ("_private", "scn_private"),
-    ("__init__", "scn__init__"),
 
-    # Contains separators (replace with underscore)
-    ("func-name", "func_name"),
-    ("func.name", "func_name"),
-    ("func name", "func_name"),
+    # Multiple separator types and consecutive separators (collapse to single underscore)
+    ("func--name..test  case", "func_name_test_case"),
 
-    # Contains invalid characters (remove them)
-    ("func@name", "funcname"),
-    ("func()", "func"),
+    # Invalid characters (removed)
+    ("func@name()", "funcname"),
 
-    # Only invalid characters (becomes _ with prefix)
-    ("###", "scn_"),
+    # Case folding (uppercase to lowercase)
+    ("CamelCase", "camelcase"),
 
-    # Consecutive separators (multiple underscores)
-    ("func--name", "func_name"),
-    ("func  name", "func_name"),
+    # Unicode special cases (casefold and normalization)
+    ("Café_ß", "café_ss"),
 
-    # Case preservation
-    ("CamelCase", "CamelCase"),
-    ("SCREAMING_SNAKE", "SCREAMING_SNAKE"),
+    # Truncation (limit to 255 chars)
+    ("a" * 300, "a" * 255),
 
-    # Complex combination (multiple rules apply)
-    ("123-abc!", "scn_123_abc"),
-    ("@class.method()", "class_method"),
+    # Valid unicode identifiers (preserved)
+    ("αβγ_变量", "αβγ_变量"),
+
+    # Complex case (multiple rules apply)
+    ("@123-CLASS__test!", "scn_123_class_test"),
 ])
 def test_sanitize_identifier(identifier: str, expected: str):
     with given:

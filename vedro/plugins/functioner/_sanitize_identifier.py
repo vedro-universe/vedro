@@ -1,5 +1,6 @@
 import keyword
 import re
+import unicodedata
 from typing import List
 
 __all__ = ("sanitize_identifier",)
@@ -19,6 +20,14 @@ def sanitize_identifier(s: str, *, prefix: str = "fn") -> str:
                    Defaults to "fn".
     :return: A valid Python identifier as a string.
     """
+    # Normalize Unicode to NFC (Canonical Decomposition, followed by Canonical Composition)
+    # This ensures consistent representation of accented characters and similar Unicode variants
+    s = unicodedata.normalize("NFC", str(s))
+
+    # Convert to lowercase using Unicode-aware case folding
+    # This handles special cases like German ß → ss more correctly than lower()
+    s = s.casefold()
+
     # Replace common separators with underscores
     s = re.sub(r'[\s\-\.]+', '_', s)
 
@@ -38,7 +47,13 @@ def sanitize_identifier(s: str, *, prefix: str = "fn") -> str:
                 result.append('_')
                 result.append(char)
 
+    # Join the validated characters into a string
+    # At this point, we have a syntactically valid identifier (or empty string)
     s = ''.join(result)
+
+    # Clean up multiple consecutive underscores and remove trailing underscores only
+    # This improves readability while preserving leading underscores if present
+    s = re.sub(r"_+", "_", s).rstrip("_")
 
     # If string is empty after cleaning, use underscore
     if not s:
@@ -52,4 +67,6 @@ def sanitize_identifier(s: str, *, prefix: str = "fn") -> str:
     if s.startswith("_") and prefix:
         s = prefix + s
 
-    return s
+    # Truncate to 255 characters to ensure reasonable identifier length
+    # This prevents excessively long identifiers that could cause issues in some contexts
+    return s[:255]
