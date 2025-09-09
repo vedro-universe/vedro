@@ -201,11 +201,17 @@ class SystemUpgrade(PluginConfig):
     plugin = SystemUpgradePlugin
     description = "Checks for Vedro updates and notifies when a newer version is available"
 
-    # API URL for checking the latest version
     api_url: str = "https://api.vedro.io"
+    """
+    API URL for checking the latest version.
+    """
 
-    # Timeout for the API request in seconds
     api_request_timeout: float = 1.0
+    """
+    Timeout for the API request in seconds.
+    """
 
-    # Interval at which the update check should be done, specified in seconds
     update_check_interval: int = 3600 * 16
+    """
+    Interval at which the update check should be done, specified in seconds.
+    """

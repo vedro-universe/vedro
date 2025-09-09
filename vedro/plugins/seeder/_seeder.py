@@ -220,11 +220,17 @@ class Seeder(PluginConfig):
     plugin = SeederPlugin
     description = "Sets seeds for deterministic random behavior in scenarios"
 
-    # Show the initial seed in the pre-run preamble
     show_seed_preamble: bool = True
+    """
+    Show the initial seed in the pre-run preamble.
+    """
 
-    # Use the same seed when a scenario is run multiple times in the same execution
     use_fixed_seed: bool = False
+    """
+    Use the same seed when a scenario is run multiple times in the same execution.
+    """
 
-    # Show concrete seeds for each scenario run
     show_seeds: bool = False
+    """
+    Show concrete seeds for each scenario run.
+    """

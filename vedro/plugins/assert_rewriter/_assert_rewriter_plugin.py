@@ -119,5 +119,7 @@ class AssertRewriter(PluginConfig):
     plugin = AssertRewriterPlugin
     description = "Rewrites assert statements to provide better error messages"
 
-    # Use legacy assertion rewriter for backwards compatibility
     legacy_assertions: bool = False
+    """
+    Use legacy assertion rewriter for backwards compatibility.
+    """

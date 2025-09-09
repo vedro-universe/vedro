@@ -216,9 +216,14 @@ class Skipper(PluginConfig):
     description = ("Allows selective scenario skipping and selection "
                    "based on file/directory or subject")
 
-    # Forbid execution of scenarios with '@vedro.only' decorator
     forbid_only: bool = False
+    """
+    Forbid execution of scenarios with '@vedro.only' decorator.
+    """
 
-    # Enable the experimental selective discoverer feature
-    # to optimize startup speed by loading scenarios only from specified files
     exp_selective_discoverer: bool = False
+    """
+    Enable the experimental selective discoverer feature.
+
+    Optimizes startup speed by loading scenarios only from specified files.
+    """

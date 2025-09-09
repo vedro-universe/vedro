@@ -125,15 +125,24 @@ class Ensurer(PluginConfig):
     description = ("Adds configurable retry logic to functions and steps, including attempts, "
                    "delay and exceptions to swallow")
 
-    # Whether to show attempt details in the step results
-    # If you are using rich reporter, `--show-steps` must be provided
     show_attempts = True
+    """
+    Whether to show attempt details in the step results.
 
-    # Default number of retry attempts
+    If you are using rich reporter, `--show-steps` must be provided.
+    """
+
     default_attempts: AttemptType = 3
+    """
+    Default number of retry attempts.
+    """
 
-    # Default delay between retry attempts
     default_delay: DelayType = 0.0
+    """
+    Default delay between retry attempts.
+    """
 
-    # Default exceptions to swallow during retries
     default_swallow: SwallowExceptionType = BaseException
+    """
+    Default exceptions to swallow during retries.
+    """

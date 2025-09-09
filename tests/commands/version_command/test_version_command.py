@@ -42,7 +42,10 @@ async def test_run(*, console_, arg_parser_: Mock):
 
     with then:
         assert result is None
-        assert arg_parser_.mock_calls == [call.parse_args()]
+        assert arg_parser_.mock_calls == [
+            call.add_argument("--no-color", action="store_true", help="Disable colored output"),
+            call.parse_args(),
+        ]
         assert console_.mock_calls == [
             call.print(f"Vedro {vedro.__version__}", style=Style(color="blue"))
         ]

@@ -176,5 +176,7 @@ class Interrupter(PluginConfig):
     plugin = InterrupterPlugin
     description = "Halts test execution after N failed scenarios or on specified signals"
 
-    # Raise Interrupted exception on these signals
     handle_signals: Tuple[signal.Signals, ...] = (signal.SIGTERM,)
+    """
+    Raise Interrupted exception on these signals.
+    """

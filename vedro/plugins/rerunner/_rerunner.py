@@ -229,5 +229,7 @@ class Rerunner(PluginConfig):
     plugin = RerunnerPlugin
     description = "Reruns failed scenarios a specified number of times"
 
-    # Scheduler that will be used to create aggregated result for rerun scenarios
     scheduler_factory: Type[ScenarioScheduler] = RerunnerScenarioScheduler
+    """
+    Scheduler that will be used to create aggregated result for rerun scenarios.
+    """
