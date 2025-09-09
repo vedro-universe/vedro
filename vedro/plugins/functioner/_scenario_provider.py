@@ -1,8 +1,9 @@
 import inspect
 import os
+from functools import WRAPPER_ASSIGNMENTS, wraps
 from inspect import iscoroutinefunction
 from types import ModuleType
-from typing import Any, Dict, List, Type, cast
+from typing import Any, Dict, List, Tuple, Type, cast
 
 from vedro._scenario import Scenario
 from vedro.core import VirtualScenario
@@ -121,13 +122,19 @@ class FuncBasedScenarioProvider(ScenarioProvider):
             __init__ = params(__init__)
 
         if iscoroutinefunction(descriptor.fn):
-            async def do(self):  # type: ignore
-                kwargs = {name: getattr(self, name) for name in param_names}
-                return await descriptor.fn(**kwargs)
+            @wraps(descriptor.fn, assigned=self._get_wrapper_assignments())
+            async def do(self, *args: Any, **kwargs: Any):  # type: ignore
+                params_kwargs = {name: getattr(self, name) for name in param_names}
+                # Merge params_kwargs with provided kwargs, with provided kwargs taking precedence
+                merged_kwargs = {**params_kwargs, **kwargs}
+                return await descriptor.fn(*args, **merged_kwargs)
         else:
-            def do(self):  # type: ignore
-                kwargs = {name: getattr(self, name) for name in param_names}
-                return descriptor.fn(**kwargs)
+            @wraps(descriptor.fn, assigned=self._get_wrapper_assignments())
+            def do(self, *args: Any, **kwargs: Any):  # type: ignore
+                params_kwargs = {name: getattr(self, name) for name in param_names}
+                # Merge params_kwargs with provided kwargs, with provided kwargs taking precedence
+                merged_kwargs = {**params_kwargs, **kwargs}
+                return descriptor.fn(*args, **merged_kwargs)
 
         attrs = self._build_common_attrs(descriptor, module)
         attrs.update({
@@ -197,10 +204,17 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         :return: A method suitable for the 'do' attribute of a scenario class.
         """
         if iscoroutinefunction(fn):
-            async def do(self):  # type: ignore
-                return await fn()
+            @wraps(fn, assigned=self._get_wrapper_assignments())
+            async def do(self, *args: Any, **kwargs: Any):  # type: ignore
+                return await fn(*args, **kwargs)
+
             return do
         else:
-            def do(self):  # type: ignore
-                return fn()
+            @wraps(fn, assigned=self._get_wrapper_assignments())
+            def do(self, *args: Any, **kwargs: Any):  # type: ignore
+                return fn(*args, **kwargs)
+
             return do
+
+    def _get_wrapper_assignments(self) -> Tuple[str, ...]:
+        return tuple(x for x in WRAPPER_ASSIGNMENTS if x != '__name__')
