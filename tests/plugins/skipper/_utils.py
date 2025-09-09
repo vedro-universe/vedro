@@ -69,7 +69,8 @@ def _make_vscenario(path: Optional[Path] = None, *,
                     subject: Optional[str] = None,
                     only: bool = False,
                     skip: bool = False,
-                    init: Optional[Callable[..., None]] = None) -> Scenario:
+                    init: Optional[Callable[..., None]] = None,
+                    lineno: Optional[int] = None) -> Scenario:
     if path is None:
         path = Path(f"scenarios/scenario_{monotonic_ns()}.py").absolute()
     ns = {"__file__": path}
@@ -77,6 +78,8 @@ def _make_vscenario(path: Optional[Path] = None, *,
         ns["subject"] = subject
     if init is not None:
         ns["__init__"] = init
+    if lineno is not None:
+        ns["__lineno__"] = lineno
 
     new_scn = type(name, (Scenario,), ns)
     if only:
@@ -91,8 +94,10 @@ def make_vscenario(path: Optional[Path] = None, *,
                    name: str = "Scenario",
                    subject: Optional[str] = None,
                    only: bool = False,
-                   skip: bool = False) -> VirtualScenario:
-    new_scn = _make_vscenario(path, name=name, subject=subject, only=only, skip=skip)
+                   skip: bool = False,
+                   lineno: Optional[int] = None) -> VirtualScenario:
+    new_scn = _make_vscenario(path, name=name, subject=subject, only=only, skip=skip,
+                              lineno=lineno)
     vscenario = VirtualScenario(new_scn, steps=[])
     return vscenario
 
