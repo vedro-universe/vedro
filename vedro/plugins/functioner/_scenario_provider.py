@@ -1,15 +1,14 @@
 import inspect
 import os
 from functools import WRAPPER_ASSIGNMENTS, wraps
-from inspect import iscoroutinefunction
+from inspect import iscoroutinefunction, unwrap
 from types import ModuleType
-from typing import Any, Dict, List, Tuple, Type, cast
+from typing import Any, Dict, List, Tuple, Type, Union, cast
 
 from vedro._scenario import Scenario
 from vedro.core import VirtualScenario
 from vedro.core.scenario_collector import ScenarioProvider, ScenarioSource
 from vedro.core.scenario_discoverer import create_vscenario
-
 from ._scenario_descriptor import ScenarioDescriptor
 
 __all__ = ("FuncBasedScenarioProvider",)
@@ -125,14 +124,12 @@ class FuncBasedScenarioProvider(ScenarioProvider):
             @wraps(descriptor.fn, assigned=self._get_wrapper_assignments())
             async def do(self, *args: Any, **kwargs: Any):  # type: ignore
                 params_kwargs = {name: getattr(self, name) for name in param_names}
-                # Merge params_kwargs with provided kwargs, with provided kwargs taking precedence
                 merged_kwargs = {**params_kwargs, **kwargs}
                 return await descriptor.fn(*args, **merged_kwargs)
         else:
             @wraps(descriptor.fn, assigned=self._get_wrapper_assignments())
             def do(self, *args: Any, **kwargs: Any):  # type: ignore
                 params_kwargs = {name: getattr(self, name) for name in param_names}
-                # Merge params_kwargs with provided kwargs, with provided kwargs taking precedence
                 merged_kwargs = {**params_kwargs, **kwargs}
                 return descriptor.fn(*args, **merged_kwargs)
 
@@ -156,10 +153,12 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         :param module: The module from which the scenario is defined.
         :return: A dictionary of attributes to be used in the Scenario class.
         """
+        module_path = self._create_module_path(module)
+        lineno = self._get_lineno(descriptor.fn, module_path)
         return {
             "__module__": module.__name__,
-            "__file__": self._create_module_path(module),
-            "__lineno__": descriptor.lineno,
+            "__file__": module_path,
+            "__lineno__": lineno,
             "__doc__": descriptor.fn.__doc__,
             "subject": self._create_subject(descriptor),
             "tags": descriptor.tags,
@@ -178,7 +177,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         """
         Generate the subject string used in the scenario based on the descriptor.
 
-        If the descriptor has a custom subject, use it. Otherwise, generate from the function name.
+        If the descriptor has a custom subject, use it. Otherwise, generate it from the function name.
 
         :param descriptor: The descriptor containing the scenario metadata.
         :return: A human-readable string subject for the scenario.
@@ -194,7 +193,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         :param module: The module to retrieve the file path from.
         :return: An absolute path to the module's file.
         """
-        return os.path.abspath(str(module.__file__))
+        return os.path.abspath(os.path.realpath(str(module.__file__)))
 
     def _make_do(self, fn: Any) -> Any:
         """
@@ -224,3 +223,21 @@ class FuncBasedScenarioProvider(ScenarioProvider):
                  excluding '__name__' to preserve the wrapper's name.
         """
         return tuple(x for x in WRAPPER_ASSIGNMENTS if x != '__name__')
+
+    def _get_lineno(self, fn: Any, module_path: str) -> Union[int, None]:
+        """
+        Get the line number where a function is defined in the source code.
+
+        :param fn: The function (possibly decorated) to get the line number from.
+        :param module_path: The path to the module file for validation.
+        :return: The line number where the function is defined, or None if unavailable
+                 or if the function is not from the specified module.
+        """
+        unwrapped = unwrap(fn)
+        try:
+            lineno = unwrapped.__code__.co_firstlineno
+            file_path = unwrapped.__code__.co_filename
+        except:  # noqa: E722
+            return None
+        else:
+            return lineno if os.path.abspath(os.path.realpath(file_path)) == module_path else None

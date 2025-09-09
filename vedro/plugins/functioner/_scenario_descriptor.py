@@ -95,14 +95,3 @@ class ScenarioDescriptor:
         :return: The tags as a list, tuple, or set of strings or Enums.
         """
         return self._tags
-
-    @property
-    def lineno(self) -> Union[int, None]:
-        """
-        Get the line number where the scenario was defined.
-
-        :return: The line number or None if not available.
-        """
-        if hasattr(self._fn, "__code__"):
-            return getattr(self._fn.__code__, "co_firstlineno", None)
-        return None  # pragma: no cover
