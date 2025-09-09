@@ -1,7 +1,7 @@
 import inspect
-import os
 from functools import WRAPPER_ASSIGNMENTS, wraps
 from inspect import iscoroutinefunction, unwrap
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, List, Tuple, Type, Union, cast
 
@@ -35,38 +35,40 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         if source.path.suffix != ".py":
             return []
         module = await source.get_module()
-        scenarios = self._collect_scenarios(module)
+        scenarios = self._collect_scenarios(module, source.path)
         return [create_vscenario(scn, project_dir=source.project_dir) for scn in scenarios]
 
-    def _collect_scenarios(self, module: ModuleType) -> List[Type[Scenario]]:
+    def _collect_scenarios(self, module: ModuleType, source_path: Path) -> List[Type[Scenario]]:
         """
         Collect all scenario classes from the specified module.
 
         :param module: The module from which to collect scenario descriptors.
+        :param source_path: The path to the source file.
         :return: A list of Scenario classes built from descriptors found in the module.
         """
         loaded = []
         for name, val in module.__dict__.items():
             if isinstance(val, ScenarioDescriptor):
                 if not name.startswith("_"):
-                    scenarios = self._build_vedro_scenarios(val, module)
+                    scenarios = self._build_vedro_scenarios(val, module, source_path)
                     loaded.extend(scenarios)
         return loaded
 
     def _build_vedro_scenarios(self, descriptor: ScenarioDescriptor,
-                               module: ModuleType) -> List[Type[Scenario]]:
+                               module: ModuleType, source_path: Path) -> List[Type[Scenario]]:
         """
         Build one or more Scenario classes from a given descriptor.
 
         :param descriptor: The descriptor containing scenario definition and metadata.
         :param module: The module in which the scenario is defined.
+        :param source_path: The path to the source file.
         :return: A list of Scenario classes, one for each parameterization if applicable.
         """
         if len(descriptor.cases) == 0:
-            scenario_cls = self._build_vedro_scenario(descriptor, module)
+            scenario_cls = self._build_vedro_scenario(descriptor, module, source_path)
             return [scenario_cls]
 
-        scenario_cls = self._build_vedro_scenario_with_cases(descriptor, module)
+        scenario_cls = self._build_vedro_scenario_with_cases(descriptor, module, source_path)
 
         scenarios = []
         for idx, _ in enumerate(descriptor.cases, start=1):
@@ -79,15 +81,16 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         return scenarios
 
     def _build_vedro_scenario(self, descriptor: ScenarioDescriptor,
-                              module: ModuleType) -> Type[Scenario]:
+                              module: ModuleType, source_path: Path) -> Type[Scenario]:
         """
         Build a single Scenario class from a descriptor without parameters.
 
         :param descriptor: The descriptor defining the scenario behavior and metadata.
         :param module: The module in which the scenario resides.
+        :param source_path: The path to the source file.
         :return: A Scenario class derived from the base Scenario.
         """
-        attrs = self._build_common_attrs(descriptor, module)
+        attrs = self._build_common_attrs(descriptor, module, source_path)
         attrs.update({
             "do": self._make_do(descriptor.fn)
         })
@@ -98,12 +101,13 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         return scenario_cls
 
     def _build_vedro_scenario_with_cases(self, descriptor: ScenarioDescriptor,
-                                         module: ModuleType) -> Type[Scenario]:
+                                         module: ModuleType, source_path: Path) -> Type[Scenario]:
         """
         Build a Scenario class that supports parameterization.
 
         :param descriptor: The descriptor containing parameterized test data and metadata.
         :param module: The module where the scenario is defined.
+        :param source_path: The path to the source file.
         :return: A Scenario class with parameterized initialization.
         """
         sig = inspect.signature(descriptor.fn)
@@ -134,7 +138,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
                 merged_kwargs = {**params_kwargs, **kwargs}
                 return descriptor.fn(*args, **merged_kwargs)
 
-        attrs = self._build_common_attrs(descriptor, module)
+        attrs = self._build_common_attrs(descriptor, module, source_path)
         attrs.update({
             "__init__": __init__,
             "do": do,
@@ -146,19 +150,19 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         return scenario_cls
 
     def _build_common_attrs(self, descriptor: ScenarioDescriptor,
-                            module: ModuleType) -> Dict[str, Any]:
+                            module: ModuleType, source_path: Path) -> Dict[str, Any]:
         """
         Build common attributes for a Scenario class based on the descriptor and module.
 
         :param descriptor: The descriptor containing scenario metadata and function.
         :param module: The module from which the scenario is defined.
+        :param source_path: The path to the source file.
         :return: A dictionary of attributes to be used in the Scenario class.
         """
-        module_path = self._create_module_path(module)
-        lineno = self._get_lineno(descriptor.fn, module_path)
+        lineno = self._get_lineno(descriptor.fn, source_path)
         return {
             "__module__": module.__name__,
-            "__file__": module_path,
+            "__file__": str(source_path),
             "__lineno__": lineno,
             "__doc__": descriptor.fn.__doc__,
             "subject": self._create_subject(descriptor),
@@ -187,15 +191,6 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         if descriptor.subject is not None:
             return descriptor.subject
         return descriptor.name.replace("_", " ")
-
-    def _create_module_path(self, module: ModuleType) -> str:
-        """
-        Determine the absolute file path of the given module.
-
-        :param module: The module to retrieve the file path from.
-        :return: An absolute path to the module's file.
-        """
-        return os.path.abspath(os.path.realpath(str(module.__file__)))
 
     def _make_do(self, fn: Any) -> Any:
         """
@@ -226,20 +221,20 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         """
         return tuple(x for x in WRAPPER_ASSIGNMENTS if x != '__name__')
 
-    def _get_lineno(self, fn: Any, module_path: str) -> Union[int, None]:
+    def _get_lineno(self, fn: Any, source_path: Path) -> Union[int, None]:
         """
         Get the line number where a function is defined in the source code.
 
         :param fn: The function (possibly decorated) to get the line number from.
-        :param module_path: The path to the module file for validation.
+        :param source_path: The path to the source file for validation.
         :return: The line number where the function is defined, or None if unavailable
                  or if the function is not from the specified module.
         """
         unwrapped = unwrap(fn)
         try:
             lineno = unwrapped.__code__.co_firstlineno
-            file_path = unwrapped.__code__.co_filename
+            file_path = Path(unwrapped.__code__.co_filename).resolve()
         except:  # noqa: E722
             return None
         else:
-            return lineno if os.path.abspath(os.path.realpath(file_path)) == module_path else None
+            return lineno if (file_path == source_path) else None
