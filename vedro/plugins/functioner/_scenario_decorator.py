@@ -204,10 +204,29 @@ class ScenarioDecorator:
             tags=self._tags,
         )
 
-        existing = fn.__globals__.get(descriptor_name)
+        existing_obj = fn.__globals__.get(descriptor_name)
+        if existing_obj is not None:
+            self._validate_no_conflict(existing_obj, descriptor)
 
+        if self._is_anonymous_function(fn) and self._subject:
+            # This is a temporary and dirty workaround; to be revisited after the v2 release
+            fn.__globals__[descriptor_name] = descriptor
+
+        return descriptor
+
+    def _validate_no_conflict(self, existing_obj: Union[ScenarioDescriptor, Any],
+                              descriptor: ScenarioDescriptor) -> None:
+        """
+        Validate that creating a scenario with the given name won't conflict
+        with existing definitions.
+
+        :param existing_obj: The existing object in the namespace
+        :param descriptor: The ScenarioDescriptor being created
+        :raises DuplicateScenarioError: If a scenario with this name already exists
+        :raises FunctionShadowingError: If this would shadow a non-scenario function
+        """
         # Check for duplicate ScenarioDescriptor
-        if (existing is not None) and isinstance(existing, ScenarioDescriptor):
+        if isinstance(existing_obj, ScenarioDescriptor):
             if self._subject:
                 raise DuplicateScenarioError(
                     f"Duplicate scenario with subject '{self._subject}' found. "
@@ -215,32 +234,26 @@ class ScenarioDecorator:
                 )
             else:
                 raise DuplicateScenarioError(
-                    f"Duplicate scenario function '{descriptor_name}' found. "
+                    f"Duplicate scenario function '{descriptor.name}' found. "
                     "Each scenario function must have a unique name."
                 )
 
-        # Check for function shadowing - when a non-ScenarioDescriptor exists with the same name
-        if (existing is not None) and not isinstance(existing, ScenarioDescriptor):
-            if self._is_anonymous_function(fn) and self._subject:
+        # Check for function shadowing: when a non-ScenarioDescriptor exists with the same name
+        else:
+            if self._is_anonymous_function(descriptor.fn) and self._subject:
                 # Anonymous function with subject that would shadow an existing function
                 raise FunctionShadowingError(
                     f"Cannot create scenario with subject '{self._subject}' because it would "
-                    f"shadow existing function '{descriptor_name}'. "
+                    f"shadow existing function '{descriptor.name}'. "
                     f"Use a different subject or rename the existing function."
                 )
-            elif not self._is_anonymous_function(fn):
+            elif not self._is_anonymous_function(descriptor.fn):
                 # Regular function that shadows an existing non-scenario function
                 raise FunctionShadowingError(
-                    f"Cannot create scenario '{descriptor_name}' because it would shadow "
+                    f"Cannot create scenario '{descriptor.name}' because it would shadow "
                     f"an existing function with the same name. "
                     f"Rename the scenario function or the existing function."
                 )
-
-        if self._is_anonymous_function(fn) and self._subject:
-            # This is a temporary and dirty workaround; to be revisited after the v2 release
-            fn.__globals__[descriptor_name] = descriptor
-
-        return descriptor
 
     def _is_anonymous_function(self, fn: Callable[..., Any]) -> bool:
         try:
