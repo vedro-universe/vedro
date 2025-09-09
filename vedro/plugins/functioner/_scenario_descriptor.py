@@ -70,6 +70,11 @@ class ScenarioDescriptor:
 
     @property
     def cases(self) -> CasesType:
+        """
+        Get the parameterization cases for the scenario.
+
+        :return: A tuple of parameter cases to run the scenario with.
+        """
         return self._cases
 
     @property

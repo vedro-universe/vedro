@@ -217,4 +217,10 @@ class FuncBasedScenarioProvider(ScenarioProvider):
             return do
 
     def _get_wrapper_assignments(self) -> Tuple[str, ...]:
+        """
+        Get the attributes to copy when wrapping functions.
+
+        :return: A tuple of attribute names to copy from the wrapped function,
+                 excluding '__name__' to preserve the wrapper's name.
+        """
         return tuple(x for x in WRAPPER_ASSIGNMENTS if x != '__name__')

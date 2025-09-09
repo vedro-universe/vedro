@@ -174,6 +174,14 @@ class ScenarioDecorator:
         return subject, cases, tags
 
     def _create_descriptor(self, fn: Callable[..., Any]) -> ScenarioDescriptor:
+        """
+        Create a ScenarioDescriptor from a function.
+
+        :param fn: The function to convert into a scenario descriptor.
+        :return: A ScenarioDescriptor instance.
+        :raises TypeError: If fn is not a regular function or async function.
+        :raises DuplicateScenarioError: If anonymous function without subject or conflicts exist.
+        """
         if not (isfunction(fn) or iscoroutinefunction(fn)):
             raise TypeError("@scenario can only be applied to regular functions")
 
@@ -256,6 +264,12 @@ class ScenarioDecorator:
                 )
 
     def _is_anonymous_function(self, fn: Callable[..., Any]) -> bool:
+        """
+        Check if a function is an anonymous function (named '_').
+
+        :param fn: The function to check.
+        :return: True if the function is anonymous, False otherwise.
+        """
         try:
             return fn.__name__ == "_"
         except AttributeError:
