@@ -1,4 +1,9 @@
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Type
+
+from vedro._params import CasesType
+from vedro._tags import TagsType
+
+from ._errors import ScenarioDeclarationError
 
 __all__ = ("ScenarioDescriptor",)
 
@@ -14,19 +19,30 @@ class ScenarioDescriptor:
 
     def __init__(self, fn: Callable[..., Any],
                  decorators: Tuple[Callable[..., Any], ...] = (),
-                 params: Tuple[Any, ...] = ()) -> None:
+                 cases: CasesType = (),
+                 subject: Optional[str] = None,
+                 name: Optional[str] = None,
+                 tags: TagsType = ()) -> None:
         """
         Initialize the ScenarioDescriptor with a function, decorators, and parameters.
 
         :param fn: The function defining the scenario logic.
         :param decorators: A tuple of decorators to apply to the scenario class.
                            Defaults to an empty tuple.
-        :param params: A tuple of parameter sets to use for parameterized scenarios.
-                       Defaults to an empty tuple.
+        :param cases: A tuple of parameter sets for parameterized scenarios. Each element
+                      should be a callable that provides parameters. Defaults to an empty tuple.
+        :param subject: An optional custom human-readable subject for the scenario.
+                        If not provided, it will be generated from the function name.
+        :param name: Optional generated name for the scenario. If not provided, uses fn.__name__.
+        :param tags: Tags to associate with the scenario. Can be a list, tuple, or set
+                     of strings or Enums. Defaults to an empty tuple.
         """
         self._fn = fn
         self._decorators = decorators
-        self._params = params
+        self._cases = cases
+        self._name = name or fn.__name__
+        self._subject = subject
+        self._tags = tags
 
     @property
     def name(self) -> str:
@@ -35,7 +51,7 @@ class ScenarioDescriptor:
 
         :return: The name of the function as a string.
         """
-        return self._fn.__name__
+        return self._name
 
     @property
     def fn(self) -> Callable[..., Any]:
@@ -56,21 +72,34 @@ class ScenarioDescriptor:
         return self._decorators
 
     @property
-    def params(self) -> Tuple[Any, ...]:
+    def cases(self) -> CasesType:
         """
-        Get the parameter sets associated with the scenario.
+        Get the parameterization cases for the scenario.
 
-        :return: A tuple containing parameter sets for scenario instantiation.
+        :return: A tuple of parameter cases to run the scenario with.
         """
-        return self._params
+        return self._cases
 
     @property
-    def lineno(self) -> Union[int, None]:
+    def subject(self) -> Optional[str]:
         """
-        Get the line number where the scenario was defined.
+        Get the custom subject for the scenario.
 
-        :return: The line number or None if not available.
+        :return: The custom subject string or None if not provided.
         """
-        if hasattr(self._fn, "__code__"):
-            return getattr(self._fn.__code__, "co_firstlineno", None)
-        return None
+        return self._subject
+
+    @property
+    def tags(self) -> TagsType:
+        """
+        Get the tags associated with the scenario.
+
+        :return: The tags as a list, tuple, or set of strings or Enums.
+        """
+        return self._tags
+
+    def __set_name__(self, owner: Type[Any], name: str) -> None:
+        raise ScenarioDeclarationError(
+            f"@scenario decorator cannot be used on method '{name}' in class '{owner.__name__}'. "
+            f"Scenarios must be module-level functions, not class methods."
+        )

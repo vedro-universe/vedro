@@ -116,6 +116,29 @@ async def test_scenario_skipped_show_paths(dispatcher: Dispatcher, printer_: Moc
 
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_skipped_show_ids(dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, show_ids=True, hide_namespaces=True)
+
+        scenario_result = make_scenario_result().mark_skipped()
+        await dispatcher.fire(ScenarioSkippedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = aggregated_result.scenario.subject
+        unique_id = scenario_result.scenario.unique_id
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(subject, ScenarioStatus.SKIPPED, elapsed=None, prefix=" "),
+            call.print_scenario_extra_details([f"id: {unique_id}"], prefix=" " * 3)
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_skipped_with_reason_and_paths(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, show_paths=True, hide_namespaces=True)

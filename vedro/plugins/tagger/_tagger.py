@@ -78,7 +78,8 @@ class TaggerPlugin(Plugin):
         """
 
         # TODO: In v2, consider moving the 'tags' attribute directly into the Scenario class
-        orig_tags = getattr(scenario._orig_scenario, "tags", ())
+        orig_tags = scenario.tags
+        # TagsType is list, tuple, or set
         if not isinstance(orig_tags, (list, tuple, set)):
             raise TypeError(f"Scenario '{scenario.unique_id}' tags must be a list, tuple or set, "
                             f"got {type(orig_tags)}")
@@ -87,7 +88,7 @@ class TaggerPlugin(Plugin):
             if isinstance(tag, Enum):
                 tag = tag.value
             try:
-                validate(tag)
+                validate(tag)  # type: ignore
             except Exception as e:
                 raise ValueError(f"Scenario '{scenario.unique_id}' tag '{tag}' is not valid ({e})")
             else:

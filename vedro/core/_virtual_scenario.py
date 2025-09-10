@@ -9,6 +9,7 @@ from typing import Type, TypeVar, Union, cast, overload
 from niltype import Nil, Nilable, NilType
 
 from .._scenario import Scenario
+from .._tags import TagsType
 from ._plugin import Plugin
 from ._scenario_meta import get_scenario_meta, set_scenario_meta
 from ._virtual_step import VirtualStep
@@ -188,6 +189,8 @@ class VirtualScenario:
 
         :return: An integer representing the line number, or None if not available.
         """
+        # TODO: Consider adding line_start/line_end in v2 for complete range tracking
+        # Currently only tracks the start line due to Python runtime limitations
         return getattr(self._orig_scenario, "__vedro__lineno__", None)
 
     def skip(self, reason: Optional[str] = None) -> None:
@@ -216,6 +219,18 @@ class VirtualScenario:
         :return: A boolean indicating if the scenario is skipped.
         """
         return self._is_skipped
+
+    @property
+    def tags(self) -> TagsType:
+        """
+        Get the tags associated with the scenario.
+
+        Tags can be used to categorize, filter, or label scenarios with specific
+        attributes. Each tag can be either a string or an Enum value.
+
+        :return: A collection of tags associated with the scenario.
+        """
+        return cast(TagsType, getattr(self._orig_scenario, "tags", ()))
 
     def set_meta(self, key: str, value: Any, *, plugin: Plugin,
                  fallback_key: Optional[str] = None) -> None:
