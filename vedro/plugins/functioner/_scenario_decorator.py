@@ -210,7 +210,7 @@ class ScenarioDecorator:
             if hasattr(fn, "__name__"):
                 name = f"'{fn.__name__}' ({type(fn).__name__})"
             else:
-                name = f"'{type(fn).__name__}"
+                name = f"{type(fn).__name__}"
             raise TypeError(
                 f"@scenario decorator cannot be used on {name} {location}. "
                 f"It can only decorate regular functions defined with 'def' or 'async def'."
@@ -221,7 +221,7 @@ class ScenarioDecorator:
             if hasattr(fn, "__name__"):
                 name = f"'{fn.__name__}' ({type(fn).__name__})"
             else:
-                name = f"'{type(fn).__name__}"
+                name = f"{type(fn).__name__}"
             raise TypeError(
                 f"@scenario decorator cannot be used on {name} {location}. "
                 f"It can only decorate regular functions defined with 'def' or 'async def'."

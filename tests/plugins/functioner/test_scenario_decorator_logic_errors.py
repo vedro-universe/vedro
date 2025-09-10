@@ -34,8 +34,8 @@ async def test_duplicate_function_name_error(provider: ScenarioProvider,
     with then:
         assert exc.type is DuplicateScenarioError
         assert str(exc.value) == (
-            "Duplicate scenario function 'create_user' found. "
-            "Each scenario function must have a unique name."
+            "Found duplicate scenario 'create_user' at 'scenarios/scenario.py:7'. "
+            "Please rename one of the scenarios to have a unique name."
         )
 
 
@@ -61,8 +61,9 @@ async def test_duplicate_subject_for_anonymous_functions(provider: ScenarioProvi
     with then:
         assert exc.type is DuplicateScenarioError
         assert str(exc.value) == (
-            "Duplicate scenario with subject 'update user' found. "
-            "Each anonymous scenario must have a unique subject."
+            "Multiple scenarios found with subject 'update user' at 'scenarios/scenario.py:7'. "
+            "When using anonymous functions (like '_'), each must have a unique subject. "
+            "Consider renaming one or using named functions instead."
         )
 
 
@@ -84,8 +85,8 @@ async def test_anonymous_function_without_subject(provider: ScenarioProvider,
     with then:
         assert exc.type is DuplicateScenarioError
         assert str(exc.value) == (
-            "Anonymous scenario function '_' requires a subject. "
-            "Use @scenario('subject') to provide one."
+            "Scenario function '_' at 'scenarios/scenario.py:3' needs a subject. "
+            "Add one like this: @scenario('your subject here')"
         )
 
 
@@ -110,7 +111,8 @@ async def test_decorating_callable_class_instance(provider: ScenarioProvider,
     with then:
         assert exc.type is TypeError
         assert str(exc.value) == (
-            "@scenario can only be applied to regular functions"
+            "@scenario decorator cannot be used on MyCallable in module 'scenarios.scenario'. "
+            "It can only decorate regular functions defined with 'def' or 'async def'."
         )
 
 
@@ -129,7 +131,9 @@ async def test_decorating_builtin_function(provider: ScenarioProvider,
     with then:
         assert exc.type is TypeError
         assert str(exc.value) == (
-            "@scenario can only be applied to regular functions"
+            "@scenario decorator cannot be used on 'len' (builtin_function_or_method) "
+            "in module 'builtins'. "
+            "It can only decorate regular functions defined with 'def' or 'async def'."
         )
 
 
@@ -153,9 +157,9 @@ async def test_shadowing_decorated_function(provider: ScenarioProvider,
     with then:
         assert exc.type is FunctionShadowingError
         assert str(exc.value) == (
-            "Cannot create scenario 'update_user' because it would shadow "
-            "an existing function with the same name. "
-            "Rename the scenario function or the existing function."
+            "Scenario 'update_user' at 'scenarios/scenario.py:6' conflicts with an existing "
+            "function. "
+            "Please either: 1) Rename your scenario function, or 2) Rename the existing function"
         )
 
 
@@ -179,9 +183,9 @@ async def test_anonymous_function_overwrites_sanitized_name(provider: ScenarioPr
     with then:
         assert exc.type is FunctionShadowingError
         assert str(exc.value) == (
-            "Cannot create scenario with subject 'update user' because it would "
-            "shadow existing function 'update_user'. "
-            "Use a different subject or rename the existing function."
+            "Subject 'update user' at 'scenarios/scenario.py:6' would create a conflict with "
+            "existing function 'update_user'. "
+            "Please either: 1) Choose a different subject, or 2) Rename the existing function"
         )
 
 
