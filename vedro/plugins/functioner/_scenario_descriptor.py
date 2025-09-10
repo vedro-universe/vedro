@@ -1,7 +1,9 @@
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable, Optional, Tuple, Type
 
 from vedro._params import CasesType
 from vedro._tags import TagsType
+
+from ._errors import ScenarioDeclarationError
 
 __all__ = ("ScenarioDescriptor",)
 
@@ -95,3 +97,9 @@ class ScenarioDescriptor:
         :return: The tags as a list, tuple, or set of strings or Enums.
         """
         return self._tags
+
+    def __set_name__(self, owner: Type[Any], name: str) -> None:
+        raise ScenarioDeclarationError(
+            f"@scenario decorator cannot be used on method '{name}' in class '{owner.__name__}'. "
+            f"Scenarios must be module-level functions, not class methods."
+        )

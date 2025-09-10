@@ -230,3 +230,27 @@ async def test_function_starting_with_underscore_with_subject(provider: Scenario
     with then:
         # Functions starting with underscore (except anonymous _) are ignored by the provider
         assert len(scenarios) == 0
+
+
+async def test_scenario_descriptor_set_name_raises_error(provider: ScenarioProvider,
+                                                         scenario_source: ScenarioSource):
+    with given:
+        scenario_source.path.write_text(dedent('''
+            from vedro import scenario
+
+            class MyClass:
+                @scenario
+                def test_method(self):
+                    pass
+        ''').strip())
+
+    with when:
+        with raises(BaseException) as exc:
+            await provider.provide(scenario_source)
+
+    with then:
+        assert exc.type is ScenarioDeclarationError
+        assert str(exc.value) == (
+            "@scenario decorator cannot be used on method 'test_method' in class 'MyClass'. "
+            "Scenarios must be module-level functions, not class methods."
+        )
