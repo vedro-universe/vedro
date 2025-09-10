@@ -1,5 +1,7 @@
+import sys
 from textwrap import dedent
 
+import pytest
 from baby_steps import given, then, when
 from pytest import raises
 
@@ -232,6 +234,7 @@ async def test_function_starting_with_underscore_with_subject(provider: Scenario
         assert len(scenarios) == 0
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="requires Python 3.12+")
 async def test_scenario_descriptor_set_name_raises_error(provider: ScenarioProvider,
                                                          scenario_source: ScenarioSource):
     with given:
