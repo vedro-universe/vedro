@@ -1,8 +1,8 @@
-__all__ = ("ScenarioError", "DuplicateScenarioError", "AnonymousScenarioError",
+__all__ = ("ScenarioDeclarationError", "DuplicateScenarioError", "AnonymousScenarioError",
            "FunctionShadowingError",)
 
 
-class ScenarioError(BaseException):
+class ScenarioDeclarationError(BaseException):
     """
     Base exception for scenario-related errors.
 
@@ -12,7 +12,7 @@ class ScenarioError(BaseException):
     pass
 
 
-class DuplicateScenarioError(ScenarioError):
+class DuplicateScenarioError(ScenarioDeclarationError):
     """
     Raised when attempting to create a scenario with a duplicate name.
 
@@ -24,7 +24,7 @@ class DuplicateScenarioError(ScenarioError):
     pass
 
 
-class AnonymousScenarioError(ScenarioError):
+class AnonymousScenarioError(ScenarioDeclarationError):
     """
     Raised when there's an issue with an anonymous scenario function.
 
@@ -34,7 +34,7 @@ class AnonymousScenarioError(ScenarioError):
     pass
 
 
-class FunctionShadowingError(ScenarioError):
+class FunctionShadowingError(ScenarioDeclarationError):
     """
     Raised when a scenario would shadow an existing non-scenario function.
 

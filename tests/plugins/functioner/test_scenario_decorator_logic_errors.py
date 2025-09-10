@@ -5,7 +5,12 @@ from pytest import raises
 
 from vedro.core.scenario_collector import ScenarioSource
 from vedro.plugins.functioner import FuncBasedScenarioProvider as ScenarioProvider
-from vedro.plugins.functioner._errors import DuplicateScenarioError, FunctionShadowingError
+from vedro.plugins.functioner._errors import (
+    AnonymousScenarioError,
+    DuplicateScenarioError,
+    FunctionShadowingError,
+    ScenarioDeclarationError,
+)
 
 from ._utils import module_loader, provider, scenario_source, tmp_dir
 
@@ -83,7 +88,7 @@ async def test_anonymous_function_without_subject(provider: ScenarioProvider,
             await provider.provide(scenario_source)
 
     with then:
-        assert exc.type is DuplicateScenarioError
+        assert exc.type is AnonymousScenarioError
         assert str(exc.value) == (
             "Scenario function '_' at 'scenarios/scenario.py:3' needs a subject. "
             "Add one like this: @scenario('your subject here')"
@@ -109,7 +114,7 @@ async def test_decorating_callable_class_instance(provider: ScenarioProvider,
         await provider.provide(scenario_source)
 
     with then:
-        assert exc.type is TypeError
+        assert exc.type is ScenarioDeclarationError
         assert str(exc.value) == (
             "@scenario decorator cannot be used on MyCallable in module 'scenarios.scenario'. "
             "It can only decorate regular functions defined with 'def' or 'async def'."
@@ -129,7 +134,7 @@ async def test_decorating_builtin_function(provider: ScenarioProvider,
         await provider.provide(scenario_source)
 
     with then:
-        assert exc.type is TypeError
+        assert exc.type is ScenarioDeclarationError
         assert str(exc.value) == (
             "@scenario decorator cannot be used on 'len' (builtin_function_or_method) "
             "in module 'builtins'. "

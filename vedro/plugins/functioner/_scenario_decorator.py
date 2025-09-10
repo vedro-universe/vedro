@@ -6,7 +6,12 @@ from typing import Any, Callable, Optional, Tuple, Union, overload
 from vedro._params import CasesType
 from vedro._tags import TagsType
 
-from ._errors import DuplicateScenarioError, FunctionShadowingError
+from ._errors import (
+    AnonymousScenarioError,
+    DuplicateScenarioError,
+    FunctionShadowingError,
+    ScenarioDeclarationError,
+)
 from ._sanitize_identifier import sanitize_identifier
 from ._scenario_descriptor import ScenarioDescriptor
 
@@ -211,7 +216,7 @@ class ScenarioDecorator:
                 name = f"'{fn.__name__}' ({type(fn).__name__})"
             else:
                 name = f"{type(fn).__name__}"
-            raise TypeError(
+            raise ScenarioDeclarationError(
                 f"@scenario decorator cannot be used on {name} {location}. "
                 f"It can only decorate regular functions defined with 'def' or 'async def'."
             )
@@ -222,14 +227,14 @@ class ScenarioDecorator:
                 name = f"'{fn.__name__}' ({type(fn).__name__})"
             else:
                 name = f"{type(fn).__name__}"
-            raise TypeError(
+            raise ScenarioDeclarationError(
                 f"@scenario decorator cannot be used on {name} {location}. "
                 f"It can only decorate regular functions defined with 'def' or 'async def'."
             )
 
         if self._is_anonymous_function(fn) and not self._subject:
             location = self._get_location_info(fn)
-            raise DuplicateScenarioError(
+            raise AnonymousScenarioError(
                 f"Scenario function '_' {location} needs a subject. "
                 "Add one like this: @scenario('your subject here')"
             )
