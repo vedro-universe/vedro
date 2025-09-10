@@ -1,3 +1,5 @@
+import inspect
+import os
 from inspect import iscoroutinefunction, isfunction
 from typing import Any, Callable, Optional, Tuple, Union, overload
 
@@ -204,19 +206,32 @@ class ScenarioDecorator:
                                         function.
         """
         if not (isfunction(fn) or iscoroutinefunction(fn)):
-            raise TypeError("@scenario can only be applied to regular functions")
+            location = self._get_location_info(fn)
+            if hasattr(fn, "__name__"):
+                name = f"'{fn.__name__}' ({type(fn).__name__})"
+            else:
+                name = f"'{type(fn).__name__}"
+            raise TypeError(
+                f"@scenario decorator cannot be used on {name} {location}. "
+                f"It can only decorate regular functions defined with 'def' or 'async def'."
+            )
 
         if not hasattr(fn, "__globals__"):  # pragma: no cover
+            location = self._get_location_info(fn)
+            if hasattr(fn, "__name__"):
+                name = f"'{fn.__name__}' ({type(fn).__name__})"
+            else:
+                name = f"'{type(fn).__name__}"
             raise TypeError(
-                f"@scenario can only be applied to regular functions or async functions. "
-                f"Got '{type(fn).__name__}' instead. "
-                f"Make sure you're decorating a function defined with 'def' or 'async def'."
+                f"@scenario decorator cannot be used on {name} {location}. "
+                f"It can only decorate regular functions defined with 'def' or 'async def'."
             )
 
         if self._is_anonymous_function(fn) and not self._subject:
+            location = self._get_location_info(fn)
             raise DuplicateScenarioError(
-                "Anonymous scenario function '_' requires a subject. "
-                "Use @scenario('subject') to provide one."
+                f"Scenario function '_' {location} needs a subject. "
+                "Add one like this: @scenario('your subject here')"
             )
 
         if self._subject:
@@ -257,32 +272,73 @@ class ScenarioDecorator:
         # Check for duplicate ScenarioDescriptor
         if isinstance(existing_obj, ScenarioDescriptor):
             if self._subject:
+                location = self._get_location_info(descriptor.fn)
                 raise DuplicateScenarioError(
-                    f"Duplicate scenario with subject '{self._subject}' found. "
-                    "Each anonymous scenario must have a unique subject."
+                    f"Multiple scenarios found with subject '{self._subject}' {location}. "
+                    "When using anonymous functions (like '_'), each must have a unique subject. "
+                    "Consider renaming one or using named functions instead."
                 )
             else:
+                location = self._get_location_info(descriptor.fn)
                 raise DuplicateScenarioError(
-                    f"Duplicate scenario function '{descriptor.name}' found. "
-                    "Each scenario function must have a unique name."
+                    f"Found duplicate scenario '{descriptor.name}' {location}. "
+                    "Please rename one of the scenarios to have a unique name."
                 )
 
         # Check for function shadowing: when a non-ScenarioDescriptor exists with the same name
         else:
             if self._is_anonymous_function(descriptor.fn) and self._subject:
-                # Anonymous function with subject that would shadow an existing function
+                location = self._get_location_info(descriptor.fn)
                 raise FunctionShadowingError(
-                    f"Cannot create scenario with subject '{self._subject}' because it would "
-                    f"shadow existing function '{descriptor.name}'. "
-                    f"Use a different subject or rename the existing function."
+                    f"Subject '{self._subject}' {location} would create a conflict with existing "
+                    f"function '{descriptor.name}'. Please either: "
+                    "1) Choose a different subject, or "
+                    "2) Rename the existing function"
                 )
             elif not self._is_anonymous_function(descriptor.fn):
-                # Regular function that shadows an existing non-scenario function
+                location = self._get_location_info(descriptor.fn)
                 raise FunctionShadowingError(
-                    f"Cannot create scenario '{descriptor.name}' because it would shadow "
-                    f"an existing function with the same name. "
-                    f"Rename the scenario function or the existing function."
+                    f"Scenario '{descriptor.name}' {location} conflicts with an existing "
+                    "function. Please either: "
+                    "1) Rename your scenario function, or "
+                    "2) Rename the existing function"
                 )
+
+    def _get_location_info(self, fn: Callable[..., Any]) -> str:
+        """
+        Get human-readable location information for a function.
+
+        WARNING: This method is SLOW and should ONLY be used for error messages.
+        It performs expensive operations like file I/O and source code inspection.
+        Never use this in hot paths or normal execution flow.
+
+        Attempts to retrieve location information in the following priority:
+        1. File path with line number (best case): "at 'path/to/file.py:123'"
+        2. Module name (fallback): "in module 'module.name'"
+        3. Unknown location (worst case): "(location unknown)"
+
+        :param fn: The function to get location information for
+        :return: A string describing the function's location, formatted for use in error messages
+        """
+        try:
+            source_file = inspect.getsourcefile(fn)
+            source_lines = inspect.getsourcelines(fn)
+        except:  # noqa: E722
+            source_file = source_lines = None
+
+        if source_file and source_lines:
+            try:
+                rel_path = os.path.relpath(source_file)
+            except ValueError:
+                rel_path = source_file
+            _, lineno = source_lines
+            return f"at '{rel_path}:{lineno}'"
+
+        module = inspect.getmodule(fn)
+        if module:
+            return f"in module '{module.__name__}'"
+
+        return "(location unknown)"
 
     def _is_anonymous_function(self, fn: Callable[..., Any]) -> bool:
         """
