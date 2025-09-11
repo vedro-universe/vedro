@@ -152,3 +152,71 @@ def test_resolve_path_invalid_type():
     with then:
         assert exc.type is TypeError
         assert str(exc.value) == "'None' must be a module or a path"
+
+
+@pytest.mark.parametrize("hide_flag", ["__tracebackhide__", "__traceback_hide__"])
+def test_skip_hidden_frames_with_hide_flag(tmp_dir: Path, hide_flag: str):
+    with given:
+        call_statement = f"{hide_flag} = True; 1 / 0"
+        create_call_stack(tmp_dir, [
+            ("main.py", "main"),
+            ("some_module/caller.py", "call_another"),
+            ("another_module/__main__.py", "do_smth"),
+        ], call_statement=call_statement)
+        tb = run_module_function(tmp_dir / "main.py", func="main")
+
+    with when:
+        filtered_tb = TracebackFilter(modules=[], skip_hidden_frames=True).filter_tb(tb)
+
+    with then:
+        assert get_frames_info(filtered_tb) == [
+            (getfile(run_module_function), "run_module_function"),
+            (abspath("main.py"), "main"),
+            (abspath("some_module/caller.py"), "call_another"),
+        ]
+
+
+@pytest.mark.parametrize("hide_flag", ["__tracebackhide__", "__traceback_hide__"])
+def test_skip_hidden_frames_false_ignores_hide_flag(tmp_dir: Path, hide_flag: str):
+    with given:
+        call_statement = f"{hide_flag} = True; 1 / 0"
+        create_call_stack(tmp_dir, [
+            ("main.py", "main"),
+            ("some_module/caller.py", "call_another"),
+            ("another_module/__main__.py", "do_smth"),
+        ], call_statement=call_statement)
+        tb = run_module_function(tmp_dir / "main.py", func="main")
+
+    with when:
+        filtered_tb = TracebackFilter(modules=[], skip_hidden_frames=False).filter_tb(tb)
+
+    with then:
+        assert get_frames_info(filtered_tb) == [
+            (getfile(run_module_function), "run_module_function"),
+            (abspath("main.py"), "main"),
+            (abspath("some_module/caller.py"), "call_another"),
+            (abspath("another_module/__main__.py"), "do_smth"),
+        ]
+
+
+@pytest.mark.parametrize("hide_flag", ["__tracebackhide__", "__traceback_hide__"])
+def test_skip_hidden_frames_with_hide_flag_false(tmp_dir: Path, hide_flag: str):
+    with given:
+        call_statement = f"{hide_flag} = False; 1 / 0"
+        create_call_stack(tmp_dir, [
+            ("main.py", "main"),
+            ("some_module/caller.py", "call_another"),
+            ("another_module/__main__.py", "do_smth"),
+        ], call_statement=call_statement)
+        tb = run_module_function(tmp_dir / "main.py", func="main")
+
+    with when:
+        filtered_tb = TracebackFilter(modules=[], skip_hidden_frames=True).filter_tb(tb)
+
+    with then:
+        assert get_frames_info(filtered_tb) == [
+            (getfile(run_module_function), "run_module_function"),
+            (abspath("main.py"), "main"),
+            (abspath("some_module/caller.py"), "call_another"),
+            (abspath("another_module/__main__.py"), "do_smth"),
+        ]

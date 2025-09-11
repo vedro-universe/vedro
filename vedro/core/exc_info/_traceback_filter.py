@@ -1,5 +1,5 @@
 from pathlib import Path
-from types import ModuleType, TracebackType
+from types import FrameType, ModuleType, TracebackType
 from typing import Callable, Sequence, Union
 
 __all__ = ("TracebackFilter", "NoOpTracebackFilter", "TracebackFilterType",)
@@ -20,35 +20,39 @@ __all__ = ("TracebackFilter", "NoOpTracebackFilter", "TracebackFilterType",)
 #         tb_filter = tb_filter_factory(modules=[...])
 class TracebackFilter:
     """
-    Filters traceback objects to exclude frames from specified modules.
+    Filters traceback objects to exclude frames from specified modules
+    and frames marked with __tracebackhide__ or __traceback_hide__.
 
     This class provides methods to filter out frames from traceback objects
-    that belong to specified modules, making it easier to focus on relevant
-    parts of the traceback.
+    that belong to specified modules or are marked for hiding, making it
+    easier to focus on relevant parts of the traceback.
     """
 
-    def __init__(self, modules: Sequence[Union[str, ModuleType]]) -> None:
+    def __init__(self, modules: Sequence[Union[str, ModuleType]], *,
+                 skip_hidden_frames: bool = True) -> None:
         """
         Initialize the TracebackFilter with a list of modules to filter out.
 
         :param modules: List of modules or module paths to be filtered out from tracebacks.
+        :param skip_hidden_frames: Whether to skip frames marked with __tracebackhide__ or
+                                   __traceback_hide__.
         """
         self._module_paths = [self.resolve_module_path(m) for m in modules]
+        self._skip_hidden_frames = skip_hidden_frames
 
     def filter_tb(self, tb: TracebackType) -> TracebackType:
         """
-        Filter the given traceback, removing frames from specified modules.
+        Filter the given traceback, removing frames from specified modules
+        and frames marked with __tracebackhide__ or __traceback_hide__.
 
         :param tb: The original traceback object to be filtered.
-        :return: A new traceback object with frames from the specified modules removed.
+        :return: A new traceback object with hidden frames removed.
         """
         filtered_tb = None
         last_tb = None
 
         while tb is not None:
-            filename = Path(tb.tb_frame.f_code.co_filename)
-
-            if not any(self._is_relative_to(filename, m) for m in self._module_paths):
+            if not self.should_hide_frame(tb.tb_frame):
                 # Create a new traceback object if it is not a filtered file
                 if last_tb is None:
                     # Create a new 'root' traceback
@@ -87,6 +91,26 @@ class TracebackFilter:
             return Path(module).resolve()
 
         raise TypeError(f"'{module}' must be a module or a path")
+
+    def should_hide_frame(self, frame: FrameType) -> bool:
+        """
+        Determine if a frame should be hidden based on module paths and hide flags.
+
+        :param frame: The frame object to check.
+        :return: True if the frame should be hidden, False otherwise.
+        """
+        filename = Path(frame.f_code.co_filename)
+        if any(self._is_relative_to(filename, m) for m in self._module_paths):
+            return True
+
+        if not self._skip_hidden_frames:
+            return False
+
+        for flag in ("__traceback_hide__", "__tracebackhide__"):
+            if frame.f_locals.get(flag, False):
+                return True
+
+        return False
 
     def _is_relative_to(self, path: Path, other: Path) -> bool:
         """
