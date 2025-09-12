@@ -1,7 +1,30 @@
+from time import time
 from types import TracebackType
 from typing import Optional, Type, Union
 
 __all__ = ("given", "when", "then", "Given", "When", "Then", "Step",)
+
+
+class StepRecorder:
+    def __init__(self) -> None:
+        self._records = []
+
+    def record(self, kind: str, name: str, start_at: float, ended_at: float,
+               exc: Optional[BaseException] = None) -> None:
+        print(f"Recorded {kind} step '{name}' from {start_at} to {ended_at} with exc={exc}")
+        self._records.append((kind, name, start_at, ended_at, exc))
+
+    def clear(self) -> None:
+        self._records.clear()
+
+    def __iter__(self):
+        return iter(self._records)
+
+    def __len__(self) -> int:
+        return len(self._records)
+
+
+step_recorder = StepRecorder()
 
 
 class Step:
@@ -18,6 +41,7 @@ class Step:
         Initialize the Step with no name set.
         """
         self._name: Union[str, None] = None
+        self._started_at: Union[float, None] = None
 
     def __enter__(self) -> None:
         """
@@ -25,7 +49,7 @@ class Step:
 
         :return: None
         """
-        pass
+        self._started_at = time()
 
     async def __aenter__(self) -> None:
         """
@@ -47,7 +71,12 @@ class Step:
         :param exc_tb: The traceback object, if an exception was raised.
         :return: True if no exception occurred; otherwise False.
         """
+        step_recorder.record(self.__class__.__name__, self._name or "",
+                             self._started_at, ended_at=time(), exc=exc_val)
+
         self._name = None
+        self._started_at = None
+
         return exc_type is None
 
     async def __aexit__(self,
@@ -62,7 +91,6 @@ class Step:
         :param exc_tb: The traceback object, if an exception was raised.
         :return: True if no exception occurred; otherwise False.
         """
-        self._name = None
         return self.__exit__(exc_type, exc_val, exc_tb)
 
     def __call__(self, name: str) -> "Step":

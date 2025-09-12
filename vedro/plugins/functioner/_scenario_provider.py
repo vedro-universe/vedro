@@ -161,6 +161,7 @@ class FuncBasedScenarioProvider(ScenarioProvider):
         """
         lineno = self._get_lineno(descriptor.fn, source_path)
         return {
+            "__vedro__fn__": True,
             "__module__": module.__name__,
             "__file__": str(source_path),
             "__lineno__": lineno,

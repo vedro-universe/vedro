@@ -3,6 +3,8 @@ import sys
 from time import time
 from typing import Any, List, Tuple, Type, cast
 
+from vedro.plugins.functioner._scenario_steps import step_recorder
+
 from ..._scenario import Scenario
 from ...events import (
     ExceptionRaisedEvent,
@@ -110,6 +112,84 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         return step_result
 
+    async def _run_fn_step(self, step: VirtualStep, ref: Scenario, **kwargs: Any) -> StepResult:
+        step_recorder.clear()
+
+        output_capturer = self._get_output_capturer(**kwargs)
+
+        step_result = StepResult(step)
+
+        step_result.set_started_at(time())
+        try:
+            with output_capturer.capture() as captured_output:
+                try:
+                    if step.is_coro():
+                        await step(ref)
+                    else:
+                        step(ref)
+                finally:
+                    if output_capturer.enabled:
+                        step_result.set_captured_output(captured_output)
+        except:  # noqa: E722
+            step_result.set_ended_at(time()).mark_failed()
+            exc_info = ExcInfo(*sys.exc_info())
+            step_result.set_exc_info(exc_info)
+        else:
+            step_result.set_ended_at(time()).mark_passed()
+
+        return step_result
+
+    async def _fire_fn_step_events(self, step_result: StepResult, scenario_result: ScenarioResult) -> None:
+        if len(step_recorder) == 0:
+            await self._dispatcher.fire(StepRunEvent(step_result))
+            if step_result.exc_info is not None:
+                await self._dispatcher.fire(ExceptionRaisedEvent(step_result.exc_info))
+                await self._dispatcher.fire(StepFailedEvent(step_result))
+
+                scenario_result.add_step_result(step_result)
+                scenario_result.set_ended_at(time()).mark_failed()
+                await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
+            else:
+                await self._dispatcher.fire(StepPassedEvent(step_result))
+
+                scenario_result.add_step_result(step_result)
+                scenario_result.set_ended_at(time()).mark_passed()
+                await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
+            return
+
+        for kind, name, started_at, ended_at, exc in step_recorder:
+            def step(*args, **kwargs):  # type: ignore
+                return step_result.step._orig_step(*args, **kwargs)
+
+            step.__name__ = f"{kind.lower()} {name}"
+            virtual_step = VirtualStep(step)
+            step_result = StepResult(virtual_step)
+
+            await self._dispatcher.fire(StepRunEvent(step_result))
+            step_result.set_started_at(started_at)
+
+            if (exc is not None) and (exc is step_result.exc_info.value):
+                step_result.set_ended_at(ended_at).mark_failed()
+
+                exc_info = step_result.exc_info
+                await self._dispatcher.fire(ExceptionRaisedEvent(exc_info))
+                step_result.set_exc_info(exc_info)
+                await self._dispatcher.fire(StepFailedEvent(step_result))
+
+                scenario_result.add_step_result(step_result)
+                scenario_result.set_ended_at(time()).mark_failed()
+                await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
+                break
+            else:
+                step_result.set_ended_at(time()).mark_passed()
+                await self._dispatcher.fire(StepPassedEvent(step_result))
+
+                scenario_result.add_step_result(step_result)
+
+        if not scenario_result.is_failed():
+            scenario_result.set_ended_at(time()).mark_passed()
+            await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
+
     async def run_scenario(self, scenario: VirtualScenario, **kwargs: Any) -> ScenarioResult:
         """
         Execute a complete scenario including all its steps.
@@ -142,6 +222,13 @@ class MonotonicScenarioRunner(ScenarioRunner):
         if output_capturer.enabled:
             scenario_result.set_captured_output(captured_output)
         scenario_result.set_scope(ref.__dict__)
+
+        is_fn_scenario = getattr(scenario._orig_scenario, "__vedro__fn__", False)
+        if is_fn_scenario and len(scenario.steps) == 1:
+            step_result = await self._run_fn_step(scenario.steps[0], ref,
+                                                  output_capturer=output_capturer)
+            await self._fire_fn_step_events(step_result, scenario_result)
+            return scenario_result
 
         for step in scenario.steps:
             try:
