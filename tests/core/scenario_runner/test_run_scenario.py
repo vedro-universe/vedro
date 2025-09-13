@@ -20,9 +20,16 @@ from vedro.events import (
     StepRunEvent,
 )
 
-from ._utils import dispatcher_, interrupt_exception, make_vscenario, make_vstep, runner
+from ._utils import (
+    dispatcher_,
+    interrupt_exception,
+    make_vscenario,
+    make_vstep,
+    runner,
+    step_recorder,
+)
 
-__all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
+__all__ = ("dispatcher_", "runner", "interrupt_exception", "step_recorder",)  # fixtures
 
 
 async def test_no_steps_passed(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
