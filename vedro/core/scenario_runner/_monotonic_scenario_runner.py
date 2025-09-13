@@ -119,11 +119,10 @@ class MonotonicScenarioRunner(ScenarioRunner):
     async def _run_fn_step(self, step: VirtualStep, ref: Scenario, **kwargs: Any) -> StepResult:
         self._step_recorder.clear()
 
-        output_capturer = self._get_output_capturer(**kwargs)
-
         step_result = StepResult(step)
-
         step_result.set_started_at(time())
+
+        output_capturer = self._get_output_capturer(**kwargs)
         try:
             with output_capturer.capture() as captured_output:
                 try:
@@ -136,6 +135,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
                         step_result.set_captured_output(captured_output)
         except:  # noqa: E722
             step_result.set_ended_at(time()).mark_failed()
+
             exc_info = ExcInfo(*sys.exc_info())
             step_result.set_exc_info(exc_info)
         else:
@@ -175,6 +175,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
                 await self._dispatcher.fire(ExceptionRaisedEvent(exc_info))
                 ctx_step_result.set_exc_info(exc_info)
+
                 await self._dispatcher.fire(StepFailedEvent(ctx_step_result))
 
                 scenario_result.add_step_result(ctx_step_result)
