@@ -147,6 +147,9 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
             exc_info = ExcInfo(*sys.exc_info())
             step_result.set_exc_info(exc_info)
+
+            if self._is_interruption(exc_info, self._interrupt_exceptions):
+                raise StepInterrupted(exc_info, step_result)
         else:
             step_result.set_ended_at(time()).mark_passed()
 
@@ -263,9 +266,20 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         is_fn_scenario = getattr(scenario._orig_scenario, "__vedro__fn__", False)
         if is_fn_scenario and len(scenario.steps) == 1:
-            step_result = await self._run_fn_step(scenario.steps[0], ref,
-                                                  output_capturer=output_capturer)
-            await self._fire_fn_step_events(step_result, scenario_result)
+            try:
+                step_result = await self._run_fn_step(scenario.steps[0], ref,
+                                                      output_capturer=output_capturer)
+            except self._interrupt_exceptions as e:
+                if isinstance(e, StepInterrupted):
+                    scenario_result.add_step_result(e.step_result)
+                    exc_info = e.exc_info
+                else:
+                    exc_info = ExcInfo(*sys.exc_info())
+                scenario_result.set_ended_at(time()).mark_failed()
+                await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
+                raise ScenarioInterrupted(exc_info, scenario_result)
+            else:
+                await self._fire_fn_step_events(step_result, scenario_result)
             return scenario_result
 
         for step in scenario.steps:
