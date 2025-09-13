@@ -1,3 +1,4 @@
+from typing import Type
 from unittest.mock import Mock, call
 
 import pytest
@@ -74,15 +75,16 @@ async def test_fn_step_failed_no_recordings(method_mock_factory: Mock, *,
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock))
 async def test_fn_step_interrupted(method_mock_factory: Mock,
                                    dispatcher_: Mock,
+                                   interrupt_exception: Type[BaseException],
                                    step_recorder: StepRecorder):
     with given:
-        interrupt_exception = KeyboardInterrupt()
-        step_ = method_mock_factory(side_effect=interrupt_exception, __name__="step")
+        exception = interrupt_exception()
+        step_ = method_mock_factory(side_effect=exception, __name__="step")
         scenario_ = Mock(Scenario, step=step_)
         vstep = VirtualStep(step_)
 
         runner = ScenarioRunner(dispatcher_,
-                                interrupt_exceptions=(interrupt_exception.__class__,),
+                                interrupt_exceptions=(interrupt_exception,),
                                 step_recorder=step_recorder)
 
     with when, raises(BaseException) as exc:
@@ -92,7 +94,7 @@ async def test_fn_step_interrupted(method_mock_factory: Mock,
         assert exc.type is StepInterrupted
 
         orig_exc = exc.value
-        assert orig_exc.exc_info.value == interrupt_exception
+        assert orig_exc.exc_info.value == exception
         assert isinstance(orig_exc.step_result, StepResult)
 
     with then("step_result created"):
