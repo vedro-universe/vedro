@@ -1,13 +1,16 @@
 from time import time
 from types import TracebackType
-from typing import Optional, Type, Union
+from typing import Iterator, List, Optional, Type, Union
 
 __all__ = ("given", "when", "then", "Given", "When", "Then", "Step",)
 
 
+RecordType = tuple[str, str, float, float, Union[BaseException, None]]
+
+
 class StepRecorder:
     def __init__(self) -> None:
-        self._records = []
+        self._records: List[RecordType] = []
 
     def record(self, kind: str, name: str, start_at: float, ended_at: float,
                exc: Optional[BaseException] = None) -> None:
@@ -17,14 +20,21 @@ class StepRecorder:
     def clear(self) -> None:
         self._records.clear()
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[RecordType]:
         return iter(self._records)
 
     def __len__(self) -> int:
         return len(self._records)
 
 
-step_recorder = StepRecorder()
+_step_recorder = None
+
+
+def get_step_recorder() -> StepRecorder:
+    global _step_recorder
+    if _step_recorder is None:
+        _step_recorder = StepRecorder()
+    return _step_recorder
 
 
 class Step:
@@ -36,12 +46,13 @@ class Step:
     provides a string representation based on that name.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, step_recorder: StepRecorder = get_step_recorder()) -> None:
         """
         Initialize the Step with no name set.
         """
         self._name: Union[str, None] = None
         self._started_at: Union[float, None] = None
+        self._step_recorder = step_recorder
 
     def __enter__(self) -> None:
         """
@@ -71,8 +82,9 @@ class Step:
         :param exc_tb: The traceback object, if an exception was raised.
         :return: True if no exception occurred; otherwise False.
         """
-        step_recorder.record(self.__class__.__name__, self._name or "",
-                             self._started_at, ended_at=time(), exc=exc_val)
+        ended_at = time()
+        self._step_recorder.record(self.__class__.__name__, self._name or "",
+                                   self._started_at or ended_at, ended_at=ended_at, exc=exc_val)
 
         self._name = None
         self._started_at = None
