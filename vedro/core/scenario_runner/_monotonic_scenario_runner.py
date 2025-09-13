@@ -63,7 +63,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
         # 3. The coupling between runner and functioner plugin is too tight
         # This will be properly refactored in v2 when breaking changes are greenlit,
         # with a proper abstraction layer for step tracking to be introduced.
-        self._step_recorder = step_recorder or get_step_recorder()
+        self._step_recorder = step_recorder if (step_recorder is not None) else get_step_recorder()
 
     def _is_interruption(self, exc_info: ExcInfo,
                          exceptions: Tuple[Type[BaseException], ...]) -> bool:
