@@ -174,6 +174,10 @@ class MonotonicScenarioRunner(ScenarioRunner):
                 await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
             return
 
+        # Add captured output from the whole step to the scenario result
+        if step_result.captured_output is not None:
+            scenario_result.set_captured_output(step_result.captured_output)
+
         for kind, name, started_at, ended_at, exc in self._step_recorder:
             ctx_step_result = self._create_fn_step_result(f"{kind.lower()} {name}",
                                                           step_result.step._orig_step)
