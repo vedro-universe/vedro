@@ -22,7 +22,7 @@ class Step:
         """
         self._name: Union[str, None] = None
         self._started_at: Union[float, None] = None
-        self._step_recorder = step_recorder or get_step_recorder()
+        self._step_recorder = step_recorder if (step_recorder is not None) else get_step_recorder()
 
     def __enter__(self) -> None:
         """
@@ -54,7 +54,7 @@ class Step:
         """
         ended_at = time()
         self._step_recorder.record(self.__class__.__name__, self._name or "",
-                                   self._started_at or ended_at, ended_at=ended_at, exc=exc_val)
+                                   self._started_at or ended_at, ended_at, exc=exc_val)
 
         self._name = None
         self._started_at = None
