@@ -1,7 +1,9 @@
 import os
 import sys
 from time import time
-from typing import Any, List, Tuple, Type, cast
+from typing import Any, List, Optional, Tuple, Type, cast
+
+from vedro.plugins.functioner._step_recorder import StepRecorder, get_step_recorder
 
 from ..._scenario import Scenario
 from ...events import (
@@ -39,16 +41,29 @@ class MonotonicScenarioRunner(ScenarioRunner):
     """
 
     def __init__(self, dispatcher: Dispatcher, *,
-                 interrupt_exceptions: Tuple[Type[BaseException], ...] = ()) -> None:
+                 interrupt_exceptions: Tuple[Type[BaseException], ...] = (),
+                 step_recorder: Optional[StepRecorder] = None) -> None:
         """
         Initialize the MonotonicScenarioRunner.
 
         :param dispatcher: The event dispatcher for firing execution events.
         :param interrupt_exceptions: Additional exception types that should interrupt execution.
+        :param step_recorder: The step recorder for tracking functional scenario steps.
+                              Defaults to the global singleton instance.
         """
         self._dispatcher = dispatcher
         assert isinstance(interrupt_exceptions, tuple)
         self._interrupt_exceptions = interrupt_exceptions + (Interrupted,)
+
+        # This is a temporary approach to support step events for fn-based scenarios
+        # without introducing breaking changes. This violates architectural principles:
+        # 1. Core components (ScenarioRunner, lower level) should not depend on or know
+        #    about plugin components (StepRecorder, higher level) — dependency inversion violation
+        # 2. Using a global singleton (step_recorder) is not ideal for testability and concurrency
+        # 3. The coupling between runner and functioner plugin is too tight
+        # This will be properly refactored in v2 when breaking changes are greenlit,
+        # with a proper abstraction layer for step tracking to be introduced.
+        self._step_recorder = step_recorder if (step_recorder is not None) else get_step_recorder()
 
     def _is_interruption(self, exc_info: ExcInfo,
                          exceptions: Tuple[Type[BaseException], ...]) -> bool:
@@ -110,12 +125,162 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         return step_result
 
+    async def _run_fn_step(self, step: VirtualStep, ref: Scenario, **kwargs: Any) -> StepResult:
+        """
+        Execute a function-based scenario's single "do" step.
+
+        Function-based scenarios have a single step that contains all given/when/then
+        blocks. This method executes that step while the StepRecorder tracks individual
+        step executions for later event generation.
+
+        :param step: The virtual "do" step containing all given/when/then blocks.
+        :param ref: The scenario instance.
+        :param kwargs: Additional keyword arguments (e.g., output_capturer).
+        :return: The result of the step execution with any exceptions captured.
+        :raises StepInterrupted: If the step is interrupted by a configured exception.
+        """
+        self._step_recorder.clear()
+
+        step_result = StepResult(step)
+        step_result.set_started_at(time())
+
+        output_capturer = self._get_output_capturer(**kwargs)
+        try:
+            with output_capturer.capture() as captured_output:
+                try:
+                    if step.is_coro():
+                        await step(ref)
+                    else:
+                        step(ref)
+                finally:
+                    if output_capturer.enabled:
+                        step_result.set_captured_output(captured_output)
+        except:  # noqa: E722
+            step_result.set_ended_at(time()).mark_failed()
+
+            exc_info = ExcInfo(*sys.exc_info())
+            step_result.set_exc_info(exc_info)
+
+            if self._is_interruption(exc_info, self._interrupt_exceptions):
+                raise StepInterrupted(exc_info, step_result)
+        else:
+            step_result.set_ended_at(time()).mark_passed()
+
+        return step_result
+
+    async def _fire_fn_step_events(self, step_result: StepResult,
+                                   scenario_result: ScenarioResult) -> None:
+        """
+        Generate and fire step events for a function-based scenario.
+
+        Processes the recorded step executions from the StepRecorder and fires
+        appropriate events for each given/when/then step. If no steps were recorded
+        (e.g., scenario without given/when/then blocks), fires events for the
+        single "do" step. If an exception occurred outside any step context,
+        creates a synthetic error step to capture it.
+
+        :param step_result: The result from executing the scenario's "do" step.
+        :param scenario_result: The scenario result to populate with step results.
+        """
+        if len(self._step_recorder) == 0:
+            await self._dispatcher.fire(StepRunEvent(step_result))
+            if step_result.exc_info is not None:
+                await self._dispatcher.fire(ExceptionRaisedEvent(step_result.exc_info))
+                await self._dispatcher.fire(StepFailedEvent(step_result))
+
+                scenario_result.add_step_result(step_result)
+                scenario_result.set_ended_at(time()).mark_failed()
+                await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
+            else:
+                await self._dispatcher.fire(StepPassedEvent(step_result))
+
+                scenario_result.add_step_result(step_result)
+                scenario_result.set_ended_at(time()).mark_passed()
+                await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
+            return
+
+        # Add captured output from the whole step to the scenario result
+        if step_result.captured_output is not None:
+            scenario_result.set_captured_output(step_result.captured_output)
+
+        for kind, name, started_at, ended_at, exc in self._step_recorder:
+            ctx_step_result = self._create_fn_step_result(f"{kind.lower()} {name}",
+                                                          step_result.step._orig_step)
+
+            await self._dispatcher.fire(StepRunEvent(ctx_step_result))
+            ctx_step_result.set_started_at(started_at)
+
+            exc_info = step_result.exc_info
+            if (exc is not None) and (exc_info is not None) and (exc is exc_info.value):
+                ctx_step_result.set_ended_at(ended_at).mark_failed()
+
+                await self._dispatcher.fire(ExceptionRaisedEvent(exc_info))
+                ctx_step_result.set_exc_info(exc_info)
+
+                await self._dispatcher.fire(StepFailedEvent(ctx_step_result))
+
+                scenario_result.add_step_result(ctx_step_result)
+                scenario_result.set_ended_at(time()).mark_failed()
+                await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
+                break
+            else:
+                ctx_step_result.set_ended_at(ended_at).mark_passed()
+                await self._dispatcher.fire(StepPassedEvent(ctx_step_result))
+
+                scenario_result.add_step_result(ctx_step_result)
+
+        if not scenario_result.is_failed() and (step_result.exc_info is not None):
+            # Exception happened outside any step context
+            # Create a synthetic step to hold the exception
+            synthetic_step_result = self._create_fn_step_result("unexpected_error",
+                                                                step_result.step._orig_step)
+
+            scenario_result.add_step_result(synthetic_step_result)
+
+            await self._dispatcher.fire(StepRunEvent(synthetic_step_result))
+            synthetic_step_result.set_started_at(step_result.started_at or time())
+
+            synthetic_step_result.set_ended_at(step_result.ended_at or time()).mark_failed()
+            await self._dispatcher.fire(ExceptionRaisedEvent(step_result.exc_info))
+            synthetic_step_result.set_exc_info(step_result.exc_info)
+            await self._dispatcher.fire(StepFailedEvent(synthetic_step_result))
+
+            scenario_result.set_ended_at(time()).mark_failed()
+            await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
+
+        elif not scenario_result.is_failed():
+            scenario_result.set_ended_at(time()).mark_passed()
+            await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
+
+    def _create_fn_step_result(self, name: str, orig_step: Any) -> StepResult:
+        """
+        Create a virtual step result for a recorded given/when/then step.
+
+        Wraps the original step function with a new name to represent the
+        specific given/when/then step that was executed.
+
+        :param name: The formatted step name (e.g., "given initial setup").
+        :param orig_step: The original step function to wrap.
+        :return: A StepResult with the appropriately named virtual step.
+        """
+        def step_wrapper(*args, **kwargs):  # type: ignore
+            return orig_step(*args, **kwargs)
+
+        step_wrapper.__name__ = name
+
+        virtual_step = VirtualStep(step_wrapper)
+        return StepResult(virtual_step)
+
     async def run_scenario(self, scenario: VirtualScenario, **kwargs: Any) -> ScenarioResult:
         """
         Execute a complete scenario including all its steps.
 
         Handles scenario initialization, step execution, output capture,
         and appropriate event firing for skipped, passed, or failed scenarios.
+
+        For function-based scenarios (marked with __vedro__fn__ attribute),
+        executes the single "do" step while recording given/when/then blocks,
+        then generates individual step events for proper reporting.
 
         :param scenario: The virtual scenario to execute.
         :param kwargs: Additional keyword arguments (e.g., output_capturer).
@@ -127,8 +292,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
         scenario_result = ScenarioResult(scenario)
 
         if scenario.is_skipped():
-            # In v2, consider firing ScenarioRunEvent before ScenarioSkippedEvent
-            # for consistency
+            # In v2, consider firing ScenarioRunEvent before skipped event for consistency
             scenario_result.mark_skipped()
             await self._dispatcher.fire(ScenarioSkippedEvent(scenario_result))
             return scenario_result
@@ -142,6 +306,24 @@ class MonotonicScenarioRunner(ScenarioRunner):
         if output_capturer.enabled:
             scenario_result.set_captured_output(captured_output)
         scenario_result.set_scope(ref.__dict__)
+
+        is_fn_scenario = getattr(scenario._orig_scenario, "__vedro__fn__", False)
+        if is_fn_scenario and len(scenario.steps) == 1:
+            try:
+                step_result = await self._run_fn_step(scenario.steps[0], ref,
+                                                      output_capturer=output_capturer)
+            except self._interrupt_exceptions as e:
+                if isinstance(e, StepInterrupted):
+                    scenario_result.add_step_result(e.step_result)
+                    exc_info = e.exc_info
+                else:
+                    exc_info = ExcInfo(*sys.exc_info())
+                scenario_result.set_ended_at(time()).mark_failed()
+                await self._dispatcher.fire(ScenarioFailedEvent(scenario_result))
+                raise ScenarioInterrupted(exc_info, scenario_result)
+            else:
+                await self._fire_fn_step_events(step_result, scenario_result)
+            return scenario_result
 
         for step in scenario.steps:
             try:

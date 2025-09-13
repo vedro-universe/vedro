@@ -13,6 +13,7 @@ class ExcInfo:
     way to store and access exception details.
     """
 
+    # TODO: In v2, make type, value, and traceback read-only
     def __init__(self,
                  type_: Type[BaseException],
                  value: BaseException,
