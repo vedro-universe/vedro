@@ -1,7 +1,7 @@
 import os
 import sys
 from time import time
-from typing import Any, List, Tuple, Type, cast
+from typing import Any, List, Optional, Tuple, Type, cast
 
 from vedro.plugins.functioner._scenario_steps import StepRecorder, get_step_recorder
 
@@ -42,7 +42,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
     def __init__(self, dispatcher: Dispatcher, *,
                  interrupt_exceptions: Tuple[Type[BaseException], ...] = (),
-                 step_recorder: StepRecorder = get_step_recorder()) -> None:
+                 step_recorder: Optional[StepRecorder] = None) -> None:
         """
         Initialize the MonotonicScenarioRunner.
 
@@ -54,7 +54,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
         self._dispatcher = dispatcher
         assert isinstance(interrupt_exceptions, tuple)
         self._interrupt_exceptions = interrupt_exceptions + (Interrupted,)
-        self._step_recorder = step_recorder
+        self._step_recorder = step_recorder or get_step_recorder()
 
     def _is_interruption(self, exc_info: ExcInfo,
                          exceptions: Tuple[Type[BaseException], ...]) -> bool:

@@ -46,13 +46,13 @@ class Step:
     provides a string representation based on that name.
     """
 
-    def __init__(self, *, step_recorder: StepRecorder = get_step_recorder()) -> None:
+    def __init__(self, *, step_recorder: Optional[StepRecorder] = None) -> None:
         """
         Initialize the Step with no name set.
         """
         self._name: Union[str, None] = None
         self._started_at: Union[float, None] = None
-        self._step_recorder = step_recorder
+        self._step_recorder = step_recorder or get_step_recorder()
 
     def __enter__(self) -> None:
         """
