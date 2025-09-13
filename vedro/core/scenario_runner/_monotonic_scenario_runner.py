@@ -163,8 +163,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
             return
 
         for kind, name, started_at, ended_at, exc in self._step_recorder:
-            ctx_step_result = self._create_synthetic_step_result(f"{kind.lower()} {name}",
-                                                                 step_result.step._orig_step)
+            ctx_step_result = self._create_fn_step_result(f"{kind.lower()} {name}",
+                                                          step_result.step._orig_step)
 
             await self._dispatcher.fire(StepRunEvent(ctx_step_result))
             ctx_step_result.set_started_at(started_at)
@@ -190,8 +190,8 @@ class MonotonicScenarioRunner(ScenarioRunner):
         if not scenario_result.is_failed() and (step_result.exc_info is not None):
             # Exception happened outside any step context
             # Create a synthetic step to hold the exception
-            synthetic_step_result = self._create_synthetic_step_result("unexpected_error",
-                                                                       step_result.step._orig_step)
+            synthetic_step_result = self._create_fn_step_result("unexpected_error",
+                                                                step_result.step._orig_step)
 
             scenario_result.add_step_result(synthetic_step_result)
 
@@ -210,7 +210,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
             scenario_result.set_ended_at(time()).mark_passed()
             await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
 
-    def _create_synthetic_step_result(self, name: str, orig_step: Any) -> StepResult:
+    def _create_fn_step_result(self, name: str, orig_step: Any) -> StepResult:
         def step_wrapper(*args, **kwargs):  # type: ignore
             return orig_step(*args, **kwargs)
 
@@ -236,8 +236,7 @@ class MonotonicScenarioRunner(ScenarioRunner):
         scenario_result = ScenarioResult(scenario)
 
         if scenario.is_skipped():
-            # In v2, consider firing ScenarioRunEvent before ScenarioSkippedEvent
-            # for consistency
+            # In v2, consider firing ScenarioRunEvent before skipped event for consistency
             scenario_result.mark_skipped()
             await self._dispatcher.fire(ScenarioSkippedEvent(scenario_result))
             return scenario_result
