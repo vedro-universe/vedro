@@ -126,6 +126,19 @@ class MonotonicScenarioRunner(ScenarioRunner):
         return step_result
 
     async def _run_fn_step(self, step: VirtualStep, ref: Scenario, **kwargs: Any) -> StepResult:
+        """
+        Execute a function-based scenario's single "do" step.
+
+        Function-based scenarios have a single step that contains all given/when/then
+        blocks. This method executes that step while the StepRecorder tracks individual
+        step executions for later event generation.
+
+        :param step: The virtual "do" step containing all given/when/then blocks.
+        :param ref: The scenario instance.
+        :param kwargs: Additional keyword arguments (e.g., output_capturer).
+        :return: The result of the step execution with any exceptions captured.
+        :raises StepInterrupted: If the step is interrupted by a configured exception.
+        """
         self._step_recorder.clear()
 
         step_result = StepResult(step)
@@ -157,6 +170,18 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
     async def _fire_fn_step_events(self, step_result: StepResult,
                                    scenario_result: ScenarioResult) -> None:
+        """
+        Generate and fire step events for a function-based scenario.
+
+        Processes the recorded step executions from the StepRecorder and fires
+        appropriate events for each given/when/then step. If no steps were recorded
+        (e.g., scenario without given/when/then blocks), fires events for the
+        single "do" step. If an exception occurred outside any step context,
+        creates a synthetic error step to capture it.
+
+        :param step_result: The result from executing the scenario's "do" step.
+        :param scenario_result: The scenario result to populate with step results.
+        """
         if len(self._step_recorder) == 0:
             await self._dispatcher.fire(StepRunEvent(step_result))
             if step_result.exc_info is not None:
@@ -228,6 +253,16 @@ class MonotonicScenarioRunner(ScenarioRunner):
             await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
 
     def _create_fn_step_result(self, name: str, orig_step: Any) -> StepResult:
+        """
+        Create a virtual step result for a recorded given/when/then step.
+
+        Wraps the original step function with a new name to represent the
+        specific given/when/then step that was executed.
+
+        :param name: The formatted step name (e.g., "given initial setup").
+        :param orig_step: The original step function to wrap.
+        :return: A StepResult with the appropriately named virtual step.
+        """
         def step_wrapper(*args, **kwargs):  # type: ignore
             return orig_step(*args, **kwargs)
 
@@ -242,6 +277,10 @@ class MonotonicScenarioRunner(ScenarioRunner):
 
         Handles scenario initialization, step execution, output capture,
         and appropriate event firing for skipped, passed, or failed scenarios.
+
+        For function-based scenarios (marked with __vedro__fn__ attribute),
+        executes the single "do" step while recording given/when/then blocks,
+        then generates individual step events for proper reporting.
 
         :param scenario: The virtual scenario to execute.
         :param kwargs: Additional keyword arguments (e.g., output_capturer).
