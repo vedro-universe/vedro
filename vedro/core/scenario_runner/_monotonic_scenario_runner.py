@@ -3,7 +3,7 @@ import sys
 from time import time
 from typing import Any, List, Optional, Tuple, Type, cast
 
-from vedro.plugins.functioner._scenario_steps import StepRecorder, get_step_recorder
+from vedro.plugins.functioner._step_recorder import StepRecorder, get_step_recorder
 
 from ..._scenario import Scenario
 from ...events import (
