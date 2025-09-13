@@ -1,9 +1,9 @@
-from typing import Iterator, List, Optional, Union
+from typing import Iterator, List, Optional, Tuple, Union
 
 __all__ = ("StepRecorder", "get_step_recorder",)
 
 
-RecordType = tuple[str, str, float, float, Union[BaseException, None]]
+RecordType = Tuple[str, str, float, float, Union[BaseException, None]]
 
 
 class StepRecorder:
