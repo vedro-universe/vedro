@@ -14,11 +14,18 @@ class Step:
     This class supports optional naming and can be used as a context manager,
     both synchronously and asynchronously. It is callable to assign a name and
     provides a string representation based on that name.
+
+    For function-based scenarios, this class automatically records step execution
+    details (timing, name, exceptions) to a StepRecorder for deferred event processing.
     """
 
     def __init__(self, *, step_recorder: Optional[StepRecorder] = None) -> None:
         """
         Initialize the Step with no name set.
+
+        :param step_recorder: Optional StepRecorder instance for tracking step execution.
+                              If not provided, uses the global singleton recorder.
+                              This is primarily used for function-based scenario support.
         """
         self._name: Union[str, None] = None
         self._started_at: Union[float, None] = None
@@ -26,7 +33,9 @@ class Step:
 
     def __enter__(self) -> None:
         """
-        Enter the synchronous context manager.
+        Enter the synchronous context manager and record the start time.
+
+        Records the current timestamp for later use in step execution tracking.
 
         :return: None
         """
@@ -35,6 +44,8 @@ class Step:
     async def __aenter__(self) -> None:
         """
         Enter the asynchronous context manager.
+
+        Delegates to the synchronous __enter__ method to record start time.
 
         :return: None
         """
@@ -45,7 +56,11 @@ class Step:
                  exc_val: Optional[BaseException],
                  exc_tb: Optional[TracebackType]) -> bool:
         """
-        Exit the synchronous context manager.
+        Exit the synchronous context manager and record step execution details.
+
+        Records the step execution information (type, name, timing, exception) to the
+        StepRecorder for later processing in function-based scenarios. This enables
+        proper step event generation when steps are executed within a single "do" step.
 
         :param exc_type: The type of exception raised, if any.
         :param exc_val: The exception instance raised, if any.
@@ -68,6 +83,8 @@ class Step:
         """
         Exit the asynchronous context manager.
 
+        Delegates to the synchronous __exit__ method to record step execution details.
+
         :param exc_type: The type of exception raised, if any.
         :param exc_val: The exception instance raised, if any.
         :param exc_tb: The traceback object, if an exception was raised.
@@ -78,6 +95,9 @@ class Step:
     def __call__(self, name: str) -> "Step":
         """
         Set the name of the step by calling the instance.
+
+        This allows for the pattern: `with step("description"):` where
+        `step` is an instance of a Step subclass.
 
         :param name: A string representing the step's name.
         :return: The current Step instance with the name set.
