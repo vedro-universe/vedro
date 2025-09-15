@@ -34,10 +34,6 @@ JsonFormatterFactory = Union[
 JsonSerializerFactory = Callable[[EventDict], str]
 
 
-def pretty_serializer(event: EventDict) -> str:
-    return json.dumps(event, indent=2, ensure_ascii=False, separators=(', ', ': '))
-
-
 def compact_serializer(event: EventDict) -> str:
     return json.dumps(event, ensure_ascii=False, separators=(',', ':'))
 
@@ -68,7 +64,13 @@ class JsonReporterPlugin(Reporter):
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
-                  .listen(DirectorInitEvent, lambda e: e.director.register("json", self))
+                  .listen(DirectorInitEvent, self.on_director_init)
+
+        if self._rich_config.enabled:
+            self._register_rich_reporter(dispatcher)
+
+    def on_director_init(self, event: DirectorInitEvent) -> None:
+        event.director.register("json", self)
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         """
@@ -81,14 +83,6 @@ class JsonReporterPlugin(Reporter):
     def on_chosen(self) -> None:
         assert isinstance(self._dispatcher, Dispatcher)  # for type checking
         assert self._global_config is not None  # for type checking
-
-        if self._rich_config.enabled:
-            # Register rich reporter before setting up event listeners
-            self._register_rich_reporter()
-            self._rich_reporter.on_config_loaded(
-                # Rich reporter needs global config to access Registry.TracebackFilter
-                ConfigLoadedEvent(self._global_config.path, self._global_config)
-            )
 
         tb_filter_factory = self._global_config.Registry.TracebackFilter
         self._formatter_inst = self._formatter_factory(tb_filter_factory([vedro]))
@@ -106,17 +100,14 @@ class JsonReporterPlugin(Reporter):
         assert self._formatter_inst is not None
         return self._formatter_inst
 
-    def _register_rich_reporter(self) -> None:
-        assert isinstance(self._dispatcher, Dispatcher)
-
+    def _register_rich_reporter(self, dispatcher: Dispatcher) -> None:
         self._buffer = StringIO()
         console_factory = partial(make_console, file=self._buffer)
         printer_factory = partial(rich_reporter.RichPrinter, console_factory=console_factory)
         self._rich_reporter = rich_reporter.RichReporterPlugin(self._rich_config,
                                                                printer_factory=printer_factory)
 
-        self._rich_reporter._dispatcher = self._dispatcher
-        self._rich_reporter.on_chosen()
+        self._rich_reporter.subscribe(dispatcher)
 
     def _calculate_discovery_stats(self, scheduler: ScenarioScheduler) -> Tuple[int, int, int]:
         """
@@ -189,7 +180,7 @@ class JsonReporter(PluginConfig):
     description = "Outputs test results as JSON events for machine-readable reporting"
 
     class RichReporter(rich_reporter.RichReporter):
-        enabled = False
+        enabled = True
+        reporter_name = "json-rich"
         hide_namespaces = True
-        show_timings = True
         show_captured_output = True
