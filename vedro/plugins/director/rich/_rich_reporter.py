@@ -40,6 +40,7 @@ class RichReporterPlugin(Reporter):
         super().__init__(config)
         self._printer = printer_factory()
         self._verbosity = 0
+        self._reporter_name = config.reporter_name
         self._tb_pretty = config.tb_pretty
         self._tb_show_internal_calls = config.tb_show_internal_calls
         self._tb_show_locals = config.tb_show_locals
@@ -73,7 +74,10 @@ class RichReporterPlugin(Reporter):
     def subscribe(self, dispatcher: Dispatcher) -> None:
         super().subscribe(dispatcher)
         dispatcher.listen(ConfigLoadedEvent, self.on_config_loaded) \
-                  .listen(DirectorInitEvent, lambda e: e.director.register("rich", self))
+                  .listen(DirectorInitEvent, self.on_director_init)
+
+    def on_director_init(self, event: DirectorInitEvent) -> None:
+        event.director.register(self._reporter_name, self)
 
     def on_chosen(self) -> None:
         assert isinstance(self._dispatcher, Dispatcher)
@@ -195,6 +199,7 @@ class RichReporterPlugin(Reporter):
 
         if self._no_color:
             self._printer.console.no_color = True
+            self._printer.console._color_system = None
 
         if not self._tb_show_internal_calls:
             self._tb_suppress_modules = tuple(self._tb_suppress_modules) + (vedro,)
@@ -590,4 +595,9 @@ class RichReporter(PluginConfig):
     Trigger a 'bell' sound at the end of scenario execution.
 
     (if supported by the terminal)
+    """
+
+    reporter_name: str = "rich"
+    """
+    Name used to register this reporter for CLI selection (e.g., --reporters rich).
     """
