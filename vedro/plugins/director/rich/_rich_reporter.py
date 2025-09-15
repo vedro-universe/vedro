@@ -55,6 +55,7 @@ class RichReporterPlugin(Reporter):
         self._show_skip_reason = config.show_skip_reason
         self._show_timings = config.show_timings
         self._show_paths = config.show_paths
+        self._show_ids = config.show_ids
         self._show_steps = config.show_steps
         self._hide_namespaces = config.hide_namespaces
         self._show_captured_output = config.show_captured_output
@@ -132,7 +133,11 @@ class RichReporterPlugin(Reporter):
         group.add_argument("--show-paths",
                            action="store_true",
                            default=self._show_paths,
-                           help="Show the relative path of each passed/failed scenario")
+                           help="Show the relative path of each scenario")
+        group.add_argument("--show-ids",
+                           action="store_true",
+                           default=self._show_ids,
+                           help="Show the unique ID of each scenario")
         group.add_argument("--show-scenario-spinner",
                            action="store_true",
                            default=self._show_scenario_spinner,
@@ -172,6 +177,7 @@ class RichReporterPlugin(Reporter):
         self._show_full_diff = event.args.show_full_diff
         self._show_timings = event.args.show_timings
         self._show_paths = event.args.show_paths
+        self._show_ids = event.args.show_ids
         self._show_steps = event.args.show_steps
         self._show_scenario_spinner = event.args.show_scenario_spinner
         self._hide_namespaces = event.args.hide_namespaces
@@ -189,6 +195,10 @@ class RichReporterPlugin(Reporter):
         if self._show_paths and (not self._show_scenario_extras):
             raise ValueError(
                 "RichReporter: to enable `show_paths` set `show_scenario_extras` to `True`")
+
+        if self._show_ids and (not self._show_scenario_extras):
+            raise ValueError(
+                "RichReporter: to enable `show_ids` set `show_scenario_extras` to `True`")
 
         if self._show_skip_reason and (not self._show_scenario_extras):
             raise ValueError(
@@ -259,6 +269,9 @@ class RichReporterPlugin(Reporter):
             skip_reason = scenario_result.scenario.skip_reason
             if skip_reason:
                 scenario_result.add_extra_details(f"{skip_reason}")
+
+        if self._show_ids:
+            scenario_result.add_extra_details(f"id: {scenario_result.scenario.unique_id}")
 
         if self._show_paths:
             path = f"{scenario_result.scenario.rel_path}"
@@ -490,6 +503,13 @@ class RichReporter(PluginConfig):
     show_paths: bool = False
     """
     Show the relative path of each executed scenario (passed, failed, or skipped).
+
+    Available if `show_scenario_extras` is True.
+    """
+
+    show_ids: bool = False
+    """
+    Show the unique ID of each executed scenario (passed, failed, or skipped).
 
     Available if `show_scenario_extras` is True.
     """

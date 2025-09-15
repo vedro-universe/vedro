@@ -11,10 +11,14 @@ __all__ = ("Skipper", "SkipperPlugin",)
 
 
 class _CompositePath:
-    def __init__(self, file_path: str, cls_name: Optional[str], tmpl_idx: Optional[int]) -> None:
+    def __init__(self, file_path: str,
+                 cls_name: Optional[str] = None,
+                 tmpl_idx: Optional[int] = None,
+                 lineno: Optional[int] = None) -> None:
         self.file_path = file_path
         self.cls_name = cls_name
         self.tmpl_idx = tmpl_idx
+        self.lineno = lineno
 
 
 @final
@@ -98,14 +102,41 @@ class SkipperPlugin(Plugin):
 
     def _get_composite_path(self, file_or_dir: str) -> _CompositePath:
         head, tail = os.path.split(file_or_dir)
-        file_name, *other = tail.split("::")
-        cls_name, *other = "".join(other).split("#")
-        tmpl_idx = "".join(other)
-        return _CompositePath(
-            file_path=self._normalize_path(os.path.join(head, file_name)),
-            cls_name=cls_name if len(cls_name) > 0 else None,
-            tmpl_idx=int(tmpl_idx) if tmpl_idx.isnumeric() else None,
-        )
+
+        # Check if contains :: for class name separator
+        if "::" in tail:
+            # Parse as class name format (existing logic)
+            file_name, *other = tail.rsplit("::")
+            cls_name, *other = "".join(other).rsplit("#")
+            tmpl_idx = "".join(other)
+
+            return _CompositePath(
+                file_path=self._normalize_path(os.path.join(head, file_name)),
+                cls_name=cls_name if len(cls_name) > 0 else None,
+                tmpl_idx=int(tmpl_idx) if tmpl_idx.isnumeric() else None,
+            )
+
+        # Check if contains single : followed by digits (line number)
+        elif ":" in tail:
+            file_name, line_str = tail.rsplit(":", 1)
+            try:
+                lineno = int(line_str)
+            except:  # noqa: E722
+                raise ValueError(
+                    f"Invalid line number format in '{file_or_dir}'. "
+                    f"Expected an integer after ':', but got '{line_str}'."
+                )
+
+            return _CompositePath(
+                file_path=self._normalize_path(os.path.join(head, file_name)),
+                lineno=lineno,
+            )
+
+        else:
+            # Plain file path
+            return _CompositePath(
+                file_path=self._normalize_path(os.path.join(head, tail)),
+            )
 
     def _normalize_path(self, file_or_dir: str) -> str:
         path = os.path.normpath(file_or_dir)
@@ -137,6 +168,9 @@ class SkipperPlugin(Plugin):
 
     def _is_match_scenario(self, path: _CompositePath, scenario: VirtualScenario) -> bool:
         if os.path.commonpath([path.file_path, scenario.path]) != path.file_path:
+            return False
+
+        if (path.lineno is not None) and (path.lineno != scenario.lineno):
             return False
 
         if (path.cls_name is not None) and (path.cls_name != scenario.name):

@@ -16,7 +16,9 @@ from vedro.core import (
 )
 
 __all__ = ("dispatcher_", "runner", "interrupt_exception", "make_vstep", "make_vscenario",
-           "make_scenario_result", "make_aggregated_result", "AsyncMock",)
+           "step_recorder", "make_scenario_result", "make_aggregated_result", "AsyncMock",)
+
+from vedro.plugins.functioner._step_recorder import StepRecorder
 
 
 @pytest.fixture()
@@ -33,9 +35,17 @@ def interrupt_exception():
 
 
 @pytest.fixture()
-def runner(dispatcher_: Dispatcher, interrupt_exception: Type[BaseException]):
+def step_recorder():
+    return StepRecorder()
+
+
+@pytest.fixture()
+def runner(dispatcher_: Dispatcher, interrupt_exception: Type[BaseException],
+           step_recorder: StepRecorder):
     interrupt_exceptions = (interrupt_exception,)
-    return MonotonicScenarioRunner(dispatcher_, interrupt_exceptions=interrupt_exceptions)
+    return MonotonicScenarioRunner(dispatcher_,
+                                   interrupt_exceptions=interrupt_exceptions,
+                                   step_recorder=step_recorder)
 
 
 def make_vstep(callable: Callable[..., Any] = None, *, name: Optional[str] = None) -> VirtualStep:

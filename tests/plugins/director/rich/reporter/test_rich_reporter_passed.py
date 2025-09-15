@@ -87,6 +87,29 @@ async def test_scenario_passed_show_paths(*, dispatcher: Dispatcher, printer_: M
 
 
 @pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_scenario_passed_show_ids(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher, show_ids=True)
+
+        scenario_result = make_scenario_result().mark_passed()
+        await dispatcher.fire(ScenarioPassedEvent(scenario_result))
+
+        aggregated_result = make_aggregated_result(scenario_result)
+        event = ScenarioReportedEvent(aggregated_result)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        subject = aggregated_result.scenario.subject
+        unique_id = scenario_result.scenario.unique_id
+        assert printer_.mock_calls == [
+            call.print_scenario_subject(subject, ScenarioStatus.PASSED, elapsed=None, prefix=" "),
+            call.print_scenario_extra_details([f"id: {unique_id}"], prefix=" " * 3)
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
 async def test_scenario_passed_show_steps(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher, show_steps=True)

@@ -129,7 +129,9 @@ async def test_collect_invalid_return_type(tmp_dir: Path, module_loader: ModuleL
 
     with then:
         assert exc.type is TypeError
-        assert str(exc.value) == "Provider must return a list of VirtualScenario"
+        assert str(exc.value) == (
+            "Provider must return a list of VirtualScenario, got ellipsis instead"
+        )
 
 
 async def test_collect_invalid_scenario_type(tmp_dir: Path, module_loader: ModuleLoader):
@@ -142,7 +144,9 @@ async def test_collect_invalid_scenario_type(tmp_dir: Path, module_loader: Modul
 
     with then:
         assert exc_info.type is TypeError
-        assert str(exc_info.value) == "Each item in the list must be a VirtualScenario"
+        assert str(exc_info.value) == (
+            "Each item in the list must be a VirtualScenario, got ellipsis instead"
+        )
 
 
 async def test_register_invalid_provider(module_loader: ModuleLoader):

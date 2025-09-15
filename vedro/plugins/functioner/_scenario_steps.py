@@ -1,5 +1,8 @@
+from time import time
 from types import TracebackType
 from typing import Optional, Type, Union
+
+from ._step_recorder import StepRecorder, get_step_recorder
 
 __all__ = ("given", "when", "then", "Given", "When", "Then", "Step",)
 
@@ -11,25 +14,38 @@ class Step:
     This class supports optional naming and can be used as a context manager,
     both synchronously and asynchronously. It is callable to assign a name and
     provides a string representation based on that name.
+
+    For function-based scenarios, this class automatically records step execution
+    details (timing, name, exceptions) to a StepRecorder for deferred event processing.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, step_recorder: Optional[StepRecorder] = None) -> None:
         """
         Initialize the Step with no name set.
+
+        :param step_recorder: Optional StepRecorder instance for tracking step execution.
+                              If not provided, uses the global singleton recorder.
+                              This is primarily used for function-based scenario support.
         """
         self._name: Union[str, None] = None
+        self._started_at: Union[float, None] = None
+        self._step_recorder = step_recorder if (step_recorder is not None) else get_step_recorder()
 
     def __enter__(self) -> None:
         """
-        Enter the synchronous context manager.
+        Enter the synchronous context manager and record the start time.
+
+        Records the current timestamp for later use in step execution tracking.
 
         :return: None
         """
-        pass
+        self._started_at = time()
 
     async def __aenter__(self) -> None:
         """
         Enter the asynchronous context manager.
+
+        Delegates to the synchronous __enter__ method to record start time.
 
         :return: None
         """
@@ -40,14 +56,24 @@ class Step:
                  exc_val: Optional[BaseException],
                  exc_tb: Optional[TracebackType]) -> bool:
         """
-        Exit the synchronous context manager.
+        Exit the synchronous context manager and record step execution details.
+
+        Records the step execution information (type, name, timing, exception) to the
+        StepRecorder for later processing in function-based scenarios. This enables
+        proper step event generation when steps are executed within a single "do" step.
 
         :param exc_type: The type of exception raised, if any.
         :param exc_val: The exception instance raised, if any.
         :param exc_tb: The traceback object, if an exception was raised.
         :return: True if no exception occurred; otherwise False.
         """
+        ended_at = time()
+        self._step_recorder.record(self.__class__.__name__, self._name or "",
+                                   self._started_at or ended_at, ended_at, exc=exc_val)
+
         self._name = None
+        self._started_at = None
+
         return exc_type is None
 
     async def __aexit__(self,
@@ -57,17 +83,21 @@ class Step:
         """
         Exit the asynchronous context manager.
 
+        Delegates to the synchronous __exit__ method to record step execution details.
+
         :param exc_type: The type of exception raised, if any.
         :param exc_val: The exception instance raised, if any.
         :param exc_tb: The traceback object, if an exception was raised.
         :return: True if no exception occurred; otherwise False.
         """
-        self._name = None
         return self.__exit__(exc_type, exc_val, exc_tb)
 
     def __call__(self, name: str) -> "Step":
         """
         Set the name of the step by calling the instance.
+
+        This allows for the pattern: `with step("description"):` where
+        `step` is an instance of a Step subclass.
 
         :param name: A string representing the step's name.
         :return: The current Step instance with the name set.

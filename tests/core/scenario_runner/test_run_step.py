@@ -12,9 +12,9 @@ from vedro.core.output_capturer import OutputCapturer
 from vedro.core.scenario_runner import Interrupted, StepInterrupted
 from vedro.events import ExceptionRaisedEvent, StepFailedEvent, StepPassedEvent, StepRunEvent
 
-from ._utils import AsyncMock, dispatcher_, interrupt_exception, runner
+from ._utils import AsyncMock, dispatcher_, interrupt_exception, runner, step_recorder
 
-__all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
+__all__ = ("dispatcher_", "runner", "interrupt_exception", "step_recorder",)  # fixtures
 
 
 @pytest.mark.parametrize("method_mock_factory", (Mock, AsyncMock,))

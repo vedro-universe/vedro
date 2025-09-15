@@ -17,9 +17,10 @@ from ._utils import (
     make_vscenario,
     make_vstep,
     runner,
+    step_recorder,
 )
 
-__all__ = ("dispatcher_", "runner", "interrupt_exception",)  # fixtures
+__all__ = ("dispatcher_", "runner", "interrupt_exception", "step_recorder",)  # fixtures
 
 
 async def test_run_no_scenarios(*, runner: MonotonicScenarioRunner, dispatcher_: Mock):
