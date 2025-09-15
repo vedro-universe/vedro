@@ -11,8 +11,10 @@ from vedro._test_utils import (
     make_scenario_passed_event,
     make_scenario_reported_event,
     make_scenario_run_event,
+    make_scenario_scheduler,
     make_scenario_skipped_event,
     make_startup_event,
+    make_vscenario,
 )
 from vedro.core import Config, ConfigType, Dispatcher
 from vedro.core.exc_info import TracebackFilter
@@ -94,6 +96,34 @@ async def trigger_startup_event():
     with then:
         assert formatter_.mock_calls == [
             call.format_startup_event(0, 0, 0, rich_output=None)
+        ]
+
+
+@scenario
+async def trigger_startup_event_with_scheduled():
+    with given:
+        make_director_plugin(dispatcher := make_dispatcher())
+
+        formatter_ = make_formatter_mock(format_startup_event=make_formatted_event_mock())
+        reporter = make_json_reporter(lambda tb_filter: formatter_)
+        reporter.subscribe(dispatcher)
+
+        await fire_config_loaded_event(dispatcher)
+        await fire_arg_parsed_event(dispatcher)
+
+        scenarios = [make_vscenario() for _ in range(3)]
+        scheduler = make_scenario_scheduler(scenarios)
+
+        scheduler.ignore(scenarios[0])
+        scenarios[-1].skip()
+        startup_event = make_startup_event(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert formatter_.mock_calls == [
+            call.format_startup_event(3, 2, 1, rich_output=None)
         ]
 
 
