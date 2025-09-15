@@ -26,7 +26,20 @@ from ._event_types import (
 __all__ = ("JsonFormatter",)
 
 TracebackLineInfo = Tuple[Union[str, None], Union[int, None]]
+"""
+Defines the ``(file_path, line_number)`` pair extracted from a traceback.
+
+This alias standardizes the minimal location information taken from the
+terminal (last) traceback frame after filtering.
+"""
+
 TimeFunction = Callable[[], float]
+"""
+Defines the callable used to obtain the current time in seconds.
+
+The formatter uses this function to generate timestamps and to convert
+elapsed durations. It defaults to :func:`time.time` when not overridden.
+"""
 
 
 class JsonFormatter:
