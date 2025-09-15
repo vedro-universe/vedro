@@ -64,7 +64,7 @@ async def test_startup(*, dispatcher: Dispatcher, printer_: Mock):
 
     with then:
         assert printer_.mock_calls == [
-            call.print_report_preamble(["discovered: 0 | scheduled: 0 | skipped: 0"]),
+            call.print_report_preamble(["running: 0 of 0 scenarios"]),
             call.print_header(),
         ]
 
@@ -74,9 +74,12 @@ async def test_startup_with_preamble(*, dispatcher: Dispatcher, printer_: Mock):
     with given:
         await fire_arg_parsed_event(dispatcher)
 
+        scenario = make_vscenario()
+        scheduler = ScenarioScheduler([scenario])
+
         report = Report()
         report.add_preamble("<preamble>")
-        scheduler = ScenarioScheduler([])
+
         event = StartupEvent(scheduler, report=report)
 
     with when:
@@ -86,7 +89,97 @@ async def test_startup_with_preamble(*, dispatcher: Dispatcher, printer_: Mock):
         assert printer_.mock_calls == [
             call.print_report_preamble([
                 "<preamble>",
-                "discovered: 0 | scheduled: 0 | skipped: 0"
+                "running: 1 of 1 scenarios"
+            ]),
+            call.print_header(),
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_startup_with_preamble_skipped(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        pending_scenario = make_vscenario()
+        skipped_scenario = make_vscenario()
+
+        scheduler = ScenarioScheduler([pending_scenario, skipped_scenario])
+        skipped_scenario.skip()
+
+        report = Report()
+        report.add_preamble("<preamble>")
+
+        event = StartupEvent(scheduler, report=report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_report_preamble([
+                "<preamble>",
+                "running: 1 of 2 scenarios (1 skipped)"
+            ]),
+            call.print_header(),
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_startup_with_preamble_ignored(*, dispatcher: Dispatcher, printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        pending_scenario = make_vscenario()
+        ignored_scenario = make_vscenario()
+
+        scheduler = ScenarioScheduler([pending_scenario, ignored_scenario])
+        scheduler.ignore(ignored_scenario)
+
+        report = Report()
+        report.add_preamble("<preamble>")
+
+        event = StartupEvent(scheduler, report=report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_report_preamble([
+                "<preamble>",
+                "running: 1 of 2 scenarios (1 ignored)"
+            ]),
+            call.print_header(),
+        ]
+
+
+@pytest.mark.usefixtures(rich_reporter.__name__)
+async def test_startup_with_preamble_skipped_and_ignored(*, dispatcher: Dispatcher,
+                                                         printer_: Mock):
+    with given:
+        await fire_arg_parsed_event(dispatcher)
+
+        pending_scenario = make_vscenario()
+        skipped_scenario = make_vscenario()
+        ignored_scenario = make_vscenario()
+
+        scheduler = ScenarioScheduler([pending_scenario, skipped_scenario, ignored_scenario])
+        skipped_scenario.skip()
+        scheduler.ignore(ignored_scenario)
+
+        report = Report()
+        report.add_preamble("<preamble>")
+
+        event = StartupEvent(scheduler, report=report)
+
+    with when:
+        await dispatcher.fire(event)
+
+    with then:
+        assert printer_.mock_calls == [
+            call.print_report_preamble([
+                "<preamble>",
+                "running: 1 of 3 scenarios (1 skipped, 1 ignored)"
             ]),
             call.print_header(),
         ]

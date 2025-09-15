@@ -37,22 +37,30 @@ build:
 # test
 # Purpose: Run the project's tests.
 # Details:
-# - Executes tests using pytest.
+# - Executes tests using pytest and vedro.
 # ------------------------------------------------------------------------------
 .PHONY: test
 test:
 	python3 -m pytest
+	python3 -m vedro tests/
 
 # ------------------------------------------------------------------------------
 # coverage
-# Purpose: Measure test coverage.
+# Purpose: Measure test coverage for both pytest and vedro tests.
 # Details:
-# - Runs tests with coverage tracking.
-# - Outputs a report in the terminal and writes an XML report (defaults to coverage.xml).
+# - Runs pytest tests with coverage tracking.
+# - Runs vedro tests with coverage tracking (appending to existing data).
+# - Merges coverage data from both test runners.
+# - Outputs a report in the terminal and writes an XML report.
 # ------------------------------------------------------------------------------
 .PHONY: coverage
 coverage:
-	python3 -m pytest --cov --cov-report=term --cov-report=xml:$(or $(COV_REPORT_DEST),coverage.xml)
+	python3 -m coverage erase
+	python3 -m coverage run -a -m pytest
+	python3 -m coverage run -a -m vedro run tests/
+
+	python3 -m coverage report
+	python3 -m coverage xml -o $(or $(COV_REPORT_DEST),coverage.xml)
 
 # ------------------------------------------------------------------------------
 # check-types

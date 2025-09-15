@@ -77,7 +77,7 @@ class DirectorPlugin(Plugin):
             if reporter_name not in self._registered_reporters:
                 raise ValueError(f"Unknown reporter specified: '{reporter_name}'.")
             reporter = self._registered_reporters[reporter_name]
-            reporter.on_chosen()
+            reporter.on_chosen()  # TODO: Consider passing the dispatcher as a parameter
 
     def register(self, name: str, reporter: Reporter) -> None:
         """
@@ -96,6 +96,7 @@ class Director(PluginConfig):
     This configuration allows defining default reporters that are used
     if no other reporters are specified via CLI.
     """
+
     plugin = DirectorPlugin
     description = "Manages and configures reporters for scenario execution"
 

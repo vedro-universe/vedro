@@ -1,0 +1,27 @@
+from traceback import extract_tb
+
+from vedro import given, scenario, then, when
+
+from ._helpers import make_json_formatter
+from ._tb_helpers import execute_and_capture_exception, generate_call_chain_modules
+
+
+@scenario
+def format_exc_info():
+    with given:
+        formatter = make_json_formatter()
+
+        tmp_dir = generate_call_chain_modules([("main.py", "main")])
+        exc_info = execute_and_capture_exception(tmp_dir / "main.py", "main")
+
+    with when:
+        formatted_exc_info = formatter.format_exc_info(exc_info)
+
+    with then:
+        last_frame = extract_tb(exc_info.traceback)[-1]
+        assert formatted_exc_info == {
+            "type": "ZeroDivisionError",
+            "message": "division by zero",
+            "file": last_frame.filename,
+            "lineno": last_frame.lineno,
+        }
