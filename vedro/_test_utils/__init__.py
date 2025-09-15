@@ -55,11 +55,14 @@ def make_dispatcher() -> Dispatcher:
     return Dispatcher()
 
 
-def make_vscenario() -> VirtualScenario:
+def make_vscenario(*, is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
         __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()
 
-    return VirtualScenario(_Scenario, steps=[])
+    vscenario = VirtualScenario(_Scenario, steps=[])
+    if is_skipped:
+        vscenario.skip()
+    return vscenario
 
 
 def make_scenario_scheduler(scenarios: Optional[List[VirtualScenario]] = None
