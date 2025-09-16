@@ -5,6 +5,11 @@ from types import ModuleType
 __all__ = ("ModuleLoader",)
 
 
+# TODO (v2): Consider separating concerns:
+#  - Rename this class to ScenarioLoader (async, for test discovery/loading)
+#  - Create a new sync ModuleLoader for general module operations
+#  This would clarify that scenarios have different loading requirements
+#  than general Python modules
 class ModuleLoader(ABC):
     """
     Represents an abstract base class for module loading.
