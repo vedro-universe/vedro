@@ -49,17 +49,20 @@ __all__ = ("AssertRewriter", "AssertRewriterPlugin",)
 @final
 class AssertRewriterPlugin(Plugin):
     """
-    Manages the assertion rewriting mechanism for enhanced error messages.
+    Manage the assertion rewriting mechanism for enhanced error messages.
 
-    This plugin subscribes to various events to configure the assertion rewriter
-    based on command-line arguments and configuration settings.
+    The plugin subscribes to configuration and CLI events, installs the
+    appropriate module loader (legacy or modern) and, when configured,
+    registers an import finder that rewrites ``assert`` statements for the
+    specified paths, enabling rich failure diffs without changing test code.
     """
 
     def __init__(self, config: Type["AssertRewriter"]):
         """
-        Initialize the AssertRewriterPlugin with the specified configuration.
+        Initialize the plugin with the given configuration.
 
-        :param config: The configuration class for the AssertRewriter plugin.
+        :param config: The configuration class providing defaults such as
+                       whether to use the legacy rewriter and which paths to rewrite.
         """
         super().__init__(config)
         self._legacy_assertions = config.legacy_assertions
@@ -77,19 +80,21 @@ class AssertRewriterPlugin(Plugin):
 
     def on_config_loaded(self, event: ConfigLoadedEvent) -> None:
         """
-        Handle the event when the configuration is loaded.
+        Store the loaded global configuration for later use.
 
-        :param event: The configuration loaded event containing the global config.
+        :param event: The configuration-loaded event that provides the global
+                      configuration object.
         """
         self._global_config: ConfigType = event.config
 
     def on_arg_parse(self, event: ArgParseEvent) -> None:
         """
-        Handle the event to parse command-line arguments.
+        Extend the CLI with the legacy assertion rewriter flag.
 
-        Adds an argument to enable legacy assertion rewriting for backwards compatibility.
+        Add the ``--legacy-assertions`` boolean option, defaulting to the value
+        from the plugin configuration, to allow opting into the legacy rewriter.
 
-        :param event: The argument parse event containing the argument parser.
+        :param event: The argument-parse event exposing the argument parser.
         """
         help_message = "Use legacy assertion rewriter for backwards compatibility"
         event.arg_parser.add_argument("--legacy-assertions", action="store_true",
@@ -97,11 +102,14 @@ class AssertRewriterPlugin(Plugin):
 
     def on_arg_parsed(self, event: ArgParsedEvent) -> None:
         """
-        Handle the event after command-line arguments are parsed.
+        Finalize setup after CLI arguments are parsed.
 
-        Registers the appropriate assertion rewriter loader based on the parsed arguments.
+        Select and register the appropriate module loader (legacy or modern)
+        based on parsed arguments. If rewrite paths are configured, validate
+        them and register an import finder that rewrites assertions within
+        those paths.
 
-        :param event: The argument parsed event containing the parsed arguments.
+        :param event: The parsed-arguments event providing CLI values.
         """
         self._legacy_assertions = event.args.legacy_assertions
         # LegacyAssertRewriterLoader is deprecated and will be removed in v2
@@ -120,9 +128,13 @@ class AssertRewriterPlugin(Plugin):
 
     def _register_assert_rewriter(self, rewrite_paths: List[Path]) -> None:
         """
-        Register assert rewriter finder in sys.meta_path if not already present.
+        Register the assert rewriter finder in ``sys.meta_path`` if absent.
 
-        :param rewrite_paths: List of paths where assertions should be rewritten
+        Ensure an :class:`AssertRewriterFinder` with the given paths is present
+        and avoid duplicate registration when an equivalent finder already exists.
+
+        :param rewrite_paths: A list of directories whose modules should have
+            their ``assert`` statements rewritten.
         """
         finder = AssertRewriterFinder(rewrite_paths)
         for existing_finder in sys.meta_path:
@@ -133,11 +145,14 @@ class AssertRewriterPlugin(Plugin):
 
     def _validate_rewrite_paths(self, paths: RewritePathsType, project_dir: Path) -> List[Path]:
         """
-        Validate and resolve rewrite paths relative to project directory.
+        Validate and resolve rewrite paths relative to the project directory.
 
-        :param paths: List of paths to validate
-        :param project_dir: Project root directory for resolving relative paths
-        :return: List of resolved, validated Path objects
+        For each provided path, resolve it to an absolute directory path. Reject
+        paths that do not exist or that resolve to non-directories.
+
+        :param paths: A collection of paths (absolute or relative) to validate.
+        :param project_dir: The project root used to resolve relative paths.
+        :return: A list of absolute, existing directories to be rewritten.
         :raises ValueError: If any path doesn't exist or isn't a directory
         """
         validated_paths = []
@@ -167,9 +182,11 @@ class AssertRewriterPlugin(Plugin):
 
 class AssertRewriter(PluginConfig):
     """
-    Configuration for the AssertRewriterPlugin.
+    Provide configuration for the assertion rewriting plugin.
 
-    This configuration allows enabling or disabling the legacy assertion rewriter.
+    This configuration selects the legacy or modern assertion rewriter and
+    lists directories whose modules should undergo assert rewriting to produce
+    richer failure messages.
     """
 
     plugin = AssertRewriterPlugin
@@ -178,10 +195,15 @@ class AssertRewriter(PluginConfig):
     legacy_assertions: bool = False
     """
     Use legacy assertion rewriter for backwards compatibility.
+
+    When ``True``, the legacy loader is registered instead of the modern one.
+    Defaults to ``False``.
     """
 
     assert_rewrite_paths: RewritePathsType = ()
     """
-    Paths where assert statements should be rewritten for better error messages.
-    Paths are resolved relative to project_dir if not absolute.
+    Configure directories whose modules should have asserts rewritten.
+
+    Paths may be absolute, or relative to ``project_dir`` when not absolute.
+    An empty tuple disables the import finder registration. Defaults to ``()``.
     """
