@@ -111,6 +111,9 @@ class AssertRewriterPlugin(Plugin):
 
         :param event: The parsed-arguments event providing CLI values.
         """
+        if getattr(event.args, 'vedro_debug', False):
+            return
+
         self._legacy_assertions = event.args.legacy_assertions
         # LegacyAssertRewriterLoader is deprecated and will be removed in v2
         # Since command‑line arguments will no longer be required, this registration
