@@ -26,10 +26,15 @@ async def test_no_recorded_steps_passed(*, runner: ScenarioRunner,
                                         step_recorder: StepRecorder,
                                         dispatcher_: Mock):
     with given:
+        captured = CapturedOutput()
+        with captured:
+            print("test output")
+
         step_ = Mock(return_value=None, __name__="step")
         vstep = VirtualStep(step_)
         step_result = StepResult(vstep)
         step_result.set_started_at(1.0).set_ended_at(2.0).mark_passed()
+        step_result.set_captured_output(captured)
 
         vscenario = make_vscenario()
         scenario_result = ScenarioResult(vscenario)
@@ -50,6 +55,13 @@ async def test_no_recorded_steps_passed(*, runner: ScenarioRunner,
         assert len(scenario_result.step_results) == 1
         assert scenario_result.step_results[0] == step_result
         assert isinstance(scenario_result.ended_at, float)
+
+    with then("captured output transferred to scenario"):
+        assert scenario_result.captured_output is not None
+        assert scenario_result.captured_output.stdout.get_value() == f"test output{linesep}"
+
+        assert step_result.captured_output is not None
+        assert step_result.captured_output.stdout.get_value() == ""
 
 
 async def test_no_recorded_steps_failed(*, runner: ScenarioRunner,

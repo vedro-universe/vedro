@@ -23,7 +23,7 @@ from .._report import Report
 from .._step_result import StepResult
 from .._virtual_scenario import VirtualScenario
 from .._virtual_step import VirtualStep
-from ..output_capturer import OutputCapturer
+from ..output_capturer import CapturedOutput, OutputCapturer
 from ..scenario_result import ScenarioResult
 from ..scenario_scheduler import ScenarioScheduler
 from ._interrupted import Interrupted, RunInterrupted, ScenarioInterrupted, StepInterrupted
@@ -182,6 +182,11 @@ class MonotonicScenarioRunner(ScenarioRunner):
         :param step_result: The result from executing the scenario's "do" step.
         :param scenario_result: The scenario result to populate with step results.
         """
+        # Add captured output from the whole step to the scenario result
+        if step_result.captured_output is not None:
+            scenario_result.set_captured_output(step_result.captured_output)
+            step_result.set_captured_output(CapturedOutput())
+
         if len(self._step_recorder) == 0:
             await self._dispatcher.fire(StepRunEvent(step_result))
             if step_result.exc_info is not None:
@@ -198,10 +203,6 @@ class MonotonicScenarioRunner(ScenarioRunner):
                 scenario_result.set_ended_at(time()).mark_passed()
                 await self._dispatcher.fire(ScenarioPassedEvent(scenario_result))
             return
-
-        # Add captured output from the whole step to the scenario result
-        if step_result.captured_output is not None:
-            scenario_result.set_captured_output(step_result.captured_output)
 
         for kind, name, started_at, ended_at, exc in self._step_recorder:
             ctx_step_result = self._create_fn_step_result(f"{kind.lower()} {name}",
