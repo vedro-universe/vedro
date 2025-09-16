@@ -1,8 +1,11 @@
-from typing import Type, final
+import sys
+from pathlib import Path
+from typing import List, Type, final
 
 from vedro.core import ConfigType, Dispatcher, Plugin, PluginConfig
 from vedro.events import ArgParsedEvent, ArgParseEvent, ConfigLoadedEvent
 
+from ._assert_rewriter_finder import AssertRewriterFinder, RewritePathsType
 from ._assert_rewriter_loader import AssertRewriterLoader
 from ._legacy_assert_rewriter_loader import LegacyAssertRewriterLoader
 
@@ -60,6 +63,7 @@ class AssertRewriterPlugin(Plugin):
         """
         super().__init__(config)
         self._legacy_assertions = config.legacy_assertions
+        self._assert_rewrite_paths = config.assert_rewrite_paths
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         """
@@ -104,9 +108,61 @@ class AssertRewriterPlugin(Plugin):
         # Since command‑line arguments will no longer be required, this registration
         # can eventually be moved to on_config_loaded
         self._global_config.Registry.ModuleLoader.register(
+            # TODO: Make assert_tool configurable
             LegacyAssertRewriterLoader if self._legacy_assertions else AssertRewriterLoader,
             self
         )
+
+        if self._assert_rewrite_paths:
+            validated_paths = self._validate_rewrite_paths(self._assert_rewrite_paths,
+                                                           self._global_config.project_dir)
+            self._register_assert_rewriter(validated_paths)
+
+    def _register_assert_rewriter(self, rewrite_paths: List[Path]) -> None:
+        """
+        Register assert rewriter finder in sys.meta_path if not already present.
+
+        :param rewrite_paths: List of paths where assertions should be rewritten
+        """
+        finder = AssertRewriterFinder(rewrite_paths)
+        for existing_finder in sys.meta_path:
+            if isinstance(existing_finder, AssertRewriterFinder):
+                if existing_finder.rewrite_paths == finder.rewrite_paths:
+                    return
+        sys.meta_path.insert(0, finder)
+
+    def _validate_rewrite_paths(self, paths: RewritePathsType, project_dir: Path) -> List[Path]:
+        """
+        Validate and resolve rewrite paths relative to project directory.
+
+        :param paths: List of paths to validate
+        :param project_dir: Project root directory for resolving relative paths
+        :return: List of resolved, validated Path objects
+        :raises ValueError: If any path doesn't exist or isn't a directory
+        """
+        validated_paths = []
+        for path_str in paths:
+            path = Path(path_str)
+
+            if path.is_absolute():
+                resolved_path = path.resolve()
+            else:
+                resolved_path = (project_dir / path).resolve()
+
+            if not resolved_path.exists():
+                raise ValueError(
+                    f"Assert rewrite path '{path_str}' does not exist "
+                    f"(resolved to '{resolved_path}')"
+                )
+            if not resolved_path.is_dir():
+                raise ValueError(
+                    f"Assert rewrite path '{path_str}' is not a directory "
+                    f"(resolved to '{resolved_path}')"
+                )
+
+            validated_paths.append(resolved_path)
+
+        return validated_paths
 
 
 class AssertRewriter(PluginConfig):
@@ -122,4 +178,10 @@ class AssertRewriter(PluginConfig):
     legacy_assertions: bool = False
     """
     Use legacy assertion rewriter for backwards compatibility.
+    """
+
+    assert_rewrite_paths: RewritePathsType = ()
+    """
+    Paths where assert statements should be rewritten for better error messages.
+    Paths are resolved relative to project_dir if not absolute.
     """
