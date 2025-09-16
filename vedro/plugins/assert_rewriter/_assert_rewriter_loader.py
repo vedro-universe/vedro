@@ -1,5 +1,6 @@
 import ast
 import inspect
+import sys
 import tokenize
 from importlib.abc import Loader
 from types import ModuleType
@@ -119,6 +120,29 @@ class AssertRewriterLoader(ModuleFileLoader):  # TODO: consider renaming to Asse
             level=0
         )
         ast.fix_missing_locations(import_stmt)
-        rewritten_tree.body.insert(0, import_stmt)
 
+        # Find correct insertion point
+        insert_at = 0
+        body = rewritten_tree.body
+
+        # Skip module docstring if present
+        if body and isinstance(body[0], ast.Expr):
+            if sys.version_info >= (3, 12):
+                is_docstring = (isinstance(body[0].value, ast.Constant) and
+                                isinstance(body[0].value.value, str))
+            else:
+                is_docstring = isinstance(body[0].value, ast.Str)
+
+            if is_docstring:
+                insert_at = 1
+
+        # Skip __future__ imports
+        while insert_at < len(body):
+            node = body[insert_at]
+            if isinstance(node, ast.ImportFrom) and node.module == "__future__":
+                insert_at += 1
+            else:
+                break
+
+        body.insert(insert_at, import_stmt)
         return cast(ast.Module, rewritten_tree)

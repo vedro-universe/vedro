@@ -91,3 +91,54 @@ async def test_load_non_existent_scenario_file(tmp_scn_dir: Path):
 
     with then:
         assert exc.type is FileNotFoundError
+
+
+async def test_load_assertion_failure_with_future_annotations(tmp_scn_dir: Path):
+    with given:
+        path = tmp_scn_dir / "scenario.py"
+        path.write_text(dedent('''
+            from __future__ import annotations
+
+            import vedro
+            class Scenario(vedro.Scenario):
+                def step(self):
+                    assert 1 == 2
+        '''))
+
+        loader = AssertRewriterLoader()
+        module = await loader.load(path)
+        scenario = module.Scenario()
+
+    with when, raises(BaseException) as exc:
+        scenario.step()
+
+    with then:
+        assert exc.type is AssertionError
+        assert str(exc.value) == ""
+
+
+async def test_load_assertion_failure_with_docstring_and_future_annotations(tmp_scn_dir: Path):
+    with given:
+        path = tmp_scn_dir / "scenario.py"
+        path.write_text(dedent('''
+            """
+            Module docstring
+            """
+            from __future__ import annotations
+
+            import vedro
+            class Scenario(vedro.Scenario):
+                def step(self):
+                    assert 1 == 2
+        '''))
+
+        loader = AssertRewriterLoader()
+        module = await loader.load(path)
+        scenario = module.Scenario()
+
+    with when, raises(BaseException) as exc:
+        scenario.step()
+
+    with then:
+        assert exc.type is AssertionError
+        assert str(exc.value) == ""
