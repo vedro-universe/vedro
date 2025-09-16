@@ -1,5 +1,6 @@
 import ast
 import inspect
+import tokenize
 from importlib.abc import Loader
 from types import ModuleType
 from typing import Any, cast, final
@@ -13,7 +14,7 @@ __all__ = ("AssertRewriterLoader",)
 
 
 @final
-class AssertRewriterLoader(ModuleFileLoader):
+class AssertRewriterLoader(ModuleFileLoader):  # TODO: consider renaming to AssertRewritingLoader
     """
     Loads and rewrites Python modules to use custom assertion methods.
 
@@ -96,7 +97,7 @@ class AssertRewriterLoader(ModuleFileLoader):
                 if file is None:
                     raise
                 # Manually open the file and read its contents
-                with open(file, "r") as f:
+                with tokenize.open(file) as f:
                     source_code = f.read()
             else:
                 # Re-raise the exception if it's not the specific "could not get source code" error
