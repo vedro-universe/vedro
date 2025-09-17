@@ -281,7 +281,7 @@ async def test_scenario_passed_with_captured_output_disabled(*, dispatcher: Disp
                                                              rich_reporter: RichReporterPlugin,
                                                              printer_: Mock):
     with given:
-        # rich_reporter._show_captured_output = False
+        rich_reporter._show_captured_output = False
         await fire_arg_parsed_event(dispatcher)
 
         scenario_result = make_scenario_result().mark_passed()
