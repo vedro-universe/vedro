@@ -37,8 +37,10 @@ def assert_rewriter_plugin(dispatcher: Dispatcher) -> AssertRewriterPlugin:
     return plugin
 
 
-def make_config() -> ConfigType:
+def make_config(project_dir_: Path = Path.cwd()) -> ConfigType:
     class TestConfig(Config):
+        project_dir = project_dir_
+
         class Registry(Config.Registry):
             ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
 

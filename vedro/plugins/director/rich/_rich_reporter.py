@@ -529,7 +529,7 @@ class RichReporter(PluginConfig):
     Show status indicator of the current running scenario.
     """
 
-    show_captured_output: bool = False
+    show_captured_output: bool = True
     """
     Show captured output (stdout/stderr) from scenarios and steps.
     """

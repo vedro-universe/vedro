@@ -26,7 +26,7 @@ class NodeAssertRewriter(ast.NodeTransformer):
         self._assert_tool = assert_tool
         self._assert_methods = assert_methods
 
-    def visit_Assert(self, node: ast.Assert) -> ast.Assert:
+    def visit_Assert(self, node: ast.Assert) -> Union[ast.Assert, ast.Expr]:
         """
         Visit assert nodes and rewrite them using the custom assertion methods.
 
@@ -42,25 +42,27 @@ class NodeAssertRewriter(ast.NodeTransformer):
             ast.fix_missing_locations(new_node)
             return new_node
 
-    def _rewrite_expr(self, node: ast.expr, msg: Union[ast.AST, None] = None) -> ast.Assert:
+    def _rewrite_expr(self, node: ast.expr, msg: Union[ast.AST, None] = None) -> ast.Expr:
         """
         Rewrite the expression of an assert node.
 
         :param node: The expression node in the assert statement.
         :param msg: The message node in the assert statement, if any.
-        :return: A new assert node with the rewritten expression.
+        :return: An expression node containing the rewritten assertion call.
+                 Returns ast.Expr instead of ast.Assert to survive -O optimization.
         """
         if isinstance(node, ast.Compare):
             return self._rewrite_compare(node, msg)
-        return ast.Assert(test=self._create_assert(node, msg=msg), msg=None)
+        return ast.Expr(value=self._create_assert(node, msg=msg))
 
-    def _rewrite_compare(self, node: ast.Compare, msg: Optional[ast.AST] = None) -> ast.Assert:
+    def _rewrite_compare(self, node: ast.Compare, msg: Optional[ast.AST] = None) -> ast.Expr:
         """
         Rewrite a comparison expression in an assert statement.
 
         :param node: The comparison node in the assert statement.
         :param msg: The message node in the assert statement, if any.
-        :return: A new assert node with the rewritten comparison expression.
+        :return: An expression node with the rewritten comparison as chained assertion calls.
+                 Returns ast.Expr instead of ast.Assert to survive -O optimization.
         """
         assertions = []
 
@@ -74,7 +76,7 @@ class NodeAssertRewriter(ast.NodeTransformer):
         for assert_expr in assertions[1:]:
             and_expr = ast.BoolOp(op=ast.And(), values=[and_expr, assert_expr])  # type: ignore
 
-        return ast.Assert(test=and_expr, msg=None)
+        return ast.Expr(value=and_expr)
 
     def _create_assert(self, left: ast.AST,
                        right: Optional[ast.AST] = None,

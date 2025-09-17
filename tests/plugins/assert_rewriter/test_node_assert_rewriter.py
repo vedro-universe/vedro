@@ -17,7 +17,7 @@ def test_rewrite_assert():
 
     with then:
         assert dump(rewritten_tree) == dump(ast.parse(
-            "assert assert_tool.assert_equal(x, y)"
+            "assert_tool.assert_equal(x, y)"
         ))
 
 
@@ -31,7 +31,7 @@ def test_rewrite_assert_with_message():
 
     with then:
         assert dump(rewritten_tree) == dump(ast.parse(
-            "assert assert_tool.assert_equal(x, y, message='x should be equal to y')"
+            "assert_tool.assert_equal(x, y, message='x should be equal to y')"
         ))
 
 
@@ -48,7 +48,7 @@ def test_rewrite_assert_multiple_comparisons():
 
     with then:
         assert dump(rewritten_tree) == dump(ast.parse(
-            "assert assert_tool.assert_less(x, y) and assert_tool.assert_less_equal(y, z)"
+            "assert_tool.assert_less(x, y) and assert_tool.assert_less_equal(y, z)"
         ))
 
 
@@ -62,7 +62,7 @@ def test_rewrite_assert_truthy():
 
     with then:
         assert dump(rewritten_tree) == dump(ast.parse(
-            "assert assert_tool.assert_truthy(x)"
+            "assert_tool.assert_truthy(x)"
         ))
 
 
