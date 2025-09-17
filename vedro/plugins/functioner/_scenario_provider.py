@@ -1,6 +1,6 @@
 import inspect
 from functools import WRAPPER_ASSIGNMENTS, wraps
-from inspect import iscoroutinefunction, unwrap
+from inspect import Parameter, Signature, iscoroutinefunction, unwrap
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, List, Tuple, Type, Union, cast
@@ -121,6 +121,12 @@ class FuncBasedScenarioProvider(ScenarioProvider):
             # Store each parameter as a named attribute
             for param_name, value in bound_args.arguments.items():
                 setattr(self, param_name, value)
+
+        # Create a signature that includes 'self' for the metaclass to use
+        # The metaclass expects __init__(self, ...) signature
+        sig_params = [Parameter("self", Parameter.POSITIONAL_OR_KEYWORD)]
+        sig_params.extend(sig.parameters.values())
+        setattr(__init__, "__signature__", Signature(sig_params))
 
         for params in reversed(descriptor.cases):
             __init__ = params(__init__)
