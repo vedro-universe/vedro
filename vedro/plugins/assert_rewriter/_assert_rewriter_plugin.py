@@ -111,6 +111,7 @@ class AssertRewriterPlugin(Plugin):
 
         :param event: The parsed-arguments event providing CLI values.
         """
+        # TODO: In v2, move this check to RunCommand level (skip plugin entirely in debug mode)
         if getattr(event.args, 'vedro_debug', False):
             return
 
