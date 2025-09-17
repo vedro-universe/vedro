@@ -69,7 +69,7 @@ class AssertRewriterFinder(MetaPathFinder):
             return None
 
         # Check if module has a physical location
-        if not getattr(spec, 'has_location', False):
+        if not getattr(spec, "has_location", False):
             return spec
 
         # Skip special origins
@@ -87,7 +87,7 @@ class AssertRewriterFinder(MetaPathFinder):
             # Can't resolve path, skip rewriting
             return spec
 
-        if module_path.suffix != '.py':
+        if module_path.suffix != ".py":
             # Skip .pyc, .pyd, .so, etc.
             return spec
 
