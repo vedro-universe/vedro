@@ -1,5 +1,6 @@
+import sys
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Generic, Type, TypeVar, Union
+from typing import Any, Callable, Generic, Type, TypeVar, Union, get_args, overload
 
 from .._plugin import Plugin
 
@@ -7,7 +8,12 @@ __all__ = ("Container", "Factory", "Singleton", "FrozenSingleton",
            "FactoryType", "ConflictError")
 
 F = TypeVar("F")
-FactoryType = Union[Type[F], Callable[..., F]]
+
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias
+    FactoryType: TypeAlias = Union[Type[F], Callable[[], F]]
+else:
+    FactoryType = Union[Type[F], Callable[[], F]]
 
 T = TypeVar("T")
 
@@ -33,6 +39,12 @@ class Container(Generic[T], ABC):
     :param resolver: The initial resolver function or type for creating objects.
     """
 
+    @overload
+    def __init__(self, resolver: Type[T]) -> None: ...
+
+    @overload
+    def __init__(self, resolver: Callable[[], T]) -> None: ...
+
     def __init__(self, resolver: FactoryType[T]) -> None:
         """
         Initialize the container with the given resolver.
@@ -50,9 +62,21 @@ class Container(Generic[T], ABC):
         :param registrant: The plugin attempting to register the resolver.
         :return: A `ConflictError` with details about the conflicting registration.
         """
-        type_ = self.__orig_class__.__args__[0]  # type: ignore
-        return ConflictError(f"{registrant} is trying to register {type_.__name__}, "
+        type_name = self._get_type_name()
+        return ConflictError(f"{registrant} is trying to register {type_name}, "
                              f"but it is already registered by {self._registrant!r}")
+
+    def _get_type_name(self) -> str:
+        """
+        Get the name of the type `T` that this container manages.
+
+        :return: The name of the type `T`.
+        """
+        args = get_args(getattr(self, "__orig_class__", None))
+        if args:
+            tp = args[0]
+            return getattr(tp, "__name__", str(tp))
+        return "object"
 
     @abstractmethod
     def register(self, resolver: FactoryType[T], registrant: Plugin) -> None:
@@ -219,8 +243,8 @@ class FrozenSingleton(Container[T]):
         :param registrant: The plugin attempting to register the resolver.
         :return: A `ConflictError` indicating the container is frozen.
         """
-        type_ = self.__orig_class__.__args__[0]  # type: ignore
-        return ConflictError(f"{registrant} is trying to register {type_.__name__}, "
+        type_name = self._get_type_name()
+        return ConflictError(f"{registrant} is trying to register {type_name}, "
                              f"but this container is frozen and cannot be modified")
 
     def resolve(self, *args: Any, **kwargs: Any) -> T:
