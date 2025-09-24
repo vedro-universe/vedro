@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from baby_steps import given, then, when
 from pytest import raises
 
 from vedro.core.scenario_finder.scenario_file_finder import ExtFilter
@@ -56,3 +57,36 @@ def test_ext_file_filter_only_and_ignore():
 
     assert exc.type is ValueError
     assert str(exc.value) == "Use 'only' or 'ignore' (not both)"
+
+
+def test_ext_filter_repr_no_params():
+    with given:
+        ext_filter = ExtFilter()
+
+    with when:
+        representation = repr(ext_filter)
+
+    with then:
+        assert representation == "ExtFilter()"
+
+
+def test_ext_filter_repr_with_only():
+    with given:
+        ext_filter = ExtFilter(only=[".py", ".sh"])
+
+    with when:
+        representation = repr(ext_filter)
+
+    with then:
+        assert representation == "ExtFilter(only=['.py', '.sh'])"
+
+
+def test_ext_filter_repr_with_ignore():
+    with given:
+        ext_filter = ExtFilter(ignore=[".pyc", ".pyo"])
+
+    with when:
+        representation = repr(ext_filter)
+
+    with then:
+        assert representation == "ExtFilter(ignore=['.pyc', '.pyo'])"

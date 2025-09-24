@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import List
 
+from baby_steps import given, then, when
+
 from vedro.core import ScenarioFileFinder
 from vedro.core.scenario_finder.scenario_file_finder import DunderFilter, HiddenFilter
 
@@ -72,3 +74,53 @@ async def test_scenario_file_finder_with_dir_filter(tmp_path: Path):
 
     assert set(paths) == set(subtree)
     assert len(paths) == len(subtree)
+
+
+def test_scenario_file_finder_repr_no_filters():
+    with given:
+        finder = ScenarioFileFinder()
+
+    with when:
+        representation = repr(finder)
+
+    with then:
+        assert representation == "ScenarioFileFinder()"
+
+
+def test_scenario_file_finder_repr_with_file_filter():
+    with given:
+        file_filter = HiddenFilter()
+        finder = ScenarioFileFinder(file_filter=file_filter)
+
+    with when:
+        representation = repr(finder)
+
+    with then:
+        assert representation == "ScenarioFileFinder(file_filter=HiddenFilter())"
+
+
+def test_scenario_file_finder_repr_with_dir_filter():
+    with given:
+        dir_filter = DunderFilter()
+        finder = ScenarioFileFinder(dir_filter=dir_filter)
+
+    with when:
+        representation = repr(finder)
+
+    with then:
+        assert representation == "ScenarioFileFinder(dir_filter=DunderFilter())"
+
+
+def test_scenario_file_finder_repr_with_both_filters():
+    with given:
+        file_filter = HiddenFilter()
+        dir_filter = DunderFilter()
+        finder = ScenarioFileFinder(file_filter=file_filter, dir_filter=dir_filter)
+
+    with when:
+        representation = repr(finder)
+
+    with then:
+        assert representation == (
+            "ScenarioFileFinder(file_filter=HiddenFilter(), dir_filter=DunderFilter())"
+        )

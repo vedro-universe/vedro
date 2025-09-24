@@ -48,3 +48,21 @@ class ExtFilter(FileFilter):
                     return True
             return False
         return False
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the filter.
+
+        The representation includes the class name and active parameters: only or ignore.
+
+        :return: A string describing the filter with its active parameters.
+        """
+        parts = []
+        if self._only is not None:
+            parts.append(f"only={self._only!r}")
+        if self._ignore is not None:
+            parts.append(f"ignore={self._ignore!r}")
+        if parts:
+            params = ", ".join(parts)
+            return f"{self.__class__.__name__}({params})"
+        return f"{self.__class__.__name__}()"

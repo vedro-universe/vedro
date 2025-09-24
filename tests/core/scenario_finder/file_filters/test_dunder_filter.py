@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from baby_steps import given, then, when
 
 from vedro.core.scenario_finder.scenario_file_finder import DunderFilter
 
@@ -23,3 +24,14 @@ def test_dunder_file_filter(value: str, expected: bool):
 
     filtered = dunder_filter.filter(Path(value))
     assert filtered is expected
+
+
+def test_dunder_filter_repr():
+    with given:
+        dunder_filter = DunderFilter()
+
+    with when:
+        representation = repr(dunder_filter)
+
+    with then:
+        assert representation == "DunderFilter()"

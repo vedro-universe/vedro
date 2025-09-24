@@ -1,3 +1,4 @@
+# TODO: in v2 consider moving this to vedro.core.events
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path

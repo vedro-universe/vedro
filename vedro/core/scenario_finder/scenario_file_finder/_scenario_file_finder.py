@@ -50,3 +50,21 @@ class ScenarioFileFinder(ScenarioFinder):
                 if self._file_filter and self._file_filter.filter(file_path):
                     continue
                 yield file_path
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the ScenarioFileFinder.
+
+        The representation includes the class name and any configured filters.
+
+        :return: A string describing the finder with its filters.
+        """
+        parts = []
+        if self._file_filter is not None:
+            parts.append(f"file_filter={self._file_filter!r}")
+        if self._dir_filter is not None:
+            parts.append(f"dir_filter={self._dir_filter!r}")
+        if parts:
+            params = ", ".join(parts)
+            return f"{self.__class__.__name__}({params})"
+        return f"{self.__class__.__name__}()"

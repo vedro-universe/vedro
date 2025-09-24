@@ -32,3 +32,14 @@ class AnyFilter(FileFilter):
             if filter_.filter(path):
                 return True
         return False
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the filter.
+
+        The representation includes the class name and the inner filters in creation order.
+
+        :return: A string describing the filter and its composed filters.
+        """
+        inner = ", ".join(repr(f) for f in self._filters)
+        return f"{self.__class__.__name__}([{inner}])"

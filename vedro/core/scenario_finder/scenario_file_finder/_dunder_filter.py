@@ -24,3 +24,13 @@ class DunderFilter(FileFilter):
             p = p.with_suffix("")
         stem = p.stem
         return stem.startswith("__") and stem.endswith("__")
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the filter.
+
+        The representation includes only the class name.
+
+        :return: A string representing the filter class.
+        """
+        return f"{self.__class__.__name__}()"

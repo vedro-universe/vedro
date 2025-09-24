@@ -21,3 +21,11 @@ class FileFilter(ABC):
         :return: True if the path should be excluded, otherwise False.
         """
         pass
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the filter.
+
+        :return: A string representing the filter class.
+        """
+        return f"<{self.__class__.__name__}>"
