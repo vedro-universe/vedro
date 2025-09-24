@@ -168,12 +168,7 @@ class AssertRewriterPlugin(Plugin):
             else:
                 resolved_path = (project_dir / path).resolve()
 
-            if not resolved_path.exists():
-                raise ValueError(
-                    f"Assert rewrite path '{path_str}' does not exist "
-                    f"(resolved to '{resolved_path}')"
-                )
-            if not resolved_path.is_dir():
+            if resolved_path.exists() and not resolved_path.is_dir():
                 raise ValueError(
                     f"Assert rewrite path '{path_str}' is not a directory "
                     f"(resolved to '{resolved_path}')"

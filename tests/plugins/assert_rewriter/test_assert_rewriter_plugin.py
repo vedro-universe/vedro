@@ -98,6 +98,7 @@ async def test_adds_finder_to_meta_path(*, tmp_scn_dir: Path, dispatcher: Dispat
 async def test_raises_for_invalid_path(*, tmp_scn_dir: Path, dispatcher: Dispatcher):
     with given:
         rewrite_path = Path("./helpers")
+        rewrite_path.touch()  # not a directory
 
         class _AssertRewriter(AssertRewriter):
             assert_rewrite_paths = [rewrite_path]
