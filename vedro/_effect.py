@@ -76,14 +76,14 @@ else:
             setattr(async_wrapper, "__vedro__effect__", True)
             return cast(T, async_wrapper)
         else:
-            @wraps(fn)
+            @wraps(fn)  # type: ignore
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                result = fn(*args, **kwargs)
+                result = fn(*args, **kwargs)  # type: ignore
                 if result is None:
                     return True
                 if not isinstance(result, bool) or result is not True:
                     raise TypeError(
-                        f"Effect '{fn.__name__}' must return True (type: bool), "
+                        f"Effect '{fn.__name__}' must return True (type: bool), "  # type: ignore
                         f"got {result!r} (type: {type(result).__name__})"
                     )
                 return result
