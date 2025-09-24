@@ -1,4 +1,5 @@
 from asyncio import CancelledError
+from pathlib import Path
 from typing import Sequence, Type
 
 import vedro.core as core
@@ -97,8 +98,17 @@ class Config(core.Config):
         ModuleLoader = Factory[ModuleLoader](ModuleFileLoader)
 
         ScenarioFinder = Factory[ScenarioFinder](lambda: ScenarioFileFinder(
-            file_filter=AnyFilter([HiddenFilter(), DunderFilter(), ExtFilter(only=["py"])]),
-            dir_filter=AnyFilter([HiddenFilter(), DunderFilter()])
+            # TODO: add filter for py files with a single leading underscore
+            # (LeadingUnderscoreFilter)
+            file_filter=AnyFilter([
+                HiddenFilter(),
+                DunderFilter(),
+                ExtFilter(only=["py"]),
+            ]),
+            dir_filter=AnyFilter([
+                HiddenFilter(),
+                DunderFilter(),
+            ])
         ))
 
         ScenarioLoader = Factory[ScenarioLoader](lambda: ScenarioFileLoader(
@@ -150,6 +160,7 @@ class Config(core.Config):
 
         class RichReporter(director.RichReporter):
             enabled = True
+            tb_suppress_modules = ("effects/",)
 
         class JsonReporter(director.JsonReporter):
             enabled = True
@@ -202,6 +213,7 @@ class Config(core.Config):
 
         class AssertRewriter(assert_rewriter.AssertRewriter):
             enabled = True
+            assert_rewrite_paths = (Path("effects/"),)
 
         class DryRunner(dry_runner.DryRunner):
             enabled = True

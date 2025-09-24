@@ -4,6 +4,7 @@ from typing import Any
 from ._catched import catched
 from ._config import Config, computed
 from ._context import context
+from ._effect import effect
 from ._interface import Interface
 from ._main import main
 from ._params import params
@@ -27,7 +28,7 @@ from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
 
 __version__ = version
 __all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
-           "catched", "scenario", "given", "when", "then", "ensure", "context",
+           "catched", "scenario", "given", "when", "then", "ensure", "context", "effect",
            "defer", "defer_global", "create_tmp_dir", "create_tmp_file", "attach_artifact",
            "attach_scenario_artifact", "attach_step_artifact", "attach_global_artifact",
            "seed", "Config", "computed", "MemoryArtifact", "FileArtifact", "Artifact",)
