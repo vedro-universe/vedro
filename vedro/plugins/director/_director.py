@@ -72,6 +72,8 @@ class DirectorPlugin(Plugin):
                                       choices=self._registered_reporters,
                                       default=self._default_reporters,
                                       help=help_message)
+        # TODO: In v2, do not use sys.argv directly - accept argv as parameter for testability
+        # parse_known_args() without arguments implicitly uses sys.argv, which makes testing harder
         args, *_ = event.arg_parser.parse_known_args()
         for reporter_name in args.reporters:
             if reporter_name not in self._registered_reporters:

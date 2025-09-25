@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any
+from typing import Any, List, Optional
 
 from ._catched import catched
 from ._config import Config, computed
@@ -34,9 +34,17 @@ __all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
            "seed", "Config", "computed", "MemoryArtifact", "FileArtifact", "Artifact",)
 
 
-def run(*, plugins: Any = None) -> None:
+def run(argv: Optional[List[str]] = None, *, plugins: Any = None) -> None:
+    """
+    Run the Vedro test framework with the specified command-line arguments.
+
+    :param argv: Optional list of command-line arguments without the program name.
+                 Examples: ["run", "--show-paths"], ["--version"]
+    :param plugins: Deprecated. Previously used to pass plugins directly.
+                    Now plugins should be declared in the configuration file (vedro.cfg.py).
+    """
     if plugins is not None:
         raise DeprecationWarning("Argument 'plugins' is deprecated, "
                                  "declare plugins in config (vedro.cfg.py)")
 
-    asyncio.run(main())
+    asyncio.run(main(argv))
