@@ -7,6 +7,7 @@ from typing import List, Optional, Type, cast
 
 from ._config import Config
 from .commands import CommandArgumentParser
+from .commands.config_command import ConfigCommand
 from .commands.plugin_command import PluginCommand
 from .commands.run_command import RunCommand
 from .commands.version_command import VersionCommand
@@ -59,7 +60,7 @@ async def main(argv: Optional[List[str]] = None) -> None:
 
     arg_parser.add_argument("--version", action="store_true", help="Show vedro version")
 
-    commands = {"run", "version", "plugin"}
+    commands = {"run", "version", "plugin", "config"}
     arg_parser.add_argument("command", nargs="?", help=f"Command to run {{{', '.join(commands)}}}")
     args, unknown_args = arg_parser.parse_known_args(argv)
 
@@ -92,6 +93,10 @@ async def main(argv: Optional[List[str]] = None) -> None:
     elif args.command in ("plugin", "plugins"):
         parser = arg_parser_factory("vedro plugin")
         await PluginCommand(config, parser).run()
+
+    elif args.command == "config":
+        parser = arg_parser_factory("vedro config")
+        await ConfigCommand(config, parser).run()
 
     else:
         arg_parser.print_help()
