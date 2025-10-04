@@ -42,7 +42,7 @@ build:
 .PHONY: test
 test:
 	python3 -m pytest
-	python3 -m vedro tests/
+	python3 -m vedro run tests/
 
 # ------------------------------------------------------------------------------
 # coverage
@@ -161,8 +161,6 @@ bump:
 	@echo
 	@git verify-commit HEAD
 	@git verify-tag `git describe`
-	@echo
-	# git push origin main --tags
 
 # ------------------------------------------------------------------------------
 # publish
