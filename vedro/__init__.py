@@ -19,6 +19,7 @@ from .plugins.artifacted import (
     attach_scenario_artifact,
     attach_step_artifact,
 )
+from .plugins.assert_rewriter import assert_ as asserts
 from .plugins.deferrer import defer, defer_global
 from .plugins.ensurer import ensure
 from .plugins.functioner import given, scenario, then, when
@@ -27,8 +28,8 @@ from .plugins.skipper import only, skip, skip_if
 from .plugins.temp_keeper import create_tmp_dir, create_tmp_file
 
 __version__ = version
-__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params",
-           "catched", "scenario", "given", "when", "then", "ensure", "context", "effect",
+__all__ = ("Scenario", "Interface", "run", "only", "skip", "skip_if", "params", "effect",
+           "catched", "scenario", "given", "when", "then", "ensure", "context", "asserts",
            "defer", "defer_global", "create_tmp_dir", "create_tmp_file", "attach_artifact",
            "attach_scenario_artifact", "attach_step_artifact", "attach_global_artifact",
            "seed", "Config", "computed", "MemoryArtifact", "FileArtifact", "Artifact",)
