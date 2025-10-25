@@ -33,7 +33,6 @@ class ParallelCommand(Command):
         :param arg_parser: Command-line argument parser.
         """
         super().__init__(config, arg_parser)
-        self._scenario_results: List[Dict[str, Any]] = []
         self._final_report: Dict[str, Any] = {}
 
     async def run(self) -> None:
@@ -290,9 +289,6 @@ class ParallelCommand(Command):
         event_type = event.get("event")
 
         if event_type == "scenario_reported":
-            # Track scenario result for aggregation
-            self._scenario_results.append(event)
-
             # Display rich_output if available
             rich_output = event.get("rich_output", "")
             if rich_output:
