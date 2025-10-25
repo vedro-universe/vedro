@@ -50,6 +50,9 @@ class ParallelCommand(Command):
         6. Displays rich_output in real-time
         7. Aggregates final report and sets exit code
         """
+        # Display experimental feature warning
+        print("⚠️ Warning: 'vedro parallel' is an experimental feature", file=sys.stderr)
+
         args, unknown_args = await self._parse_args()
 
         # Validate workers count
