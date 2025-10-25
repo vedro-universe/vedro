@@ -3,7 +3,6 @@ import json
 import os
 import sys
 from argparse import Namespace
-from pathlib import Path
 from typing import Any, Dict, List, Tuple, Type
 
 from vedro import Config
@@ -66,16 +65,18 @@ class ParallelCommand(Command):
         for arg in unknown_args:
             # Check for exact match (e.g., --slice)
             if arg in forbidden_args:
-                print(f"Error: '{arg}' cannot be used with 'vedro parallel'", file=sys.stderr)
-                print(f"       The parallel command manages scenario distribution automatically",
+                print(f"Error: '{arg}' cannot be used with 'vedro parallel'",
                       file=sys.stderr)
+                print("       The parallel command manages scenario "
+                      "distribution automatically", file=sys.stderr)
                 sys.exit(1)
             # Check for = syntax (e.g., --slice=1/2)
             for forbidden in forbidden_args:
                 if arg.startswith(f"{forbidden}="):
-                    print(f"Error: '{forbidden}' cannot be used with 'vedro parallel'", file=sys.stderr)
-                    print(f"       The parallel command manages scenario distribution automatically",
-                          file=sys.stderr)
+                    print(f"Error: '{forbidden}' cannot be used with "
+                          "'vedro parallel'", file=sys.stderr)
+                    print("       The parallel command manages scenario "
+                          "distribution automatically", file=sys.stderr)
                     sys.exit(1)
 
         # Build original arguments (all unknown args + forced reporters)
@@ -201,7 +202,7 @@ class ParallelCommand(Command):
         return scenario_count
 
     def _create_worker_task(self, worker_index: int, total_workers: int,
-                           original_args: List[str]) -> asyncio.Task:
+                            original_args: List[str]) -> "asyncio.Task[None]":
         """
         Create an asyncio task for a worker process.
 
@@ -215,7 +216,7 @@ class ParallelCommand(Command):
         )
 
     async def _run_worker(self, worker_index: int, total_workers: int,
-                         original_args: List[str]) -> None:
+                          original_args: List[str]) -> None:
         """
         Run a single worker process and collect its output.
 
@@ -252,7 +253,7 @@ class ParallelCommand(Command):
                 print(stderr.decode(), end="", file=sys.stderr)
 
     async def _collect_worker_output(self, worker_id: int,
-                                    stdout: asyncio.StreamReader) -> None:
+                                     stdout: asyncio.StreamReader) -> None:
         """
         Read and process JSON events from worker stdout.
 
@@ -360,9 +361,9 @@ class ParallelCommand(Command):
         print(f"Elapsed time: {report['elapsed']:.2f}s")
 
         if report.get("interrupted"):
-            print(f"Status: INTERRUPTED")
+            print("Status: INTERRUPTED")
         elif report["failed"] > 0:
-            print(f"Status: FAILED")
+            print("Status: FAILED")
         else:
-            print(f"Status: PASSED")
+            print("Status: PASSED")
         print("=" * 70)
