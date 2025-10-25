@@ -60,6 +60,24 @@ class ParallelCommand(Command):
             print("Error: --workers must be at least 1", file=sys.stderr)
             sys.exit(1)
 
+        # Validate that user didn't pass slice-related arguments
+        # These are managed by the parallel command itself
+        forbidden_args = ["--slice", "--slicer-index", "--slicer-total"]
+        for arg in unknown_args:
+            # Check for exact match (e.g., --slice)
+            if arg in forbidden_args:
+                print(f"Error: '{arg}' cannot be used with 'vedro parallel'", file=sys.stderr)
+                print(f"       The parallel command manages scenario distribution automatically",
+                      file=sys.stderr)
+                sys.exit(1)
+            # Check for = syntax (e.g., --slice=1/2)
+            for forbidden in forbidden_args:
+                if arg.startswith(f"{forbidden}="):
+                    print(f"Error: '{forbidden}' cannot be used with 'vedro parallel'", file=sys.stderr)
+                    print(f"       The parallel command manages scenario distribution automatically",
+                          file=sys.stderr)
+                    sys.exit(1)
+
         # Build original arguments (all unknown args + forced reporters)
         original_args = self._build_original_args(unknown_args)
 
