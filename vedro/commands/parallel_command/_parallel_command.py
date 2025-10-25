@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import sys
 from argparse import Namespace
 from pathlib import Path
@@ -59,10 +60,20 @@ class ParallelCommand(Command):
         # Build original arguments (all unknown args + forced reporters)
         original_args = self._build_original_args(unknown_args)
 
+        # Discover how many scenarios exist
+        scenario_count = await self._discover_scenario_count(original_args)
+
+        # Adjust worker count if it exceeds scenario count
+        actual_workers = min(args.workers, scenario_count) if scenario_count > 0 else args.workers
+
+        if actual_workers < args.workers and scenario_count > 0:
+            print(f"Note: Reducing workers from {args.workers} to {actual_workers} "
+                  f"(only {scenario_count} scenario(s) to run)", file=sys.stderr)
+
         # Create and run worker processes
         workers = []
-        for worker_index in range(1, args.workers + 1):
-            worker = self._create_worker_task(worker_index, args.workers, original_args)
+        for worker_index in range(1, actual_workers + 1):
+            worker = self._create_worker_task(worker_index, actual_workers, original_args)
             workers.append(worker)
 
         # Run all workers concurrently and collect outputs
@@ -91,11 +102,14 @@ class ParallelCommand(Command):
 
         :return: Tuple of (parsed args, unknown args to forward).
         """
+        # Get CPU count, default to 2 if unavailable
+        cpu_count = os.cpu_count() or 2
+
         self._arg_parser.add_argument(
             "--workers", "-w",
             type=int,
-            default=2,
-            help="Number of parallel workers (default: 2)"
+            default=cpu_count,
+            help=f"Number of parallel workers (default: {cpu_count} - number of CPUs)"
         )
 
         # Use parse_known_args to capture --workers and preserve everything else
@@ -119,6 +133,51 @@ class ParallelCommand(Command):
         original_args.extend(["-r", "json", "json-rich"])
 
         return original_args
+
+    async def _discover_scenario_count(self, original_args: List[str]) -> int:
+        """
+        Discover the number of scenarios that will be run.
+
+        Runs vedro with --dry-run to count scenarios without executing them.
+
+        :param original_args: Arguments to pass to vedro run.
+        :return: Number of scenarios that will be scheduled.
+        """
+        # Build command for dry run discovery
+        cmd = [
+            sys.executable, "-m", "vedro", "run",
+            *original_args,
+            "--dry-run"
+        ]
+
+        # Run the discovery process
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL  # Suppress stderr during discovery
+        )
+
+        scenario_count = 0
+
+        # Parse JSON output to count scenarios
+        if process.stdout:
+            while True:
+                line = await process.stdout.readline()
+                if not line:
+                    break
+
+                try:
+                    event = json.loads(line.decode().strip())
+                    if event.get("event") == "startup":
+                        # The startup event contains the total scenario count
+                        scenarios = event.get("scenarios", {})
+                        scenario_count = scenarios.get("scheduled", 0)
+                        break  # We have the count, no need to continue
+                except json.JSONDecodeError:
+                    continue
+
+        await process.wait()
+        return scenario_count
 
     def _create_worker_task(self, worker_index: int, total_workers: int,
                            original_args: List[str]) -> asyncio.Task:
