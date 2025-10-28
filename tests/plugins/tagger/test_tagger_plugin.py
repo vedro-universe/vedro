@@ -278,3 +278,70 @@ async def test_tags_tag_type_validation(*, dispatcher: Dispatcher):
         assert str(exc.value).startswith(
             f"Scenario '{scenario.unique_id}' tag 'None' is not valid"
         )
+
+
+@pytest.mark.usefixtures(tagger.__name__)
+async def test_tags_tag_custom_type_validation(*, dispatcher: Dispatcher):
+    with given:
+        class CustomTypeTag:
+            def __str__(self):
+                return "custom_type_tag"
+
+    with given:
+        await fire_arg_parsed_event(dispatcher, tags="custom_type_tag")
+
+        scenarios = [
+            make_vscenario(),
+            make_vscenario(tags=[CustomTypeTag()]),
+            make_vscenario(tags=["SMOKE", "P0"])
+        ]
+        scheduler = Scheduler(scenarios)
+        startup_event = StartupEvent(scheduler)
+
+    with when:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert list(scheduler.scheduled) == [scenarios[1]]
+
+
+@pytest.mark.parametrize("input_value", [
+    'D and R',
+    '',
+    ' ',
+    'or',
+    '\'',
+    '"',
+    '"',
+    'a:1',
+    'a@1',
+    str(object()),
+])
+@pytest.mark.usefixtures(tagger.__name__)
+async def test_tags_tag_custom_type_invalid_string_validation(*, input_value,
+                                                              dispatcher: Dispatcher):
+    with given:
+        class CustomTypeTag:
+            def __str__(self):
+                return input_value
+
+    with given:
+        await fire_arg_parsed_event(dispatcher, tags="SMOKE")
+
+        custom_tag = CustomTypeTag()
+        scenarios = [
+            make_vscenario(tags=[custom_tag]),
+            make_vscenario(),
+            make_vscenario(tags=["SMOKE", "P0"])
+        ]
+        scheduler = Scheduler(scenarios)
+        startup_event = StartupEvent(scheduler)
+
+    with when, raises(BaseException) as exc:
+        await dispatcher.fire(startup_event)
+
+    with then:
+        assert exc.type is ValueError
+        assert str(exc.value).startswith(
+            f"Scenario '{scenarios[0].unique_id}' tag '{custom_tag}' is not valid"
+        )

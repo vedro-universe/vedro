@@ -1,6 +1,6 @@
 import re
 from re import fullmatch
-from typing import Set, Union, cast
+from typing import Any, Set, Union, cast
 
 from pyparsing import CaselessKeyword
 from pyparsing import ParserElement as Parser
@@ -54,10 +54,10 @@ class LogicTagMatcher(TagMatcher):
             self._grammar = self._parse(self._parser, self._expr)
         return self._grammar(tags)
 
-    def validate(self, tag: str) -> bool:
+    def validate(self, tag: Any) -> bool:
         """
         Validate that a given tag name meets the required criteria:
-        - Must be a string
+        - Must be a stringify-able
         - Must match the pattern: start with a letter or underscore, followed by letters, digits,
           or underscores.
         - Must not be a reserved keyword ('and', 'or', 'not').
@@ -67,10 +67,10 @@ class LogicTagMatcher(TagMatcher):
         :raises TypeError: If the tag is not a string.
         :raises ValueError: If the tag is invalid or a reserved keyword.
         """
-        if not isinstance(tag, str):
-            raise TypeError(f"Tag must be a str, got {type(tag)}")
+        if tag is None:
+            raise TypeError(f"Tag must be a stringify-able, got {type(tag)}")
 
-        res = fullmatch(self.tag_pattern, tag, re.IGNORECASE)
+        res = fullmatch(self.tag_pattern, str(tag), re.IGNORECASE)
         if res is None:
             raise ValueError("Tags must start with a letter or underscore, "
                              "followed by letters, digits, or underscores. "

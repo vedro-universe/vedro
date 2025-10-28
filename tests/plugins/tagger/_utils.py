@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from time import monotonic_ns
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import pytest
 
@@ -25,7 +25,7 @@ def tagger(dispatcher: Dispatcher) -> TaggerPlugin:
     return tagger
 
 
-def make_vscenario(*, tags: Optional[List[str]] = None,
+def make_vscenario(*, tags: Optional[List[str | Any]] = None,
                    is_skipped: bool = False) -> VirtualScenario:
     class _Scenario(Scenario):
         __file__ = Path(f"scenario_{monotonic_ns()}.py").absolute()

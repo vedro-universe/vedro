@@ -89,7 +89,7 @@ class TaggerPlugin(Plugin):
             except Exception as e:
                 raise ValueError(f"Scenario '{scenario.unique_id}' tag '{tag}' is not valid ({e})")
             else:
-                tags.append(tag)
+                tags.append(str(tag))
         return tags
 
     async def on_startup(self, event: StartupEvent) -> None:
